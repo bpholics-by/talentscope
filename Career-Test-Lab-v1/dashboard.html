@@ -5,93 +5,7 @@
 
 <head>
 
-     <style>
-
-/* =========================================================
-   MOBILE SIDEBAR FIX - SAFE VERSION
-========================================================= */
-
-@media (max-width: 768px) {
-
-    html,
-    body {
-        overflow-x: hidden;
-    }
-
-
-    /* SIDEBAR */
-
-    .sidebar {
-
-        position: fixed !important;
-
-        top: 0 !important;
-        left: 0 !important;
-
-        width: 280px !important;
-        max-width: 85vw !important;
-
-        height: 100vh !important;
-
-        z-index: 9999 !important;
-
-        transform: translateX(-100%) !important;
-
-        transition: transform 0.3s ease !important;
-
-        overflow-y: auto !important;
-    }
-
-
-    /* SIDEBAR OPEN */
-
-    .sidebar.mobile-open {
-
-        transform: translateX(0) !important;
-    }
-
-
-    /* OVERLAY */
-
-    .sidebar-overlay {
-
-        display: block;
-
-        position: fixed;
-
-        inset: 0;
-
-        background: rgba(0,0,0,0.45);
-
-        z-index: 9998;
-
-        opacity: 0;
-
-        visibility: hidden;
-
-        pointer-events: none;
-
-        transition: 0.3s;
-    }
-
-
-    .sidebar-overlay.active {
-
-        opacity: 1;
-
-        visibility: visible;
-
-        pointer-events: auto;
-    }
-
-
-    /* JANGAN UBAH HEIGHT / DISPLAY CONTAINER UTAMA */
-
-}
-
-</style>
-
-    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+       <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
     (function() {
         "use strict";
@@ -183,6 +97,219 @@
 <link rel="stylesheet" href="css/pages.css">
 
 <link rel="stylesheet" href="css/dashboard.css">
+
+<style>
+
+/* =========================================================
+   DASHBOARD MOBILE FIX
+   KHUSUS HALAMAN dashboard.html
+========================================================= */
+
+@media (max-width: 768px) {
+
+    /* ==========================================
+       RESET APP LAYOUT KHUSUS DASHBOARD
+    ========================================== */
+
+    html,
+    body {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        overflow-x: hidden !important;
+
+    }
+
+
+    .app {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        overflow-x: hidden !important;
+
+    }
+
+
+    /* ==========================================
+       MAIN CONTENT
+    ========================================== */
+
+    .main {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        height: 100vh !important;
+
+        margin: 0 !important;
+
+    }
+
+
+    .content {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        padding: 20px !important;
+
+        overflow-x: hidden !important;
+
+    }
+
+
+    /* ==========================================
+       SIDEBAR MOBILE
+    ========================================== */
+
+    .sidebar {
+
+        display: flex !important;
+
+        position: fixed !important;
+
+        top: 0 !important;
+
+        left: 0 !important;
+
+        width: 280px !important;
+
+        max-width: 85vw !important;
+
+        height: 100vh !important;
+
+        z-index: 10001 !important;
+
+        transform: translateX(-100%) !important;
+
+        transition: transform 0.3s ease !important;
+
+        overflow-y: auto !important;
+
+        flex-direction: column !important;
+
+    }
+
+
+    /* SIDEBAR SAAT DIBUKA */
+
+    .sidebar.mobile-open {
+
+        display: flex !important;
+
+        transform: translateX(0) !important;
+
+    }
+
+
+    /* ==========================================
+       OVERLAY
+    ========================================== */
+
+    .sidebar-overlay {
+
+        display: block !important;
+
+        position: fixed !important;
+
+        top: 0 !important;
+
+        right: 0 !important;
+
+        bottom: 0 !important;
+
+        left: 0 !important;
+
+        width: 100% !important;
+
+        height: 100% !important;
+
+        background: rgba(15, 23, 42, 0.45) !important;
+
+        z-index: 10000 !important;
+
+        opacity: 0 !important;
+
+        visibility: hidden !important;
+
+        pointer-events: none !important;
+
+        transition:
+            opacity 0.3s ease,
+            visibility 0.3s ease !important;
+
+    }
+
+
+    .sidebar-overlay.active {
+
+        opacity: 1 !important;
+
+        visibility: visible !important;
+
+        pointer-events: auto !important;
+
+    }
+
+
+    /* ==========================================
+       PREVENT PAGE SHIFT
+    ========================================== */
+
+    .app,
+    .main {
+
+        margin-left: 0 !important;
+
+    }
+
+
+    /* ==========================================
+       DASHBOARD ELEMENTS
+    ========================================== */
+
+    .hero {
+
+        min-height: auto !important;
+
+        padding: 28px 22px !important;
+
+        margin-bottom: 28px !important;
+
+        flex-direction: column !important;
+
+        align-items: flex-start !important;
+
+        gap: 24px !important;
+
+    }
+
+
+    .hero-right {
+
+        width: 100% !important;
+
+    }
+
+
+    .dashboard-tools-grid {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+}
+
+</style>
+
 
     <link rel="preconnect"
           href="https://fonts.googleapis.com">
