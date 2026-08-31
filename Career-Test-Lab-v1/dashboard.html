@@ -206,12 +206,13 @@
 
     #mobileMenuButton {
 
-        display: flex !important;
+    display: flex !important;
 
-        position: fixed !important;
+    position: fixed !important;
 
-        top: 16px !important;
-        left: 16px !important;
+    top: 16px !important;
+    right: 16px !important;
+    left: auto !important;
 
         width: 46px !important;
         height: 46px !important;
@@ -249,13 +250,12 @@
     /* SAAT SIDEBAR TERBUKA */
 
     body.sidebar-is-open
-    #mobileMenuButton {
+#mobileMenuButton {
 
-        left: calc(
-            min(85vw, 280px) + 12px
-        ) !important;
+    right: 16px !important;
+    left: auto !important;
 
-    }
+}
 
 }
 
@@ -272,392 +272,62 @@
 
 }
 /* =========================================================
-   HEADER SEARCH MOBILE FIX
-   KHUSUS DASHBOARD.HTML
+   DASHBOARD HEADER MOBILE - SAFE FIX
 ========================================================= */
 
 @media (max-width: 768px) {
 
-    /* HEADER RIGHT */
-
-    .header-right {
-
-        width: 100% !important;
-
-        max-width: 100% !important;
-
-        min-width: 0 !important;
-
-        flex: 1 !important;
-
-        display: flex !important;
-
-        align-items: center !important;
-
-        justify-content: flex-end !important;
-
-        box-sizing: border-box !important;
-
-        overflow: hidden !important;
-
-    }
-
-
-    /* SEARCH WRAPPER */
-
-    .header-right .header-search,
-    .header-right .global-search {
-
-        flex: 1 1 auto !important;
-
-        width: auto !important;
-
-        min-width: 0 !important;
-
-        max-width: 100% !important;
-
-        box-sizing: border-box !important;
-
-    }
-
-
-    /* SEARCH INPUT */
-
-    .header-right .header-search input {
-
-        width: 100% !important;
-
-        min-width: 0 !important;
-
-        max-width: 100% !important;
-
-        box-sizing: border-box !important;
-
-    }
-
-
-    /* SEARCH SUGGESTIONS */
-
-    .header-right .global-search-suggestions {
-
-        width: 100% !important;
-
-        max-width: 100% !important;
-
-        box-sizing: border-box !important;
-
-    }
-
-}
-@media (max-width: 768px) {
-
+    /* Header jangan keluar layar */
     .header {
 
-        height: auto !important;
-
-        min-height: auto !important;
-
-        padding: 18px 20px !important;
-
-        flex-wrap: wrap !important;
-
-        gap: 14px !important;
-
-    }
-
-
-    .header-left {
-
         width: 100% !important;
 
-        flex: none !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+        overflow-x: hidden !important;
 
     }
 
 
+    /* Search jangan terpotong */
     .header-right {
 
+        min-width: 0 !important;
+
+    }
+
+
+    .header-search {
+
+        min-width: 0 !important;
+
+        max-width: 100% !important;
+
+    }
+
+
+    .header-search input {
+
+        min-width: 0 !important;
+
         width: 100% !important;
-
-        flex: none !important;
-
-    }
-
-
-    .header-right .header-search {
-
-        width: 100% !important;
-
-    }
-
-}
-/* =========================================================
-   DASHBOARD MOBILE FINAL FIX
-   FIX MENU + AVATAR + HERO
-========================================================= */
-
-@media (max-width: 768px) {
-
-    /* =====================================================
-       1. MOBILE MENU BUTTON
-    ===================================================== */
-
-    .mobile-menu-toggle,
-    .menu-toggle,
-    #menuToggle {
-
-        position: relative !important;
-
-        flex: 0 0 56px !important;
-
-        width: 56px !important;
-        height: 56px !important;
-
-        min-width: 56px !important;
-        min-height: 56px !important;
-
-        margin: 0 !important;
-
-        z-index: 1001 !important;
-
-    }
-
-
-    /* =====================================================
-       2. HEADER
-    ===================================================== */
-
-    .header {
-
-        position: relative !important;
-
-        display: flex !important;
-
-        flex-wrap: wrap !important;
-
-        align-items: center !important;
-
-        gap: 18px !important;
-
-        padding: 28px 36px 24px !important;
 
         box-sizing: border-box !important;
 
     }
 
 
-    /* AREA JUDUL */
-
-    .header-left {
-
-        width: calc(100% - 75px) !important;
-
-        flex: 1 1 calc(100% - 75px) !important;
-
-        min-width: 0 !important;
-
-        padding-left: 0 !important;
-
-        box-sizing: border-box !important;
-
-    }
-
-
-    /* JUDUL DASHBOARD */
-
-    .header-left h1 {
-
-        font-size: 42px !important;
-
-        line-height: 1.1 !important;
-
-        margin: 0 !important;
-
-        white-space: normal !important;
-
-    }
-
-
-    /* SUBTITLE */
-
-    .header-left p {
-
-        font-size: 17px !important;
-
-        line-height: 1.5 !important;
-
-        margin-top: 14px !important;
-
-    }
-
-
-    /* =====================================================
-       3. HEADER RIGHT
-    ===================================================== */
-
-    .header-right {
-
-        width: 100% !important;
-
-        flex: 0 0 100% !important;
-
-        min-width: 0 !important;
-
-        display: grid !important;
-
-        grid-template-columns: minmax(0, 1fr) auto !important;
-
-        align-items: center !important;
-
-        gap: 28px !important;
-
-        overflow: visible !important;
-
-    }
-
-
-    /* =====================================================
-       4. SEARCH
-    ===================================================== */
-
-    .header-right .header-search,
-    .header-right .global-search {
-
-        width: 100% !important;
-
-        min-width: 0 !important;
-
-        max-width: none !important;
-
-        box-sizing: border-box !important;
-
-    }
-
-
-    .header-right .header-search input,
-    .header-right .global-search input {
-
-        width: 100% !important;
-
-        min-width: 0 !important;
-
-        box-sizing: border-box !important;
-
-    }
-
-
-    /* =====================================================
-       5. ADMIN PROFILE
-    ===================================================== */
-
-    .header-profile,
-    .user-profile,
-    .profile-menu {
-
-        min-width: 0 !important;
-
-        flex-shrink: 0 !important;
-
-    }
-
-
-    /* AVATAR SYSTEM ADMIN */
-
-    .header-profile .avatar,
-    .user-profile .avatar,
-    .profile-menu .avatar,
-    .profile-avatar {
-
-        width: 56px !important;
-
-        height: 56px !important;
-
-        min-width: 56px !important;
-
-        min-height: 56px !important;
+    /* Avatar tetap bulat */
+    .profile-avatar,
+    .avatar {
 
         aspect-ratio: 1 / 1 !important;
 
-        flex: 0 0 56px !important;
-
         border-radius: 50% !important;
 
-        display: flex !important;
-
-        align-items: center !important;
-
-        justify-content: center !important;
-
-        overflow: hidden !important;
-
-    }
-
-
-    /* =====================================================
-       6. HERO CARD
-    ===================================================== */
-
-    .hero,
-    .hero-card,
-    .welcome-card {
-
-        overflow: visible !important;
-
-    }
-
-
-    /* LABEL TALENTSCOPE ENTERPRISE */
-
-    .hero .hero-label,
-    .hero-card .hero-label,
-    .welcome-card .hero-label {
-
-        position: relative !important;
-
-        z-index: 5 !important;
-
-        display: inline-block !important;
-
-        overflow: visible !important;
-
-        white-space: normal !important;
-
-        margin-top: 8px !important;
-
-    }
-
-
-    /* JIKA ADA PSEUDO ELEMENT YANG MENUTUPI */
-
-    .hero::before,
-    .hero-card::before,
-    .welcome-card::before {
-
-        z-index: 0 !important;
-
-    }
-
-
-    .hero > *,
-    .hero-card > *,
-    .welcome-card > * {
-
-        position: relative !important;
-
-        z-index: 2 !important;
-
-    }
-
-
-    /* HERO TITLE */
-
-    .hero h1,
-    .hero-card h1,
-    .welcome-card h1 {
-
-        position: relative !important;
-
-        z-index: 3 !important;
+        flex-shrink: 0 !important;
 
     }
 
