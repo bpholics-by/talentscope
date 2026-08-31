@@ -1,0 +1,46 @@
+Career-Test-Lab-v1 — DISC Result Isolation Fix (V3)
+
+ROOT CAUSE FOUND
+1. js/test-result.js had an unsafe DISC fallback key: disc_final_result.
+   This key is shared, not participant-scoped, so a missing participant result could
+   display another participant's DISC score.
+2. The last-resort localStorage scan accepted any key containing projectId OR
+   participantId. Therefore AA01 could scan and accept an AA02 result simply because
+   the key contained the same projectId.
+3. participant-dashboard.html had a hardcoded fallback participant ID "AA02".
+   If the participant session lacked an ID, every such session could start an
+   assessment under AA02.
+4. login.html had a fallback participant ID "P001" when no participant was found.
+   This could create an invalid/shared participant session.
+5. assessment.html only read project/participant/step while other pages also used
+   projectId/participantId/assessmentIndex. Navigation between assessment steps could
+   lose identity.
+6. disc_test.html displayed hardcoded participant/project/date labels. The scoring
+   itself is valid: AA02's 24 visible answers produce exactly MOST 9/7/6/2,
+   LEAST -5/-4/-8/-7, CHANGE 4/3/-2/-5.
+
+FIXES APPLIED
+- Result lookup is now strictly participant + project + assessmentIndex scoped.
+- Removed shared disc_final_result fallback.
+- Last-resort localStorage scan requires both projectId and participantId in the key
+  and validates result metadata before accepting it.
+- If a DISC result contains 24 typed answers, test-result.js verifies the stored score
+  against the answers and reconstructs the score if they differ.
+- Removed hardcoded AA02 fallback from participant-dashboard.html.
+- Removed fake P001 participant session fallback from login.html.
+- assessment.html accepts both canonical and legacy parameter names and forwards
+  canonical parameters.
+- disc_test.html validates identity before saving and displays real participant,
+  project, and date metadata.
+
+IMPORTANT
+Existing incorrect/shared results in the browser localStorage are not silently
+rewritten by this patch. The fixed result page will refuse to use another participant's
+result. If a participant's own result exists under a participant-specific legacy key,
+it can still be read. If no participant-specific result exists, the page will report
+that the assessment result is unavailable instead of showing someone else's score.
+
+VALIDATION
+- Node syntax checks passed for modified JS and inline scripts.
+- DISC 24-answer scoring logic was verified against the AA02 answer table visible in
+  the supplied screenshot: the stored score exactly matches those answers.

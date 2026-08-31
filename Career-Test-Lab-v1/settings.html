@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Settings Center | TalentScope</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+
+<body>
+
+<div class="settings-shell">
+
+    <a href="dashboard.html" class="back-dashboard">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back to Dashboard</span>
+    </a>
+
+    <section class="settings-intro">
+
+        <div class="brand-mark">TS</div>
+
+        <div class="brand-copy">
+            <span class="brand-name">TalentScope</span>
+            <span class="brand-version">Enterprise v1.0</span>
+        </div>
+
+        <div class="settings-intro-copy">
+            <span class="eyebrow">SETTINGS CENTER</span>
+
+            <h1>Account & Access Settings</h1>
+
+            <p>
+                Kelola akun, password, pengguna, role, dan hak akses
+                TalentScope dalam satu pusat pengaturan.
+            </p>
+        </div>
+
+    </section>
+
+
+    <main class="settings-container">
+
+        <div class="settings-tabs">
+
+            <button class="settings-tab active" data-tab="profile">
+                <span class="tab-icon">
+                    <i class="fa-regular fa-user"></i>
+                </span>
+                <span>
+                    <strong>Account</strong>
+                    <small>Profile & username</small>
+                </span>
+            </button>
+
+            <button class="settings-tab" data-tab="security">
+                <span class="tab-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </span>
+                <span>
+                    <strong>Security</strong>
+                    <small>Password protection</small>
+                </span>
+            </button>
+
+            <button class="settings-tab" data-tab="users">
+                <span class="tab-icon">
+                    <i class="fa-solid fa-users"></i>
+                </span>
+                <span>
+                    <strong>Users</strong>
+                    <small>Admin & client accounts</small>
+                </span>
+            </button>
+
+            <button class="settings-tab" data-tab="roles">
+                <span class="tab-icon">
+                    <i class="fa-solid fa-key"></i>
+                </span>
+                <span>
+                    <strong>Roles</strong>
+                    <small>Permissions & access</small>
+                </span>
+            </button>
+
+        </div>
+
+
+        <!-- ACCOUNT -->
+        <section class="settings-panel active" id="tab-profile">
+
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">MY ACCOUNT</span>
+                    <h2>Account Profile</h2>
+                    <p>Perbarui informasi akun yang digunakan untuk mengakses TalentScope.</p>
+                </div>
+
+                <div class="profile-avatar" id="profileAvatar">A</div>
+            </div>
+
+            <form id="profileForm">
+
+                <div class="form-grid">
+
+                    <div class="field-group">
+                        <label>Full Name</label>
+                        <input id="profileName" type="text" required>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Username</label>
+                        <input id="profileUsername" type="text" required>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Email Address</label>
+                        <input id="profileEmail" type="email" required>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Current Role</label>
+                        <div class="readonly-input">
+                            <i class="fa-solid fa-lock"></i>
+                            <span id="profileRole">System Administrator</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="panel-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Save Changes
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- SECURITY -->
+        <section class="settings-panel" id="tab-security">
+
+            <div class="panel-heading">
+                <div>
+                    <span class="eyebrow">ACCOUNT SECURITY</span>
+                    <h2>Change Password</h2>
+                    <p>Gunakan password yang kuat untuk menjaga keamanan akun Anda.</p>
+                </div>
+
+                <div class="heading-icon security">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+
+            <form id="passwordForm">
+
+                <div class="password-form">
+
+                    <div class="field-group">
+                        <label>Current Password</label>
+                        <div class="password-wrap">
+                            <input id="currentPassword" type="password" required>
+                            <button type="button" class="password-toggle" data-target="currentPassword">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>New Password</label>
+                        <div class="password-wrap">
+                            <input id="newPassword" type="password" minlength="6" required>
+                            <button type="button" class="password-toggle" data-target="newPassword">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Confirm New Password</label>
+                        <div class="password-wrap">
+                            <input id="confirmPassword" type="password" minlength="6" required>
+                            <button type="button" class="password-toggle" data-target="confirmPassword">
+                                <i class="fa-regular fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="security-note">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Password minimal 6 karakter. Gunakan kombinasi huruf, angka, dan karakter khusus untuk keamanan yang lebih baik.</span>
+                </div>
+
+                <div class="panel-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fa-solid fa-key"></i>
+                        Update Password
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+
+        <!-- USERS -->
+        <section class="settings-panel" id="tab-users">
+
+            <div class="panel-heading panel-heading-users">
+                <div>
+                    <span class="eyebrow">USER MANAGEMENT</span>
+                    <h2>Admin & Client Accounts</h2>
+                    <p>Buat dan kelola akun administrator maupun client.</p>
+                </div>
+
+                <button type="button" class="btn-primary" id="addUserBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    Add User
+                </button>
+            </div>
+
+            <div class="users-toolbar">
+
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input id="userSearch" type="text" placeholder="Search name, username or email...">
+                </div>
+
+                <select id="roleFilter">
+                    <option value="">All Roles</option>
+                </select>
+
+            </div>
+
+            <div class="table-card">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th class="align-right">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+
+        </section>
+
+
+        <!-- ROLES -->
+        <section class="settings-panel" id="tab-roles">
+
+            <div class="panel-heading panel-heading-users">
+                <div>
+                    <span class="eyebrow">ROLE MANAGEMENT</span>
+                    <h2>Roles & Permissions</h2>
+                    <p>Buat role baru dan tentukan akses untuk setiap halaman TalentScope.</p>
+                </div>
+
+                <button type="button" class="btn-primary" id="addRoleBtn">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Role
+                </button>
+            </div>
+
+            <div class="roles-grid" id="rolesGrid"></div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- USER MODAL -->
+<div class="modal" id="userModal">
+    <div class="modal-backdrop" data-close="userModal"></div>
+
+    <div class="modal-dialog">
+
+        <div class="modal-header">
+            <div>
+                <span class="eyebrow" id="userModalEyebrow">USER ACCOUNT</span>
+                <h3 id="userModalTitle">Add User</h3>
+            </div>
+
+            <button type="button" class="modal-close" data-close="userModal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="userForm">
+
+            <input id="userId" type="hidden">
+
+            <div class="form-grid">
+
+                <div class="field-group">
+                    <label>Full Name</label>
+                    <input id="userName" type="text" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Username</label>
+                    <input id="userUsername" type="text" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Email Address</label>
+                    <input id="userEmail" type="email" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Role</label>
+                    <select id="userRole" required></select>
+                </div>
+
+                <div class="field-group">
+                    <label>Status</label>
+                    <select id="userStatus">
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+
+                <div class="field-group">
+                    <label>Password</label>
+                    <div class="password-wrap">
+                        <input id="userPassword" type="password" required>
+                        <button type="button" class="password-toggle" data-target="userPassword">
+                            <i class="fa-regular fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" data-close="userModal">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save User
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+<!-- ROLE MODAL -->
+<div class="modal" id="roleModal">
+    <div class="modal-backdrop" data-close="roleModal"></div>
+
+    <div class="modal-dialog modal-wide">
+
+        <div class="modal-header">
+            <div>
+                <span class="eyebrow">ACCESS CONTROL</span>
+                <h3 id="roleModalTitle">Create Role</h3>
+            </div>
+
+            <button type="button" class="modal-close" data-close="roleModal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form id="roleForm">
+
+            <input id="roleId" type="hidden">
+
+            <div class="form-grid">
+
+                <div class="field-group">
+                    <label>Role Name</label>
+                    <input id="roleName" type="text" required>
+                </div>
+
+                <div class="field-group">
+                    <label>Description</label>
+                    <input id="roleDescription" type="text">
+                </div>
+
+            </div>
+
+            <div class="permission-header">
+                <div>
+                    <h4>Permissions</h4>
+                    <p>Pilih halaman yang dapat diakses oleh role ini.</p>
+                </div>
+
+                <button type="button" id="selectAllPermissions" class="text-btn">Select all</button>
+            </div>
+
+            <div class="permissions-grid" id="permissionsGrid"></div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" data-close="roleModal">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    Save Role
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+
+<div class="toast" id="settingsToast"></div>
+
+<script src="js/settings.js"></script>
+</body>
+</html>

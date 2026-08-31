@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+    <script>
+    (function() {
+        "use strict";
+
+        function getSavedUser() {
+            try {
+                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
+        }
+
+        var activeUser = getSavedUser();
+
+        if (activeUser) {
+            localStorage.setItem("talentscope_current_user", JSON.stringify(activeUser));
+            
+            document.addEventListener("DOMContentLoaded", function() {
+                var role = String(activeUser.role || "").trim();
+
+                var allEls = document.querySelectorAll("div, span, p, strong, b, h1, h2, h3");
+                allEls.forEach(function(el) {
+                    if (el.children.length === 0) {
+                        if (el.textContent.trim() === "Administrator") {
+                            el.textContent = activeUser.name || activeUser.username || "User";
+                        }
+                        if (el.textContent.trim() === "System Admin") {
+                            el.textContent = role;
+                        }
+                    }
+                });
+
+                var isClient = /client/i.test(role);
+                var isAsesor = /asesor|assessor/i.test(role);
+                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+
+                var hideList = [];
+                if (isClient) {
+                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAsesor) {
+                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAdmin) {
+                    hideList = ["Settings"];
+                }
+
+                if (hideList.length > 0) {
+                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
+                    menuLinks.forEach(function(item) {
+                        var text = item.textContent.trim();
+                        hideList.forEach(function(m) {
+                            if (text.indexOf(m) !== -1) {
+                                item.style.setProperty("display", "none", "important");
+                            }
+                        });
+                    });
+                }
+
+                if (isClient || isAsesor) {
+                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
+                        var bt = btn.textContent.toLowerCase();
+                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
+                            btn.style.setProperty("display", "none", "important");
+                        }
+                    });
+                }
+            });
+        }
+    })();
+    </script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Projects | TalentScope Enterprise</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23087ff5'/%3E%3Ctext x='50' y='67' font-size='55' text-anchor='middle' fill='white' font-family='Arial'%3ETS%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/projects.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar"></aside>
+
+    <div class="main">
+
+        <!-- Header -->
+        <header class="header"></header>
+
+        <!-- Content -->
+        <main class="content">
+
+            <section class="page-header">
+                <div class="page-title-group"></div>
+            </section>
+
+            <!-- ======================================================= -->
+            <!-- STATISTIC CONTAINER (ISOLASI DUAL-ROLE)                 -->
+            <!-- ======================================================= -->
+
+            <!-- 1. TAMPILAN ADMIN -->
+            <section class="project-stats" id="ts-admin-stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Projects</span>
+                        <h3 id="stat-total-projects">0</h3>
+                        <small>Assessment projects</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Running</span>
+                        <h3 id="stat-running-projects">0</h3>
+                        <small>Active projects</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Completed</span>
+                        <h3 id="stat-completed-projects">0</h3>
+                        <small>Finished projects</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Clients</span>
+                        <h3 id="stat-total-clients">0</h3>
+                        <small>Registered companies</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. TAMPILAN ASESOR & CLIENT -->
+            <section class="project-stats" id="ts-client-asesor-stats-section" style="display: none !important;">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Nama Project</span>
+                        <h3 id="ts-custom-project-name" style="font-size: 16px; margin: 4px 0; font-weight: 700;">-</h3>
+                        <small id="ts-custom-project-id" style="color: #2563eb; font-weight: 600;">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Status Project</span>
+                        <h3 id="ts-custom-running-status" style="font-size: 18px; margin: 4px 0; color: #10b981; font-weight: 700;">-</h3>
+                        <small style="color: #64748b; font-weight: 600;"></small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Jumlah Peserta</span>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin: 4px 0;">
+                            <h3 id="ts-custom-total-participants" style="font-size: 24px; font-weight: 800; margin: 0; color: #0f172a;">0</h3>
+                            <span style="font-size: 13px; color: #64748b; font-weight: 600;"></span>
+                        </div>
+                        <small style="color: #64748b;">Total Terdaftar</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-content" style="width: 100%;">
+                        <span class="stat-label">Status Peserta</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 6px;">
+                            <span style="color: #64748b;">Invited:</span>
+                            <strong id="ts-custom-invited" style="color: #ea580c; font-weight: 700;">0 orang</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 3px;">
+                            <span style="color: #64748b;">Completed:</span>
+                            <strong id="ts-custom-completed" style="color: #10b981; font-weight: 700;">0 orang</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TOOLBAR -->
+            <section class="project-toolbar">
+                <div class="toolbar-left"></div>
+                <div class="toolbar-right">
+                    <button class="btn btn-danger" id="removeSelectedProjects">
+                        <i class="fa-solid fa-trash"></i> Remove Selected Project
+                    </button>
+                </div>
+            </section>
+
+            <!-- TABLE -->
+            <section class="project-table">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllProjects"></th>
+                                <th>Project</th>
+                                <th>Client</th>
+                                <th>Assessment Date</th>
+                                <th>Participants</th>
+                                <th>PIC</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectTable"></tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button class="page-btn">Previous</button>
+                    <button class="page-number active">1</button>
+                    <button class="page-number">2</button>
+                    <button class="page-number">3</button>
+                    <button class="page-btn">Next</button>
+                </div>
+            </section>
+
+            <!-- CREATE PROJECT MODAL -->
+            <div class="modal" id="projectModal">
+                <div class="modal-content large">
+                    <div class="modal-header">
+                        <h2>Create Assessment Project</h2>
+                        <button class="modal-close" id="closeModal"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Project Name <span class="required">*</span></label>
+                                <input type="text" id="projectName">
+                            </div>
+                            <div class="form-group">
+                                <label>Company <span class="required">*</span></label>
+                                <input type="text" id="companyName">
+                            </div>
+                            <div class="form-group">
+                                <label>Client</label>
+                                <input type="text" id="clientName">
+                            </div>
+                            <div class="form-group">
+                                <label>PIC</label>
+                                <input type="text" id="picName">
+                            </div>
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="endDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Maximum Participant</label>
+                                <input type="number" id="participantLimit">
+                            </div>
+                        </div>
+
+                        <div class="assessment-selection">
+                            <h3>Assessment Selection</h3>
+                            <p>Select assessments that will be available for this project.</p>
+                            <div class="assessment-list" id="projectAssessmentList"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancelProject">Cancel</button>
+                        <button class="btn btn-primary" id="saveProject">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Project
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="js/layout/layout-loader.js"></script>
+<script src="js/assessment-data.js"></script>
+<script src="js/projects-data.js"></script>
+<script src="js/projects-render.js"></script>
+<script src="js/projects-modal.js"></script>
+<script src="js/global-search.js"></script>
+<script src="js/project-export.js"></script>
+<script src="js/app-access-control.js"></script>
+<script src="js/project-access-filter.js"></script>
+<script src="js/auth-guard.js"></script>
+
+<!-- SCRIPT FILTER & STATISTIK TERUNIFIKASI -->
+<script>
+(function() {
+    "use strict";
+
+    function updateUnifiedStats() {
+        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        var activeUser = userRaw ? JSON.parse(userRaw) : null;
+        var role = activeUser ? String(activeUser.role || "").toLowerCase() : "";
+
+        var isAdmin = /administrator|system/i.test(role);
+        var isClientOrAsesor = /client|asesor|assessor/i.test(role);
+
+        var adminSec = document.getElementById("ts-admin-stats-section");
+        var clientSec = document.getElementById("ts-client-asesor-stats-section");
+
+        if (isClientOrAsesor) {
+            if (adminSec) adminSec.style.setProperty("display", "none", "important");
+            if (clientSec) clientSec.style.setProperty("display", "grid", "important");
+
+            var firstRow = document.querySelector("tbody tr");
+            if (firstRow) {
+                var cols = firstRow.querySelectorAll("td");
+                if (cols.length >= 6) {
+                    var pName = cols[1].innerText.trim().split("\n")[0];
+                    var pCount = cols[4].innerText.trim();
+                    var pStatus = cols[6].innerText.trim();
+
+                    if (pName && pName !== "No projects found.") {
+                        document.getElementById("ts-custom-project-name").innerText = pName;
+                        var prefix = pName.replace(/project/i, "").trim().toUpperCase();
+                        document.getElementById("ts-custom-project-id").innerText = "ID: PRJ-" + (prefix || "BY");
+                    }
+                    if (pCount) {
+                        document.getElementById("ts-custom-total-participants").innerText = pCount;
+                        document.getElementById("ts-custom-invited").innerText = pCount + " Orang";
+                    }
+                    if (pStatus) {
+                        var statusEl = document.getElementById("ts-custom-running-status");
+                        statusEl.innerText = pStatus;
+                        statusEl.style.color = pStatus.toLowerCase().includes("draft") ? "#d97706" : "#10b981";
+                    }
+                }
+            }
+        } else {
+            if (adminSec) adminSec.style.setProperty("display", "grid", "important");
+            if (clientSec) clientSec.style.setProperty("display", "none", "important");
+
+            var allRows = document.querySelectorAll("#projectTable tr");
+            var total = 0, running = 0, completed = 0;
+            var clients = new Set();
+
+            allRows.forEach(function(row) {
+                var cols = row.querySelectorAll("td");
+                if (cols.length >= 7) {
+                    total++;
+                    var clientName = cols[2].innerText.trim();
+                    if (clientName && clientName !== "-") clients.add(clientName);
+
+                    var st = cols[6].innerText.trim().toLowerCase();
+                    // Menghitung status Running, Active, Scheduled, Ongoing, DAN Draft sebagai proyek aktif/berjalan
+                    if (st.includes("running") || st.includes("active") || st.includes("scheduled") || st.includes("ongoing") || st.includes("draft") || st.includes("waiting")) {
+                        running++;
+                    } else if (st.includes("completed") || st.includes("complete") || st.includes("finish")) {
+                        completed++;
+                    }
+                }
+            });
+
+            document.getElementById("stat-total-projects").innerText = total;
+            document.getElementById("stat-running-projects").innerText = running;
+            document.getElementById("stat-completed-projects").innerText = completed;
+            document.getElementById("stat-total-clients").innerText = clients.size || (total > 0 ? 1 : 0);
+        }
+    }
+
+    function applyProjectFilter() {
+        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        if (!userRaw) return;
+
+        var activeUser = JSON.parse(userRaw);
+        var projectIdTarget = (activeUser.projectId || "").toLowerCase();
+
+        if (projectIdTarget === "all" || /system/i.test(activeUser.role || "")) {
+            updateUnifiedStats();
+            return;
+        }
+
+        var tbody = document.getElementById("projectTable");
+        if (tbody) {
+            var rows = tbody.querySelectorAll("tr");
+            rows.forEach(function(row) {
+                var rowText = row.textContent.toLowerCase();
+                if (projectIdTarget && rowText.indexOf(projectIdTarget) === -1) {
+                    row.style.setProperty("display", "none", "important");
+                }
+            });
+        }
+        updateUnifiedStats();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(applyProjectFilter, 300);
+    });
+    window.addEventListener("load", applyProjectFilter);
+})();
+</script>
+
+<style id="hide-settings-style">
+  .dropdown-menu a[href*="setting"],
+  .dropdown-menu button[onclick*="setting"],
+  .dropdown-item[href*="setting"],
+  [class*="dropdown"] a:has(svg):first-child,
+  .user-dropdown a:first-child {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function() {
+  "use strict";
+
+  function enforceHideSettings() {
+    var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+    if (!userRaw) return;
+
+    var activeUser = JSON.parse(userRaw);
+    var isSystemAdmin = /system/i.test(activeUser.role || "");
+    var styleEl = document.getElementById("hide-settings-style");
+
+    if (isSystemAdmin) {
+      if (styleEl) styleEl.remove();
+      return;
+    }
+
+    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
+    menuItems.forEach(function(item) {
+      var text = item.textContent.trim().toLowerCase();
+      if (text.includes("setting") || text.includes("pengaturan")) {
+        item.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", enforceHideSettings);
+  window.addEventListener("load", enforceHideSettings);
+
+  var observer = new MutationObserver(function() {
+    enforceHideSettings();
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<script>
+// Skrip otomatis untuk menyisipkan id="globalSearchInput" jika header dimuat secara dinamis
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        var searchInput = document.querySelector('.main header input[type="text"], .header input[type="text"], .main input[placeholder*="Cari"]');
+        if (searchInput && !searchInput.id) {
+            searchInput.id = "globalSearchInput";
+        }
+    }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Tangkap tombol Remove Selected Project
+    const removeBtn = document.getElementById("removeSelectedProjects");
+    const selectAllCb = document.getElementById("selectAllProjects");
+
+    // Fungsi centang semua (Select All)
+    if (selectAllCb) {
+        selectAllCb.addEventListener("change", function() {
+            const checkboxes = document.querySelectorAll("#projectTable input[type='checkbox']");
+            checkboxes.forEach(cb => cb.checked = selectAllCb.checked);
+        });
+    }
+
+    // Fungsi ketika tombol Remove Selected Project diklik
+    if (removeBtn) {
+        removeBtn.addEventListener("click", function() {
+            const checkedBoxes = document.querySelectorAll("#projectTable input[type='checkbox']:checked");
+            
+            if (checkedBoxes.length === 0) {
+                alert("Silakan pilih project yang ingin dihapus terlebih dahulu!");
+                return;
+            }
+
+            if (confirm(`Apakah Anda yakin ingin menghapus ${checkedBoxes.length} project yang dipilih?`)) {
+                // Hapus baris dari tabel tampilan
+                checkedBoxes.forEach(cb => {
+                    const row = cb.closest("tr");
+                    if (row) row.remove();
+                });
+
+                // Reset checkbox "Select All"
+                if (selectAllCb) selectAllCb.checked = false;
+
+                // Perbarui statistik setelah penghapusan
+                if (typeof updateUnifiedStats === "function") {
+                    updateUnifiedStats();
+                }
+                
+                alert("Project yang dipilih berhasil dihapus!");
+            }
+        });
+    }
+});
+</script>
+</body>
+</html>

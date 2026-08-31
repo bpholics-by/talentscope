@@ -1,0 +1,808 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TalentScope Enterprise — DISC Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"><style>
+:root{--p:#2563eb;--pd:#1d4ed8;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#f7f9fc;--soft:#eff6ff;--ok:#10b981}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',sans-serif}
+.top{height:66px;position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 28px}
+.back{color:var(--muted);text-decoration:none;font-size:13px;font-weight:700}.back:hover{color:var(--p)}.timer{display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;background:var(--soft);border:1px solid #dbeafe;color:var(--p);font-weight:800;font-size:13px}
+.wrap{max-width:980px;margin:28px auto 60px;padding:0 18px}.hero{position:relative;overflow:hidden;padding:34px 36px;border-radius:24px;color:#fff;background:linear-gradient(135deg,#0f4ccf,#2563eb 65%,#3b82f6);box-shadow:0 18px 45px rgba(37,99,235,.18);margin-bottom:20px}.hero:after{content:'';position:absolute;width:300px;height:300px;right:-90px;top:-150px;border-radius:50%;background:rgba(255,255,255,.09)}
+.eyebrow{display:inline-flex;padding:7px 11px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}.hero h1{margin:14px 0 7px;font-size:29px}.hero p{margin:0;max-width:720px;color:#dbeafe;font-size:13px;line-height:1.7}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px;margin-bottom:20px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 5px 18px rgba(15,23,42,.035)}.info-item{display:flex;gap:12px;align-items:center;padding:7px}.ico{width:42px;height:42px;border-radius:12px;background:#eff6ff;color:var(--p);display:grid;place-items:center}.label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;font-weight:800}.value{font-size:13px;font-weight:800;margin-top:3px}
+.instruction,.quiz-card,.finish{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 26px rgba(15,23,42,.045)}.instruction{padding:30px}.instruction-head{display:flex;gap:14px;align-items:flex-start}.badge{width:45px;height:45px;border-radius:13px;background:#eff6ff;color:var(--p);display:grid;place-items:center}.instruction h2{margin:0;font-size:21px}.lead{margin:5px 0 0;color:var(--muted);font-size:12px}.instruction ol{margin:20px 0 0;padding-left:22px;color:#334155;font-size:13px;line-height:1.75}.instruction li{margin-bottom:10px}.confirm{margin-top:22px;border-top:1px solid var(--line);padding-top:20px}.check{display:flex;gap:10px;align-items:flex-start;font-size:12px;font-weight:600;line-height:1.55;color:#334155}.check input{width:17px;height:17px;margin-top:3px;accent-color:var(--p)}
+.start,.btn{border:0;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer}.start{width:100%;margin-top:17px;padding:14px;background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;font-size:13px;box-shadow:0 8px 20px rgba(37,99,235,.22)}.start:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.quiz{display:none}.quiz-card{padding:28px}.progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.progress strong{font-size:11px;color:var(--p);text-transform:uppercase;letter-spacing:.7px}.progress span{font-size:12px;color:var(--muted);font-weight:700}.bar{height:7px;background:#eef2f7;border-radius:99px;overflow:hidden;margin-bottom:25px}.bar i{display:block;height:100%;width:4%;background:linear-gradient(90deg,var(--p),#60a5fa);border-radius:99px;transition:.25s}
+.q-title{font-size:18px;font-weight:800;margin-bottom:6px}.q-sub{font-size:12px;color:var(--muted);margin-bottom:20px}.options{display:flex;flex-direction:column;gap:11px}.option{border:1px solid var(--line);border-radius:15px;padding:15px;background:#fbfcfe;transition:.2s}.option:hover{border-color:#93c5fd;background:#f8fbff}.option.most{border-color:#60a5fa;background:#eff6ff}.option.least{border-color:#fda4af;background:#fff1f2}
+.opt{display:flex;gap:12px;align-items:flex-start}.letter{width:30px;height:30px;flex:0 0 30px;border-radius:9px;background:#f1f5f9;display:grid;place-items:center;font-size:11px;font-weight:800;color:#64748b}.most .letter{background:#dbeafe;color:#1d4ed8}.least .letter{background:#ffe4e6;color:#be123c}.text{font-size:13px;line-height:1.55;font-weight:650;padding-top:4px}.choices{display:flex;gap:9px;margin-top:13px;padding-left:42px}.choice{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:11px;font-weight:800;color:#475569;cursor:pointer}.choice.active.m{background:#dbeafe;border-color:#60a5fa;color:#1d4ed8}.choice.active.l{background:#ffe4e6;border-color:#fda4af;color:#be123c}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}.btn{padding:11px 17px;border:1px solid var(--line);background:#fff;color:#334155;font-size:12px}.btn.primary{background:var(--p);border-color:var(--p);color:#fff}.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}.btn:disabled{opacity:.4;cursor:not-allowed}
+.pages{margin-top:18px;padding:20px;background:#fbfcfe;border:1px solid var(--line);border-radius:18px}.pages-head{display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;font-weight:800;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:7px}.page{height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#64748b;font-size:10px;font-weight:800;cursor:pointer}.page.current{background:var(--p);border-color:var(--p);color:#fff}.page.done{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.finish{display:none;text-align:center;padding:42px}.finish-icon{width:62px;height:62px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:#ecfdf5;color:#059669;font-size:25px}.finish h2{margin:0 0 8px}.finish p{max-width:520px;margin:0 auto 22px;color:var(--muted);font-size:13px;line-height:1.7}
+.modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.52);backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:20px}.modal.show{display:flex}.modal-card{width:100%;max-width:420px;padding:30px;border-radius:22px;background:#fff;text-align:center;box-shadow:0 24px 70px rgba(15,23,42,.22)}.modal-card i{font-size:40px;color:#10b981}.modal-card h3{margin:14px 0 7px}.modal-card p{font-size:12px;color:var(--muted);line-height:1.6}.modal-card .btn{width:100%;margin-top:10px}.toast{display:none;position:fixed;right:18px;bottom:18px;z-index:120;padding:11px 14px;border-radius:10px;background:#0f172a;color:#fff;font-size:11px;font-weight:700}.toast.show{display:block}
+@media(max-width:700px){.top{padding:0 14px}.wrap{margin-top:18px}.hero{padding:25px 22px}.hero h1{font-size:24px}.info{grid-template-columns:1fr}.instruction,.quiz-card{padding:21px}.grid{grid-template-columns:repeat(8,1fr)}.choices{padding-left:0}.finish{padding:32px 20px}}
+
+/* ===== PREMIUM DISC INSTRUCTION ===== */
+.instruction{
+    margin:0 0 28px!important;
+    padding:0!important;
+    position:relative;
+    overflow:hidden;
+    background:#fff;
+    border:1px solid #dbe5f0;
+    border-radius:24px!important;
+    box-shadow:0 18px 45px rgba(15,23,42,.08)!important;
+}
+.instruction::before{
+    content:"";
+    position:absolute;
+    left:0;right:0;top:0;
+    height:5px;
+    background:linear-gradient(90deg,#0052cc,#0066ff,#38bdf8);
+}
+.instruction-head{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    padding:28px 32px 22px!important;
+    background:linear-gradient(180deg,#f8fbff 0%,#fff 100%);
+    border-bottom:1px solid #edf2f7;
+}
+.instruction .badge{
+    width:56px!important;height:56px!important;
+    flex:0 0 56px;
+    border-radius:16px!important;
+    background:#e8f1ff!important;
+    color:#0066ff!important;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:23px!important;
+    box-shadow:inset 0 0 0 1px #d6e7ff;
+}
+.instruction .eyebrow{
+    display:block;
+    margin:0 0 4px;
+    padding:0;
+    background:transparent;
+    border:0;
+    color:#0066ff;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:1.3px;
+    text-transform:uppercase;
+}
+.instruction-head h2{
+    margin:0 0 5px!important;
+    color:#0f172a;
+    font-size:22px!important;
+    line-height:1.25;
+    font-weight:800;
+}
+.instruction-head .lead{
+    margin:0!important;
+    color:#64748b;
+    font-size:13px!important;
+    line-height:1.5;
+}
+.disc-test-meta{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    padding:18px 32px;
+    background:#fff;
+    border-bottom:1px solid #edf2f7;
+}
+.disc-meta-item{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-height:48px;
+    padding:10px 14px;
+    border:1px solid #e6edf5;
+    border-radius:14px;
+    background:#f8fafc;
+}
+.disc-meta-item>i{
+    width:24px;
+    text-align:center;
+    color:#0066ff;
+    font-size:17px;
+}
+.disc-meta-item div{
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+}
+.disc-meta-item strong{
+    color:#0f172a;
+    font-size:16px;
+    font-weight:800;
+}
+.disc-meta-item span{
+    color:#64748b;
+    font-size:11px;
+    font-weight:600;
+}
+.disc-instruction-body{
+    padding:24px 32px 10px;
+}
+.disc-instruction-title{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+    color:#334155;
+    font-size:13px;
+    line-height:1.5;
+}
+.disc-title-line{
+    width:4px;height:20px;
+    flex:0 0 4px;
+    border-radius:10px;
+    background:#0066ff;
+}
+.disc-steps{
+    list-style:none!important;
+    padding:0!important;
+    margin:0!important;
+    display:grid;
+    gap:10px;
+}
+.disc-steps li{
+    display:grid;
+    grid-template-columns:38px 1fr;
+    gap:14px;
+    align-items:start;
+    padding:13px 14px;
+    border:1px solid #edf2f7;
+    border-radius:13px;
+    background:#fbfdff;
+    color:#475569;
+    font-size:13px;
+    line-height:1.58;
+}
+.disc-steps li strong{color:#1e293b}
+.disc-step-number{
+    width:34px;height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    background:#eaf2ff;
+    color:#0066ff;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.3px;
+}
+.disc-start-area{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:20px;
+    margin:18px 32px 0;
+    padding:18px;
+    border:1px solid #dfe8f2;
+    border-radius:16px;
+    background:linear-gradient(135deg,#f8fbff 0%,#f3f8ff 100%);
+}
+.disc-confirm{
+    display:flex;
+    align-items:flex-start;
+    gap:11px;
+    cursor:pointer;
+    color:#334155;
+    font-size:12px;
+    line-height:1.45;
+    flex:1;
+}
+.disc-confirm input{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+}
+.disc-checkmark{
+    width:20px;height:20px;
+    flex:0 0 20px;
+    margin-top:1px;
+    border:2px solid #cbd5e1;
+    border-radius:6px;
+    background:#fff;
+    position:relative;
+    transition:all .2s ease;
+}
+.disc-confirm input:checked+.disc-checkmark{
+    border-color:#0066ff;
+    background:#0066ff;
+}
+.disc-confirm input:checked+.disc-checkmark::after{
+    content:"";
+    position:absolute;
+    left:5px;top:2px;
+    width:6px;height:10px;
+    border:solid #fff;
+    border-width:0 2px 2px 0;
+    transform:rotate(45deg);
+}
+.disc-confirm strong{
+    display:block;
+    color:#1e293b;
+    font-weight:700;
+    margin-bottom:2px;
+}
+.disc-confirm small{
+    display:block;
+    color:#64748b;
+    font-size:11px;
+}
+.disc-start-button{
+    min-width:176px;
+    min-height:48px;
+    padding:12px 18px;
+    border:0;
+    border-radius:12px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    color:#fff;
+    background:linear-gradient(135deg,#0066ff,#0052cc);
+    box-shadow:0 8px 20px rgba(0,102,255,.22);
+    font-family:inherit;
+    font-size:13px;
+    font-weight:800;
+    cursor:pointer;
+    transition:transform .2s ease,box-shadow .2s ease,opacity .2s ease;
+}
+.disc-start-button:not(:disabled):hover{
+    transform:translateY(-1px);
+    box-shadow:0 11px 25px rgba(0,102,255,.28);
+}
+.disc-start-button:disabled{
+    opacity:.52;
+    cursor:not-allowed;
+    background:linear-gradient(135deg,#94a3b8,#64748b);
+    box-shadow:none;
+}
+.disc-start-button i{font-size:12px}
+.disc-secure-note{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:14px 20px 18px;
+    color:#94a3b8;
+    font-size:10px;
+    font-weight:600;
+}
+.disc-secure-note i{color:#10b981}
+@media(max-width:700px){
+    .instruction-head{padding:24px 20px 20px!important}
+    .disc-test-meta{padding:15px 20px;grid-template-columns:1fr}
+    .disc-instruction-body{padding:20px 20px 8px}
+    .disc-start-area{
+        flex-direction:column;
+        align-items:stretch;
+        margin:15px 20px 0;
+    }
+    .disc-start-button{width:100%}
+}
+
+</style></head>
+<body>
+<header class="top"><a class="back" id="back" href="#"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a><div class="timer"><i class="fa-regular fa-clock"></i><span id="timer">30:00</span></div></header>
+<main class="wrap">
+<section class="hero"><span class="eyebrow">TalentScope Enterprise</span><h1>DISC Assessment</h1><p>Inventori gaya perilaku untuk memahami kecenderungan Dominance, Influence, Steadiness, dan Compliance dalam konteks kerja.</p></section>
+<section class="info"><div class="info-item"><div class="ico"><i class="fa-solid fa-user"></i></div><div><div class="label">Peserta</div><div class="value" id="participant">-</div></div></div><div class="info-item"><div class="ico"><i class="fa-solid fa-folder"></i></div><div><div class="label">Proyek</div><div class="value" id="project">-</div></div></div><div class="info-item"><div class="ico"><i class="fa-solid fa-calendar"></i></div><div><div class="label">Tanggal</div><div class="value" id="date">-</div></div></div></section>
+<section class="instruction" id="instruction" aria-labelledby="discInstructionTitle">
+    <div class="instruction-head">
+        <div class="badge"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div>
+            <span class="eyebrow">PERSIAPAN TES</span>
+            <h2 id="discInstructionTitle">Petunjuk Khusus DISC</h2>
+            <p class="lead">Mohon baca seluruh petunjuk dengan teliti sebelum mulai mengerjakan.</p>
+        </div>
+    </div>
+
+    <div class="disc-test-meta">
+        <div class="disc-meta-item">
+            <i class="fa-regular fa-circle-question"></i>
+            <div><strong>24</strong><span>Nomor</span></div>
+        </div>
+        <div class="disc-meta-item">
+            <i class="fa-regular fa-clock"></i>
+            <div><strong>30</strong><span>Menit</span></div>
+        </div>
+        <div class="disc-meta-item">
+            <i class="fa-solid fa-list-check"></i>
+            <div><strong>2</strong><span>Pilihan / Nomor</span></div>
+        </div>
+    </div>
+
+    <div class="disc-instruction-body">
+        <div class="disc-instruction-title">
+            <span class="disc-title-line"></span>
+            <strong>Harap baca petunjuk berikut dengan cermat sebelum memulai pengerjaan</strong>
+        </div>
+
+        <ol class="disc-steps">
+            <li>
+                <span class="disc-step-number">01</span>
+                <div>Tes ini terdiri dari <strong>24 nomor</strong>. Setiap nomor berisi <strong>empat pernyataan</strong>.</div>
+            </li>
+            <li>
+                <span class="disc-step-number">02</span>
+                <div>Pada setiap nomor, pilih <strong>satu (1) Most / M</strong>, yaitu pernyataan yang paling menggambarkan diri Anda.</div>
+            </li>
+            <li>
+                <span class="disc-step-number">03</span>
+                <div>Pada nomor yang sama, pilih <strong>satu (1) Least / L</strong>, yaitu pernyataan yang paling tidak menggambarkan diri Anda.</div>
+            </li>
+            <li>
+                <span class="disc-step-number">04</span>
+                <div>Anda wajib memilih <strong>satu Most dan satu Least</strong> pada setiap nomor. Pilihan Most dan Least tidak boleh berada pada pernyataan yang sama.</div>
+            </li>
+            <li>
+                <span class="disc-step-number">05</span>
+                <div>Tidak ada jawaban <strong>benar atau salah</strong>. Jawablah secara jujur, spontan, dan berdasarkan perilaku Anda yang paling sering muncul dalam situasi kerja.</div>
+            </li>
+            <li>
+                <span class="disc-step-number">06</span>
+                <div>Pastikan seluruh <strong>24 nomor</strong> telah dijawab sebelum mengirimkan jawaban.</div>
+            </li>
+        </ol>
+    </div>
+
+    <div class="disc-start-area">
+        <label class="disc-confirm">
+            <input type="checkbox" id="confirm">
+            <span class="disc-checkmark"></span>
+            <span>
+                <strong>Saya telah membaca dan memahami petunjuk khusus DISC.</strong>
+                <small>Centang kotak ini untuk mengaktifkan tombol pengerjaan tes.</small>
+            </span>
+        </label>
+
+        <button type="button" id="start" class="disc-start-button" disabled>
+            <span>Kerjakan Tes</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <div class="disc-secure-note">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Jawaban Anda tersimpan otomatis selama pengerjaan.</span>
+    </div>
+</section>
+<section class="quiz" id="quiz"><div class="quiz-card"><div class="progress"><strong>DISC Assessment</strong><span id="count">1 / 24</span></div><div class="bar"><i id="bar"></i></div><div id="host"></div><div class="nav"><button class="btn" id="prev"><i class="fa-solid fa-chevron-left"></i> Sebelumnya</button><div><button class="btn primary" id="next">Selanjutnya <i class="fa-solid fa-chevron-right"></i></button><button class="btn ok" id="submit" style="display:none"><i class="fa-solid fa-check"></i> Kirim Jawaban</button></div></div></div><div class="pages"><div class="pages-head"><span>Navigasi Soal</span><span id="answered">0 / 24 terjawab</span></div><div class="grid" id="pages"></div></div></section>
+<section class="finish" id="finish"><div class="finish-icon"><i class="fa-solid fa-check"></i></div><h2>Terima kasih</h2><p>Jawaban DISC Anda telah berhasil direkam dan disimpan untuk assessment ini.</p><button class="btn primary" id="nextTest">Lanjut ke Tes Berikutnya <i class="fa-solid fa-arrow-right"></i></button></section>
+</main><div class="modal" id="modal"><div class="modal-card"><i class="fa-solid fa-circle-check"></i><h3>Konfirmasi Pengiriman</h3><p>Pastikan seluruh nomor sudah memiliki satu Most dan satu Least.</p><button class="btn ok" id="confirmSubmit">Ya, Kirim Jawaban</button><button class="btn" id="cancelSubmit">Periksa Kembali</button></div></div><div class="toast" id="toast"></div>
+<script>
+const questions=[{"options": [{"text": "Mudah bergaul, ramah, mudah setuju", "type": "I"}, {"text": "Mempercayai, percaya pada orang lain", "type": "S"}, {"text": "Petualang, suka mengambil resiko", "type": "D"}, {"text": "Penuh toleransi, menghormati orang lain", "type": "C"}]}, {"options": [{"text": "Lembut, tertutup", "type": "C"}, {"text": "Visionary/pandangan ke masa depan", "type": "D"}, {"text": "Pusat perhatian, suka bersosialisasi", "type": "I"}, {"text": "Pendamai, membawa ketenangan", "type": "S"}]}, {"options": [{"text": "Menyemangati orang lain", "type": "I"}, {"text": "Berusaha mencapai kesempurnaan", "type": "C"}, {"text": "Menjadi bagian dari tim / kelompok", "type": "S"}, {"text": "Ingin menetapkan goal / tujuan", "type": "D"}]}, {"options": [{"text": "Menjadi frustasi", "type": "D"}, {"text": "Memendam perasaan dalam hati", "type": "S"}, {"text": "Menyampaikan sudut pandang pribadi", "type": "I"}, {"text": "Berani menghadapi oposisi", "type": "C"}]}, {"options": [{"text": "Hidup / lincah, banyak bicara", "type": "I"}, {"text": "Cepat, penuh keyakinan", "type": "D"}, {"text": "Berusaha menjaga keseimbangan", "type": "S"}, {"text": "Berusaha patuh pada peraturan", "type": "C"}]}, {"options": [{"text": "Mengelola waktu dengan efisien", "type": "C"}, {"text": "Sering terburu-buru, merasa ditekan", "type": "D"}, {"text": "Hal-hal sosial adalah penting", "type": "I"}, {"text": "Suka menyelesaikan hal yang sudah dimulai", "type": "S"}]}, {"options": [{"text": "Menolak perubahan yang mendadak", "type": "S"}, {"text": "Cenderung terlalu banyak berjanji", "type": "I"}, {"text": "Mundur bila berada di bawah tekanan", "type": "C"}, {"text": "Tidak takut untuk berkelahi", "type": "D"}]}, {"options": [{"text": "Penyemangat/pendukung yang baik", "type": "S"}, {"text": "Pendengar yang baik", "type": "I"}, {"text": "Penganalisa yang baik", "type": "C"}, {"text": "Pendelegasi yang baik / pandai membagi tugas", "type": "D"}]}, {"options": [{"text": "Yang penting adalah hasil", "type": "D"}, {"text": "Kerjakan dengan benar, ketepatan sangat penting", "type": "C"}, {"text": "Buat agar menyenangkan", "type": "I"}, {"text": "Kerjakan bersama-sama", "type": "S"}]}, {"options": [{"text": "Menahan diri, bisa hidup tanpa memiliki", "type": "C"}, {"text": "Membeli karena dorongan hasrat / impuls", "type": "I"}, {"text": "Akan menunggu, tanpa tekanan", "type": "S"}, {"text": "Akan membeli apa yang diinginkan", "type": "D"}]}, {"options": [{"text": "Bersahabat, mudah bergaul", "type": "I"}, {"text": "Unik, bosan pada rutinitas", "type": "D"}, {"text": "Aktif melakukan perubahan", "type": "D"}, {"text": "Ingin segala sesuatu akurat dan pasti", "type": "C"}]}, {"options": [{"text": "Mengalah, tidak suka pertentangan", "type": "S"}, {"text": "Penuh dengan hal-hal kecil / detail", "type": "C"}, {"text": "Berubah pada menit-menit terakhir", "type": "I"}, {"text": "Mendesak/memaksa, agak kasar", "type": "D"}]}, {"options": [{"text": "Ingin kemajuan / peningkatan", "type": "D"}, {"text": "Puas dengan keadaan, tenang / mudah puas", "type": "S"}, {"text": "Menunjukkan perasaan dengan terbuka", "type": "I"}, {"text": "Rendah hati, sederhana", "type": "C"}]}, {"options": [{"text": "Tenang, pendiam, tertutup", "type": "C"}, {"text": "Gembira, bebas, riang", "type": "I"}, {"text": "Menyenangkan, baik hati", "type": "S"}, {"text": "Menonjol, berani", "type": "D"}]}, {"options": [{"text": "Menyediakan waktu untuk orang lain", "type": "S"}, {"text": "Merencanakan masa depan, bersiap-siap", "type": "C"}, {"text": "Menuju petualangan baru", "type": "D"}, {"text": "Menerima penghargaan atas pencapaian target", "type": "I"}]}, {"options": [{"text": "Peraturan perlu diuji", "type": "D"}, {"text": "Peraturan membuat menjadi adil", "type": "C"}, {"text": "Peraturan membuat menjadi membosankan", "type": "I"}, {"text": "Peraturan membuat menjadi aman", "type": "S"}]}, {"options": [{"text": "Pendidikan, kebudayaan", "type": "C"}, {"text": "Prestasi, penghargaan", "type": "I"}, {"text": "Keselamatan, keamanan", "type": "S"}, {"text": "Sosial, pertemuan kelompok", "type": "D"}]}, {"options": [{"text": "Mengambil kendali, bersikap langsung / direct", "type": "D"}, {"text": "Suka bergaul, antusias", "type": "I"}, {"text": "Mudah ditebak, konsisten", "type": "S"}, {"text": "Waspada, berhati-hati", "type": "C"}]}, {"options": [{"text": "Sulit dikalahkan / ditundukkan", "type": "D"}, {"text": "Melaksanakan sesuai perintah", "type": "S"}, {"text": "Bersemangat, riang", "type": "I"}, {"text": "Ingin keteraturan, rapi", "type": "C"}]}, {"options": [{"text": "Saya akan pimpin mereka", "type": "D"}, {"text": "Saya akan ikut / mengikuti", "type": "S"}, {"text": "Saya akan pengaruhi / bujuk mereka", "type": "I"}, {"text": "Saya akan mendapatkan fakta-faktanya", "type": "C"}]}, {"options": [{"text": "Memikirkan orang lain dahulu", "type": "S"}, {"text": "Suka bersaing / kompetitif, suka tantangan", "type": "D"}, {"text": "Optimis, berpikir positif", "type": "I"}, {"text": "Sistematis, berpikir logis", "type": "C"}]}, {"options": [{"text": "Menyenangkan orang lain, ramah, penurut", "type": "S"}, {"text": "Tertawa lepas, hidup", "type": "I"}, {"text": "Pemberani, tegas", "type": "D"}, {"text": "Pendiam, tertutup, tenang", "type": "C"}]}, {"options": [{"text": "Ingin wewenang / kekuasaan lebih", "type": "D"}, {"text": "Ingin kesempatan baru", "type": "I"}, {"text": "Menghindari perselisihan / konflik apapun", "type": "S"}, {"text": "Ingin arahan yang jelas", "type": "C"}]}, {"options": [{"text": "Dapat dipercaya dan diandalkan", "type": "S"}, {"text": "Kreatif, unik", "type": "I"}, {"text": "Berorientasi pada hasil/profit/untung", "type": "D"}, {"text": "Memegang teguh standar yang tinggi, akurat", "type": "C"}]}];
+const p=new URLSearchParams(location.search);
+const projectId=(p.get('projectId')||p.get('project')||'').trim();
+const participantId=(p.get('participantId')||p.get('participant')||'').trim();
+const assessmentIndex=Number(p.get('assessmentIndex')??p.get('step')??0);
+const assessmentCode=(p.get('assessmentCode')||'DISC').toUpperCase();
+const answerKey=`ts_disc_${encodeURIComponent(projectId)}_${encodeURIComponent(participantId)}_${assessmentIndex}_answers`;
+const resultKey=`disc_result_v3_${projectId}_${participantId}_${assessmentIndex}`;
+let answers=[];try{answers=JSON.parse(localStorage.getItem(answerKey)||'[]')}catch(e){answers=[]}
+answers=Array.from({length:questions.length},(_,i)=>({M:answers[i]?.M??null,L:answers[i]?.L??null}));
+let current=0,seconds=30*60,timerId=null,sending=false;
+
+function loadMeta(){
+ try{
+  const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
+  const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
+  const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
+  document.getElementById('participant').textContent=part?.name||part?.fullName||participantId||'-';
+  document.getElementById('project').textContent=proj?.projectName||proj?.name||proj?.title||projectId||'-';
+  const dv=proj?.startDate||proj?.start||proj?.assessmentDate||new Date(),d=new Date(dv);
+  document.getElementById('date').textContent=Number.isNaN(d.getTime())?String(dv):d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+ }catch(e){console.warn('DISC metadata:',e)}
+}
+function save(){localStorage.setItem(answerKey,JSON.stringify(answers))}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2300)}
+function renderPages(){
+ const n=answers.filter(a=>a.M!==null&&a.L!==null).length;
+ document.getElementById('answered').textContent=`${n} / ${questions.length} terjawab`;
+ document.getElementById('pages').innerHTML=questions.map((_,i)=>`<button type="button" class="page ${i===current?'current':''} ${answers[i].M!==null&&answers[i].L!==null?'done':''}" onclick="go(${i})">${i+1}</button>`).join('');
+}
+function render(){
+ const q=questions[current];
+ document.getElementById('count').textContent=`${current+1} / ${questions.length}`;
+ document.getElementById('bar').style.width=`${((current+1)/questions.length)*100}%`;
+ let h=`<div class="q-title">Pilih Most dan Least</div><div class="q-sub">Pilih satu pernyataan yang paling menggambarkan Anda dan satu yang paling tidak menggambarkan Anda.</div><div class="options">`;
+ q.options.forEach((o,i)=>{
+  const m=answers[current].M===i,l=answers[current].L===i;
+  h+=`<div class="option ${m?'most':''} ${l?'least':''}"><div class="opt"><div class="letter">${String.fromCharCode(65+i)}</div><div class="text">${o.text}</div></div><div class="choices"><button type="button" class="choice m ${m?'active':''}" onclick="pick('M',${i})">M · Most</button><button type="button" class="choice l ${l?'active':''}" onclick="pick('L',${i})">L · Least</button></div></div>`;
+ });
+ h+='</div>';document.getElementById('host').innerHTML=h;
+ document.getElementById('prev').disabled=current===0;
+ document.getElementById('next').style.display=current===questions.length-1?'none':'inline-block';
+ document.getElementById('submit').style.display=current===questions.length-1?'inline-block':'none';
+ renderPages();
+}
+function pick(kind,i){
+ if((kind==='M'&&answers[current].L===i)||(kind==='L'&&answers[current].M===i)){toast('Most dan Least tidak boleh memilih pernyataan yang sama.');return}
+ answers[current][kind]=i;save();render();
+}
+function go(i){current=Math.max(0,Math.min(questions.length-1,i));render();window.scrollTo({top:document.querySelector('.quiz-card').offsetTop-82,behavior:'smooth'})}
+function startQuiz(){
+ if(!projectId||!participantId){alert('Identitas project atau peserta tidak valid. Silakan kembali dan login ulang.');return}
+ updateParticipantAssessmentStatus('Ongoing', 'Sedang mengerjakan tes (DISC Personality)', 'Memulai tes DISC Personality', 'test-start');
+ document.getElementById('instruction').style.display='none';document.getElementById('quiz').style.display='block';render();startTimer();window.scrollTo({top:0,behavior:'smooth'});
+}
+function startTimer(){
+ if(timerId)return;
+ timerId=setInterval(()=>{seconds--;if(seconds<=0){clearInterval(timerId);timerId=null;finalize(true);return}const m=Math.floor(seconds/60),s=seconds%60;document.getElementById('timer').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`},1000)
+}
+function requestSubmit(){
+ const missing=answers.findIndex(a=>a.M===null||a.L===null);
+ if(missing>=0){go(missing);toast(`Nomor ${missing+1} belum lengkap. Pilih Most dan Least.`);return}
+ document.getElementById('modal').classList.add('show');
+}
+function finalize(auto){
+ if(sending)return;
+ const missing=answers.findIndex(a=>a.M===null||a.L===null);
+ if(missing>=0&&!auto){go(missing);return}
+ sending=true;clearInterval(timerId);
+ const most={D:0,I:0,S:0,C:0},leastCount={D:0,I:0,S:0,C:0};
+ const stored=answers.map((a,i)=>{
+  const mt=questions[i].options[a.M]?.type||null,lt=questions[i].options[a.L]?.type||null;
+  if(mt)most[mt]++;if(lt)leastCount[lt]++;
+  return {M:a.M,L:a.L,mostType:mt,leastType:lt};
+ });
+ const least={D:-leastCount.D,I:-leastCount.I,S:-leastCount.S,C:-leastCount.C};
+ const change={D:most.D+least.D,I:most.I+least.I,S:most.S+least.S,C:most.C+least.C};
+ const result={version:3,resultType:'DISC',projectId,participantId,assessmentIndex,assessmentCode,scores:{most,least,change},answers:stored,submittedAt:new Date().toISOString()};
+ localStorage.setItem(resultKey,JSON.stringify(result));
+ localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`,JSON.stringify(result));
+ let all=[];try{all=JSON.parse(localStorage.getItem('talent_scope_results')||'[]')}catch(e){}
+ if(!Array.isArray(all))all=[];
+ all=all.filter(x=>!(String(x?.projectId||'')===projectId&&String(x?.participantId||'')===participantId&&String(x?.assessmentIndex??'')===String(assessmentIndex)&&String(x?.assessmentCode||'').toUpperCase()==='DISC'));
+ all.push(result);localStorage.setItem('talent_scope_results',JSON.stringify(all));localStorage.removeItem(answerKey);
+ updateParticipantAssessmentStatus('Completed', 'Tes DISC telah selesai — peserta masih aktif dalam sesi', 'Menyelesaikan tes DISC Personality', 'test-complete');
+ // IMPORTANT: selesai tes ≠ logout. Presence/session tetap ONLINE sampai peserta klik Logout atau menutup tab/window.
+ document.getElementById('modal').classList.remove('show');document.getElementById('quiz').style.display='none';document.getElementById('finish').style.display='block';
+}
+function nextTest(){
+ const next=assessmentIndex+1;let more=false;
+ try{const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');const proj=ps.find(x=>String(x.id||x.projectId||'')===projectId);const packs=proj?.assessmentPackage||proj?.assessments||proj?.packages||[];more=next<packs.length}catch(e){}
+ markInternalNavigation();
+ location.href=more?`assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}`:`participant-dashboard.html?completed=true`;
+}
+document.getElementById('confirm').addEventListener('change',e=>document.getElementById('start').disabled=!e.target.checked);
+document.getElementById('start').addEventListener('click',startQuiz);
+document.getElementById('prev').addEventListener('click',()=>go(current-1));
+document.getElementById('next').addEventListener('click',()=>go(current+1));
+document.getElementById('submit').addEventListener('click',requestSubmit);
+document.getElementById('cancelSubmit').addEventListener('click',()=>document.getElementById('modal').classList.remove('show'));
+document.getElementById('confirmSubmit').addEventListener('click',()=>finalize(false));
+document.getElementById('nextTest').addEventListener('click',nextTest);
+document.getElementById('back').addEventListener('click',e=>{
+ e.preventDefault();
+ markInternalNavigation();
+ location.href='participant-dashboard.html';
+});
+loadMeta();
+
+/* ==========================================================
+   TALENTSCOPE PARTICIPANT PRESENCE & ASSESSMENT SYNC
+   FULL FIX:
+   - Sinkron ke talentscope_projects (Database Peserta)
+   - Sinkron legacy projects (kompatibilitas Monitoring lama)
+   - Status assessment + activity log direkam langsung
+========================================================== */
+
+const HEARTBEAT_INTERVAL = 5000;
+
+function findProjectIndex(projects) {
+    return projects.findIndex(project => {
+        const ids = [
+            project?.id,
+            project?.projectId,
+            project?.projectID,
+            project?.project_id
+        ].filter(v => v !== undefined && v !== null && v !== "");
+        return ids.some(id => String(id) === String(projectId));
+    });
+}
+
+function findParticipantIndex(participants) {
+    return participants.findIndex(person => {
+        const ids = [
+            person?.id,
+            person?.participantId,
+            person?.participantID,
+            person?.employeeId,
+            person?.employee_id
+        ].filter(v => v !== undefined && v !== null && v !== "");
+        return ids.some(id => String(id) === String(participantId));
+    });
+}
+
+function updateStore(storeKey, status, activity, historyText, historyType, forceHistory) {
+    try {
+        const projects = JSON.parse(localStorage.getItem(storeKey) || "[]");
+        if (!Array.isArray(projects) || !projects.length) return false;
+
+        const projectIndex = findProjectIndex(projects);
+        if (projectIndex < 0) return false;
+
+        const project = projects[projectIndex];
+        if (!Array.isArray(project.participants)) return false;
+
+        const participantIndex = findParticipantIndex(project.participants);
+        if (participantIndex < 0) return false;
+
+        const participant = project.participants[participantIndex];
+        const now = new Date().toISOString();
+
+        // Presence
+        participant.isLoggedIn = true;
+        participant.onlineStatus = "online";
+        participant.lastSeen = now;
+        participant.lastSeenAt = now;
+        participant.lastHeartbeat = now;
+
+        // Jangan reset waktu login setiap heartbeat.
+        if (!participant.loginTime) participant.loginTime = now;
+        if (!participant.loggedInAt) participant.loggedInAt = participant.loginTime;
+        if (!participant.loginAt) participant.loginAt = participant.loginTime;
+        if (!participant.lastLoginAt) participant.lastLoginAt = participant.loginTime;
+
+        // Assessment status - simpan seluruh alias agar Database lama/baru terbaca.
+        if (status) {
+            participant.assessmentStatus = status;
+            participant.statusAsesmen = status;
+            participant.assessment_status = status;
+            participant.status = status;
+        }
+
+        if (activity) {
+            participant.currentActivity = activity;
+            participant.currentTest = "DISC Personality";
+            participant.activity = activity;
+            participant.lastActivity = activity;
+            participant.activityUpdatedAt = now;
+        }
+
+        participant.disconnectDetectedAt = null;
+
+        // Tambah history hanya untuk event penting, bukan setiap heartbeat.
+        if (forceHistory && historyText) {
+            if (!Array.isArray(participant.activityHistory)) {
+                participant.activityHistory = [];
+            }
+
+            const duplicate = participant.activityHistory.some(item =>
+                String(item?.type || "") === String(historyType || "") &&
+                String(item?.activity || item?.description || "") === String(historyText)
+            );
+
+            if (!duplicate) {
+                participant.activityHistory.unshift({
+                    activity: historyText,
+                    description: historyText,
+                    type: historyType || "assessment",
+                    timestamp: now
+                });
+            }
+        }
+
+        project.participants[participantIndex] = participant;
+        projects[projectIndex] = project;
+        localStorage.setItem(storeKey, JSON.stringify(projects));
+        return true;
+
+    } catch (error) {
+        console.warn("Gagal sinkronisasi ke " + storeKey + ":", error);
+        return false;
+    }
+}
+
+function updateParticipantAssessmentStatus(status, activity, historyText, historyType) {
+    // Database Peserta memakai talentscope_projects sebagai sumber utama.
+    const primary = updateStore(
+        "talentscope_projects",
+        status,
+        activity,
+        historyText,
+        historyType,
+        true
+    );
+
+    // Legacy compatibility untuk halaman lama.
+    updateStore(
+        "projects",
+        status,
+        activity,
+        historyText,
+        historyType,
+        false
+    );
+
+    return primary;
+}
+
+function updateParticipantHeartbeat() {
+    // Saat halaman DISC terbuka tetapi belum mulai:
+    // peserta tetap online, tetapi status assessment belum dipaksa Ongoing.
+    // Setelah tombol Kerjakan Tes ditekan, startQuiz mengubah menjadi Ongoing.
+    updateStore(
+        "talentscope_projects",
+        null,
+        null,
+        null,
+        null,
+        false
+    );
+
+    updateStore(
+        "projects",
+        null,
+        null,
+        null,
+        null,
+        false
+    );
+}
+
+/* ==========================================================
+   SESSION / LOGOUT CONTROL
+   Prinsip:
+   1. Selesai assessment TIDAK berarti logout.
+   2. Pindah ke tes berikutnya/dashboard TIDAK berarti logout.
+   3. Logout hanya dicatat saat tombol Logout atau tab/window benar-benar ditutup.
+========================================================== */
+
+const NAVIGATION_FLAG = `talentscope_internal_navigation_${projectId}_${participantId}`;
+
+function markInternalNavigation() {
+    try {
+        sessionStorage.setItem(NAVIGATION_FLAG, "1");
+    } catch (error) {}
+}
+
+function consumeInternalNavigation() {
+    try {
+        const value = sessionStorage.getItem(NAVIGATION_FLAG) === "1";
+        sessionStorage.removeItem(NAVIGATION_FLAG);
+        return value;
+    } catch (error) {
+        return false;
+    }
+}
+
+function setParticipantOffline(storeKey, reason, historyText) {
+    try {
+        const projects = JSON.parse(localStorage.getItem(storeKey) || "[]");
+        if (!Array.isArray(projects)) return false;
+
+        const projectIndex = findProjectIndex(projects);
+        if (projectIndex < 0) return false;
+
+        const project = projects[projectIndex];
+        if (!Array.isArray(project.participants)) return false;
+
+        const participantIndex = findParticipantIndex(project.participants);
+        if (participantIndex < 0) return false;
+
+        const participant = project.participants[participantIndex];
+        const now = new Date().toISOString();
+
+        participant.isLoggedIn = false;
+        participant.onlineStatus = "offline";
+        participant.lastSeen = now;
+        participant.lastSeenAt = now;
+        participant.logoutTime = now;
+        participant.loggedOutAt = now;
+        participant.logoutAt = now;
+        participant.lastLogoutAt = now;
+        participant.currentActivity = "Offline";
+        participant.activity = "Offline";
+        participant.lastActivity = "Offline";
+        participant.disconnectReason = reason || "logout";
+
+        if (historyText) {
+            if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+
+            const recentDuplicate = participant.activityHistory.some(item =>
+                String(item?.type || "") === "logout" &&
+                String(item?.activity || item?.description || "") === String(historyText) &&
+                Math.abs(new Date(item?.timestamp || 0).getTime() - new Date(now).getTime()) < 10000
+            );
+
+            if (!recentDuplicate) {
+                participant.activityHistory.unshift({
+                    activity: historyText,
+                    description: historyText,
+                    type: "logout",
+                    timestamp: now
+                });
+            }
+        }
+
+        project.participants[participantIndex] = participant;
+        projects[projectIndex] = project;
+        localStorage.setItem(storeKey, JSON.stringify(projects));
+        return true;
+    } catch (error) {
+        console.warn("Gagal mencatat logout pada " + storeKey + ":", error);
+        return false;
+    }
+}
+
+function recordParticipantLogout(reason, historyText) {
+    // Jangan mengubah assessmentStatus.
+    // Jika DISC sudah Completed, status Completed tetap tersimpan.
+    setParticipantOffline(
+        "talentscope_projects",
+        reason,
+        historyText || "Peserta logout / menutup sesi"
+    );
+
+    setParticipantOffline(
+        "projects",
+        reason,
+        null
+    );
+}
+
+function handleExplicitLogout() {
+    recordParticipantLogout(
+        "manual-logout",
+        "Peserta logout dari sistem"
+    );
+}
+
+// Reset flag jika halaman berhasil dimuat setelah perpindahan internal.
+consumeInternalNavigation();
+
+// Tangkap tombol logout bila tombol tersebut tersedia pada halaman ini.
+document.addEventListener("click", function(event) {
+    const button = event.target.closest(
+        '[data-action="logout"], #logout, #logoutBtn, .logout-btn, .btn-logout'
+    );
+    if (button) handleExplicitLogout();
+});
+
+// pagehide digunakan untuk close tab/window.
+// Pindah ke tes lain atau dashboard tidak dicatat sebagai logout karena
+// sebelumnya sudah diberi markInternalNavigation().
+window.addEventListener("pagehide", function(event) {
+    if (event.persisted) return;
+
+    let internalNavigation = false;
+    try {
+        internalNavigation = sessionStorage.getItem(NAVIGATION_FLAG) === "1";
+    } catch (error) {}
+
+    if (!internalNavigation) {
+        recordParticipantLogout(
+            "tab-window-closed",
+            "Peserta keluar / menutup tab atau window"
+        );
+    }
+});
+
+/* ==========================================================
+   INITIALIZE
+========================================================== */
+
+// Catat peserta sedang membuka halaman DISC.
+updateParticipantAssessmentStatus(
+    "Ongoing",
+    "Sedang berada pada halaman tes (DISC Personality)",
+    "Membuka halaman tes DISC Personality",
+    "test-open"
+);
+
+// Heartbeat setiap 5 detik.
+updateParticipantHeartbeat();
+
+const participantHeartbeatInterval = setInterval(
+    updateParticipantHeartbeat,
+    HEARTBEAT_INTERVAL
+);
+</script></body></html>

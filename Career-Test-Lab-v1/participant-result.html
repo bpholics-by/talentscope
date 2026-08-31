@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Participant Test Results | TalentScope</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/participant-result.css">
+<link rel="stylesheet" href="css/participant-result-premium.css">
+
+    <!-- Override khusus halaman Participant Test Results.
+         Dimuat terakhir agar fungsi/style existing tetap dapat digunakan. -->
+    <link rel="stylesheet" href="css/participant-result.css">
+</head>
+
+<style>
+/* ==========================================================
+   PARTICIPANT RESULT HEADER
+========================================================== */
+
+.header {
+    height: 118px;
+    min-height: 118px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border-bottom: 1px solid #dbe5f1;
+    box-sizing: border-box;
+}
+
+.header-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.header-page .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    line-height: 1;
+    color: #8ba0b8;
+}
+
+.header-page .breadcrumb i {
+    font-size: 8px;
+}
+
+.header-page .breadcrumb strong {
+    color: #0066d6;
+    font-weight: 600;
+}
+
+.header-page h1 {
+    margin: 0;
+    font-size: 29px;
+    line-height: 1.15;
+    font-weight: 700;
+    color: #073b70;
+}
+
+.header-page p {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #7890aa;
+}
+
+.header-user {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 30px;
+}
+
+.header-user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #edf6ff;
+    border: 1px solid #cfe4fa;
+    color: #0066d6;
+    font-size: 17px;
+}
+
+.header-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 100px;
+}
+
+.header-user-info strong {
+    font-size: 14px;
+    line-height: 1.2;
+    color: #082f5c;
+    font-weight: 700;
+}
+
+.header-user-info span {
+    font-size: 11px;
+    line-height: 1.2;
+    color: #7f94aa;
+}
+
+/* Sidebar Layout (Lebar 270px) */
+.sidebar {
+  width: 270px; /* Diubah menjadi 270px sesuai permintaan */
+  min-height: 100vh;
+  background-color: #0d6efd;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 18px;
+  box-sizing: border-box;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+/* Brand Header */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding-left: 2px;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  background: #ffffff;
+  color: #0d6efd;
+  font-weight: 800;
+  font-size: 19px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-name {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.brand-sub {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+/* Card Container */
+.sidebar-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 20px 18px;
+}
+
+/* Icon Box Di Dalam Card */
+.card-icon {
+  width: 38px;
+  height: 38px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 17px;
+  margin-bottom: 14px;
+}
+
+/* Judul Card */
+.card-title {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 7px 0;
+  line-height: 1.2;
+}
+
+/* Deskripsi Teks Card */
+.card-desc {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0 0 16px 0;
+  font-weight: 400;
+}
+
+/* Status Indicator Active */
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 12px;
+}
+
+.status-dot {
+  width: 7.5px;
+  height: 7.5px;
+  background-color: #00e676;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00e676;
+}
+
+.status-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* Tombol Logout */
+.sidebar-footer {
+  margin-top: auto;
+  padding-bottom: 6px;
+}
+
+.btn-logout {
+  width: 100%;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 11px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+}
+
+/* Margin Konten Utama Sesuaikan 270px */
+.main-content {
+  margin-left: 270px;
+}
+</style>
+
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">TS</div>
+    <div class="brand-text">
+      <div class="brand-name">TalentScope</div>
+      <div class="brand-sub">Enterprise v1.0</div>
+    </div>
+  </div>
+
+  <div class="sidebar-card">
+    <div class="card-icon">
+      <i class="fa-solid fa-chart-line"></i>
+    </div>
+    <h3 class="card-title">Participant Results</h3>
+    <p class="card-desc">View individual and combined assessment results for project participants.</p>
+    <div class="card-status">
+      <span class="status-dot"></span>
+      <span class="status-text">Results Module Active</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" id="logoutBtn">
+      <i class="fa-solid fa-right-from-bracket"></i>
+      <span>Logout</span>
+    </button>
+  </div>
+</aside>
+
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <header class="header">
+
+    <div class="header-page">
+
+        <div class="breadcrumb">
+            <span>Participant Portal</span>
+            <i class="fa-solid fa-chevron-right"></i>
+            <strong>Test Result</strong>
+        </div>
+
+        <h1>
+            Participant Test Results
+        </h1>
+
+        <p>
+            View individual and combined assessment results
+        </p>
+
+    </div>
+
+
+    <div class="header-user">
+
+        <div class="header-user-avatar">
+            <i class="fa-solid fa-user"></i>
+        </div>
+
+        <div class="header-user-info">
+            <strong>Administrator</strong>
+            <span>Admin</span>
+        </div>
+
+    </div>
+
+</header>
+
+
+        <main class="content">
+
+            
+
+            </section>
+
+
+            <!-- PARTICIPANT RESULT CARD -->
+            <section class="result-card participant-result-card">
+
+                <div class="result-card-header">
+
+                    <div class="participant-summary">
+
+                        <span class="result-label">Participant</span>
+
+                        <h2 id="participantName">-</h2>
+
+                    </div>
+
+
+                    <div class="summary-item">
+
+                        <span class="result-label">Project</span>
+
+                        <h3 id="projectName">-</h3>
+
+                    </div>
+
+
+                    <div class="summary-item">
+
+                        <span class="result-label">Assessment Date</span>
+
+                        <h3 id="assessmentDate">-</h3>
+
+                    </div>
+
+                </div>
+
+
+                <div class="result-card-divider"></div>
+
+
+                <!-- TEST LIST -->
+                <div class="test-results">
+
+                    <div class="section-heading">
+
+                        <div>
+                            <h3>Assessment Tests</h3>
+
+                            <p>
+                                Select a test to view its detailed result.
+                            </p>
+                        </div>
+
+                        <div class="section-heading-icon">
+                            <i class="fa-solid fa-clipboard-check"></i>
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="test-list"
+                        id="testList"
+                    >
+                        <!-- Test akan diisi oleh participant-result.js -->
+                    </div>
+
+
+                    <!-- COMBINED RESULT -->
+                    <div class="combined-result">
+
+                        <button
+                            class="combined-result-btn"
+                            type="button"
+                            id="combinedResultBtn"
+                        >
+                            <i class="fa-solid fa-file-pdf"></i>
+                            View Combined Result
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<script src="js/app.js"></script>
+<script src="js/participant-result.js"></script>
+<script src="js/papikostik.js"></script>
+<script src="js/disc.js"></script>
+<script src="js/test-result.js"></script>
+
+
+
+<script>
+    // Logout tetap kompatibel dengan halaman lama bila app.js menyediakan handler.
+    document.getElementById("logoutBtn")?.addEventListener("click", function () {
+        if (typeof window.logout === "function") {
+            window.logout();
+            return;
+        }
+
+        if (confirm("Logout dari TalentScope?")) {
+            window.location.href = "login.html";
+        }
+    });
+</script>
+
+</body>
+</html>

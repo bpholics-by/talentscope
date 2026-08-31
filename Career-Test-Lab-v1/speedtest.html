@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAP Assessment</title>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--blue2:#1d4ed8;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}.hidden{display:none!important}
+header{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:20}
+.back{color:#334155;text-decoration:none;font-weight:750;font-size:14px;display:flex;align-items:center;gap:8px}.back:hover{color:var(--blue)}
+.timer-wrap{text-align:right}.timer-wrap small{display:block;color:#94a3b8;font-size:9px;font-weight:800;letter-spacing:1.5px}.timer{font-weight:900;font-size:19px;color:var(--blue);font-variant-numeric:tabular-nums}
+main{max-width:1120px;margin:auto;padding:30px 20px 55px}
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:42px 44px;background:linear-gradient(135deg,#172554 0%,#1d4ed8 52%,#4338ca 100%);color:#fff;box-shadow:0 18px 45px #0f172a20}
+.hero:before,.hero:after{content:"";position:absolute;border:1px solid #ffffff22;border-radius:50%}.hero:before{width:260px;height:260px;right:-60px;top:-130px}.hero:after{width:330px;height:330px;right:110px;bottom:-275px}
+.pill{display:inline-flex;border:1px solid #ffffff35;background:#ffffff14;border-radius:999px;padding:7px 12px;font-size:10px;font-weight:850;letter-spacing:1.8px;position:relative;z-index:1}
+.hero h1{font-size:46px;line-height:1;margin:19px 0 10px;font-weight:950;letter-spacing:-1.5px;position:relative;z-index:1}
+.hero p{max-width:720px;line-height:1.65;color:#dbeafe;margin:0;position:relative;z-index:1}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.meta{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 5px 20px #0f172a08}
+.meta .k{font-size:10px;font-weight:850;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.meta .icon-box{width:30px;height:30px;border-radius:10px;background:#eff6ff;color:#2563eb;display:grid;place-items:center;flex:0 0 30px}
+.meta .icon-box svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.meta .v{font-size:16px;font-weight:850;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prep{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:24px;padding:27px;box-shadow:0 8px 28px #0f172a08}
+.prep-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.eyebrow{font-size:10px;font-weight:900;letter-spacing:1.7px;color:var(--blue)}
+.prep h2{margin:6px 0 6px;font-size:24px}.prep-head p{margin:0;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:9px;flex-wrap:wrap}.stat{min-width:105px;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}.stat strong{display:block;font-size:18px}.stat span{font-size:10px;color:var(--muted);font-weight:750}
+.steps{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:22px}
+.step{display:flex;gap:13px;padding:16px;border:1px solid var(--line);background:#fbfdff;border-radius:16px}.step-no{width:30px;height:30px;border-radius:10px;background:#eff6ff;color:var(--blue);display:grid;place-items:center;font-size:12px;font-weight:900;flex:0 0 30px}
+.step b{font-size:13px}.step p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+.confirm{margin-top:19px;padding:16px;border-radius:15px;background:#f8fafc;border:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}.confirm input{margin-top:3px;width:17px;height:17px;accent-color:var(--blue)}.confirm label{margin:0;font-size:13px;font-weight:700;color:#334155;cursor:pointer}
+.start-row{margin-top:16px;display:flex;justify-content:flex-end}.btn{border:0;border-radius:12px;padding:13px 19px;font-weight:850;cursor:pointer}.primary{background:var(--blue);color:#fff}.primary:hover{background:var(--blue2)}.primary:disabled{background:#cbd5e1;color:#94a3b8;cursor:not-allowed}
+.security{margin-top:13px;text-align:center;color:#64748b;font-size:11px;display:flex;justify-content:center;align-items:center;gap:8px}
+.shield{width:22px;height:22px;border-radius:7px;background:#eff6ff;color:var(--blue);display:grid;place-items:center;flex:0 0 22px}
+.shield svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.test{max-width:800px;margin:auto}.test-head{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 21px}
+.session-name{font-weight:900;font-size:18px}.session-num{font-size:9px;font-weight:900;letter-spacing:1.5px;color:var(--blue);margin-bottom:4px}
+.session-time{text-align:right}.session-time small{display:block;font-size:9px;color:#94a3b8}.session-time strong{font-size:21px;color:#334155;font-variant-numeric:tabular-nums}
+.stimulus-box{margin-top:16px;background:#020617;border-radius:25px;min-height:350px;display:flex;align-items:center;justify-content:center;padding:38px}.stimulus{color:#fff;font-size:68px;font-weight:950;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:center;letter-spacing:4px;line-height:1.35}.hint{text-align:center;color:#94a3b8;font-size:12px;margin-bottom:23px}
+.controls{max-width:500px;margin:16px auto 0;display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.controls button{border:0;border-radius:13px;background:#0f172a;color:#fff;padding:16px 5px;font-size:20px;font-weight:900;cursor:pointer}.controls button:hover{background:#2563eb}.letters{grid-template-columns:1fr 1fr}.letters button{padding:19px}.same{background:#2563eb!important}.different{background:#f59e0b!important}
+.break{max-width:600px;margin:70px auto;text-align:center}.break .card{padding:45px}.check{font-size:52px;color:#16a34a}.card,.result-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+.results h2{margin:0}.score-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}.score-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px}.score-card small{color:#64748b;font-weight:700}.score{font-size:31px;font-weight:950;margin-top:7px}.bar{height:7px;background:#e2e8f0;border-radius:99px;margin-top:12px;overflow:hidden}.bar i{display:block;height:100%;background:#2563eb}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}canvas{width:100%!important;max-height:330px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:left}th{background:#f8fafc;color:#64748b}.interpret{display:grid;gap:9px}.interpret div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;line-height:1.55}
+@media(max-width:750px){header{padding:0 15px}.meta-grid,.result-grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.prep-head{display:block}.stats{margin-top:16px}.hero{padding:30px}.hero h1{font-size:38px}.stimulus{font-size:48px}.stimulus-box{min-height:300px;padding:24px}}
+@media(max-width:450px){.score-grid{grid-template-columns:1fr}.controls{gap:7px}.controls button{padding:14px 3px}}
+
+/* Psychometric assessor report redesign */
+.executive-report,.dimension-categories{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.exec-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 5px 20px #0f172a08}
+.verdict-badge{display:inline-block;padding:8px 13px;border-radius:999px;font-weight:900;font-size:13px}
+.verdict-fit{background:#dcfce7;color:#166534}.verdict-reservation{background:#fef3c7;color:#92400e}.verdict-review{background:#fee2e2;color:#991b1b}
+.job-match{display:grid;gap:12px;margin-top:14px}.match-item{border:1px solid var(--line);border-radius:14px;padding:13px;background:#fbfdff}.match-head{display:flex;justify-content:space-between;gap:10px;font-size:13px}.match-bar{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}.match-bar i{display:block;height:100%;background:var(--blue)}
+.dimension-categories{margin-top:18px}.dim-row{padding:11px 0;border-bottom:1px solid var(--line)}.dim-row:last-child{border-bottom:0}.dim-head{display:flex;justify-content:space-between;font-size:13px;font-weight:850}.dim-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.norm-note{font-size:11px;color:var(--muted);line-height:1.5}.anomaly{margin-top:8px;padding:11px 13px;background:#fffbeb;border-left:4px solid #d97706;border-radius:8px;font-size:12px}.anomaly-ok{margin-top:8px;padding:11px 13px;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:8px;font-size:12px}
+.bei-guide{display:grid;gap:10px}.bei-q{padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:12px;font-size:13px;line-height:1.6}
+@media(max-width:750px){.executive-report,.dimension-categories{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="#" onclick="backToDashboard(event)">← Kembali ke Dashboard</a>
+  <div class="timer-wrap"><small>TOTAL ASSESSMENT</small><div id="globalTimer" class="timer">60:00</div></div>
+</header>
+<main>
+<section id="intro">
+  <div class="hero"><span class="pill">TALENTSCOPE ENTERPRISE • ASSESSMENT</span><h1>VAP</h1><p>Work Performance &amp; Sustained Attention Assessment</p></div>
+  <div class="meta-grid">
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.2 3.1-5 7-5s6.3 1.8 7 5"></path></svg></span>Peserta</div><div class="v" id="participantName">-</div></div>
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"></rect><path d="M8 6V4h8v2M3 10h18"></path></svg></span>Proyek</div><div class="v" id="projectName">-</div></div>
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>Tanggal</div><div class="v" id="assessmentDate">-</div></div>
+  </div>
+  <div class="prep">
+    <div class="prep-head"><div><div class="eyebrow">PERSIAPAN TES</div><h2>Siap untuk memulai assessment?</h2><p>Pastikan Anda berada di tempat yang tenang dan dapat menyelesaikan seluruh assessment tanpa gangguan.</p></div>
+      <div class="stats"><div class="stat"><strong>2</strong><span>Sesi</span></div><div class="stat"><strong>60</strong><span>Menit</span></div><div class="stat"><strong>30 + 30</strong><span>Menit</span></div></div></div>
+    <div class="steps">
+      <div class="step"><div class="step-no">01</div><div><b>Kerjakan secepat dan seteliti mungkin</b><p>Respons setiap stimulus sesuai instruksi dan jangan menunda pilihan jawaban.</p></div></div>
+      <div class="step"><div class="step-no">02</div><div><b>Pilih satu jawaban</b><p>Setiap stimulus hanya memiliki satu respons yang dapat dipilih.</p></div></div>
+      <div class="step"><div class="step-no">03</div><div><b>Stimulus berganti otomatis</b><p>Jika response window habis, stimulus akan berganti secara otomatis.</p></div></div>
+      <div class="step"><div class="step-no">04</div><div><b>Jangan memuat ulang halaman</b><p>Biarkan halaman tetap terbuka sampai seluruh assessment selesai.</p></div></div>
+    </div>
+    <div class="confirm"><input id="confirmRead" type="checkbox" onchange="toggleStart()"><label for="confirmRead">Saya telah membaca dan memahami seluruh petunjuk tes</label></div>
+    <div class="start-row"><button id="startBtn" class="btn primary" onclick="begin()" disabled>Kerjakan Tes →</button></div>
+    <div class="security"><span class="shield"><svg viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.3c0 4.4-2.7 7.8-7 9.2-4.3-1.4-7-4.8-7-9.2V6l7-2.5Z"></path><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg></span><b>Jawaban Anda tersimpan otomatis selama pengerjaan.</b></div>
+  </div>
+</section>
+<section id="test" class="hidden test">
+  <div class="test-head"><div><div id="sessionNum" class="session-num">SESSION 1</div><div id="sessionName" class="session-name">Numerical Work Performance</div></div><div class="session-time"><small>SISA WAKTU SESI</small><strong id="sessionTimer">30:00</strong></div></div>
+  <div class="stimulus-box"><div><div id="hint" class="hint">Hitung dan pilih digit terakhir hasil penjumlahan</div><div id="stimulus" class="stimulus"></div></div></div>
+  <div id="numericControls" class="controls"></div><div id="letterControls" class="controls letters hidden"><button class="same" onclick="answer('S')">SAMA</button><button class="different" onclick="answer('B')">BERBEDA</button></div>
+</section>
+<section id="break" class="hidden break"><div class="card"><div class="check">✓</div><h2>Session 1 Selesai</h2><p>Silakan beristirahat sejenak sebelum melanjutkan.</p><button class="btn primary" onclick="startSession(2)">Mulai Session 2</button></div></section>
+<section id="results" class="hidden results">
+  <div class="card">
+    <small>VAP REPORT</small>
+    <h2>Work Performance Profile</h2>
+    <p id="reportParticipant"></p>
+    <button class="btn" onclick="exportJSON()">Export Raw Data</button>
+  </div>
+
+  <div class="executive-report" style="margin-top:18px">
+    <div class="exec-card">
+      <div class="eyebrow">EXECUTIVE SUMMARY</div>
+      <h3 id="verdictTitle">-</h3>
+      <span id="verdictBadge" class="verdict-badge">-</span>
+      <div id="executiveNarrative" class="interpret" style="margin-top:14px"></div>
+    </div>
+    <div class="exec-card">
+      <div class="eyebrow">JOB MATCH INDICATOR</div>
+      <div id="jobMatch" class="job-match"></div>
+      <p class="norm-note">Indikator kesesuaian peran bersifat decision-support dan perlu diinterpretasikan bersama data asesmen lain.</p>
+    </div>
+  </div>
+
+  <div class="dimension-categories">
+    <div class="result-card"><h3>Kapasitas Output (Quantity)</h3><div id="quantityDimensions"></div></div>
+    <div class="result-card"><h3>Kualitas &amp; Stabilitas (Quality)</h3><div id="qualityDimensions"></div></div>
+  </div>
+
+  <div class="result-grid">
+    <div class="result-card">
+      <h3>Performance Trend</h3>
+      <canvas id="trend"></canvas>
+      <div id="anomalies"></div>
+    </div>
+    <div class="result-card">
+      <h3>Dimension Profile</h3>
+      <canvas id="radar"></canvas>
+      <p class="norm-note">Area transparan menunjukkan benchmark referensi 50 sebagai titik pembanding visual, bukan norma populasi final.</p>
+    </div>
+  </div>
+
+  <div class="result-card" style="margin-top:18px">
+    <h3>Behavioral Interpretation</h3>
+    <div id="interpret" class="interpret"></div>
+  </div>
+
+  <div class="result-card" style="margin-top:18px">
+    <h3>Session Summary</h3>
+    <div style="overflow:auto;margin-top:10px">
+      <table>
+        <thead><tr><th>Session</th><th>Correct</th><th>Wrong</th><th>Missed</th><th>Accuracy</th><th>Median RT</th></tr></thead>
+        <tbody id="summary"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <details class="result-card" style="margin-top:18px">
+    <summary><b>Detail Jawaban &amp; Kunci Jawaban</b></summary>
+    <div style="overflow:auto;margin-top:12px">
+      <table>
+        <thead><tr><th>No</th><th>Sesi</th><th>Block</th><th>Stimulus</th><th>Jawaban</th><th>Kunci</th><th>Status</th><th>RT</th></tr></thead>
+        <tbody id="log"></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+</main>
+<script>
+/* =========================================================
+   VAP TEST MODE
+   true  = durasi singkat untuk testing
+   false = durasi normal untuk production
+========================================================= */
+
+const TEST_MODE = true;
+
+
+const CFG = {
+
+    // Durasi per sesi
+    sessionSeconds: TEST_MODE ? 60 : 1800,
+
+    // Total durasi dua sesi
+    totalSeconds: TEST_MODE ? 120 : 3600,
+
+    // Waktu maksimal menjawab setiap item
+    itemWindowMs: 3000,
+
+    // Jumlah blok analisis
+    blocks: 6
+};
+
+
+let participant = {
+        name: "",
+        id: "",
+        project: "",
+        date: ""
+    },
+    currentSession = 1,
+    sessionRemaining = CFG.sessionSeconds,
+    totalRemaining = CFG.totalSeconds,
+    sessionTimer = null,
+    itemTimeout = null,
+    currentTrial = null;
+const sessions={1:{trials:[],startedAt:null,endedAt:null},2:{trials:[],startedAt:null,endedAt:null}};
+function el(id){return document.getElementById(id)} function fmt(sec){sec=Math.max(0,Math.ceil(sec));return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")} function clamp(x,a=0,b=100){return Math.max(a,Math.min(b,x))} function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+
+function getAssessmentIdentity(){
+  const params = new URLSearchParams(location.search);
+  let session = {};
+  try { session = JSON.parse(sessionStorage.getItem("ts_participant_session") || "{}"); } catch(e) {}
+  const projectId = String(
+    params.get("projectId") || params.get("project") ||
+    session.projectId || session.project_id || ""
+  ).trim();
+  const participantId = String(
+    params.get("participantId") || params.get("participant") ||
+    session.participantId || session.employeeId || session.id || ""
+  ).trim();
+  return {projectId, participantId};
+}
+
+function getAssessmentDisplayName(){
+  const params = new URLSearchParams(location.search);
+  const ctx = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object")
+    ? window.TALENTSCOPE_CONTEXT : {};
+  return String(
+    params.get("assessmentName") ||
+    params.get("testName") ||
+    ctx.assessmentName ||
+    ctx.assessment_name ||
+    ctx.testName ||
+    ctx.test_name ||
+    ctx.assessmentTitle ||
+    ctx.testTitle ||
+    "VAP"
+  ).trim() || "VAP";
+}
+
+function syncAssessmentActivity(activity, historyType){
+  const ids = getAssessmentIdentity();
+  if(!ids.projectId || !ids.participantId) return;
+
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return;
+
+    const now = new Date().toISOString();
+    let changed = false;
+
+    projects.forEach(project=>{
+      const pid = String(project?.id || project?.projectId || project?.project_id || "").trim();
+      if(pid !== ids.projectId) return;
+
+      const participants = Array.isArray(project.participants) ? project.participants : [];
+      participants.forEach(p=>{
+        const id = String(
+          p?.id || p?.participantId || p?.employeeId || p?.employee_id || ""
+        ).trim();
+        if(id !== ids.participantId) return;
+
+        const testName = getAssessmentDisplayName();
+        p.currentActivity = activity;
+        p.activity = activity;
+        p.currentTest = testName;
+        p.testActivity = activity;
+        p.lastActivity = activity;
+        p.activityUpdatedAt = now;
+
+        // Update heartbeat peserta agar monitoring tetap mendeteksi Online
+p.lastSeenAt = now;
+p.lastSeen = now;
+p.isLoggedIn = true;
+p.status = "Online";
+p.onlineStatus = "Online";
+
+        if(historyType){
+          if(!Array.isArray(p.activityHistory)) p.activityHistory = [];
+          p.activityHistory.push({
+            type: historyType,
+            activity: activity,
+            testName: testName,
+            assessmentName: testName,
+            projectId: ids.projectId,
+            participantId: ids.participantId,
+            description: activity,
+            timestamp: now,
+            time: now
+          });
+        }
+
+        changed = true;
+      });
+    });
+
+    if(changed){
+      localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+    }
+  }catch(e){
+    console.warn("Assessment activity sync gagal:", e);
+  }
+}
+
+
+/* ==========================================================
+   AUTO LOGOUT SAAT TAB / WINDOW / HALAMAN DITINGGALKAN
+   - pagehide = event utama
+   - beforeunload = fallback
+   - navigasi internal diberi flag agar tidak dianggap logout
+========================================================== */
+
+let assessmentLogoutRecorded = false;
+
+function recordAssessmentLogout(reason) {
+
+    if (assessmentLogoutRecorded) {
+        return;
+    }
+
+    /*
+     * Jangan catat logout bila peserta hanya berpindah
+     * ke assessment berikutnya / dashboard melalui navigasi
+     * internal yang memang kita kendalikan.
+     */
+    const internalNavigation =
+        sessionStorage.getItem(
+            "ts_internal_assessment_navigation"
+        );
+
+    if (internalNavigation === "true") {
+
+        sessionStorage.removeItem(
+            "ts_internal_assessment_navigation"
+        );
+
+        return;
+    }
+
+    assessmentLogoutRecorded = true;
+
+    const ids = getAssessmentIdentity();
+
+    if (!ids.projectId || !ids.participantId) {
+        return;
+    }
+
+    try {
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        if (!Array.isArray(projects)) {
+            return;
+        }
+
+        const now =
+            new Date().toISOString();
+
+        const testName =
+            getAssessmentDisplayName();
+
+        const activity =
+            "Logout ke Portal Peserta";
+
+        projects.forEach(project => {
+
+            const projectId =
+                String(
+                    project?.id ||
+                    project?.projectId ||
+                    project?.project_id ||
+                    ""
+                ).trim();
+
+            if (
+                projectId !==
+                ids.projectId
+            ) {
+                return;
+            }
+
+            const participants =
+                Array.isArray(
+                    project.participants
+                )
+                    ? project.participants
+                    : [];
+
+            participants.forEach(participant => {
+
+                const participantId =
+                    String(
+                        participant?.id ||
+                        participant?.participantId ||
+                        participant?.employeeId ||
+                        participant?.employee_id ||
+                        ""
+                    ).trim();
+
+                if (
+                    participantId !==
+                    ids.participantId
+                ) {
+                    return;
+                }
+
+
+                /*
+                 * ==========================================
+                 * WAKTU LOGOUT TERAKHIR
+                 * ==========================================
+                 */
+
+                participant.logoutTime =
+                    now;
+
+                participant.loggedOutAt =
+                    now;
+
+                participant.logoutAt =
+                    now;
+
+                participant.timeLogout =
+                    now;
+
+
+                /*
+                 * ==========================================
+                 * STATUS PRESENCE
+                 * ==========================================
+                 */
+
+                participant.isLoggedIn =
+                    false;
+
+                participant.status =
+                    "Offline";
+
+                participant.onlineStatus =
+                    "Offline";
+
+
+                /*
+                 * ==========================================
+                 * AKTIVITAS TERAKHIR
+                 * ==========================================
+                 */
+
+                participant.currentActivity =
+                    activity;
+
+                participant.activity =
+                    activity;
+
+                participant.lastActivity =
+                    activity;
+
+                participant.activityUpdatedAt =
+                    now;
+
+
+                /*
+                 * currentTest TETAP DIPERTAHANKAN
+                 * agar monitoring tetap tahu assessment
+                 * terakhir yang dikerjakan.
+                 */
+
+
+                /*
+                 * ==========================================
+                 * ACTIVITY HISTORY
+                 * ==========================================
+                 */
+
+                if (
+                    !Array.isArray(
+                        participant.activityHistory
+                    )
+                ) {
+                    participant.activityHistory = [];
+                }
+
+                participant.activityHistory.push({
+
+                    type:
+                        "logout",
+
+                    activity:
+                        activity,
+
+                    title:
+                        activity,
+
+                    action:
+                        "Logout",
+
+                    reason:
+                        reason ||
+                        "tab-close",
+
+                    test:
+                        testName,
+
+                    testName:
+                        testName,
+
+                    assessmentName:
+                        testName,
+
+                    assessmentCode:
+                        "VAP",
+
+                    assessmentIndex:
+                        Number.isFinite(
+                            Number(
+                                new URLSearchParams(
+                                    location.search
+                                ).get(
+                                    "assessmentIndex"
+                                )
+                            )
+                        )
+                            ? Number(
+                                new URLSearchParams(
+                                    location.search
+                                ).get(
+                                    "assessmentIndex"
+                                )
+                            )
+                            : "",
+
+                    projectId:
+                        ids.projectId,
+
+                    participantId:
+                        ids.participantId,
+
+                    description:
+                        "Peserta meninggalkan halaman " +
+                        "assessment (" +
+                        testName +
+                        ").",
+
+                    timestamp:
+                        now,
+
+                    time:
+                        now
+
+                });
+
+            });
+
+        });
+
+
+        localStorage.setItem(
+            "talentscope_projects",
+            JSON.stringify(projects)
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "[VAP] Gagal mencatat auto logout:",
+            error
+        );
+
+    }
+
+}
+
+
+/*
+ * pagehide adalah event utama untuk tab/window ditutup.
+ */
+window.addEventListener(
+    "pagehide",
+    function () {
+
+        recordAssessmentLogout(
+            "pagehide"
+        );
+
+    }
+);
+
+
+/*
+ * beforeunload sebagai fallback.
+ * Flag mencegah duplikasi dengan pagehide.
+ */
+window.addEventListener(
+    "beforeunload",
+    function () {
+
+        recordAssessmentLogout(
+            "beforeunload"
+        );
+
+    }
+);
+
+
+function markAssessmentStarted(){
+  const name = getAssessmentDisplayName();
+  syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")", "test-start");
+}
+
+function markAssessmentSessionChange(sessionNumber){
+  const name = getAssessmentDisplayName();
+  syncAssessmentActivity(
+    "Sedang mengerjakan tes (" + name + ") — Sesi " + sessionNumber,
+    "test-session"
+  );
+}
+
+function markAssessmentFinished(){
+  const name = getAssessmentDisplayName();
+  syncAssessmentActivity("Tes selesai (" + name + ")", "test-complete");
+}
+
+function getContext() {
+
+    const params = new URLSearchParams(location.search);
+
+    /* =====================================================
+       AMBIL ID DARI URL
+    ===================================================== */
+
+    const participantId = String(
+        params.get("participantId") ||
+        params.get("id") ||
+        ""
+    ).trim();
+
+    const projectId = String(
+        params.get("projectId") ||
+        ""
+    ).trim();
+
+
+    /* =====================================================
+       CONTEXT FALLBACK
+    ===================================================== */
+
+    const context =
+        (
+            window.TALENTSCOPE_CONTEXT &&
+            typeof window.TALENTSCOPE_CONTEXT === "object"
+        )
+            ? window.TALENTSCOPE_CONTEXT
+            : {};
+
+
+    let storedContext = {};
+
+    try {
+
+        storedContext = JSON.parse(
+            localStorage.getItem("talentscope_context") || "{}"
+        );
+
+    } catch (e) {
+
+        storedContext = {};
+
+    }
+
+
+    /* =====================================================
+       DEFAULT DATA
+    ===================================================== */
+
+    let participantName = "";
+    let projectName = "";
+
+    let participantObject = null;
+    let projectObject = null;
+
+
+    /* =====================================================
+       CARI DATA RIIL DARI talentscope_projects
+    ===================================================== */
+
+    try {
+
+        const projects = JSON.parse(
+            localStorage.getItem("talentscope_projects") || "[]"
+        );
+
+
+        if (Array.isArray(projects)) {
+
+            projectObject = projects.find(function(project) {
+
+                const currentProjectId = String(
+                    project.id ||
+                    project.projectId ||
+                    project.project_id ||
+                    ""
+                ).trim();
+
+                return currentProjectId === projectId;
+
+            });
+
+
+            if (projectObject) {
+
+                /* =========================================
+                   NAMA PROJECT
+                ========================================= */
+
+                projectName = String(
+                    projectObject.name ||
+                    projectObject.projectName ||
+                    projectObject.project_name ||
+                    projectObject.title ||
+                    ""
+                ).trim();
+
+
+                /* =========================================
+                   CARI PESERTA DALAM PROJECT
+                ========================================= */
+
+                const participants = Array.isArray(
+                    projectObject.participants
+                )
+                    ? projectObject.participants
+                    : [];
+
+
+                participantObject = participants.find(
+                    function(participant) {
+
+                        const currentParticipantId = String(
+                            participant.id ||
+                            participant.participantId ||
+                            participant.employeeId ||
+                            participant.employee_id ||
+                            ""
+                        ).trim();
+
+                        return (
+                            currentParticipantId === participantId
+                        );
+
+                    }
+                );
+
+
+                if (participantObject) {
+
+                    participantName = String(
+                        participantObject.name ||
+                        participantObject.fullName ||
+                        participantObject.full_name ||
+                        participantObject.participantName ||
+                        ""
+                    ).trim();
+
+                }
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Gagal mengambil data peserta/project dari talentscope_projects:",
+            error
+        );
+
+    }
+
+
+    /* =====================================================
+       FALLBACK JIKA DATA BELUM DITEMUKAN
+    ===================================================== */
+
+    if (!participantName) {
+
+        const participantObj =
+            context.participant ||
+            context.candidate ||
+            context.user ||
+            storedContext.participant ||
+            storedContext.candidate ||
+            storedContext.user ||
+            {};
+
+
+        participantName = String(
+            params.get("participantName") ||
+            params.get("name") ||
+            context.participantName ||
+            context.participant_name ||
+            context.candidateName ||
+            participantObj.name ||
+            participantObj.fullName ||
+            storedContext.participantName ||
+            storedContext.name ||
+            ""
+        ).trim();
+
+    }
+
+
+    if (!projectName) {
+
+        const projectObj =
+            context.project ||
+            storedContext.project ||
+            {};
+
+
+        projectName = String(
+            params.get("projectName") ||
+            params.get("project") ||
+            context.projectName ||
+            context.project_name ||
+            context.projectTitle ||
+            (
+                typeof projectObj === "string"
+                    ? projectObj
+                    : (
+                        projectObj.name ||
+                        projectObj.projectName ||
+                        projectObj.title ||
+                        ""
+                    )
+            ) ||
+            storedContext.projectName ||
+            ""
+        ).trim();
+
+    }
+
+
+    /* =====================================================
+       RETURN DATA FINAL
+    ===================================================== */
+
+    return {
+
+        id: participantId,
+
+        name: participantName,
+
+        project: projectName,
+
+        projectId: projectId,
+
+        participant: participantObject,
+
+        projectData: projectObject
+
+    };
+
+}
+function init(){const c=getContext();participant.name=c.name;participant.id=c.id;participant.project=c.project;participant.date=new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());el("participantName").textContent=participant.name||"-";el("projectName").textContent=participant.project||"-";el("assessmentDate").textContent=participant.date||"-"}
+function toggleStart(){el("startBtn").disabled=!el("confirmRead").checked}
+function backToDashboard(e){
+  e.preventDefault();
+
+  if(
+    confirm(
+      "Kembali ke Dashboard? Progress assessment yang belum selesai dapat terhenti."
+    )
+  ){
+
+    /*
+     * Ini navigasi internal, bukan logout sebenarnya.
+     * pagehide/beforeunload akan melihat flag ini dan tidak
+     * menulis event logout.
+     */
+    sessionStorage.setItem(
+      "ts_internal_assessment_navigation",
+      "true"
+    );
+
+    if(document.referrer){
+      history.back();
+    }else{
+      location.href="/dashboard";
+    }
+  }
+}
+let assessmentStarted=false, heartbeatTimer=null;
+function heartbeat(){
+  if(!assessmentStarted||totalRemaining<=0)return;
+  syncAssessmentActivity("Sedang mengerjakan tes ("+getAssessmentDisplayName()+") — Sesi "+currentSession,null);
+}
+function begin(){
+  if(!el("confirmRead").checked)return;
+  assessmentStarted=true;
+  el("intro").classList.add("hidden");el("test").classList.remove("hidden");
+  buildNumeric();markAssessmentStarted();
+  clearInterval(heartbeatTimer);heartbeatTimer=setInterval(heartbeat,5000);
+  startSession(1);
+}
+function buildNumeric(){const c=el("numericControls");if(c.children.length)return;[0,1,2,3,4,5,6,7,8,9].forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>answer(n);c.appendChild(b)})}
+document.addEventListener("keydown",e=>{if(currentSession===1&&!el("test").classList.contains("hidden")&&/^[0-9]$/.test(e.key))answer(Number(e.key))});
+function startSession(n){markAssessmentSessionChange(n);currentSession=n;sessionRemaining=CFG.sessionSeconds;sessions[n].startedAt=new Date().toISOString();el("break").classList.add("hidden");el("results").classList.add("hidden");el("test").classList.remove("hidden");el("sessionNum").textContent="SESSION "+n;el("sessionName").textContent=n===1?"Numerical Work Performance":"Visual Attention & Letter Matching";el("hint").textContent=n===1?"Hitung dan pilih digit terakhir hasil penjumlahan":"Tentukan apakah kedua pola huruf SAMA atau BERBEDA";el("numericControls").classList.toggle("hidden",n!==1);el("letterControls").classList.toggle("hidden",n!==2);updateTimers();clearInterval(sessionTimer);sessionTimer=setInterval(()=>{sessionRemaining--;totalRemaining--;updateTimers();if(sessionRemaining<=0||totalRemaining<=0)finishSession()},1000);nextTrial()}
+function updateTimers(){el("sessionTimer").textContent=fmt(sessionRemaining);el("globalTimer").textContent=fmt(totalRemaining)}
+function blockInfo(){
+  const elapsed=CFG.sessionSeconds-sessionRemaining;
+  return {block:Math.min(CFG.blocks,Math.floor(elapsed/(CFG.sessionSeconds/CFG.blocks))+1)};
+}
+
+/* ISOMORPHIC BLOCKS: kesukaran tidak berubah menurut block */
+function numTrial(){
+  const a=rand(1,9), b=rand(1,9);
+  return {stimulus:`${a} + ${b}`,key:(a+b)%10};
+}
+function letters(len){
+  const abc="ABCDEFGHJKLMNPQRSTUVWXYZ";let s="";
+  for(let i=0;i<len;i++)s+=abc[rand(0,abc.length-1)];
+  return s;
+}
+function differentOne(s){
+  const p=rand(0,s.length-1);let r;
+  do{r=letters(1)}while(r===s[p]);
+  return s.slice(0,p)+r+s.slice(p+1);
+}
+function letterTrial(){
+  const a=letters(4), same=Math.random()<.5;
+  return {stimulus:a+"   vs   "+(same?a:differentOne(a)),key:same?"S":"B"};
+}
+function nextTrial(){clearTimeout(itemTimeout);const info=blockInfo(),g=currentSession===1?numTrial():letterTrial(),number=sessions[currentSession].trials.length+1;currentTrial={trialId:`VAP-S${currentSession}-${String(number).padStart(4,"0")}`,session:currentSession,number,block:info.block,difficulty:"isomorphic",stimulus:g.stimulus,answerKey:String(g.key),answer:null,correct:null,timeout:false,responseTimeMs:null,presentedAt:performance.now()};el("stimulus").textContent=g.stimulus;itemTimeout=setTimeout(timeoutTrial,CFG.itemWindowMs)}
+function answer(value){if(!currentTrial||currentTrial.answer!==null||currentTrial.timeout)return;clearTimeout(itemTimeout);const t=currentTrial;t.answer=String(value);t.responseTimeMs=Math.round(performance.now()-t.presentedAt);t.correct=t.answer===t.answerKey;sessions[currentSession].trials.push(t);currentTrial=null;if(sessionRemaining>0&&totalRemaining>0)nextTrial()}
+function timeoutTrial(){if(!currentTrial||currentTrial.answer!==null)return;const t=currentTrial;t.timeout=true;t.correct=false;t.responseTimeMs=null;sessions[currentSession].trials.push(t);currentTrial=null;if(sessionRemaining>0&&totalRemaining>0)nextTrial()}
+function finishSession(){clearInterval(sessionTimer);clearTimeout(itemTimeout);if(currentTrial){currentTrial.timeout=true;currentTrial.correct=false;sessions[currentSession].trials.push(currentTrial);currentTrial=null}sessions[currentSession].endedAt=new Date().toISOString();if(currentSession===1){el("test").classList.add("hidden");el("break").classList.remove("hidden")}else finishAssessment()}
+/* =========================================================
+   FINISH ASSESSMENT
+   Menutup VAP, menyimpan status selesai,
+   merender report, dan sinkronisasi monitoring.
+========================================================= */
+
+function finishAssessment(){
+
+    console.log("VAP Assessment selesai");
+
+    // Pastikan semua timer berhenti
+    clearInterval(sessionTimer);
+    clearInterval(heartbeatTimer);
+    clearTimeout(itemTimeout);
+
+    assessmentStarted = false;
+
+    // Pastikan trial terakhir ditutup
+    if(currentTrial){
+
+        currentTrial.timeout = true;
+        currentTrial.correct = false;
+
+        sessions[currentSession].trials.push(currentTrial);
+
+        currentTrial = null;
+    }
+
+    // Tandai sesi terakhir selesai
+    if(!sessions[2].endedAt){
+        sessions[2].endedAt = new Date().toISOString();
+    }
+
+
+    /* ==========================================
+       UPDATE STATUS ASSESSMENT DI TALENTSCOPE
+    ========================================== */
+
+    try{
+
+        const ids = getAssessmentIdentity();
+
+        const projects = JSON.parse(
+            localStorage.getItem("talentscope_projects") || "[]"
+        );
+
+        if(Array.isArray(projects)){
+
+            const params = new URLSearchParams(location.search);
+
+            const assessmentIndex = Number(
+                params.get("assessmentIndex") || 0
+            );
+
+            const assessmentCode = String(
+                params.get("assessmentCode") || "VAP"
+            ).trim();
+
+            const assessmentName = getAssessmentDisplayName();
+
+            const now = new Date().toISOString();
+
+            projects.forEach(project => {
+
+                const projectId = String(
+                    project.id ||
+                    project.projectId ||
+                    project.project_id ||
+                    ""
+                ).trim();
+
+                if(projectId !== ids.projectId) return;
+
+                const participants = Array.isArray(
+                    project.participants
+                )
+                    ? project.participants
+                    : [];
+
+                participants.forEach(p => {
+
+                    const participantId = String(
+                        p.id ||
+                        p.participantId ||
+                        p.employeeId ||
+                        p.employee_id ||
+                        ""
+                    ).trim();
+
+                    if(participantId !== ids.participantId) return;
+
+
+                    /* ==============================
+                       UPDATE CURRENT ASSESSMENT
+                    ============================== */
+
+                    p.currentAssessmentIndex = assessmentIndex;
+
+                    p.currentAssessmentCode = assessmentCode;
+
+                    p.currentTest = assessmentName;
+
+                    p.testActivity =
+                        "Tes selesai (" +
+                        assessmentName +
+                        ")";
+
+                    p.currentActivity =
+                        "Tes selesai (" +
+                        assessmentName +
+                        ")";
+
+                    p.activity =
+                        "Tes selesai (" +
+                        assessmentName +
+                        ")";
+
+                    p.lastActivity =
+                        "Tes selesai (" +
+                        assessmentName +
+                        ")";
+
+                    p.activityUpdatedAt = now;
+
+
+                    /* ==============================
+                       STATUS ONLINE TETAP AKTIF
+                    ============================== */
+
+                    p.isLoggedIn = true;
+
+                    p.status = "Online";
+
+                    p.onlineStatus = "Online";
+
+                    p.lastSeenAt = now;
+
+                    p.lastSeen = now;
+
+
+                    /* ==============================
+                       UPDATE ASSESSMENT STATUS
+                    ============================== */
+
+                    if(!Array.isArray(p.assessmentProgress)){
+                        p.assessmentProgress = [];
+                    }
+
+
+                    let progressItem =
+                        p.assessmentProgress.find(function(item){
+
+                            return Number(
+                                item.assessmentIndex
+                            ) === assessmentIndex;
+
+                        });
+
+
+                    if(!progressItem){
+
+                        progressItem = {
+
+                            assessmentIndex:
+                                assessmentIndex,
+
+                            assessmentCode:
+                                assessmentCode,
+
+                            assessmentName:
+                                assessmentName
+
+                        };
+
+                        p.assessmentProgress.push(
+                            progressItem
+                        );
+                    }
+
+
+                    progressItem.status = "Completed";
+
+                    progressItem.completedAt = now;
+
+
+                    /* ==============================
+                       UPDATE STATUS DI PACKAGE
+                    ============================== */
+
+                    const assessmentList =
+                        Array.isArray(project.assessments)
+                            ? project.assessments
+                            : (
+                                Array.isArray(
+                                    project.assessmentPackage
+                                )
+                                    ? project.assessmentPackage
+                                    : []
+                            );
+
+
+                    if(
+                        assessmentList[assessmentIndex] &&
+                        typeof assessmentList[assessmentIndex] ===
+                        "object"
+                    ){
+
+                        // Tidak mengubah master project,
+                        // hanya progress participant
+                    }
+
+
+                    /* ==============================
+                       HITUNG APAKAH SEMUA TES SELESAI
+                    ============================== */
+
+                    const totalAssessment =
+                        assessmentList.length;
+
+
+                    const completedAssessment =
+                        p.assessmentProgress.filter(
+                            function(item){
+
+                                return String(
+                                    item.status || ""
+                                )
+                                .toLowerCase() ===
+                                "completed";
+
+                            }
+                        ).length;
+
+
+                    if(
+                        totalAssessment > 0 &&
+                        completedAssessment >= totalAssessment
+                    ){
+
+                        p.assessmentStatus = "Completed";
+
+                    }else{
+
+                        p.assessmentStatus = "In Progress";
+
+                    }
+
+
+                    /* ==============================
+                       ACTIVITY HISTORY
+                    ============================== */
+
+                    if(!Array.isArray(p.activityHistory)){
+                        p.activityHistory = [];
+                    }
+
+
+                    const alreadyRecorded =
+                        p.activityHistory.some(function(item){
+
+                            return (
+                                item.type ===
+                                "test-complete" &&
+
+                                Number(
+                                    item.assessmentIndex
+                                ) === assessmentIndex &&
+
+                                item.assessmentCode ===
+                                assessmentCode
+                            );
+
+                        });
+
+
+                    if(!alreadyRecorded){
+
+                        p.activityHistory.push({
+
+                            type:
+                                "test-complete",
+
+                            activity:
+                                "Tes selesai (" +
+                                assessmentName +
+                                ")",
+
+                            title:
+                                "Assessment Completed",
+
+                            action:
+                                "Complete Assessment",
+
+                            test:
+                                assessmentName,
+
+                            testName:
+                                assessmentName,
+
+                            assessmentName:
+                                assessmentName,
+
+                            assessmentCode:
+                                assessmentCode,
+
+                            assessmentIndex:
+                                assessmentIndex,
+
+                            projectId:
+                                ids.projectId,
+
+                            participantId:
+                                ids.participantId,
+
+                            description:
+                                "Peserta telah menyelesaikan " +
+                                assessmentName +
+                                ".",
+
+                            timestamp:
+                                now,
+
+                            time:
+                                now
+
+                        });
+
+                    }
+
+                });
+
+            });
+
+
+            localStorage.setItem(
+                "talentscope_projects",
+                JSON.stringify(projects)
+            );
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Gagal menyimpan completion VAP:",
+            error
+        );
+
+    }
+
+
+    /* ==========================================
+       SYNC ACTIVITY
+    ========================================== */
+
+    markAssessmentFinished();
+
+
+    /* ==========================================
+       HITUNG HASIL
+    ========================================== */
+
+    let result;
+
+    try{
+
+        result = calc();
+
+    }catch(error){
+
+        console.error(
+            "Gagal menghitung hasil VAP:",
+            error
+        );
+
+        result = null;
+
+    }
+
+
+    /* ==========================================
+       TAMPILKAN REPORT
+    ========================================== */
+
+    el("test").classList.add("hidden");
+
+    el("break").classList.add("hidden");
+
+    el("results").classList.remove("hidden");
+
+
+    if(result){
+
+        try{
+
+            render(result);
+
+        }catch(error){
+
+            console.error(
+                "Gagal merender report VAP:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* ==========================================
+       SCROLL KE ATAS REPORT
+    ========================================== */
+
+    window.scrollTo({
+
+        top: 0,
+
+        behavior: "smooth"
+
+    });
+
+
+    console.log(
+        "VAP Assessment berhasil diselesaikan"
+    );
+
+}
+function median(a){if(!a.length)return null;a=[...a].sort((x,y)=>x-y);const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function median(a){if(!a.length)return null;a=[...a].sort((x,y)=>x-y);const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
+function mean(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:0}
+function cv(a){if(a.length<2)return null;const m=mean(a);if(!m)return null;return Math.sqrt(mean(a.map(x=>(x-m)**2)))/m*100}
+function metrics(n){
+  const t=sessions[n].trials,a=t.filter(x=>!x.timeout),c=t.filter(x=>x.correct),w=t.filter(x=>!x.timeout&&!x.correct),m=t.filter(x=>x.timeout),rt=a.map(x=>x.responseTimeMs).filter(Number.isFinite);
+  return {trials:t,answered:a.length,correct:c.length,wrong:w.length,missed:m.length,accuracy:a.length?c.length/a.length*100:0,omissionRate:t.length?m.length/t.length*100:0,crpm:c.length/Math.max(1,CFG.sessionSeconds/60),medianRT:median(rt)};
+}
+function blocks(n){
+  return Array.from({length:CFG.blocks},(_,i)=>{
+    const t=sessions[n].trials.filter(x=>x.block===i+1),a=t.filter(x=>!x.timeout),c=t.filter(x=>x.correct),m=t.filter(x=>x.timeout);
+    return {block:i+1,accuracy:a.length?c.length/a.length*100:0,omissionRate:t.length?m.length/t.length*100:0,crpm:c.length/Math.max(1,CFG.sessionSeconds/CFG.blocks/60)};
+  });
+}
+function calc(){
+  const s1=metrics(1),s2=metrics(2),b1=blocks(1),b2=blocks(2);
+  const all=[s1,s2],rt=[...s1.trials,...s2.trials].filter(x=>!x.timeout&&Number.isFinite(x.responseTimeMs)).map(x=>x.responseTimeMs);
+  const avgCRPM=mean(all.map(x=>x.crpm)),medRT=median(rt)||CFG.itemWindowMs;
+  /* Speed = throughput + median reaction time, not CRPM alone */
+  const throughput=clamp(avgCRPM*20),rtEfficiency=clamp(100-(medRT/CFG.itemWindowMs)*55);
+  const speed=clamp(throughput*.60+rtEfficiency*.40);
+  const accuracy=mean(all.map(x=>x.accuracy));
+  const perf=[...b1,...b2].map(b=>b.accuracy*.65+clamp(b.crpm*20)*.35);
+  const stability=clamp(100-(cv(perf)??100)*2);
+  const retention=b=>{
+    const score=x=>x.accuracy*.65+clamp(x.crpm*20)*.35;
+    const first=mean(b.slice(0,2).map(score)),last=mean(b.slice(-2).map(score));
+    return first?clamp(last/first*100):0;
+  };
+  const endurance=mean([retention(b1),retention(b2)]);
+  const attention=clamp(s2.accuracy*.55+(100-s2.omissionRate)*.30+(100-(cv(b2.map(x=>x.accuracy))??100)*1.5)*.15);
+  const vigilance=clamp(endurance*.45+stability*.30+(100-mean(all.map(x=>x.omissionRate)))*.25);
+  return {speed,accuracy,stability,endurance,attention,vigilance,s1,s2,b1,b2,medianRT:medRT};
+}
+function cls(x){return x>=80?"Strong":x>=65?"Adequate":x>=50?"Developing":"Needs Further Review"}
+function verdict(d){const core=mean([d.speed,d.accuracy,d.stability,d.endurance,d.attention,d.vigilance]);return core>=75&&d.accuracy>=70?"Fit":core>=60&&d.accuracy>=55?"Fit with Reservation":"Needs Further Review"}
+function row(name,val,desc){return `<div class="dim-row"><div class="dim-head"><span>${name}</span><span>${val.toFixed(1)}</span></div><div class="dim-sub">${desc} • ${cls(val)}</div><div class="bar"><i style="width:${val}%"></i></div></div>`}
+function detectAnomalies(d){
+  const out=[];[[1,d.b1],[2,d.b2]].forEach(([s,b])=>{for(let i=1;i<b.length;i++){if(b[i].omissionRate>=30&&b[i].omissionRate-b[i-1].omissionRate>=15)out.push(`Anomali: Sesi ${s}, Block ${b[i].block} menunjukkan lonjakan omission/timeout (indikasi sementara loss of focus atau distraksi singkat).`);else if(b[i-1].accuracy-b[i].accuracy>=25)out.push(`Anomali: Sesi ${s}, Block ${b[i].block} menunjukkan penurunan akurasi tajam.`)}});return out;
+}
+function band(v){
+  return v>=80?"sangat kuat":v>=65?"baik":v>=50?"cukup":v>=35?"perlu penguatan":"rendah";
+}
+function causeNarrative(name,val){
+  const b=band(val);
+  const map={
+    "Kecepatan Kerja": b==="sangat kuat"||b==="baik"
+      ? "menunjukkan tempo pemrosesan yang efisien sehingga tuntutan penyelesaian pekerjaan berulang dalam batas waktu cenderung dapat direspons dengan cepat."
+      : "menunjukkan tempo pemrosesan yang belum konsisten sehingga pada tuntutan volume kerja tinggi kandidat berpotensi membutuhkan waktu lebih panjang untuk mempertahankan output.",
+    "Ketelitian Kerja": b==="sangat kuat"||b==="baik"
+      ? "menunjukkan kontrol kualitas respons yang baik sehingga risiko kesalahan pada tugas rutin relatif lebih terkendali."
+      : "menunjukkan kualitas respons yang masih perlu dipantau karena peningkatan tempo dapat diikuti kenaikan risiko kesalahan.",
+    "Stabilitas Kerja": b==="sangat kuat"||b==="baik"
+      ? "menunjukkan konsistensi performa antarblok sehingga kualitas kerja cenderung tetap terjaga ketika tuntutan berlangsung berulang."
+      : "menunjukkan fluktuasi performa antarperiode sehingga kualitas output dapat berubah ketika tuntutan kerja berlangsung terus-menerus.",
+    "Endurance": b==="sangat kuat"||b==="baik"
+      ? "menunjukkan kemampuan mempertahankan performa dari fase awal hingga akhir sehingga kandidat relatif mampu menjaga output pada tugas berdurasi panjang."
+      : "menunjukkan penurunan retensi performa sehingga tugas panjang dan repetitif berpotensi menurunkan efektivitas kerja apabila tidak disertai strategi pengaturan fokus.",
+    "Kontrol Perhatian": b==="sangat kuat"||b==="baik"
+      ? "menunjukkan kemampuan menyaring dan mempertahankan perhatian terhadap stimulus relevan sehingga informasi penting relatif tidak mudah terlewat."
+      : "menunjukkan kontrol perhatian yang belum stabil sehingga pada kondisi banyak stimulus atau distraksi terdapat risiko informasi relevan terlewat.",
+    "Vigilance": b==="sangat kuat"||b==="baik"
+      ? "menunjukkan kewaspadaan yang cukup terpelihara pada tugas monoton sehingga perubahan stimulus tetap dapat dipantau secara konsisten."
+      : "menunjukkan kewaspadaan yang mudah menurun pada aktivitas monoton sehingga risiko omission atau penurunan respons perlu menjadi perhatian."
+  };
+  return map[name] || "";
+}
+function monitoredNarrative(name,val){
+  const map={
+    "Kecepatan Kerja":"merupakan salah satu aspek yang relatif lebih rendah dibandingkan dimensi lain, sehingga pada situasi dengan lonjakan volume dan tekanan waktu yang sangat tinggi, konsistensi tempo tetap perlu dipantau.",
+    "Ketelitian Kerja":"merupakan aspek yang relatif lebih rendah dibandingkan dimensi lain, sehingga mekanisme pengecekan kualitas tetap penting ketika tuntutan kecepatan meningkat.",
+    "Stabilitas Kerja":"relatif lebih rendah dibandingkan dimensi lain, sehingga konsistensi performa tetap perlu diamati pada pekerjaan yang berlangsung panjang dan berulang.",
+    "Endurance":"relatif lebih rendah dibandingkan dimensi lain, sehingga kemampuan mempertahankan output pada tugas berkepanjangan perlu dikonfirmasi melalui tuntutan kerja nyata.",
+    "Kontrol Perhatian":"relatif lebih rendah dibandingkan dimensi lain, sehingga kemampuan menjaga fokus pada situasi multitugas atau penuh distraksi tetap perlu dipantau.",
+    "Vigilance":"relatif lebih rendah dibandingkan dimensi lain, sehingga kewaspadaan pada pekerjaan yang monoton dan repetitif tetap perlu diperhatikan."
+  };
+  return map[name] || "merupakan aspek yang relatif lebih rendah dibandingkan dimensi lain dan perlu dipantau sesuai tuntutan jabatan.";
+}
+
+function listConclusion(title, items, mode){
+  const isStrength=mode==="strength";
+  const isRisk=mode==="risk";
+
+  const intro=isStrength
+    ? "Berdasarkan dimensi yang menunjukkan kapasitas paling menonjol, kandidat memiliki modal perilaku kerja sebagai berikut:"
+    : isRisk
+      ? "Berdasarkan dimensi yang berada pada kategori pengembangan atau rendah, terdapat area yang berpotensi menjadi hambatan ketika tuntutan kerja meningkat:"
+      : "Tidak ditemukan kelemahan yang menonjol secara absolut. Namun, dibandingkan dengan dimensi kandidat lainnya, aspek berikut tetap perlu dipantau sesuai tuntutan jabatan:";
+
+  return `<div><b>${title}</b><p style="margin:6px 0 8px">${intro}</p><ul>${
+    items.map(x=>{
+      const narrative=isStrength || isRisk
+        ? causeNarrative(x[0],x[1])
+        : monitoredNarrative(x[0],x[1]);
+      return `<li><b>${x[0]} (${x[1].toFixed(1)})</b> — ${narrative}</li>`;
+    }).join("")
+  }</ul></div>`;
+}
+function render(d){
+  el("reportParticipant").textContent=[participant.name,participant.id,participant.project].filter(Boolean).join(" • ");
+
+  const v=verdict(d), badge=el("verdictBadge");
+  el("verdictTitle").textContent=v;
+  badge.textContent=v;
+  badge.className="verdict-badge "+(v==="Fit"?"verdict-fit":v==="Fit with Reservation"?"verdict-reservation":"verdict-review");
+
+  const dims=[
+    ["Kecepatan Kerja",d.speed],
+    ["Ketelitian Kerja",d.accuracy],
+    ["Stabilitas Kerja",d.stability],
+    ["Endurance",d.endurance],
+    ["Kontrol Perhatian",d.attention],
+    ["Vigilance",d.vigilance]
+  ].sort((a,b)=>b[1]-a[1]);
+
+  const conclusion = v==="Fit"
+    ? "Secara keseluruhan, profil menunjukkan kapasitas kerja yang memadai untuk memenuhi tuntutan tugas terstruktur dengan tempo dan ketelitian yang relatif seimbang."
+    : v==="Fit with Reservation"
+      ? "Secara keseluruhan, kandidat memiliki modal kapasitas kerja yang dapat digunakan, namun terdapat ketimpangan pada beberapa dimensi sehingga kesesuaian peran perlu mempertimbangkan tingkat tuntutan kerja dan sistem kontrol kualitas."
+      : "Secara keseluruhan, profil menunjukkan beberapa area yang belum cukup kuat untuk dijadikan dasar kesimpulan kesesuaian tanpa data tambahan; keputusan perlu dikonfirmasi melalui metode asesmen lain dan konteks tuntutan jabatan.";
+
+  /*
+     Klasifikasi interpretatif:
+     - >= 80 : kekuatan
+     - 50–64.9 : area pengembangan
+     - < 50 : area risiko
+     - Jika tidak ada skor < 65, jangan memaksakan label "Area Risiko".
+       Gunakan "Area yang Perlu Dipantau" untuk dua dimensi relatif terendah.
+  */
+  const strengths=dims.filter(x=>x[1]>=80).slice(0,2);
+  const strengthItems=strengths.length?strengths:dims.slice(0,2);
+
+  const riskItems=dims
+    .filter(x=>x[1]<65)
+    .sort((a,b)=>a[1]-b[1])
+    .slice(0,2);
+
+  const watchItems=dims
+    .slice(-2)
+    .reverse();
+
+  const developmentSection=riskItems.length
+    ? listConclusion(
+        "Area Risiko Perilaku Kerja",
+        riskItems,
+        "risk"
+      )
+    : listConclusion(
+        "Area yang Perlu Dipantau",
+        watchItems,
+        "monitor"
+      );
+
+  el("executiveNarrative").innerHTML=
+    `<div><b>Kesimpulan Asesmen</b><p style="margin:6px 0 0">${conclusion}</p></div>`+
+    listConclusion(
+      "Kekuatan Utama Perilaku Kerja",
+      strengthItems,
+      "strength"
+    )+
+    developmentSection;
+
+  const jobs=[
+    ["Operational & Fast-Paced Roles",clamp(d.speed*.40+d.endurance*.25+d.stability*.15+d.accuracy*.20)],
+    ["Quality Control, Finance & Auditor Roles",clamp(d.accuracy*.45+d.attention*.25+d.stability*.20+d.vigilance*.10)]
+  ];
+  el("jobMatch").innerHTML=jobs.map(x=>
+    `<div class="match-item"><div class="match-head"><b>${x[0]}</b><strong>${x[1].toFixed(0)}%</strong></div><div class="match-bar"><i style="width:${x[1]}%"></i></div></div>`
+  ).join("");
+
+  el("quantityDimensions").innerHTML=
+    row("Kecepatan Kerja",d.speed,"Output benar terintegrasi dengan median waktu respons")+
+    row("Endurance",d.endurance,"Kemampuan mempertahankan performa sepanjang tugas");
+
+  el("qualityDimensions").innerHTML=
+    row("Ketelitian Kerja",d.accuracy,"Proporsi respons benar")+
+    row("Stabilitas Kerja",d.stability,"Konsistensi performa antarblok")+
+    row("Kontrol Perhatian",d.attention,"Pemeliharaan perhatian dan minimnya omission")+
+    row("Vigilance",d.vigilance,"Kewaspadaan pada tugas monoton");
+
+  el("summary").innerHTML=[
+    ["Session 1 — Numerical",d.s1],
+    ["Session 2 — Letter Matching",d.s2]
+  ].map(([n,m])=>
+    `<tr><td>${n}</td><td>${m.correct}</td><td>${m.wrong}</td><td>${m.missed}</td><td>${m.accuracy.toFixed(1)}%</td><td>${m.medianRT?(m.medianRT/1000).toFixed(2)+" sec":"-"}</td></tr>`
+  ).join("");
+
+  el("log").innerHTML=[...sessions[1].trials,...sessions[2].trials].map(t=>
+    `<tr><td>${t.number}</td><td>S${t.session}</td><td>${t.block}</td><td>${t.stimulus}</td><td>${t.timeout?"—":t.answer}</td><td>${t.answerKey}</td><td>${t.timeout?"TIMEOUT":t.correct?"BENAR":"SALAH"}</td><td>${t.responseTimeMs?(t.responseTimeMs/1000).toFixed(2)+" sec":"—"}</td></tr>`
+  ).join("");
+
+  const behavioral=[
+    ["Kecepatan Kerja",d.speed],
+    ["Ketelitian Kerja",d.accuracy],
+    ["Stabilitas Kerja",d.stability],
+    ["Endurance",d.endurance],
+    ["Kontrol Perhatian",d.attention],
+    ["Vigilance",d.vigilance]
+  ];
+
+  const grouped=[
+    ["Pola Kapasitas Output",mean([d.speed,d.endurance]),"Kecepatan Kerja dan Endurance"],
+    ["Pola Kualitas Kerja",mean([d.accuracy,d.stability]),"Ketelitian Kerja dan Stabilitas Kerja"],
+    ["Pola Pengelolaan Perhatian",mean([d.attention,d.vigilance]),"Kontrol Perhatian dan Vigilance"]
+  ];
+
+  el("interpret").innerHTML=grouped.map(([title,val,parts])=>{
+    const related=behavioral.filter(x=>parts.includes(x[0]));
+    const high=related.sort((a,b)=>b[1]-a[1])[0];
+    const low=related.sort((a,b)=>a[1]-b[1])[0];
+    return `<div><b>${title} — ${val.toFixed(1)} (${cls(val)})</b><br>`+
+      `Skor pada kelompok ${parts} menunjukkan profil ${band(val)}. `+
+      `${high[0]} menjadi aspek yang relatif lebih dominan karena ${causeNarrative(high[0],high[1])} `+
+      `${low[0]!==high[0] ? "Sementara itu, "+low[0]+" perlu tetap diperhatikan karena "+causeNarrative(low[0],low[1]) : ""}`+
+      ` Dengan demikian, implikasi perilaku kerja yang paling mungkin terlihat adalah ${val>=65 ? "kemampuan mempertahankan tuntutan kerja secara relatif konsisten" : "kebutuhan terhadap struktur kerja, prioritas yang jelas, dan kontrol kualitas agar performa tetap terjaga"}.`+
+    `</div>`;
+  }).join("");
+
+  const anomalies=detectAnomalies(d);
+  el("anomalies").innerHTML=anomalies.length
+    ? anomalies.map(x=>`<div class="anomaly">${x}</div>`).join("")
+    : `<div class="anomaly-ok">Tidak ditemukan penurunan tajam yang memenuhi kriteria flag screening antarblok.</div>`;
+
+  requestAnimationFrame(()=>draw(d,anomalies));
+}
+function draw(d,anomalies){
+  const tc=el("trend"), rc=el("radar");
+  if(!tc || !rc) return;
+
+  const ratio=window.devicePixelRatio||1;
+
+  // PERFORMANCE TREND
+  const w=Math.max(280,tc.clientWidth||420), h=300;
+  tc.width=Math.round(w*ratio); tc.height=Math.round(h*ratio);
+  tc.style.height=h+"px";
+  const tctx=tc.getContext("2d");
+  tctx.setTransform(ratio,0,0,ratio,0,0);
+  tctx.clearRect(0,0,w,h);
+
+  const p1=d.b1.map(x=>clamp(x.accuracy*.65+clamp(x.crpm*20)*.35));
+  const p2=d.b2.map(x=>clamp(x.accuracy*.65+clamp(x.crpm*20)*.35));
+  const data=[...p1,...p2];
+  const L=42,R=w-18,T=24,B=h-42;
+  tctx.font="11px sans-serif";
+  [0,25,50,75,100].forEach(v=>{
+    const y=B-v/100*(B-T);
+    tctx.strokeStyle="#e2e8f0"; tctx.lineWidth=1;
+    tctx.beginPath();tctx.moveTo(L,y);tctx.lineTo(R,y);tctx.stroke();
+    tctx.fillStyle="#64748b";tctx.fillText(String(v),8,y+4);
+  });
+  if(data.length){
+    tctx.strokeStyle="#2563eb";tctx.lineWidth=2.5;tctx.beginPath();
+    data.forEach((v,i)=>{
+      const x=data.length===1?(L+R)/2:L+i*(R-L)/(data.length-1);
+      const y=B-v/100*(B-T);
+      i?tctx.lineTo(x,y):tctx.moveTo(x,y);
+    });
+    tctx.stroke();
+    data.forEach((v,i)=>{
+      const x=data.length===1?(L+R)/2:L+i*(R-L)/(data.length-1);
+      const y=B-v/100*(B-T);
+      tctx.fillStyle="#2563eb";tctx.beginPath();tctx.arc(x,y,3.5,0,Math.PI*2);tctx.fill();
+      tctx.fillStyle="#64748b";tctx.fillText(i<6?`S1-B${i+1}`:`S2-B${i-5}`,x-14,B+18);
+    });
+  } else {
+    tctx.fillStyle="#64748b";tctx.fillText("Data blok belum tersedia.",L,T+20);
+  }
+  if(anomalies.length){
+    tctx.fillStyle="#b45309";tctx.font="bold 11px sans-serif";
+    tctx.fillText("⚑ Flag anomali terdeteksi — lihat catatan",L,T+2);
+  }
+
+  // DIMENSION PROFILE
+  const rw=Math.max(280,rc.clientWidth||420), rh=300;
+  rc.width=Math.round(rw*ratio); rc.height=Math.round(rh*ratio);
+  rc.style.height=rh+"px";
+  const rctx=rc.getContext("2d");
+  rctx.setTransform(ratio,0,0,ratio,0,0);
+  rctx.clearRect(0,0,rw,rh);
+
+  const vals=[d.speed,d.accuracy,d.stability,d.endurance,d.attention,d.vigilance].map(v=>clamp(v));
+  const labels=["Speed","Accuracy","Stability","Endurance","Attention","Vigilance"];
+  const cx=rw/2, cy=rh/2+8, rad=Math.min(rw,rh)*.29;
+
+  function polygon(arr,fill,stroke,width){
+    rctx.beginPath();
+    arr.forEach((v,i)=>{
+      const a=-Math.PI/2+i*Math.PI*2/6, rr=rad*v/100;
+      const x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+      i?rctx.lineTo(x,y):rctx.moveTo(x,y);
+    });
+    rctx.closePath();
+    if(fill){rctx.fillStyle=fill;rctx.fill();}
+    rctx.strokeStyle=stroke;rctx.lineWidth=width||1;rctx.stroke();
+  }
+  [25,50,75,100].forEach(v=>polygon(Array(6).fill(v),null,"#dbe3ee",1));
+  for(let i=0;i<6;i++){
+    const a=-Math.PI/2+i*Math.PI*2/6;
+    rctx.strokeStyle="#dbe3ee";rctx.beginPath();rctx.moveTo(cx,cy);rctx.lineTo(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad);rctx.stroke();
+  }
+  polygon(Array(6).fill(50),"rgba(100,116,139,.10)","#94a3b8",1.2);
+  polygon(vals,"rgba(37,99,235,.18)","#2563eb",2);
+
+  rctx.font="10px sans-serif";rctx.fillStyle="#475569";
+  labels.forEach((l,i)=>{
+    const a=-Math.PI/2+i*Math.PI*2/6;
+    const x=cx+Math.cos(a)*(rad+28), y=cy+Math.sin(a)*(rad+28);
+    rctx.textAlign=Math.abs(Math.cos(a))<.25?"center":Math.cos(a)>0?"left":"right";
+    rctx.fillText(l,x,y+3);
+  });
+  rctx.textAlign="left";
+}
+function exportJSON(){const payload={assessment:"VAP",generatedAt:new Date().toISOString(),participant,sessions,dimensions:calc()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`VAP_${participant.id||participant.name.replace(/\s+/g,"_")||"participant"}.json`;a.click();URL.revokeObjectURL(url)}
+
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "visible" && assessmentStarted && currentSession && totalRemaining > 0){
+    syncAssessmentActivity(
+      "Sedang mengerjakan tes (" + getAssessmentDisplayName() + ") — Sesi " + currentSession,
+      null
+    );
+  }
+});
+
+init();
+</script>
+</body>
+</html>

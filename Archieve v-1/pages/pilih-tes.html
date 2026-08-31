@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Assessment Center - Career Test Lab
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="../css/assessment.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+</head>
+
+<body>
+
+<div class="page">
+
+
+    <!-- =========================
+         HEADER
+    ========================== -->
+
+    <header class="page-header">
+
+        <div>
+
+            <div class="brand">
+                CAREER TEST LAB
+            </div>
+
+            <h1>
+                Assessment Center
+            </h1>
+
+            <p>
+                Pilih kategori tes yang ingin Anda kerjakan.
+            </p>
+
+        </div>
+
+
+        <div class="participant">
+
+            <span id="participantName">
+                Peserta
+            </span>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =========================
+         CONTENT
+    ========================== -->
+
+    <main class="content">
+
+
+        <div class="section-title">
+
+            <h2>
+                Kategori Tes
+            </h2>
+
+            <p>
+                Setiap kategori memiliki karakteristik
+                dan waktu pengerjaan yang berbeda.
+            </p>
+
+        </div>
+
+
+
+        <!-- =========================
+             CATEGORY GRID
+        ========================== -->
+
+        <div
+            id="categoryList"
+            class="category-grid">
+
+<!-- Cognitive Ability -->
+
+<article class="category-card">
+
+    <div class="category-icon intelligence">
+
+       <i data-lucide="brain"></i>
+
+    </div>
+
+    <div class="category-content">
+
+        <h3>Cognitive Ability Assessment</h3>
+
+        <div class="assessment-status ready">
+
+            <span class="dot"></span>
+
+            Ready
+
+        </div>
+
+        <button
+            class="start-btn"
+            data-test="intelligence">
+
+            Start Assessment →
+
+        </button>
+
+    </div>
+
+</article>
+
+
+
+<!-- Behavioral -->
+
+<article class="category-card">
+
+    <div class="category-icon personality">
+
+        <i data-lucide="users"></i>
+
+    </div>
+
+    <div class="category-content">
+
+        <h3>
+
+            Behavioral & Personality Assessment
+
+        </h3>
+
+        <div class="assessment-status locked">
+
+            🔒 Locked
+
+        </div>
+
+        <button
+            class="start-btn secondary"
+            id="personalityBtn">
+
+            Choose Assessment →
+
+        </button>
+
+    </div>
+
+</article>
+
+
+
+<!-- Work -->
+
+<article class="category-card">
+
+    <div class="category-icon work">
+
+         <i data-lucide="briefcase-business"></i>
+
+    </div>
+
+    <div class="category-content">
+
+        <h3>
+
+            Work Competencies Assessment
+
+        </h3>
+
+        <div class="assessment-status locked">
+
+            🔒 Locked
+
+        </div>
+
+        <button
+            class="start-btn"
+            data-test="workAttitude">
+
+            Start Assessment →
+
+        </button>
+
+    </div>
+
+</article>
+
+
+
+<!-- Leadership -->
+
+<article class="category-card">
+
+    <div class="category-icon leadership">
+
+        <i data-lucide="crown"></i>
+
+    </div>
+
+    <div class="category-content">
+
+        <h3>
+
+            Leadership Assessment
+
+        </h3>
+
+        <div class="assessment-status locked">
+
+            🔒 Locked
+
+        </div>
+
+        <button
+            class="start-btn"
+            data-test="leadership">
+
+            Start Assessment →
+
+        </button>
+
+    </div>
+
+</article>
+        </div>
+
+
+
+        <!-- =========================
+             PERSONALITY OPTIONS
+        ========================== -->
+
+        <section
+            id="personalityOptions"
+            class="personality-options hidden">
+
+
+            <div class="personality-header">
+
+                <h2>
+                    Pilih Instrumen Kepribadian
+                </h2>
+
+                <p>
+                    Pilih salah satu tes yang tersedia.
+                </p>
+
+            </div>
+
+
+            <div class="personality-grid">
+
+
+                <article
+                    class="personality-card">
+
+                    <div class="small-icon">
+                        D
+                    </div>
+
+                    <h3>
+                        DISC
+                    </h3>
+
+                    <p>
+                        Tes untuk memahami
+                        kecenderungan gaya perilaku.
+                    </p>
+
+                    <button
+                        class="start-btn"
+                        data-personality="disc">
+
+                        Mulai DISC
+
+                    </button>
+
+                </article>
+
+
+
+                <article
+                    class="personality-card">
+
+                    <div class="small-icon">
+                        P
+                    </div>
+
+                    <h3>
+                        PAPIKOSTIK
+                    </h3>
+
+                    <p>
+                        Tes untuk mengeksplorasi
+                        karakteristik dan preferensi
+                        perilaku dalam konteks kerja.
+                    </p>
+
+                    <button
+                        class="start-btn"
+                        data-personality="papikostik">
+
+                        Mulai PAPIKOSTIK
+
+                    </button>
+
+                </article>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        Career Test Lab
+        <span>•</span>
+        Assessment Simulation Platform
+
+    </footer>
+
+
+</div>
+
+
+
+<!-- =========================
+     JAVASCRIPT
+========================== -->
+
+<script src="../js/storage.js"></script>
+
+<script src="../js/test/test-config.js"></script>
+
+<script src="../js/pilih-tes.js"></script>
+
+<script>
+    lucide.createIcons();
+</script>
+
+</body>
+
+</html>

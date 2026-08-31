@@ -1,0 +1,2755 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentScope Enterprise - PAPI Kostick Assessment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0066ff;
+            --primary-dark: #0052cc;
+            --primary-light: #e6f0ff;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; }
+        
+        /* Top Navigation Bar */
+        .top-nav {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .back-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .back-link:hover { color: var(--primary); }
+        .timer-badge {
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Main Container */
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+
+        /* Banner Card */
+        .banner-card {
+            background: linear-gradient(135deg, #0052cc 0%, #0066ff 100%);
+            border-radius: 20px;
+            color: white;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0, 102, 255, 0.15);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        .banner-card::after {
+            content: '';
+            position: absolute;
+            right: -50px;
+            bottom: -50px;
+            width: 250px;
+            height: 250px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        .brand-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        .banner-card h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .banner-card p { opacity: 0.9; font-size: 15px; }
+
+        /* Info Bar */
+        .info-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 20px 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+        .info-item { display: flex; align-items: center; gap: 15px; }
+        .info-icon {
+            width: 45px; height: 45px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .info-content label { font-size: 12px; color: var(--text-muted); font-weight: 600; display: block; }
+        .info-content span { font-size: 15px; font-weight: 700; color: var(--text-main); }
+
+        /* Content Card */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            margin-bottom: 25px;
+        }
+
+        /* Question Box */
+        .question-container { display: none; }
+        .question-container.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .q-number {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+        .q-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 20px;
+        }
+        .options-group { display: flex; flex-direction: column; gap: 15px; }
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 18px 20px;
+            background: #f8fafc;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .option-label:hover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .option-label input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.2);
+            accent-color: var(--primary);
+        }
+        .option-label.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            font-weight: 600;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+
+        /* Pagination Dots / Grid */
+        .pagination-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .page-dot {
+            height: 35px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .page-dot.answered { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+        .page-dot.current { border-color: var(--primary); background: var(--primary); color: white; }
+
+        /* Thank you / Submitted State */
+        #thankyou-section { display: none; text-align: center; padding: 40px 20px; }
+        #thankyou-section i { font-size: 64px; color: var(--success); margin-bottom: 20px; }
+        #thankyou-section h2 { font-size: 24px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
+        #thankyou-section p { color: var(--text-muted); font-size: 15px; max-width: 500px; margin: 0 auto; line-height: 1.5; }
+    
+        /* ==========================================================
+           PREMIUM PAPI INSTRUCTION
+        ========================================================== */
+        #quiz-card {
+            display: none;
+        }
+
+        .papi-instruction {
+            margin: 0 0 28px;
+        }
+
+        .papi-instruction-card {
+            position: relative;
+            overflow: hidden;
+            background: #ffffff;
+            border: 1px solid #dbe5f0;
+            border-radius: 24px;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        .papi-instruction-card::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #0052cc, #0066ff, #38bdf8);
+        }
+
+        .papi-instruction-head {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding: 28px 32px 22px;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .papi-instruction-icon {
+            width: 56px;
+            height: 56px;
+            flex: 0 0 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: #e8f1ff;
+            color: #0066ff;
+            font-size: 23px;
+            box-shadow: inset 0 0 0 1px #d6e7ff;
+        }
+
+        .papi-eyebrow {
+            display: block;
+            margin-bottom: 4px;
+            color: #0066ff;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+        }
+
+        .papi-instruction-head h2 {
+            margin: 0 0 5px;
+            color: #0f172a;
+            font-size: 22px;
+            line-height: 1.25;
+            font-weight: 800;
+        }
+
+        .papi-instruction-head p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .papi-test-meta {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 18px 32px;
+            background: #ffffff;
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .papi-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 48px;
+            padding: 10px 14px;
+            border: 1px solid #e6edf5;
+            border-radius: 14px;
+            background: #f8fafc;
+        }
+
+        .papi-meta-item > i {
+            color: #0066ff;
+            font-size: 17px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .papi-meta-item div {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .papi-meta-item strong {
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .papi-meta-item span {
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .papi-instruction-body {
+            padding: 24px 32px 10px;
+        }
+
+        .papi-instruction-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            color: #334155;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .papi-title-line {
+            width: 4px;
+            height: 20px;
+            flex: 0 0 4px;
+            border-radius: 10px;
+            background: #0066ff;
+        }
+
+        .papi-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 10px;
+        }
+
+        .papi-steps li {
+            display: grid;
+            grid-template-columns: 38px 1fr;
+            gap: 14px;
+            align-items: start;
+            padding: 13px 14px;
+            border: 1px solid #edf2f7;
+            border-radius: 13px;
+            background: #fbfdff;
+            color: #475569;
+            font-size: 13px;
+            line-height: 1.58;
+        }
+
+        .papi-steps li strong {
+            color: #1e293b;
+        }
+
+        .papi-step-number {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #eaf2ff;
+            color: #0066ff;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .3px;
+        }
+
+        .papi-start-area {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin: 18px 32px 0;
+            padding: 18px;
+            border: 1px solid #dfe8f2;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #f8fbff 0%, #f3f8ff 100%);
+        }
+
+        .papi-confirm {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            cursor: pointer;
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.45;
+            flex: 1;
+        }
+
+        .papi-confirm input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .papi-checkmark {
+            width: 20px;
+            height: 20px;
+            flex: 0 0 20px;
+            margin-top: 1px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            background: #ffffff;
+            position: relative;
+            transition: all .2s ease;
+        }
+
+        .papi-confirm input:checked + .papi-checkmark {
+            border-color: #0066ff;
+            background: #0066ff;
+        }
+
+        .papi-confirm input:checked + .papi-checkmark::after {
+            content: "";
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .papi-confirm strong {
+            display: block;
+            color: #1e293b;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .papi-confirm small {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .papi-start-button {
+            min-width: 176px;
+            min-height: 48px;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #0066ff, #0052cc);
+            box-shadow: 0 8px 20px rgba(0, 102, 255, .22);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+        }
+
+        .papi-start-button:not(:disabled):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 11px 25px rgba(0, 102, 255, .28);
+        }
+
+        .papi-start-button:disabled {
+            opacity: .52;
+            cursor: not-allowed;
+            background: linear-gradient(135deg, #94a3b8, #64748b);
+            box-shadow: none;
+        }
+
+        .papi-start-button i {
+            font-size: 12px;
+        }
+
+        .papi-secure-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 14px 20px 18px;
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .papi-secure-note i {
+            color: #10b981;
+        }
+
+        @media (max-width: 700px) {
+            .papi-instruction-head {
+                padding: 24px 20px 20px;
+            }
+
+            .papi-test-meta {
+                padding: 15px 20px;
+            }
+
+            .papi-instruction-body {
+                padding: 20px 20px 8px;
+            }
+
+            .papi-start-area {
+                flex-direction: column;
+                align-items: stretch;
+                margin: 15px 20px 0;
+            }
+
+            .papi-start-button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .papi-test-meta {
+                grid-template-columns: 1fr;
+            }
+
+            .papi-instruction-head h2 {
+                font-size: 19px;
+            }
+
+            .papi-instruction-icon {
+                width: 48px;
+                height: 48px;
+                flex-basis: 48px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <a href="#" class="back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a>
+        <div class="timer-badge" id="timer-display">
+            <i class="fa-regular fa-clock"></i> 60:00
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Banner -->
+        <div class="banner-card">
+            <div class="brand-badge">TalentScope Enterprise v1.0</div>
+            <h1>PAPI Kostick Assessment</h1>
+            <p>Pemeriksaan inventori kepribadian untuk evaluasi orientasi kerja, gaya kepemimpinan, dan dinamika sosial.</p>
+        </div>
+
+        <!-- Info Bar -->
+        <div class="info-bar" id="participant-info-bar">
+            <div class="info-item">
+                <div class="info-icon"><i class="fa-solid fa-user"></i></div>
+                <div class="info-content"><label>Peserta</label> <span id="participant-name">-</span></div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="fa-solid fa-folder"></i></div>
+                <div class="info-content"><label>Proyek</label><span id="project-name">-</span></div>
+            </div>
+            <div class="info-item">
+                <div class="info-icon"><i class="fa-solid fa-calendar"></i></div>
+                <div class="info-content"><label>Tanggal</label><span id="current-date-span"></span></div>
+            </div>
+        </div>
+
+
+        <!-- ==========================================================
+     PETUNJUK KHUSUS PAPI KOSTICK
+========================================================== -->
+<section id="papiInstruction" class="papi-instruction" aria-labelledby="papiInstructionTitle">
+    <div class="papi-instruction-card">
+
+        <div class="papi-instruction-head">
+            <div class="papi-instruction-icon">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <div>
+                <span class="papi-eyebrow">PERSIAPAN TES</span>
+                <h2 id="papiInstructionTitle">Petunjuk Khusus PAPI Kostick</h2>
+                <p>Mohon baca seluruh petunjuk dengan teliti sebelum mulai mengerjakan.</p>
+            </div>
+        </div>
+
+        <div class="papi-test-meta">
+            <div class="papi-meta-item">
+                <i class="fa-regular fa-circle-question"></i>
+                <div><strong>90</strong><span>Nomor</span></div>
+            </div>
+            <div class="papi-meta-item">
+                <i class="fa-regular fa-clock"></i>
+                <div><strong>60</strong><span>Menit</span></div>
+            </div>
+            <div class="papi-meta-item">
+                <i class="fa-solid fa-list-check"></i>
+                <div><strong>1</strong><span>Pilihan / Nomor</span></div>
+            </div>
+        </div>
+
+        <div class="papi-instruction-body">
+            <div class="papi-instruction-title">
+                <span class="papi-title-line"></span>
+                <strong>Harap baca petunjuk berikut dengan cermat sebelum memulai pengerjaan</strong>
+            </div>
+
+            <ol class="papi-steps">
+                <li>
+                    <span class="papi-step-number">01</span>
+                    <div>
+                        Tes ini terdiri dari <strong>90 nomor</strong>. Setiap nomor berisi
+                        <strong>dua pernyataan</strong>, yaitu Pernyataan A dan Pernyataan B.
+                    </div>
+                </li>
+                <li>
+                    <span class="papi-step-number">02</span>
+                    <div>
+                        Pilih <strong>SATU</strong> pernyataan yang paling menggambarkan diri Anda
+                        atau yang paling sesuai dengan kebiasaan/sikap kerja Anda sehari-hari.
+                    </div>
+                </li>
+                <li>
+                    <span class="papi-step-number">03</span>
+                    <div>
+                        Tidak ada jawaban yang <strong>"Benar"</strong> atau <strong>"Salah"</strong>.
+                        Jawablah secara jujur dan spontan sesuai kondisi diri Anda yang sebenarnya.
+                    </div>
+                </li>
+                <li>
+                    <span class="papi-step-number">04</span>
+                    <div>
+                        Jika kedua pernyataan terasa sama-sama sesuai, tetap <strong>pilih satu</strong>
+                        yang paling mendominasi. Jika keduanya terasa tidak sesuai, pilih yang paling mendekati.
+                    </div>
+                </li>
+                <li>
+                    <span class="papi-step-number">05</span>
+                    <div>
+                        Pastikan Anda menjawab <strong>SELURUH 90 NOMOR</strong> dan tidak ada yang terlewatkan.
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="papi-start-area">
+            <label class="papi-confirm">
+                <input type="checkbox" id="papiInstructionConfirm">
+                <span class="papi-checkmark"></span>
+                <span>
+                    <strong>Saya telah membaca dan memahami petunjuk khusus PAPI Kostick.</strong>
+                    <small>Centang kotak ini untuk mengaktifkan tombol pengerjaan tes.</small>
+                </span>
+            </label>
+
+            <button type="button" id="startPapiButton" class="papi-start-button" disabled>
+                <span>Kerjakan Tes</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+
+        <div class="papi-secure-note">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Jawaban Anda tersimpan otomatis selama pengerjaan.</span>
+        </div>
+    </div>
+</section>
+
+        <!-- Quiz Card -->
+        <div class="card" id="quiz-card">
+            <form id="papi-form">
+                <div id="questions-container">
+                    <!-- Questions will be dynamically loaded via JS -->
+                </div>
+
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-outline" id="prev-btn" onclick="changeQuestion(-1)"><i class="fa-solid fa-chevron-left"></i> Sebelumnya</button>
+                    <button type="button" class="btn btn-primary" id="next-btn" onclick="changeQuestion(1)">Selanjutnya <i class="fa-solid fa-chevron-right"></i></button>
+                    <button type="button" class="btn btn-success" id="submit-btn" style="display:none;" onclick="confirmSubmit()"><i class="fa-solid fa-check"></i> Submit</button>
+                </div>
+            </form>
+
+            <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+                <label style="font-size: 13px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 10px;">Navigasi Soal:</label>
+                <div class="pagination-grid" id="pagination-grid"></div>
+            </div>
+        </div>
+
+        <!-- Thank You / Submitted Section for Participant -->
+        <div class="card" id="thankyou-section">
+            <i class="fa-solid fa-circle-check"></i>
+            <h2>Jawaban Anda telah berhasil disimpan.</h2>
+            <p>Terima kasih telah menyelesaikan rangkaian tes asesmen ini. Jawaban Anda telah tersimpan secara otomatis di sistem. Halaman ini dapat ditutup.</p>
+        </div>
+    </div>
+<script>
+        // Set dynamic current date in Indonesian format based on today's live date
+        const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        const today = new Date();
+        const formattedDate = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+        document.getElementById("current-date-span").innerText = formattedDate;
+
+        // PAPI Kostick 90 items — sumber soal dari dokumen terlampir.
+        // aDim/bDim sengaja dihapus: scoring ditentukan HANYA oleh tabel kode nomor+pilihan.
+        const papiItems = [
+            { id: 1, aText: "Saya seorang pekerja keras.", bText: "Saya bukan seorang pemurung" },
+            { id: 2, aText: "Saya suka melakukan pekerjaan lebih baik dari orang lain.", bText: "Saya suka menyelesaikan pekerjaan yang saya mulai." },
+            { id: 3, aText: "Saya suka menunjukkan kepada orang lain bagaimana cara melakukan sesuatu.", bText: "Saya ingin melakukan hal-hal sebaik mungkin." },
+            { id: 4, aText: "Saya suka melakukan hal-hal yang lucu/jenaka.", bText: "Saya suka katakan pada orang lain tentang apa yang harus mereka lakukan." },
+            { id: 5, aText: "Saya suka bergabung dalam kelompok-kelompok.", bText: "Saya suka diperhatikan oleh kelompok-kelompok." },
+            { id: 6, aText: "Saya suka membuat teman-teman baru yang intim/akrab.", bText: "Saya suka bergabung dalam kelompok-kelompok." },
+            { id: 7, aText: "Saya cepat berubah bila dirasa perlu.", bText: "Saya berusaha untuk membuat teman-teman baru yang intim/akrab." },
+            { id: 8, aText: "Saya suka membalas jika disakiti.", bText: "Saya suka melakukan hal-hal yang baru dan berbeda." },
+            { id: 9, aText: "Saya ingin atasan saya menyukai saya.", bText: "Saya suka membalas jika disakiti." },
+            { id: 10, aText: "Saya suka mengikuti petunjuk-petunjuk yang diberikan kepada saya.", bText: "Saya ingin atasan saya menyenangkan saya." },
+            { id: 11, aText: "Saya berusaha keras untuk berhasil.", bText: "Saya seorang pekerja keras." },
+            { id: 12, aText: "Saya seorang pemimpin yang baik.", bText: "Saya seorang pekerja keras." },
+            { id: 13, aText: "Saya suka membuat orang lain melakukan apa yang saya inginkan.", bText: "Saya seorang pemimpin yang baik." },
+            { id: 14, aText: "Saya suka melakukan hal-hal yang tidak biasa.", bText: "Saya suka membuat orang lain melakukan apa yang saya inginkan." },
+            { id: 15, aText: "Saya ingin menjadi orang yang penting dalam kelompok.", bText: "Saya suka melakukan hal-hal yang tidak biasa." },
+            { id: 16, aText: "Saya suka membuat teman-teman baru.", bText: "Saya ingin menjadi orang yang penting dalam kelompok." },
+            { id: 17, aText: "Saya suka bepergian dan mencoba hal-hal baru.", bText: "Saya suka membuat teman-teman baru." },
+            { id: 18, aText: "Saya suka menentang pendapat orang lain.", bText: "Saya suka bepergian dan mencoba hal-hal baru." },
+            { id: 19, aText: "Saya ingin bertindak sesuai aturan.", bText: "Saya suka menentang pendapat orang lain." },
+            { id: 20, aText: "Saya suka melakukan hal-hal menurut cara saya sendiri.", bText: "Saya ingin bertindak sesuai aturan." },
+            { id: 21, aText: "Saya selalu berusaha untuk menjadi yang terbaik.", bText: "Saya seorang pekerja keras." },
+            { id: 22, aText: "Saya ingin menjadi pemimpin kelompok.", bText: "Saya ingin berhasil dalam hal-hal yang saya lakukan." },
+            { id: 23, aText: "Saya suka membimbing orang lain.", bText: "Saya ingin menjadi pemimpin kelompok." },
+            { id: 24, aText: "Saya suka mencari perhatian orang lain.", bText: "Saya suka membimbing orang lain." },
+            { id: 25, aText: "Saya suka berada di tengah-tengah orang banyak.", bText: "Saya suka mencari perhatian orang lain." },
+            { id: 26, aText: "Saya suka menjalin persahabatan yang erat.", bText: "Saya suka berada di tengah-tengah orang banyak." },
+            { id: 27, aText: "Saya suka mencoba hal-hal yang belum pernah saya lakukan.", bText: "Saya suka menjalin persahabatan yang erat." },
+            { id: 28, aText: "Saya tidak takut untuk menyatakan ketidaksetujuan.", bText: "Saya suka mencoba hal-hal yang belum pernah saya lakukan." },
+            { id: 29, aText: "Saya ingin disukai oleh orang yang berwenang.", bText: "Saya tidak takut untuk menyatakan ketidaksetujuan." },
+            { id: 30, aText: "Saya suka bekerja sesuai perencanaan yang matang.", bText: "Saya ingin disukai oleh orang yang berwenang." },
+            { id: 31, aText: "Saya suka menyelesaikan tugas-tugas sulit.", bText: "Saya adalah seorang yang tekun dan giat bekerja." },
+            { id: 32, aText: "Saya suka membuat keputusan untuk orang lain.", bText: "Saya suka menyelesaikan tugas-tugas sulit." },
+            { id: 33, aText: "Saya suka memimpin orang lain.", bText: "Saya suka membuat keputusan untuk orang lain." },
+            { id: 34, aText: "Saya suka menceritakan cerita-cerita yang menarik.", bText: "Saya suka memimpin orang lain." },
+            { id: 35, aText: "Saya suka menghadiri pesta-pesta sosial.", bText: "Saya suka menceritakan cerita-cerita yang menarik." },
+            { id: 36, aText: "Saya suka mempunyai teman-teman yang setia.", bText: "Saya suka menghadiri pesta-pesta sosial." },
+            { id: 37, aText: "Saya suka berpindah dari satu tempat ke tempat lain.", bText: "Saya suka mempunyai teman-teman yang setia." },
+            { id: 38, aText: "Saya suka mempertahankan pendapat saya sendiri.", bText: "Saya suka berpindah dari satu tempat ke tempat lain." },
+            { id: 39, aText: "Saya suka menuruti petunjuk dari orang yang berpengalaman.", bText: "Saya suka mempertahankan pendapat saya sendiri." },
+            { id: 40, aText: "Saya suka merencanakan tugas-tugas saya dengan cermat.", bText: "Saya suka menuruti petunjuk dari orang yang berpengalaman." },
+            { id: 41, aText: "Saya bertekad untuk menjadi sangat sukses.", bText: "Saya suka bekerja terus-menerus hingga selesai." },
+            { id: 42, aText: "Saya suka bertindak sebagai ketua dalam kegiatan.", bText: "Saya bertekad untuk menjadi sangat sukses." },
+            { id: 43, aText: "Saya suka mengarahkan aktivitas orang lain.", bText: "Saya suka bertindak sebagai ketua dalam kegiatan." },
+            { id: 44, aText: "Saya suka menjadi pusat perhatian orang banyak.", bText: "Saya suka mengarahkan aktivitas orang lain." },
+            { id: 45, aText: "Saya suka bergaul dengan banyak orang.", bText: "Saya suka menjadi pusat perhatian orang banyak." },
+            { id: 46, aText: "Saya merasa senang jika dikelilingi teman-teman dekat.", bText: "Saya suka bergaul dengan banyak orang." },
+            { id: 47, aText: "Saya menyukai tantangan dan variasi dalam hidup.", bText: "Saya merasa senang jika dikelilingi teman-teman dekat." },
+            { id: 48, aText: "Saya suka berbicara secara terbalik/kritis jika tidak setuju.", bText: "Saya menyukai tantangan dan variasi dalam hidup." },
+            { id: 49, aText: "Saya berusaha menyenangkan hati atasan saya.", bText: "Saya suka berbicara secara terbalik/kritis jika tidak setuju." },
+            { id: 50, aText: "Saya suka mengatur segala sesuatu secara rinci.", bText: "Saya berusaha menyenangkan hati atasan saya." },
+            { id: 51, aText: "Saya bekerja keras untuk mencapai sasaran hidup saya.", bText: "Saya selalu berusaha menyelesaikan apa yang telah saya mulai." },
+            { id: 52, aText: "Saya suka mengatur orang lain agar bekerja dengan baik.", bText: "Saya bekerja keras untuk mencapai sasaran hidup saya." },
+            { id: 53, aText: "Saya suka mempengaruhi orang lain untuk mengikuti pandangan saya.", bText: "Saya suka mengatur orang lain agar bekerja dengan baik." },
+            { id: 54, aText: "Saya suka menghibur orang lain dengan lelucon.", bText: "Saya suka mempengaruhi orang lain untuk mengikuti pandangan saya." },
+            { id: 55, aText: "Saya suka menjadi anggota organisasi sosial.", bText: "Saya suka menghibur orang lain dengan lelucon." },
+            { id: 56, aText: "Saya sangat menghargai teman-teman yang setia.", bText: "Saya suka menjadi anggota organisasi sosial." },
+            { id: 57, aText: "Saya menyukai pekerjaan yang membutuhkan perjalanan jauh.", bText: "Saya sangat menghargai teman-teman yang setia." },
+            { id: 58, aText: "Saya suka berdebat jika merasa benar.", bText: "Saya menyukai pekerjaan yang membutuhkan perjalanan jauh." },
+            { id: 59, aText: "Saya suka mendapatkan bimbingan dari senior saya.", bText: "Saya suka berdebat jika merasa benar." },
+            { id: 60, aText: "Saya menyukai tugas yang memiliki urutan kerja yang jelas.", bText: "Saya suka mendapatkan bimbingan dari senior saya." },
+            { id: 61, aText: "Saya bercita-cita tinggi dalam karier saya.", bText: "Saya bekerja tanpa kenal lelah." },
+            { id: 62, aText: "Saya suka mengambil tanggung jawab atas keputusan kelompok.", bText: "Saya bercita-cita tinggi dalam karier saya." },
+            { id: 63, aText: "Saya suka mengendalikan situasi kerja.", bText: "Saya suka mengambil tanggung jawab atas keputusan kelompok." },
+            { id: 64, aText: "Saya suka menjadi juru bicara dalam pertemuan.", bText: "Saya suka mengendalikan situasi kerja." },
+            { id: 65, aText: "Saya merasa nyaman ketika berada di tempat yang ramai.", bText: "Saya suka menjadi juru bicara dalam pertemuan." },
+            { id: 66, aText: "Saya menyukai persahabatan yang bertahan lama.", bText: "Saya merasa nyaman ketika berada di tempat yang ramai." },
+            { id: 67, aText: "Saya suka mencoba pendekatan baru dalam menyelesaikan tugas.", bText: "Saya menyukai persahabatan yang bertahan lama." },
+            { id: 68, aText: "Saya tidak ragu menegur orang lain jika mereka bersalah.", bText: "Saya suka mencoba pendekatan baru dalam menyelesaikan tugas." },
+            { id: 69, aText: "Saya merasa aman bila ada pimpinan yang membimbing.", bText: "Saya tidak ragu menegur orang lain jika mereka bersalah." },
+            { id: 70, aText: "Saya suka menyusun jadwal kegiatan saya sendiri secara rapi.", bText: "Saya merasa aman bila ada pimpinan yang membimbing." },
+            { id: 71, aText: "Saya selalu memberikan yang terbaik dalam setiap pekerjaan.", bText: "Saya menyelesaikan pekerjaan sebelum beralih ke hal lain." },
+            { id: 72, aText: "Saya ingin dipandang sebagai pemimpin yang efektif.", bText: "Saya selalu memberikan yang terbaik dalam setiap pekerjaan." },
+            { id: 73, aText: "Saya suka mengorganisasi kegiatan kelompok.", bText: "Saya ingin dipandang sebagai pemimpin yang efektif." },
+            { id: 74, aText: "Saya suka jika keberadaan saya diperhatikan oleh orang banyak.", bText: "Saya suka mengorganisasi kegiatan kelompok." },
+            { id: 75, aText: "Saya suka berpartisipasi dalam diskusi kelompok besar.", bText: "Saya suka jika keberadaan saya diperhatikan oleh orang banyak." },
+            { id: 76, aText: "Saya senang membantu teman dekat yang membutuhkan bantuan.", bText: "Saya suka berpartisipasi dalam diskusi kelompok besar." },
+            { id: 77, aText: "Saya merasa bosan jika harus mengerjakan hal yang sama berulang kali.", bText: "Saya senang membantu teman dekat yang membutuhkan bantuan." },
+            { id: 78, aText: "Saya suka mengkritik ide yang menurut saya kurang realistis.", bText: "Saya merasa bosan jika harus mengerjakan hal yang sama berulang kali." },
+            { id: 79, aText: "Saya suka bekerja di bawah pengawasan pimpinan yang adil.", bText: "Saya suka mengkritik ide yang menurut saya kurang realistis." },
+            { id: 80, aText: "Saya mengutamakan ketelitian dan kerapian dalam bekerja.", bText: "Saya suka bekerja di bawah pengawasan pimpinan yang adil." },
+            { id: 81, aText: "Saya berusaha mencapai standar kinerja yang sangat tinggi.", bText: "Saya selalu bertahan mengerjakan tugas hingga tuntas." },
+            { id: 82, aText: "Saya suka memotivasikan orang lain agar bekerja lebih cepat.", bText: "Saya berusaha mencapai standar kinerja yang sangat tinggi." },
+            { id: 83, aText: "Saya suka membuat rencana kerja untuk tim saya.", bText: "Saya suka memotivasikan orang lain agar bekerja lebih cepat." },
+            { id: 84, aText: "Saya suka tampil di hadapan publik atau di depan kelas.", bText: "Saya suka membuat rencana kerja untuk tim saya." },
+            { id: 85, aText: "Saya suka memperluas jaringan pertemanan saya.", bText: "Saya suka tampil di hadapan publik atau di depan kelas." },
+            { id: 86, aText: "Saya menyukai hubungan kerja yang penuh rasa saling percaya.", bText: "Saya suka memperluas jaringan pertemanan saya." },
+            { id: 87, aText: "Saya fleksibel dalam menghadapi perubahan situasi mendadak.", bText: "Saya menyukai hubungan kerja yang penuh rasa saling percaya." },
+            { id: 88, aText: "Saya cenderung blak-blakan ketika ada hal yang tidak saya sukai.", bText: "Saya fleksibel dalam menghadapi perubahan situasi mendadak." },
+            { id: 89, aText: "Saya suka meminta saran pimpinan sebelum mengambil langkah penting.", bText: "Saya cenderung blak-blakan ketika ada hal yang tidak saya sukai." },
+            { id: 90, aText: "Saya merasa puas jika pekerjaan diselesaikan secara tertata dan rinci.", bText: "Saya suka meminta saran pimpinan sebelum mengambil langkah penting." }
+        ];
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const projId = (urlParams.get('projectId') || urlParams.get('project') || '').trim();
+        const partId = (urlParams.get('participantId') || urlParams.get('participant') || '').trim();
+        const assessmentIndex = urlParams.get('assessmentIndex');
+        const assessmentCode = 'PAPI';
+
+/* =====================================================
+   TALENTSCOPE - LIVE ASSESSMENT ACTIVITY
+   Menandai bahwa peserta benar-benar berada di halaman PAPI.
+===================================================== */
+
+function getPapiAssessmentName() {
+
+    const urlName =
+        (
+            urlParams.get("assessmentName") ||
+            urlParams.get("testName") ||
+            ""
+        ).trim();
+
+    if (urlName) {
+        return urlName;
+    }
+
+    try {
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        const project =
+            Array.isArray(projects)
+                ? projects.find(function (p) {
+
+                    return String(
+                        p?.id ||
+                        p?.projectId ||
+                        p?.project_id ||
+                        ""
+                    ).trim() === projId;
+
+                })
+                : null;
+
+        const assessments =
+            Array.isArray(project?.assessments)
+                ? project.assessments
+                : Array.isArray(project?.assessmentPackage)
+                    ? project.assessmentPackage
+                    : Array.isArray(project?.packages)
+                        ? project.packages
+                        : [];
+
+        const item =
+            assessments[
+                Number(assessmentIndex)
+            ];
+
+        if (typeof item === "string") {
+            return item.trim() ||
+                "PAPI Kostick";
+        }
+
+        return String(
+            item?.name ||
+            item?.title ||
+            item?.assessmentName ||
+            item?.testName ||
+            item?.label ||
+            item?.code ||
+            "PAPI Kostick"
+        ).trim();
+
+    } catch (error) {
+
+        console.warn(
+            "[PAPI] Gagal membaca nama assessment:",
+            error
+        );
+
+        return "PAPI Kostick";
+    }
+}
+
+
+/* =====================================================
+   UPDATE LIVE ONLINE + TEST ACTIVITY
+===================================================== */
+
+function updatePapiActivity(
+    eventType = null
+) {
+
+    if (
+        !projId ||
+        !partId
+    ) {
+        return;
+    }
+
+    try {
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        if (!Array.isArray(projects)) {
+            return;
+        }
+
+        const testName =
+            getPapiAssessmentName();
+
+        const now =
+            new Date().toISOString();
+
+        const activity =
+            eventType === "test-complete"
+
+                ? "Tes selesai (" +
+                  testName +
+                  ")"
+
+                : "Sedang mengerjakan tes (" +
+                  testName +
+                  ")";
+
+
+        projects.forEach(
+            function(project) {
+
+                const projectId =
+                    String(
+                        project?.id ||
+                        project?.projectId ||
+                        project?.project_id ||
+                        ""
+                    ).trim();
+
+                if (
+                    projectId !==
+                    String(projId).trim()
+                ) {
+                    return;
+                }
+
+
+                const participants =
+                    Array.isArray(
+                        project.participants
+                    )
+                        ? project.participants
+                        : [];
+
+
+                participants.forEach(
+                    function(participant) {
+
+                        const participantId =
+                            String(
+                                participant?.id ||
+                                participant?.participantId ||
+                                participant?.employeeId ||
+                                participant?.employee_id ||
+                                ""
+                            ).trim();
+
+
+                        if (
+                            participantId !==
+                            String(partId).trim()
+                        ) {
+                            return;
+                        }
+
+
+                        /* ==================================
+   STATUS PESERTA
+================================== */
+
+if (
+    eventType === "test-complete"
+) {
+
+    participant.isLoggedIn =
+        false;
+
+    participant.status =
+        "Completed";
+
+    participant.onlineStatus =
+        "Completed";
+
+} else {
+
+    participant.isLoggedIn =
+        true;
+
+    participant.status =
+        "Online";
+
+    participant.onlineStatus =
+        "Online";
+
+}
+                        participant.lastSeen =
+                            now;
+
+                        participant.lastSeenAt =
+                            now;
+
+
+                        /* ==================================
+                           INILAH FIELD YANG MEMBERITAHU
+                           MONITORING PESERTA SEDANG TES APA
+                        ================================== */
+
+                        participant.currentTest =
+                            testName;
+
+                        participant.testActivity =
+                            activity;
+
+                        participant.currentAssessmentIndex =
+                            Number(assessmentIndex);
+
+                        participant.currentAssessmentCode =
+                            assessmentCode;
+
+                        participant.currentActivity =
+                            activity;
+
+                        participant.activity =
+                            activity;
+
+                        participant.lastActivity =
+                            activity;
+
+                        participant.activityUpdatedAt =
+                            now;
+
+
+                        /* ==================================
+                           ACTIVITY HISTORY
+                        ================================== */
+
+                        if (
+                            eventType
+                        ) {
+
+                            if (
+                                !Array.isArray(
+                                    participant.activityHistory
+                                )
+                            ) {
+
+                                participant.activityHistory =
+                                    [];
+
+                            }
+
+
+                            participant.activityHistory.push({
+
+                                type:
+                                    eventType,
+
+                                activity:
+                                    activity,
+
+                                title:
+                                    activity,
+
+                                action:
+                                    eventType ===
+                                    "test-start"
+
+                                        ? "Start Assessment"
+
+                                        : "Complete Assessment",
+
+                                test:
+                                    testName,
+
+                                testName:
+                                    testName,
+
+                                assessmentName:
+                                    testName,
+
+                                assessmentCode:
+                                    assessmentCode,
+
+                                assessmentIndex:
+                                    Number(
+                                        assessmentIndex
+                                    ),
+
+                                projectId:
+                                    String(projId),
+
+                                participantId:
+                                    String(partId),
+
+                                description:
+                                    activity,
+
+                                timestamp:
+                                    now,
+
+                                time:
+                                    now
+
+                            });
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        localStorage.setItem(
+            "talentscope_projects",
+            JSON.stringify(projects)
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[PAPI] Gagal update activity:",
+            error
+        );
+
+    }
+
+}
+
+/* =====================================================
+   UPDATE STATUS OFFLINE
+   Dipanggil ketika peserta logout / menutup halaman
+===================================================== */
+
+function setPapiOffline(
+    reason = "window-closed"
+) {
+
+    if (
+        !projId ||
+        !partId
+    ) {
+        return;
+    }
+
+    try {
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        if (
+            !Array.isArray(projects)
+        ) {
+            return;
+        }
+
+        const now =
+            new Date().toISOString();
+
+
+        projects.forEach(
+            function(project) {
+
+                const projectId =
+                    String(
+                        project?.id ||
+                        project?.projectId ||
+                        project?.project_id ||
+                        ""
+                    ).trim();
+
+
+                if (
+                    projectId !==
+                    String(projId).trim()
+                ) {
+                    return;
+                }
+
+
+                const participants =
+                    Array.isArray(
+                        project.participants
+                    )
+                        ? project.participants
+                        : [];
+
+
+                participants.forEach(
+                    function(participant) {
+
+                        const participantId =
+                            String(
+                                participant?.id ||
+                                participant?.participantId ||
+                                participant?.employeeId ||
+                                participant?.employee_id ||
+                                ""
+                            ).trim();
+
+
+                        if (
+                            participantId !==
+                            String(partId).trim()
+                        ) {
+                            return;
+                        }
+
+
+                        /* =============================
+                           UBAH STATUS MENJADI OFFLINE
+                        ============================= */
+
+                        participant.isLoggedIn =
+                            false;
+
+                        participant.status =
+                            "Offline";
+
+                        participant.onlineStatus =
+                            "Offline";
+
+                        participant.lastSeen =
+                            now;
+
+                        participant.lastSeenAt =
+                            now;
+
+                        participant.offlineAt =
+                            now;
+
+                        participant.offlineReason =
+                            reason;
+
+
+                        /* =============================
+                           ACTIVITY TERAKHIR
+                        ============================= */
+
+                        participant.currentActivity =
+                            "Offline";
+
+                        participant.activity =
+                            "Offline";
+
+                        participant.lastActivity =
+                            "Offline";
+
+
+                        /* =============================
+                           SIMPAN HISTORY
+                        ============================= */
+
+                        if (
+                            !Array.isArray(
+                                participant.activityHistory
+                            )
+                        ) {
+
+                            participant.activityHistory =
+                                [];
+
+                        }
+
+
+                        participant.activityHistory.push({
+
+                            type:
+                                "offline",
+
+                            activity:
+                                "Peserta offline",
+
+                            title:
+                                "Peserta offline",
+
+                            action:
+                                "Offline",
+
+                            test:
+                                getPapiAssessmentName(),
+
+                            testName:
+                                getPapiAssessmentName(),
+
+                            assessmentCode:
+                                assessmentCode,
+
+                            assessmentIndex:
+                                Number(
+                                    assessmentIndex
+                                ),
+
+                            projectId:
+                                String(projId),
+
+                            participantId:
+                                String(partId),
+
+                            description:
+                                reason === "logout"
+
+                                    ? "Peserta logout dari sistem"
+
+                                    : "Peserta menutup atau meninggalkan halaman assessment",
+
+                            timestamp:
+                                now,
+
+                            time:
+                                now
+
+                        });
+
+                    }
+
+                );
+
+            }
+
+        );
+
+
+        /* =============================
+           SIMPAN PERUBAHAN
+        ============================= */
+
+        localStorage.setItem(
+            "talentscope_projects",
+            JSON.stringify(projects)
+        );
+
+
+        /* Memberitahu halaman lain dalam browser */
+        localStorage.setItem(
+            "talentscope_presence_updated",
+            Date.now().toString()
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[PAPI] Gagal mengubah status Offline:",
+            error
+        );
+
+    }
+
+}
+
+        if (!projId || !partId || assessmentIndex === null) {
+            console.error('[PAPI] Identitas assessment tidak lengkap.', {
+                projectId: projId, participantId: partId, assessmentIndex,
+                url: window.location.href
+            });
+        }
+
+        const papiStatePrefix =
+            `ts_papi_${encodeURIComponent(projId)}_${encodeURIComponent(partId)}_${encodeURIComponent(assessmentIndex ?? 'invalid')}`;
+        const PAPI_ANSWERS_KEY = `${papiStatePrefix}_answers`;
+        const PAPI_TIME_KEY = `${papiStatePrefix}_time`;
+        const PAPI_SUBMITTED_KEY = `${papiStatePrefix}_submitted`;
+        const PAPI_RESULT_KEY = `papi_result_${projId}_${partId}_${assessmentIndex}`;
+
+        let currentQuestion = 0;
+        const totalQuestions = papiItems.length;
+        let answers = JSON.parse(localStorage.getItem(PAPI_ANSWERS_KEY) || '{}');
+        let timeLeft = parseInt(localStorage.getItem(PAPI_TIME_KEY), 10);
+        if (!Number.isFinite(timeLeft) || timeLeft <= 0) timeLeft = 60 * 60;
+        let timerInterval;
+
+/* =====================================================
+   HEARTBEAT PESERTA
+===================================================== */
+
+let papiActivityHeartbeat = null;
+
+
+/* Durasi heartbeat */
+
+const PAPI_HEARTBEAT_INTERVAL =
+    5000;
+
+
+/* Peserta dianggap offline jika tidak ada aktivitas */
+
+const PAPI_OFFLINE_TIMEOUT =
+    20000;
+
+
+/* =====================================================
+   MULAI HEARTBEAT
+===================================================== */
+
+function startPapiActivityHeartbeat() {
+
+    /* Update pertama */
+
+    updatePapiActivity();
+
+
+    /* Jika interval lama masih ada */
+
+    if (
+        papiActivityHeartbeat
+    ) {
+
+        clearInterval(
+            papiActivityHeartbeat
+        );
+
+    }
+
+
+    /* Update setiap 5 detik */
+
+    papiActivityHeartbeat =
+        setInterval(
+            function() {
+
+                updatePapiActivity();
+
+            },
+
+            PAPI_HEARTBEAT_INTERVAL
+        );
+
+}
+
+
+/* =====================================================
+   HENTIKAN HEARTBEAT
+===================================================== */
+
+function stopPapiActivityHeartbeat() {
+
+    if (
+        papiActivityHeartbeat
+    ) {
+
+        clearInterval(
+            papiActivityHeartbeat
+        );
+
+        papiActivityHeartbeat =
+            null;
+
+    }
+
+}
+
+/* =====================================================
+   DETEKSI PESERTA MENUTUP HALAMAN
+===================================================== */
+
+let papiPageIsLeaving =
+    false;
+
+
+/* ================================================
+   PAGEHIDE
+   Berjalan saat halaman ditutup atau ditinggalkan
+================================================ */
+
+window.addEventListener(
+    "pagehide",
+    function() {
+
+        if (
+            papiPageIsLeaving
+        ) {
+            return;
+        }
+
+        papiPageIsLeaving =
+            true;
+
+
+        /* Hentikan heartbeat */
+
+        stopPapiActivityHeartbeat();
+
+
+        /* Ubah status Offline */
+
+        setPapiOffline(
+            "window-closed"
+        );
+
+    }
+);
+
+
+/* ================================================
+   BEFOREUNLOAD
+   Backup jika browser ditutup
+================================================ */
+
+window.addEventListener(
+    "beforeunload",
+    function() {
+
+        if (
+            papiPageIsLeaving
+        ) {
+            return;
+        }
+
+        papiPageIsLeaving =
+            true;
+
+
+        stopPapiActivityHeartbeat();
+
+
+        setPapiOffline(
+            "browser-closed"
+        );
+
+    }
+);
+
+        // Initialize App
+        document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadParticipantInfo();
+
+        renderQuestions();
+
+        renderPagination();
+
+        showQuestion(
+            currentQuestion
+        );
+
+
+        const instruction =
+            document.getElementById(
+                "papiInstruction"
+            );
+
+        const quizCard =
+            document.getElementById(
+                "quiz-card"
+            );
+
+        const confirmBox =
+            document.getElementById(
+                "papiInstructionConfirm"
+            );
+
+        const startButton =
+            document.getElementById(
+                "startPapiButton"
+            );
+
+
+        /* ==========================================
+           CEK HASIL LAMA
+        ========================================== */
+
+        const alreadySubmitted =
+            projId &&
+            partId &&
+            assessmentIndex !== null &&
+            localStorage.getItem(
+                PAPI_SUBMITTED_KEY
+            ) === "true";
+
+
+        if (
+            alreadySubmitted
+        ) {
+
+            if (instruction) {
+                instruction.style.display =
+                    "none";
+            }
+
+            showThankYou();
+
+            return;
+        }
+
+
+        /* ==========================================
+           AWALNYA SOAL DISEMBUNYIKAN
+        ========================================== */
+
+        if (quizCard) {
+
+            quizCard.style.display =
+                "none";
+
+        }
+
+
+        /* ==========================================
+           PESERTA SUDAH MASUK HALAMAN PAPI
+           MONITORING LANGSUNG TAHU PAPI
+        ========================================== */
+
+        updatePapiActivity();
+
+        startPapiActivityHeartbeat();
+
+
+        /* ==========================================
+           CHECKBOX PETUNJUK
+        ========================================== */
+
+        if (
+            confirmBox &&
+            startButton
+        ) {
+
+            confirmBox.addEventListener(
+                "change",
+                function() {
+
+                    startButton.disabled =
+                        !confirmBox.checked;
+
+                }
+            );
+
+
+            /* ======================================
+               TOMBOL KERJAKAN TES
+            ====================================== */
+
+            startButton.addEventListener(
+                "click",
+                function() {
+
+                    if (
+                        !confirmBox.checked
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    /* ==============================
+                       SEKARANG RESMI MULAI TES
+                    ============================== */
+
+                    updatePapiActivity(
+                        "test-start"
+                    );
+
+
+                    if (instruction) {
+
+                        instruction.style.display =
+                            "none";
+
+                    }
+
+
+                    if (quizCard) {
+
+                        quizCard.style.display =
+                            "block";
+
+                    }
+
+
+                    startTimer();
+
+                }
+            );
+
+        }
+
+    }
+);
+
+        function renderQuestions() {
+            const container = document.getElementById("questions-container");
+            let html = "";
+            papiItems.forEach((item, index) => {
+                html += `
+                    <div class="question-container" id="q-container-${index}">
+                        <div class="q-number">Pertanyaan ${index + 1} dari ${totalQuestions}</div>
+                        <div class="q-title">Pilih salah satu pernyataan yang paling mencerminkan diri Anda:</div>
+                        <div class="options-group">
+                            <label class="option-label ${answers[item.id] === 'A' ? 'selected' : ''}" onclick="selectAnswer(${item.id}, 'A', ${index})">
+                                <input type="radio" name="q_${item.id}" value="A" ${answers[item.id] === 'A' ? 'checked' : ''}>
+                                ${item.aText}
+                            </label>
+                            <label class="option-label ${answers[item.id] === 'B' ? 'selected' : ''}" onclick="selectAnswer(${item.id}, 'B', ${index})">
+                                <input type="radio" name="q_${item.id}" value="B" ${answers[item.id] === 'B' ? 'checked' : ''}>
+                                ${item.bText}
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderPagination() {
+            const grid = document.getElementById("pagination-grid");
+            let html = "";
+            for(let i = 0; i < totalQuestions; i++) {
+                let qId = papiItems[i].id;
+                let statusClass = answers[qId] ? 'answered' : '';
+                if(i === currentQuestion) statusClass += ' current';
+                html += `<button type="button" class="page-dot ${statusClass}" onclick="goToQuestion(${i})">${i+1}</button>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        function showQuestion(index) {
+            document.querySelectorAll(".question-container").forEach(el => el.classList.remove("active"));
+            document.getElementById(`q-container-${index}`).classList.add("active");
+            
+            document.getElementById("prev-btn").style.display = index === 0 ? "none" : "inline-flex";
+            document.getElementById("next-btn").style.display = index === totalQuestions - 1 ? "none" : "inline-flex";
+            document.getElementById("submit-btn").style.display = index === totalQuestions - 1 ? "inline-flex" : "none";
+            
+            currentQuestion = index;
+            renderPagination();
+        }
+
+        function changeQuestion(direction) {
+            let newIndex = currentQuestion + direction;
+            if(newIndex >= 0 && newIndex < totalQuestions) {
+                showQuestion(newIndex);
+            }
+        }
+
+        function goToQuestion(index) {
+            showQuestion(index);
+        }
+
+        function selectAnswer(itemId, option, qIndex) {
+            answers[itemId] = option;
+            localStorage.setItem(PAPI_ANSWERS_KEY, JSON.stringify(answers));
+
+            const container = document.getElementById(`q-container-${qIndex}`);
+            if (container) {
+                container.querySelectorAll(".option-label").forEach(lbl => {
+                    lbl.classList.remove("selected");
+                });
+
+                const labels = container.querySelectorAll(".option-label");
+                const targetIndex = option === "A" ? 0 : 1;
+
+                if (labels[targetIndex]) {
+                    labels[targetIndex].classList.add("selected");
+                }
+            }
+
+            renderPagination();
+        }
+
+        function startTimer() {
+            if (timerInterval) return;
+            timerInterval = setInterval(() => {
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Waktu ujian telah habis! Sistem akan melakukan submit otomatis.");
+                    submitExam();
+                    return;
+                }
+                timeLeft--;
+                localStorage.setItem(PAPI_TIME_KEY, timeLeft);
+                
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                document.getElementById("timer-display").innerHTML = `<i class="fa-regular fa-clock"></i> ${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+            }, 1000);
+        }
+
+        function confirmSubmit() {
+            let answeredCount = Object.keys(answers).length;
+            if(answeredCount < totalQuestions) {
+                if(!confirm(`Anda baru menjawab ${answeredCount} dari ${totalQuestions} soal. Apakah Anda yakin ingin mengumpulkan jawaban sekarang?`)) {
+                    return;
+                }
+            } else {
+                if(!confirm("Apakah Anda yakin ingin mengumpulkan jawaban tes PAPI Kostick ini?")) {
+                    return;
+                }
+            }
+            submitExam();
+        }
+
+        /* ==========================================================
+           PAPI KOSTICK — SCORING BERDASARKAN TABEL
+           Nilai 1 hanya bila kombinasi nomor + pilihan persis ada di tabel.
+           Semua kombinasi lain = 0.
+           Tidak menggunakan aDim / bDim.
+        ========================================================== */
+
+        const PAPI_SCORING_MAP = {
+    "G": [
+        "1a",
+        "11a",
+        "21a",
+        "31a",
+        "41a",
+        "51a",
+        "61a",
+        "71a",
+        "81a"
+    ],
+    "L": [
+        "12a",
+        "22a",
+        "32a",
+        "42a",
+        "52a",
+        "62a",
+        "72a",
+        "82a",
+        "81b"
+    ],
+    "I": [
+        "23a",
+        "33a",
+        "43a",
+        "53a",
+        "63a",
+        "73a",
+        "83a",
+        "71b",
+        "82b"
+    ],
+    "T": [
+        "34a",
+        "44a",
+        "54a",
+        "64a",
+        "74a",
+        "84a",
+        "61b",
+        "72b",
+        "83b"
+    ],
+    "V": [
+        "45a",
+        "55a",
+        "65a",
+        "75a",
+        "85a",
+        "51b",
+        "62b",
+        "73b",
+        "84b"
+    ],
+    "S": [
+        "56a",
+        "66a",
+        "76a",
+        "86a",
+        "41b",
+        "52b",
+        "63b",
+        "74b",
+        "85b"
+    ],
+    "R": [
+        "67a",
+        "77a",
+        "87a",
+        "31b",
+        "42b",
+        "53b",
+        "64b",
+        "75b",
+        "86b"
+    ],
+    "D": [
+        "78a",
+        "88a",
+        "21b",
+        "32b",
+        "43b",
+        "54b",
+        "65b",
+        "76b",
+        "87b"
+    ],
+    "C": [
+        "89a",
+        "11b",
+        "22b",
+        "33b",
+        "44b",
+        "55b",
+        "66b",
+        "77b",
+        "88b"
+    ],
+    "E": [
+        "1b",
+        "12b",
+        "23b",
+        "34b",
+        "45b",
+        "56b",
+        "67b",
+        "78b",
+        "89b"
+    ],
+    "N": [
+        "2b",
+        "13b",
+        "24b",
+        "35b",
+        "46b",
+        "57b",
+        "68b",
+        "79b",
+        "90b"
+    ],
+    "A": [
+        "2a",
+        "3b",
+        "14b",
+        "25b",
+        "36b",
+        "47b",
+        "58b",
+        "69b",
+        "80b"
+    ],
+    "P": [
+        "3a",
+        "13a",
+        "4b",
+        "15b",
+        "26b",
+        "37b",
+        "48b",
+        "59b",
+        "70b"
+    ],
+    "X": [
+        "4a",
+        "14a",
+        "24a",
+        "5b",
+        "16b",
+        "27b",
+        "38b",
+        "49b",
+        "60b"
+    ],
+    "B": [
+        "5a",
+        "15a",
+        "25a",
+        "35a",
+        "6b",
+        "17b",
+        "28b",
+        "39b",
+        "50b"
+    ],
+    "O": [
+        "6b",
+        "16b",
+        "26b",
+        "36b",
+        "46b",
+        "7b",
+        "18b",
+        "29b",
+        "40b"
+    ],
+    "Z": [
+        "7a",
+        "17a",
+        "27a",
+        "37a",
+        "47a",
+        "57a",
+        "8b",
+        "19b",
+        "30b"
+    ],
+    "K": [
+        "8a",
+        "18a",
+        "28a",
+        "38a",
+        "48a",
+        "58a",
+        "68a",
+        "9b",
+        "20b"
+    ],
+    "F": [
+        "9a",
+        "19a",
+        "29a",
+        "39a",
+        "49a",
+        "59a",
+        "69a",
+        "79a",
+        "10b"
+    ],
+    "W": [
+        "10a",
+        "20a",
+        "30a",
+        "40a",
+        "50a",
+        "60a",
+        "70a",
+        "80a",
+        "90a"
+    ]
+};
+
+        const PAPI_DIMENSIONS = [
+            "G","L","I","T","V","S","R","D","C","E",
+            "N","A","P","X","B","O","Z","K","F","W"
+        ];
+
+        function calculatePapiScores(userAnswers) {
+            const scores = {};
+            PAPI_DIMENSIONS.forEach(dimension => {
+                scores[dimension] = 0;
+            });
+
+            Object.keys(PAPI_SCORING_MAP).forEach(dimension => {
+                PAPI_SCORING_MAP[dimension].forEach(code => {
+                    const match = String(code).match(/^(\d+)([ab])$/i);
+                    if (!match) return;
+
+                    const questionNumber = match[1];
+                    const expectedAnswer = match[2].toUpperCase();
+
+                    const rawAnswer =
+                        userAnswers[questionNumber] ??
+                        userAnswers[Number(questionNumber)];
+
+                    const answer =
+                        typeof rawAnswer === "string"
+                            ? rawAnswer.trim().toUpperCase()
+                            : "";
+
+                    if (answer === expectedAnswer) {
+                        scores[dimension] += 1;
+                    }
+                });
+            });
+
+            PAPI_DIMENSIONS.forEach(dimension => {
+                scores[dimension] = Math.max(
+                    0,
+                    Math.min(9, scores[dimension])
+                );
+            });
+
+            return scores;
+        }
+
+        // Kompatibilitas dengan fungsi lama.
+        function calculateScores(answers) {
+            return calculatePapiScores(answers);
+        }
+
+
+
+        /* ==========================================================
+           SUBMIT EXAM
+        ========================================================== */
+
+        function submitExam() {
+            clearInterval(timerInterval);
+
+            const userAnswers = JSON.parse(
+                localStorage.getItem(PAPI_ANSWERS_KEY) || "{}"
+            );
+
+            const scores = calculatePapiScores(userAnswers);
+
+            if (!projId || !partId || assessmentIndex === null) {
+                alert(
+                    "Identitas project, peserta, atau assessment tidak valid. Silakan kembali ke dashboard."
+                );
+                return;
+            }
+
+            const projects = JSON.parse(
+                localStorage.getItem("talentscope_projects") || "[]"
+            );
+
+            const project = Array.isArray(projects)
+                ? projects.find(function (p) {
+                    return String(
+                        p.id ||
+                        p.projectId ||
+                        p.project_id ||
+                        ""
+                    ).trim() === projId;
+                })
+                : null;
+
+            const participant =
+                project && Array.isArray(project.participants)
+                    ? project.participants.find(function (p) {
+                        return String(
+                            p.id ||
+                            p.participantId ||
+                            p.employeeId ||
+                            p.employee_id ||
+                            ""
+                        ).trim() === partId;
+                    })
+                    : null;
+
+            const submittedAt = new Date().toISOString();
+
+            const resultData = {
+                projectId: projId,
+                participantId: partId,
+                assessmentIndex: Number(assessmentIndex),
+                assessmentCode: assessmentCode,
+
+                peserta:
+                    participant?.name ||
+                    participant?.fullName ||
+                    partId,
+
+                tanggal: submittedAt,
+
+                /* Dua field dipertahankan untuk kompatibilitas halaman lama. */
+                skorDimensi: scores,
+                scores: scores,
+
+                /* Jawaban mentah dipertahankan agar dapat dihitung ulang. */
+                jawabanMentah: userAnswers,
+                answers: userAnswers,
+
+                status: "Completed",
+                submittedAt: submittedAt,
+
+                scoringVersion: "PAPI-KOSTICK-TABLE-V3"
+            };
+
+            localStorage.setItem(
+                PAPI_RESULT_KEY,
+                JSON.stringify(resultData)
+            );
+
+            localStorage.setItem(
+                `assessment_result_${projId}_${partId}_${assessmentIndex}`,
+                JSON.stringify(resultData)
+            );
+
+            const allResults = JSON.parse(
+                localStorage.getItem("talent_scope_results") || "[]"
+            );
+
+            const filteredResults = Array.isArray(allResults)
+                ? allResults.filter(function (item) {
+                    return !(
+                        String(item?.projectId || "") === projId &&
+                        String(item?.participantId || "") === partId &&
+                        String(item?.assessmentIndex ?? "") ===
+                            String(assessmentIndex) &&
+                        String(item?.assessmentCode || "").toUpperCase() ===
+                            String(assessmentCode).toUpperCase()
+                    );
+                })
+                : [];
+
+            filteredResults.push(resultData);
+
+            localStorage.setItem(
+                "talent_scope_results",
+                JSON.stringify(filteredResults)
+            );
+
+            localStorage.setItem(
+                PAPI_SUBMITTED_KEY,
+                "true"
+            );
+
+            localStorage.removeItem("papi_submitted");
+
+/* ==========================================
+   CATAT TES PAPI SELESAI
+========================================== */
+
+updatePapiActivity("test-complete");
+
+/* ==========================================
+   MATIKAN HEARTBEAT
+========================================== */
+
+if (papiActivityHeartbeat) {
+    clearInterval(papiActivityHeartbeat);
+    papiActivityHeartbeat = null;
+}
+
+showThankYou();
+}
+        
+
+</script>
+<script>
+
+/* ==========================================================
+   NEXT ASSESSMENT ROUTER
+   Menentukan assessment berikutnya dari paket Project.
+========================================================== */
+
+function getNextAssessmentIndex() {
+
+    if (
+        !projId ||
+        assessmentIndex === null
+    ) {
+        return null;
+    }
+
+    try {
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        if (!Array.isArray(projects)) {
+            return null;
+        }
+
+        const project =
+            projects.find(function(project) {
+
+                return String(
+                    project?.id ||
+                    project?.projectId ||
+                    project?.project_id ||
+                    ""
+                ).trim() ===
+                String(projId).trim();
+
+            });
+
+        if (!project) {
+            return null;
+        }
+
+        const assessments =
+            Array.isArray(
+                project.assessments
+            )
+                ? project.assessments
+
+                : Array.isArray(
+                    project.assessmentPackage
+                )
+                    ? project.assessmentPackage
+
+                    : Array.isArray(
+                        project.packages
+                    )
+                        ? project.packages
+
+                        : [];
+
+        const currentIndex =
+            Number(assessmentIndex);
+
+        if (
+            !Number.isFinite(
+                currentIndex
+            )
+        ) {
+            return null;
+        }
+
+        const nextIndex =
+            currentIndex + 1;
+
+        if (
+            nextIndex >=
+            assessments.length
+        ) {
+            return null;
+        }
+
+        return nextIndex;
+
+    } catch (error) {
+
+        console.warn(
+            "[PAPI] Gagal mencari assessment berikutnya:",
+            error
+        );
+
+        return null;
+
+    }
+}
+</script>
+<script>
+function showThankYou() {
+
+    const instruction =
+        document.getElementById(
+            "papiInstruction"
+        );
+
+    const quizCard =
+        document.getElementById(
+            "quiz-card"
+        );
+
+
+    if (instruction) {
+        instruction.style.display =
+            "none";
+    }
+
+
+    if (quizCard) {
+        quizCard.style.display =
+            "none";
+    }
+
+
+    const container =
+        document.querySelector(
+            ".container"
+        ) || document.body;
+
+
+    const nextIndex =
+        getNextAssessmentIndex();
+
+
+    const hasNextAssessment =
+        nextIndex !== null;
+
+
+    let htmlContent =
+        '<div style="' +
+        'text-align:center;' +
+        'padding:60px 20px;' +
+        '">';
+
+
+    htmlContent +=
+        '<div style="' +
+        'width:70px;' +
+        'height:70px;' +
+        'border-radius:50%;' +
+        'background:#ecfdf5;' +
+        'color:#10b981;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        'margin:0 auto 20px;' +
+        'font-size:32px;' +
+        '">';
+
+    htmlContent +=
+        '<i class="fa-solid fa-check"></i>';
+
+    htmlContent +=
+        '</div>';
+
+
+    htmlContent +=
+        '<h2 style="' +
+        'color:#1e293b;' +
+        'font-size:28px;' +
+        'margin-bottom:12px;' +
+        '">Tes PAPI Kostick Selesai</h2>';
+
+
+    htmlContent +=
+        '<p style="' +
+        'color:#64748b;' +
+        'font-size:15px;' +
+        'line-height:1.6;' +
+        'max-width:560px;' +
+        'margin:0 auto 28px;' +
+        '">';
+
+
+    if (hasNextAssessment) {
+
+        htmlContent +=
+            'Jawaban PAPI Kostick Anda telah berhasil disimpan. ' +
+            'Silakan lanjut ke assessment berikutnya.';
+
+    } else {
+
+        htmlContent +=
+            'Jawaban PAPI Kostick Anda telah berhasil disimpan. ' +
+            'Seluruh rangkaian assessment pada project ini telah selesai.';
+
+    }
+
+
+    htmlContent +=
+        '</p>';
+
+
+    if (hasNextAssessment) {
+
+        htmlContent +=
+            '<button ' +
+            'type="button" ' +
+            'onclick="goToNextAssessment()" ' +
+            'style="' +
+            'display:inline-flex;' +
+            'align-items:center;' +
+            'justify-content:center;' +
+            'gap:9px;' +
+            'background:#0066ff;' +
+            'color:white;' +
+            'border:none;' +
+            'padding:13px 22px;' +
+            'border-radius:10px;' +
+            'font-size:14px;' +
+            'font-weight:700;' +
+            'cursor:pointer;' +
+            '">';
+
+        htmlContent +=
+            'Lanjut ke Tes Berikutnya';
+
+        htmlContent +=
+            ' <i class="fa-solid fa-arrow-right"></i>';
+
+        htmlContent +=
+            '</button>';
+
+    } else {
+
+        htmlContent +=
+            '<a ' +
+            'href="participant-dashboard.html" ' +
+            'style="' +
+            'display:inline-flex;' +
+            'align-items:center;' +
+            'justify-content:center;' +
+            'gap:9px;' +
+            'background:#0066ff;' +
+            'color:white;' +
+            'padding:13px 22px;' +
+            'border-radius:10px;' +
+            'text-decoration:none;' +
+            'font-size:14px;' +
+            'font-weight:700;' +
+            '">';
+
+        htmlContent +=
+            'Kembali ke Dashboard';
+
+        htmlContent +=
+            '</a>';
+
+    }
+
+
+    htmlContent +=
+        '</div>';
+
+
+    container.innerHTML =
+        htmlContent;
+
+
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
+}
+</script>
+<script>
+function goToNextAssessment() {
+
+    const nextIndex =
+        getNextAssessmentIndex();
+
+
+    if (
+        nextIndex === null
+    ) {
+
+        window.location.href =
+            "participant-dashboard.html";
+
+        return;
+
+    }
+
+
+    window.location.href =
+        "assessment.html" +
+        "?projectId=" +
+        encodeURIComponent(
+            projId
+        ) +
+
+        "&participantId=" +
+        encodeURIComponent(
+            partId
+        ) +
+
+        "&assessmentIndex=" +
+        encodeURIComponent(
+            nextIndex
+        );
+}
+</script>
+<script>
+/* ==========================================================
+   DYNAMIC PARTICIPANT / PROJECT INFO
+========================================================== */
+
+function loadParticipantInfo() {
+
+    try {
+
+        /* ------------------------------------------
+           AMBIL ID DARI URL
+        ------------------------------------------ */
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+        const projectId =
+            params.get("projectId") ||
+            params.get("project") ||
+            "";
+
+        const participantId =
+            params.get("participantId") ||
+            params.get("participant") ||
+            "";
+
+
+        /* ------------------------------------------
+           ELEMENT HTML
+        ------------------------------------------ */
+
+        const participantEl =
+            document.getElementById(
+                "participant-name"
+            );
+
+        const projectEl =
+            document.getElementById(
+                "project-name"
+            );
+
+        const dateEl =
+            document.getElementById(
+                "current-date-span"
+            );
+
+
+        /* ------------------------------------------
+           AMBIL DATA PROJECT
+        ------------------------------------------ */
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+
+        const project =
+            Array.isArray(projects)
+                ? projects.find(
+                    function (p) {
+
+                        return String(
+                            p?.id ||
+                            p?.projectId ||
+                            p?.project_id ||
+                            ""
+                        ) === String(projectId);
+
+                    }
+                )
+                : null;
+
+
+        /* ------------------------------------------
+           AMBIL DATA PARTICIPANT
+        ------------------------------------------ */
+
+        const participant =
+            project &&
+            Array.isArray(project.participants)
+
+                ? project.participants.find(
+                    function (p) {
+
+                        return String(
+                            p?.id ||
+                            p?.participantId ||
+                            p?.employeeId ||
+                            p?.employee_id ||
+                            ""
+                        ) === String(participantId);
+
+                    }
+                )
+
+                : null;
+
+
+        /* ------------------------------------------
+           NAMA PESERTA
+        ------------------------------------------ */
+
+        if (participantEl) {
+
+            participantEl.textContent =
+                participant?.name ||
+                participant?.fullName ||
+                participant?.participantName ||
+                participantId ||
+                "-";
+
+        }
+
+
+        /* ------------------------------------------
+           NAMA PROJECT
+        ------------------------------------------ */
+
+        if (projectEl) {
+
+            projectEl.textContent =
+                project?.projectName ||
+                project?.name ||
+                project?.title ||
+                projectId ||
+                "-";
+
+        }
+
+
+        /* ------------------------------------------
+           TANGGAL
+           
+           Kalau assessment date tersedia di project,
+           gunakan tanggal tersebut.
+           
+           Kalau tidak ada, gunakan tanggal hari ini.
+        ------------------------------------------ */
+
+        if (dateEl) {
+            const today = new Date();
+            dateEl.textContent = today.toLocaleDateString(
+                "id-ID",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric"
+                }
+            );
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "Gagal memuat informasi peserta/project:",
+            error
+        );
+
+    }
+
+}
+</script>
+</body>
+</html>

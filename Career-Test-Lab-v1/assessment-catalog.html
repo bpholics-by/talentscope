@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+    <head>
+    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+    <script>
+    (function() {
+        "use strict";
+
+        // 1. Ambil session user asli dari login
+        function getSavedUser() {
+            try {
+                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
+        }
+
+        var activeUser = getSavedUser();
+
+        if (activeUser) {
+            // PAKSA PERTAHANKAN SESSION LOGIN (Cegah ditimpa script template lain)
+            localStorage.setItem("talentscope_current_user", JSON.stringify(activeUser));
+            
+            // Terapkan penyesuaian tampilan setelah DOM siap
+            document.addEventListener("DOMContentLoaded", function() {
+                var role = String(activeUser.role || "").trim();
+
+                // A. Ubah Teks Header Kanan Atas
+                var allEls = document.querySelectorAll("div, span, p, strong, b, h1, h2, h3");
+                allEls.forEach(function(el) {
+                    if (el.children.length === 0) {
+                        if (el.textContent.trim() === "Administrator") {
+                            el.textContent = activeUser.name || activeUser.username || "User";
+                        }
+                        if (el.textContent.trim() === "System Admin") {
+                            el.textContent = role;
+                        }
+                    }
+                });
+
+                // B. Filter Menu Sidebar
+                var isClient = /client/i.test(role);
+                var isAsesor = /asesor|assessor/i.test(role);
+                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+
+                var hideList = [];
+                if (isClient) {
+                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAsesor) {
+                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAdmin) {
+                    hideList = ["Settings"];
+                }
+
+                if (hideList.length > 0) {
+                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
+                    menuLinks.forEach(function(item) {
+                        var text = item.textContent.trim();
+                        hideList.forEach(function(m) {
+                            if (text.indexOf(m) !== -1) {
+                                item.style.setProperty("display", "none", "important");
+                            }
+                        });
+                    });
+                }
+
+                // C. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
+                if (isClient || isAsesor) {
+                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
+                        var bt = btn.textContent.toLowerCase();
+                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
+                            btn.style.setProperty("display", "none", "important");
+                        }
+                    });
+                }
+            });
+        }
+    })();
+    </script>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Assessment Catalog | TalentScope</title>
+
+    <!-- CSS -->
+
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/assessment-catalog.css">
+
+    <!-- Font -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar"></aside>
+
+    <!-- Main -->
+
+    <div class="main">
+
+        <!-- Header -->
+
+        <header class="header"></header>
+
+        <!-- Content -->
+
+        <main class="content">
+
+    <!-- =====================================================
+         PAGE HEADER
+    ====================================================== -->
+
+    <!-- =====================================================
+         PAGE HEADER & TOP ACTION BAR (FIXED BINDING & CLOSING TAG)
+    ====================================================== -->
+    <section class="page-header" style="width: 100%; display: block; clear: both; margin-bottom: 24px;">
+
+        <div class="page-action" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            
+            <!-- Tombol Kiri -->
+            <button class="btn btn-primary" id="addAssessmentBtn" style="font-size: 14px; padding: 10px 18px; font-weight: 600;">
+                + Add Assessment
+            </button>
+
+            <!-- Panel Kanan (Terpisah ke Ujung Kanan) -->
+            <div id="selectionPanel" style="display: flex; align-items: center; gap: 12px; background: #ffffff; padding: 6px 6px 6px 16px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <span id="selectedCount" style="font-size: 14px; font-weight: 500; color: #64748b;">0 assessment selected</span>
+                <button class="btn btn-primary" id="createProjectBtn" style="font-size: 14px; padding: 10px 18px; font-weight: 600;">
+                    <i class="fas fa-layer-group"></i> Create Assessment Project
+                </button>
+            </div>
+
+        </div>
+
+    </section> <!-- SEBELUMNYA TAG INI LUPA DITUTUP DI SINI -->
+
+    <!-- =====================================================
+         STATISTICS
+    ====================================================== -->
+
+    <section class="catalog-stats">
+
+        <div class="stat-card">
+
+            <div class="stat-icon blue">
+
+                <i class="fa-solid fa-book"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span>Total Assessment</span>
+
+                <h3 id="totalAssessment">0</h3>
+
+                <small>Assessment available</small>
+
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div class="stat-icon green">
+
+                <i class="fa-solid fa-circle-check"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span>Active</span>
+
+                <h3 id="activeAssessment">0</h3>
+
+                <small>Ready to use</small>
+
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div class="stat-icon orange">
+
+                <i class="fa-solid fa-clock"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span>Total Duration</span>
+
+                <h3 id="totalDuration">0</h3>
+
+                <small>Minutes</small>
+
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div class="stat-icon purple">
+
+                <i class="fa-solid fa-layer-group"></i>
+
+            </div>
+
+            <div class="stat-content">
+
+                <span>Categories</span>
+
+                <h3 id="totalCategory">0</h3>
+
+                <small>Assessment Types</small>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- =====================================================
+     TOOLBAR
+===================================================== -->
+
+<section class="catalog-toolbar">
+
+    <div class="toolbar-left">
+
+        <div class="search-box">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+            <input
+                type="text"
+                id="searchAssessment"
+                placeholder="Search assessment...">
+
+        </div>
+
+    </div>
+
+    <div class="toolbar-right">
+
+        <button
+            class="btn btn-outline"
+            id="filterAssessment">
+
+            <i class="fa-solid fa-filter"></i>
+
+            Filter
+
+        </button>
+
+           </div>
+
+</section>
+<!-- =====================================================
+     FILTER PANEL
+===================================================== -->
+
+<div id="assessmentFilterPanel" style="
+    display:none;
+    background:#ffffff;
+    border:1px solid #e2e8f0;
+    border-radius:10px;
+    padding:18px 20px;
+    margin-bottom:16px;
+    box-shadow:0 2px 8px rgba(15,23,42,.06);
+">
+
+    <div style="
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        margin-bottom:16px;
+    ">
+
+        <div>
+            <div style="
+                font-size:15px;
+                font-weight:700;
+                color:#0f172a;
+            ">
+                Filter Assessment
+            </div>
+
+            <div style="
+                margin-top:3px;
+                font-size:12px;
+                color:#64748b;
+            ">
+                Filter assessment berdasarkan category dan status
+            </div>
+        </div>
+
+        <button
+            type="button"
+            id="resetAssessmentFilter"
+            style="
+                border:none;
+                background:transparent;
+                color:#64748b;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;
+            ">
+            Reset
+        </button>
+
+    </div>
+
+
+    <div style="
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:16px;
+    ">
+
+        <!-- CATEGORY -->
+
+        <div>
+
+            <label style="
+                display:block;
+                margin-bottom:7px;
+                font-size:13px;
+                font-weight:600;
+                color:#334155;
+            ">
+                Category
+            </label>
+
+            <select
+                id="filterCategory"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:10px 12px;
+                    border:1px solid #d8e0ea;
+                    border-radius:8px;
+                    background:#ffffff;
+                    color:#0f172a;
+                    font-size:13px;
+                    outline:none;
+                ">
+
+                <option value="">All Categories</option>
+                <option value="Cognitive">Cognitive</option>
+                <option value="Personality">Personality</option>
+                <option value="Intelligence">Intelligence</option>
+                <option value="Behavior">Behavior</option>
+                <option value="Interest">Interest</option>
+                <option value="Projective">Projective</option>
+                <option value="Performance">Performance</option>
+
+            </select>
+
+        </div>
+
+
+        <!-- STATUS -->
+
+        <div>
+
+            <label style="
+                display:block;
+                margin-bottom:7px;
+                font-size:13px;
+                font-weight:600;
+                color:#334155;
+            ">
+                Status
+            </label>
+
+            <select
+                id="filterStatus"
+                style="
+                    width:100%;
+                    box-sizing:border-box;
+                    padding:10px 12px;
+                    border:1px solid #d8e0ea;
+                    border-radius:8px;
+                    background:#ffffff;
+                    color:#0f172a;
+                    font-size:13px;
+                    outline:none;
+                ">
+
+                <option value="">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+
+            </select>
+
+        </div>
+
+    </div>
+
+
+    <div style="
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:16px;
+        padding-top:15px;
+        border-top:1px solid #eef2f7;
+    ">
+
+        <button
+            type="button"
+            id="clearAssessmentFilter"
+            style="
+                padding:9px 15px;
+                border:1px solid #d8e0ea;
+                background:#ffffff;
+                color:#52667c;
+                border-radius:8px;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;
+            ">
+            Clear
+        </button>
+
+        <button
+            type="button"
+            id="applyAssessmentFilter"
+            style="
+                padding:9px 16px;
+                border:1px solid #0066ff;
+                background:#0066ff;
+                color:#ffffff;
+                border-radius:8px;
+                font-size:13px;
+                font-weight:600;
+                cursor:pointer;
+            ">
+            Apply Filter
+        </button>
+
+    </div>
+
+</div>
+<!-- =====================================================
+     TABLE
+===================================================== -->
+
+<div class="table-wrapper">
+
+    <table class="assessment-table">
+
+        <thead>
+
+            <tr>
+
+                <th width="55">
+
+                    <input
+                        type="checkbox"
+                        id="checkAll">
+
+                </th>
+
+                <th width="90">
+                    Code
+                </th>
+
+                <th>
+                    Assessment Name
+                </th>
+
+                <th width="170">
+                    Category
+                </th>
+
+                <th width="120">
+                    Duration
+                </th>
+
+                <th width="130">
+                    Questions
+                </th>
+
+                <th width="130">
+                    Status
+                </th>
+
+                <th width="140">
+                    Action
+                </th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="assessmentTable">
+
+            <!-- Render by JavaScript -->
+
+        </tbody>
+
+    </table>
+
+    <!-- PAGINATION PERSIS HALAMAN PARTICIPANTS -->
+<div class="pagination-wrapper" style="display: flex; justify-content: flex-end; align-items: center; padding: 20px 0 10px 0;">
+    <div class="pagination-container" id="assessmentPagination" style="display: flex; align-items: center; gap: 6px; background: #ffffff; padding: 6px 10px; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #f1f5f9;">
+        
+        <!-- Previous -->
+        <button id="prevPage" class="pg-btn" style="border: none; background: transparent; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; border-radius: 6px;">
+            Previous
+        </button>
+
+        <!-- Numbers -->
+        <button class="pg-btn pg-num active" style="border: none; background: #0066ff; color: #ffffff; width: 32px; height: 32px; font-size: 13px; font-weight: 600; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            1
+        </button>
+        <button class="pg-btn pg-num" style="border: none; background: transparent; color: #334155; width: 32px; height: 32px; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            2
+        </button>
+        <button class="pg-btn pg-num" style="border: none; background: transparent; color: #334155; width: 32px; height: 32px; font-size: 13px; font-weight: 500; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+            3
+        </button>
+
+        <!-- Next -->
+        <button id="nextPage" class="pg-btn" style="border: none; background: transparent; padding: 6px 12px; font-size: 13px; font-weight: 500; color: #334155; cursor: pointer; border-radius: 6px;">
+            Next
+        </button>
+
+    </div>
+
+
+    </div>
+</div>
+
+<!-- =========================================
+BOTTOM PANEL
+========================================= -->
+
+<section class="selection-panel" style="margin-top: 10px; padding-top: 10px; padding-bottom: 20px;">
+
+    <div class="selected-info">
+
+               <p>
+
+            <span id="selectedCount">
+
+                0
+
+            </span>
+
+            assessment selected
+
+        </p>
+
+    </div>
+
+    <button
+    class="btn btn-primary"
+    id="createProject">
+
+    <i class="fa-solid fa-layer-group"></i>
+    Create Assessment Project
+
+</button>
+
+</section>
+
+
+<!-- =====================================================
+     PREMIUM ADD ASSESSMENT MODAL
+===================================================== -->
+<div class="modal-overlay" id="assessmentModal" style="display: none;">
+    <div class="modal-card">
+        <!-- Header -->
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title">Add New Assessment</h3>
+                <p class="modal-subtitle">Create and configure a new assessment instrument</p>
+            </div>
+            <button type="button" class="btn-close" id="closeAssessmentModal">&times;</button>
+        </div>
+
+        <!-- Body Form -->
+        <div class="modal-body">
+            <div class="form-grid">
+                
+                <div class="form-group">
+                    <label>Assessment Code <span class="required">*</span></label>
+                    <input type="text" id="assessmentCode" placeholder="e.g. VR" />
+                </div>
+
+                <div class="form-group">
+                    <label>Assessment Name <span class="required">*</span></label>
+                    <input type="text" id="assessmentName" placeholder="e.g. Verbal Reasoning" />
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="assessmentCategory">
+                        <option value="Cognitive">Cognitive</option>
+                        <option value="Personality">Personality</option>
+                        <option value="Intelligence">Intelligence</option>
+                        <option value="Behavior">Behavior</option>
+                        <option value="Interest">Interest</option>
+                        <option value="Projective">Projective</option>
+                        <option value="Performance">Performance</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="assessmentStatus">
+
+    <option value="Active">
+        Active
+    </option>
+
+    <option value="Inactive">
+        Inactive
+    </option>
+
+</select>
+
+                <div class="form-group">
+                    <label>Duration (Minutes)</label>
+                    <input type="number" id="assessmentDuration" value="20" placeholder="20" />
+                </div>
+
+                <div class="form-group">
+                    <label>Total Questions</label>
+                    <input type="number" id="assessmentQuestion" value="30" placeholder="30" />
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Description</label>
+                    <textarea id="assessmentDescription" rows="3" placeholder="Enter assessment overview or instructions..."></textarea>
+                </div>
+
+            </div>
+
+            <!-- Footer Action -->
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAssessment">Cancel</button>
+                <button type="button" class="btn-primary-modal" id="saveAssessment">
+                    <i class="fa-solid fa-floppy-disk"></i> Save Assessment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- =========================================
+     JAVASCRIPT
+========================================= -->
+
+<script src="js/layout/layout-loader.js"></script>
+
+<script src="js/assessment-data.js"></script>
+
+<script src="js/assessment-render.js"></script>
+<script src="js/assessment-modal.js"></script>
+<script src="js/assessment.js"></script>
+<script src="js/global-search.js"></script>
+
+<!-- Panggil script kontrol akses di semua halaman -->
+<script src="js/app-access-control.js"></script>
+<script src="js/project-access-filter.js"></script>
+
+<script src="js/auth-guard.js"></script>
+
+<script>
+/* =========================================================
+   TALENTSCOPE - TRANSFER SELECTED ASSESSMENTS TO PROJECT
+========================================================= */
+
+(function () {
+    "use strict";
+
+    const createBtn = document.getElementById("createProjectBtn");
+
+    if (!createBtn) return;
+
+    createBtn.addEventListener("click", function () {
+
+        /*
+         * Ambil semua assessment yang dicentang.
+         *
+         * Sesuaikan selector checkbox jika checkbox
+         * di tabel menggunakan class/id yang berbeda.
+         */
+        const selected = Array.from(
+            document.querySelectorAll(
+                'input[type="checkbox"]:checked'
+            )
+        )
+        .filter(function (checkbox) {
+
+    /*
+     * Hanya ambil checkbox yang berada
+     * di dalam baris assessment (tbody)
+     *
+     * Checkbox Select All berada di header (thead),
+     * jadi tidak akan ikut dihitung.
+     */
+    return checkbox.closest("tbody") !== null;
+
+})
+        .map(function (checkbox) {
+
+            /*
+             * Coba ambil data assessment dari row tabel
+             */
+            const row = checkbox.closest("tr");
+
+            if (!row) return null;
+
+            const cells = row.querySelectorAll("td");
+
+            /*
+             * Struktur tabel:
+             * Code
+             * Assessment Name
+             * Category
+             * Duration
+             * Questions
+             * Status
+             */
+            return {
+                id: checkbox.value || cells[1]?.textContent.trim(),
+                code: cells[1]?.textContent.trim() || "",
+                name: cells[2]?.textContent.trim() || "",
+                category: cells[3]?.textContent.trim() || "",
+                duration: parseInt(
+                    cells[4]?.textContent.replace(/\D/g, ""),
+                    10
+                ) || 0,
+                questions: parseInt(
+                    cells[5]?.textContent.replace(/\D/g, ""),
+                    10
+                ) || 0,
+                required: true,
+                active: true
+            };
+
+        })
+        .filter(Boolean);
+
+        /*
+         * Simpan pilihan assessment sementara.
+         */
+        sessionStorage.setItem(
+            "talentscope_selected_assessments",
+            JSON.stringify(selected)
+        );
+
+        /*
+         * Masuk ke halaman Assessment Project.
+         */
+        window.location.href = "assessment-project.html";
+
+    });
+
+})();
+</script>
+
+</script>
+
+<script>
+/* =========================================================
+   TALENTSCOPE
+   TRANSFER SELECTED ASSESSMENTS
+   FROM ASSESSMENT CATALOG
+   TO NEW PROJECT
+========================================================= */
+
+(function () {
+
+    "use strict";
+
+
+    /* =====================================================
+       ELEMENT
+    ===================================================== */
+
+    const assessmentTable =
+        document.getElementById("assessmentTable");
+
+    const checkAll =
+        document.getElementById("checkAll");
+
+    const selectedCount =
+        document.getElementById("selectedCount");
+
+    const createProjectBtn =
+        document.getElementById("createProject");
+
+
+    if (!assessmentTable) {
+        console.warn(
+            "TalentScope: #assessmentTable tidak ditemukan."
+        );
+        return;
+    }
+
+
+    /* =====================================================
+       AMBIL CHECKBOX ASSESSMENT
+    ===================================================== */
+
+    function getAssessmentCheckboxes() {
+
+        return Array.from(
+            assessmentTable.querySelectorAll(
+                'input[type="checkbox"]'
+            )
+        );
+
+    }
+
+
+    /* =====================================================
+       UPDATE JUMLAH ASSESSMENT TERPILIH
+    ===================================================== */
+
+    function updateSelectedCount() {
+
+        const checkboxes =
+            getAssessmentCheckboxes();
+
+        const selected =
+            checkboxes.filter(
+                checkbox => checkbox.checked
+            );
+
+
+        if (selectedCount) {
+
+            selectedCount.textContent =
+                selected.length;
+
+        }
+
+
+        /* Update Select All */
+
+        if (checkAll) {
+
+            if (checkboxes.length === 0) {
+
+                checkAll.checked = false;
+                checkAll.indeterminate = false;
+
+            }
+            else {
+
+                const checkedCount =
+                    selected.length;
+
+                checkAll.checked =
+                    checkedCount === checkboxes.length;
+
+                checkAll.indeterminate =
+                    checkedCount > 0 &&
+                    checkedCount < checkboxes.length;
+
+            }
+
+        }
+
+
+        /* Aktif / nonaktif tombol */
+
+        if (createProjectBtn) {
+
+            createProjectBtn.disabled =
+                selected.length === 0;
+
+            createProjectBtn.style.opacity =
+                selected.length === 0
+                    ? "0.55"
+                    : "1";
+
+            createProjectBtn.style.cursor =
+                selected.length === 0
+                    ? "not-allowed"
+                    : "pointer";
+
+        }
+
+    }
+
+
+    /* =====================================================
+       AMBIL DATA ASSESSMENT DARI ROW
+    ===================================================== */
+
+    function getAssessmentFromRow(row, checkbox) {
+
+        const cells =
+            row.querySelectorAll("td");
+
+
+        /*
+         * Struktur tabel kakak:
+         *
+         * 0 = Checkbox
+         * 1 = Code
+         * 2 = Assessment Name
+         * 3 = Category
+         * 4 = Duration
+         * 5 = Questions
+         * 6 = Status
+         * 7 = Action
+         */
+
+
+        const code =
+            cells[1]
+                ? cells[1].textContent.trim()
+                : "";
+
+
+        const name =
+            cells[2]
+                ? cells[2].textContent.trim()
+                : "";
+
+
+        const category =
+            cells[3]
+                ? cells[3].textContent.trim()
+                : "";
+
+
+        const durationText =
+            cells[4]
+                ? cells[4].textContent.trim()
+                : "0";
+
+
+        const questionsText =
+            cells[5]
+                ? cells[5].textContent.trim()
+                : "0";
+
+
+        const status =
+            cells[6]
+                ? cells[6].textContent.trim()
+                : "";
+
+
+        /*
+         * Ambil angka dari:
+         * "20 Minutes"
+         */
+        const durationMatch =
+            durationText.match(/\d+/);
+
+
+        const duration =
+            durationMatch
+                ? Number(durationMatch[0])
+                : 0;
+
+
+        /*
+         * Ambil angka dari:
+         * "20 Items"
+         */
+        const questionsMatch =
+            questionsText.match(/\d+/);
+
+
+        const questions =
+            questionsMatch
+                ? Number(questionsMatch[0])
+                : 0;
+
+
+        /*
+         * value checkbox kalau ada
+         */
+        const checkboxValue =
+            checkbox.value &&
+            checkbox.value !== "on"
+                ? checkbox.value
+                : code;
+
+
+        return {
+
+            id:
+                checkboxValue ||
+                code ||
+                name,
+
+            code:
+                code,
+
+            name:
+                name,
+
+            category:
+                category,
+
+            duration:
+                duration,
+
+            questions:
+                questions,
+
+            status:
+                status,
+
+            required:
+                true,
+
+            active:
+                true
+
+        };
+
+    }
+
+
+    /* =====================================================
+       AMBIL SEMUA ASSESSMENT YANG DIPILIH
+    ===================================================== */
+
+    function getSelectedAssessments() {
+
+        const result = [];
+
+
+        getAssessmentCheckboxes()
+            .forEach(function (checkbox) {
+
+                if (!checkbox.checked) {
+                    return;
+                }
+
+
+                const row =
+                    checkbox.closest("tr");
+
+
+                if (!row) {
+                    return;
+                }
+
+
+                const assessment =
+                    getAssessmentFromRow(
+                        row,
+                        checkbox
+                    );
+
+
+                result.push(assessment);
+
+            });
+
+
+        return result;
+
+    }
+
+
+    /* =====================================================
+       SIMPAN ASSESSMENT TERPILIH
+    ===================================================== */
+
+    function saveSelectedAssessments() {
+
+        const assessments =
+            getSelectedAssessments();
+
+
+        if (assessments.length === 0) {
+
+            alert(
+                "Silakan pilih minimal satu assessment."
+            );
+
+            return false;
+
+        }
+
+
+        /*
+         * Simpan sementara.
+         *
+         * Nanti akan dibaca oleh
+         * assessment-project.html
+         */
+        sessionStorage.setItem(
+            "talentscope_selected_assessments",
+            JSON.stringify(assessments)
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =====================================================
+       SELECT ALL
+    ===================================================== */
+
+    if (checkAll) {
+
+        checkAll.addEventListener(
+            "change",
+            function () {
+
+                const checked =
+                    this.checked;
+
+
+                getAssessmentCheckboxes()
+                    .forEach(function (checkbox) {
+
+                        checkbox.checked =
+                            checked;
+
+                    });
+
+
+                updateSelectedCount();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       CHECKBOX INDIVIDUAL
+    ===================================================== */
+
+    assessmentTable.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target.matches(
+                    'input[type="checkbox"]'
+                )
+            ) {
+
+                updateSelectedCount();
+
+            }
+
+        }
+    );
+
+
+    /* =====================================================
+       CREATE ASSESSMENT PROJECT
+    ===================================================== */
+
+    if (createProjectBtn) {
+
+        createProjectBtn.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+
+                const success =
+                    saveSelectedAssessments();
+
+
+                if (!success) {
+                    return;
+                }
+
+
+                /*
+                 * Pindah ke halaman Assessment Project.
+                 */
+                window.location.href =
+                    "assessment-project.html";
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       INITIAL STATE
+    ===================================================== */
+
+    updateSelectedCount();
+
+
+    /* =====================================================
+       JIKA TABEL DI-RENDER ULANG
+       OLEH JAVASCRIPT LAMA
+    ===================================================== */
+
+    const observer =
+        new MutationObserver(
+            function () {
+
+                updateSelectedCount();
+
+            }
+        );
+
+
+    observer.observe(
+        assessmentTable,
+        {
+            childList: true,
+            subtree: true
+        }
+    );
+
+
+})();
+</script>
+
+<!-- SCRIPT STABILISASI SEMBUNYIKAN MENU SETTINGS -->
+<style id="hide-settings-style">
+  /* Sembunyikan elemen menu settings secara instan sejak CSS dimuat */
+  .dropdown-menu a[href*="setting"],
+  .dropdown-menu button[onclick*="setting"],
+  .dropdown-item[href*="setting"],
+  [class*="dropdown"] a:has(svg):first-child,
+  .user-dropdown a:first-child {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function() {
+  "use strict";
+
+  function enforceHideSettings() {
+    var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+    if (!userRaw) return;
+
+    var activeUser = JSON.parse(userRaw);
+    var isSystemAdmin = /system/i.test(activeUser.role || "");
+
+    var styleEl = document.getElementById("hide-settings-style");
+
+    // Jika user ADALAH System Admin, kembalikan tampilan menu Settings
+    if (isSystemAdmin) {
+      if (styleEl) styleEl.remove();
+      return;
+    }
+
+    // Jika BUKAN System Admin, pastikan semua elemen teks bertuliskan "Setting" tersembunyi
+    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
+    menuItems.forEach(function(item) {
+      var text = item.textContent.trim().toLowerCase();
+      if (text.includes("setting") || text.includes("pengaturan")) {
+        item.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+
+  // 1. Jalankan saat DOM dan Window siap
+  document.addEventListener("DOMContentLoaded", enforceHideSettings);
+  window.addEventListener("load", enforceHideSettings);
+
+  // 2. Pantau perubahan DOM (MutationObserver) agar jika dropdown baru dirender/diklik, Settings tetap tersembunyi
+  var observer = new MutationObserver(function() {
+    enforceHideSettings();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
+
+<!-- SCRIPT PROTEKSI KHUSUS ROLE ASESOR & CLIENT (ADD, EDIT, & DELETE) -->
+<script>
+(function() {
+    "use strict";
+
+    // 1. Fungsi Cek Role Asesor ATAU Client
+    function isRestrictedRole() {
+        var savedUser = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        var activeUser = savedUser ? JSON.parse(savedUser) : {};
+        var role = String(activeUser.role || "").toLowerCase();
+
+        var roleTextInPage = document.querySelector(".dropdown-profile small, .user-role, .profile-role")?.textContent.toLowerCase() || "";
+
+        // Mengecek apakah role mengandung kata 'asesor', 'assessor', atau 'client'
+        var isAsesor = role.includes("asesor") || role.includes("assessor") || roleTextInPage.includes("asesor");
+        var isClient = role.includes("client") || roleTextInPage.includes("client");
+
+        return isAsesor || isClient;
+    }
+
+    // 2. Cegah Klik Edit, Delete, & Tambah Assessment untuk Asesor & Client
+    document.addEventListener("click", function(e) {
+
+        // Cek elemen yang diklik (Delete, Edit, atau Tambah)
+        var btnDelete = e.target.closest(".deleteAssessment") || e.target.closest(".delete-btn") || e.target.closest(".fa-trash") || e.target.closest("button[title='Delete']");
+        var btnEdit   = e.target.closest(".editAssessment") || e.target.closest(".edit-btn") || e.target.closest(".fa-pen") || e.target.closest("button[title='Edit']");
+        var btnAdd    = e.target.closest("#addAssessmentBtn") || e.target.closest("#openModalBtn");
+
+        if (btnDelete && isRestrictedRole()) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation(); // Blokir script JS lain (termasuk confirm hapus)
+            alert("Akses Ditolak: Role Anda tidak memiliki izin untuk menghapus asesmen.");
+            return false;
+        }
+
+        if (btnEdit && isRestrictedRole()) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation(); // Blokir modal edit
+            alert("Akses Ditolak: Role Anda tidak memiliki izin untuk mengedit asesmen.");
+            return false;
+        }
+
+        if (btnAdd && isRestrictedRole()) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation(); // Blokir modal tambah
+            alert("Akses Ditolak: Role Anda tidak memiliki izin untuk menambah asesmen.");
+            return false;
+        }
+
+    }, true); // Event Capturing (Dijalankan paling awal)
+})();
+</script>
+
+<script>
+// Skrip otomatis untuk menyisipkan id="globalSearchInput" jika header dimuat secara dinamis
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        var searchInput = document.querySelector('.main header input[type="text"], .header input[type="text"], .main input[placeholder*="Cari"]');
+        if (searchInput && !searchInput.id) {
+            searchInput.id = "globalSearchInput";
+        }
+    }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
+});
+</script>
+
+</body>
+</html>
+
+</body>
+
+</html>
+

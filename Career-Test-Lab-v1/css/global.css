@@ -1,0 +1,179 @@
+/* ==========================================================
+   CAREER TEST LAB v1.0.0
+   GLOBAL DESIGN TOKEN
+   ========================================================== */
+
+/* ===========================
+   RESET
+=========================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+
+    scroll-behavior:smooth;
+
+}
+
+body{
+
+    font-family:"Poppins",sans-serif;
+
+    background:#F4F7FB;
+
+    color:#1F2937;
+
+    line-height:1.6;
+
+}
+
+/* ===========================
+   COLOR SYSTEM
+=========================== */
+
+:root{
+
+    /* PRIMARY */
+
+    --primary:#2563EB;
+    --primary-dark:#1D4ED8;
+    --primary-light:#DBEAFE;
+
+    /* SUCCESS */
+
+    --success:#16A34A;
+
+    /* WARNING */
+
+    --warning:#F59E0B;
+
+    /* DANGER */
+
+    --danger:#DC2626;
+
+    /* TEXT */
+
+    --text:#1F2937;
+    --text-soft:#6B7280;
+    --text-light:#9CA3AF;
+
+    /* BACKGROUND */
+
+    --background:#F4F7FB;
+    --surface:#FFFFFF;
+
+    /* BORDER */
+
+    --border:#E5E7EB;
+
+    /* RADIUS */
+
+    --radius-sm:10px;
+    --radius-md:18px;
+    --radius-lg:28px;
+
+    /* SHADOW */
+
+    --shadow-soft:
+        0 10px 30px rgba(15,23,42,.06);
+
+    --shadow-medium:
+        0 18px 40px rgba(15,23,42,.08);
+
+    --shadow-large:
+        0 30px 70px rgba(15,23,42,.12);
+
+}
+
+/* ===========================
+   TYPOGRAPHY
+=========================== */
+
+h1{
+
+    font-size:40px;
+    font-weight:700;
+
+}
+
+h2{
+
+    font-size:32px;
+    font-weight:700;
+
+}
+
+h3{
+
+    font-size:24px;
+    font-weight:600;
+
+}
+
+p{
+
+    color:var(--text-soft);
+
+}
+
+/* ===========================
+   LINK
+=========================== */
+
+a{
+
+    text-decoration:none;
+
+    color:inherit;
+
+}
+
+/* ===========================
+   IMAGE
+=========================== */
+
+img{
+
+    max-width:100%;
+
+    display:block;
+
+}
+
+/* ===========================
+   BUTTON
+=========================== */
+
+button{
+
+    border:none;
+
+    outline:none;
+
+    font-family:inherit;
+
+    cursor:pointer;
+
+}
+
+/* ===========================
+   INPUT
+=========================== */
+
+input,
+textarea,
+select{
+
+    font-family:inherit;
+
+}
+
+/* Memberikan jarak atas dan bawah yang lega untuk semua panel/card di dashboard */
+.card, .panel, section {
+    margin-top: 20px !important;
+    margin-bottom: 25px !important;
+}

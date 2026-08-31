@@ -1,0 +1,2498 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<head>
+    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+    <script>
+    (function() {
+        "use strict";
+
+        // 1. Ambil session user asli dari login
+        function getSavedUser() {
+            try {
+                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
+        }
+
+        var activeUser = getSavedUser();
+
+        if (activeUser) {
+            // PAKSA PERTAHANKAN SESSION LOGIN (Cegah ditimpa script template lain)
+            localStorage.setItem("talentscope_current_user", JSON.stringify(activeUser));
+            
+            // Terapkan penyesuaian tampilan setelah DOM siap
+            document.addEventListener("DOMContentLoaded", function() {
+                var role = String(activeUser.role || "").trim();
+
+                // A. Ubah Teks Header Kanan Atas
+                var allEls = document.querySelectorAll("div, span, p, strong, b, h1, h2, h3");
+                allEls.forEach(function(el) {
+                    if (el.children.length === 0) {
+                        if (el.textContent.trim() === "Administrator") {
+                            el.textContent = activeUser.name || activeUser.username || "User";
+                        }
+                        if (el.textContent.trim() === "System Admin") {
+                            el.textContent = role;
+                        }
+                    }
+                });
+
+                // B. Filter Menu Sidebar
+                var isClient = /client/i.test(role);
+                var isAsesor = /asesor|assessor/i.test(role);
+                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+
+                var hideList = [];
+                if (isClient) {
+                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAsesor) {
+                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAdmin) {
+                    hideList = ["Settings"];
+                }
+
+                if (hideList.length > 0) {
+                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
+                    menuLinks.forEach(function(item) {
+                        var text = item.textContent.trim();
+                        hideList.forEach(function(m) {
+                            if (text.indexOf(m) !== -1) {
+                                item.style.setProperty("display", "none", "important");
+                            }
+                        });
+                    });
+                }
+
+                // C. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
+                if (isClient || isAsesor) {
+                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
+                        var bt = btn.textContent.toLowerCase();
+                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
+                            btn.style.setProperty("display", "none", "important");
+                        }
+                    });
+                }
+            });
+        }
+    })();
+    </script>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Assessment Results - TalentScope</title>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet"
+>
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+>
+
+
+<style>
+
+/* ==========================================================
+   GLOBAL
+========================================================== */
+
+*{
+    box-sizing:border-box;
+}
+
+:root{
+
+    --blue:#1167ea;
+    --blue2:#0758d7;
+    --blue3:#2d8cff;
+
+    --navy:#10234b;
+
+    --muted:#6c7ea3;
+
+    --line:#e6ecf5;
+
+    --bg:#f7faff;
+
+    --white:#fff;
+
+    --shadow:
+        0 10px 30px rgba(31,70,130,.08);
+
+}
+
+
+html{
+    scroll-behavior:smooth;
+}
+
+
+body{
+
+    margin:0;
+
+    background:var(--bg);
+
+    color:var(--navy);
+
+    font-family:
+        Poppins,
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+
+}
+
+
+button,
+input,
+select{
+
+    font:inherit;
+
+}
+
+
+a{
+
+    text-decoration:none;
+
+    color:inherit;
+
+}
+
+
+/* ==========================================================
+   APP
+========================================================== */
+
+.app{
+
+    min-height:100vh;
+
+    display:flex;
+
+}
+
+
+/* ==========================================================
+   SIDEBAR
+========================================================== */
+
+.sidebar{
+
+    position:fixed;
+
+    inset:0 auto 0 0;
+
+    width:267px;
+
+    z-index:30;
+
+    color:#fff;
+
+    overflow:hidden;
+
+    background:
+
+        radial-gradient(
+            circle at 75% 75%,
+            rgba(63,154,255,.28),
+            transparent 26%
+        ),
+
+        radial-gradient(
+            circle at 25% 90%,
+            rgba(20,93,225,.35),
+            transparent 35%
+        ),
+
+        linear-gradient(
+            180deg,
+            #0758d7 0%,
+            #0b67e7 48%,
+            #0755cc 100%
+        );
+
+}
+
+
+.sidebar:before{
+
+    content:"";
+
+    position:absolute;
+
+    width:360px;
+
+    height:220px;
+
+    left:-70px;
+
+    bottom:60px;
+
+    border-radius:50%;
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    transform:rotate(-12deg);
+
+    box-shadow:
+
+        0 0 0 35px
+        rgba(255,255,255,.035),
+
+        0 0 0 70px
+        rgba(255,255,255,.025);
+
+}
+
+
+/* ==========================================================
+   BRAND
+========================================================== */
+
+.brand{
+
+    position:relative;
+
+    z-index:2;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    padding:
+        25px 20px 30px;
+
+}
+
+
+.brand-logo{
+
+    width:46px;
+
+    height:46px;
+
+    border-radius:11px;
+
+    background:#fff;
+
+    color:#1267e9;
+
+    display:grid;
+
+    place-items:center;
+
+    font-size:19px;
+
+    font-weight:800;
+
+    box-shadow:
+        0 8px 18px rgba(0,0,0,.10);
+
+    flex:none;
+
+}
+
+
+.brand-title{
+
+    font-size:20px;
+
+    line-height:1.1;
+
+    letter-spacing:-.4px;
+
+    font-weight:700;
+
+}
+
+
+.brand-version{
+
+    display:block;
+
+    font-size:12px;
+
+    margin-top:4px;
+
+    color:
+        rgba(255,255,255,.86);
+
+}
+
+
+/* ==========================================================
+   SIDEBAR BODY
+========================================================== */
+
+.sidebar-body{
+
+    position:relative;
+
+    z-index:2;
+
+    padding:
+        22px 20px;
+
+}
+
+
+/* ==========================================================
+   RESULT MODULE
+========================================================== */
+
+.result-module{
+
+    border:
+        1px solid rgba(255,255,255,.24);
+
+    border-radius:16px;
+
+    padding:
+        22px 20px;
+
+    background:
+        rgba(255,255,255,.055);
+
+}
+
+
+.result-module-icon{
+
+    width:48px;
+
+    height:48px;
+
+    border-radius:13px;
+
+    display:grid;
+
+    place-items:center;
+
+    background:
+        rgba(255,255,255,.14);
+
+    font-size:21px;
+
+    margin-bottom:16px;
+
+}
+
+
+.result-module h3{
+
+    margin:0;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    color:#fff;
+
+}
+
+
+.result-module p{
+
+    margin:
+        8px 0 0;
+
+    color:
+        rgba(255,255,255,.80);
+
+    font-size:11px;
+
+    line-height:1.65;
+
+}
+
+
+.module-divider{
+
+    height:1px;
+
+    background:
+        rgba(255,255,255,.15);
+
+    margin:
+        18px 0 14px;
+
+}
+
+
+.module-status{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:10px;
+
+    color:
+        rgba(255,255,255,.88);
+
+}
+
+
+.module-status-dot{
+
+    width:8px;
+
+    height:8px;
+
+    border-radius:50%;
+
+    background:#42e59b;
+
+    box-shadow:
+        0 0 0 4px
+        rgba(66,229,155,.12);
+
+}
+
+
+/* ==========================================================
+   SIDEBAR FOOTER
+========================================================== */
+
+.sidebar-footer{
+
+    position:absolute;
+
+    left:20px;
+
+    right:20px;
+
+    bottom:20px;
+
+    z-index:3;
+
+}
+
+
+.logout-btn{
+
+    width:100%;
+
+    height:45px;
+
+    border:
+        1px solid rgba(255,255,255,.28);
+
+    border-radius:10px;
+
+    background:
+        rgba(255,255,255,.045);
+
+    color:#fff;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:9px;
+
+    cursor:pointer;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    transition:
+        background .2s ease,
+        transform .2s ease;
+
+}
+
+
+.logout-btn:hover{
+
+    background:
+        rgba(255,255,255,.13);
+
+    transform:translateY(-1px);
+
+}
+
+
+.logout-btn i{
+
+    font-size:13px;
+
+}
+
+
+.platform-info{
+
+    border-top:
+        1px solid rgba(255,255,255,.13);
+
+    margin-top:14px;
+
+    padding-top:13px;
+
+}
+
+
+.platform-info strong{
+
+    display:block;
+
+    font-size:10px;
+
+    font-weight:600;
+
+    color:
+        rgba(255,255,255,.88);
+
+}
+
+
+.platform-info span{
+
+    display:block;
+
+    margin-top:4px;
+
+    font-size:10px;
+
+    color:
+        rgba(255,255,255,.65);
+
+}
+
+
+/* ==========================================================
+   MAIN
+========================================================== */
+
+.main{
+
+    margin-left:267px;
+
+    width:
+        calc(100% - 267px);
+
+    min-width:0;
+
+}
+
+
+/* ==========================================================
+   HEADER
+========================================================== */
+
+.header{
+
+    min-height:114px;
+
+    background:#fff;
+
+    border-bottom:
+        1px solid #e8edf5;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:30px;
+
+    padding:
+        20px 34px;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:20;
+
+}
+
+
+.header-left{
+
+    min-width:0;
+
+}
+
+
+.breadcrumb{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:10px;
+
+    color:#8291ad;
+
+    margin-bottom:6px;
+
+}
+
+
+.breadcrumb i{
+
+    font-size:7px;
+
+    color:#a4b1c8;
+
+}
+
+
+.breadcrumb .active{
+
+    color:#176cf0;
+
+    font-weight:600;
+
+}
+
+
+.header-title{
+
+    margin:0;
+
+    font-size:28px;
+
+    line-height:1.2;
+
+    font-weight:700;
+
+    letter-spacing:-.5px;
+
+    color:#10234b;
+
+}
+
+
+.header-description{
+
+    margin:
+        5px 0 0;
+
+    color:#6c7ea3;
+
+    font-size:11px;
+
+    font-weight:400;
+
+}
+
+
+/* ==========================================================
+   USER HEADER
+========================================================== */
+
+.header-user{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    flex:none;
+
+}
+
+
+.header-user-icon{
+
+    width:43px;
+
+    height:43px;
+
+    border-radius:50%;
+
+    background:#e8f2ff;
+
+    color:#1267e9;
+
+    border:
+        1px solid #d8e8ff;
+
+    display:grid;
+
+    place-items:center;
+
+    font-size:16px;
+
+}
+
+
+.header-user-info{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+
+.header-user-info strong{
+
+    font-size:13px;
+
+    font-weight:700;
+
+    color:#10234b;
+
+}
+
+
+.header-user-info span{
+
+    font-size:10px;
+
+    color:#7c8ba8;
+
+    margin-top:2px;
+
+}
+
+
+/* ==========================================================
+   CONTENT
+========================================================== */
+
+.content{
+
+    width:100%;
+
+    max-width:1400px;
+
+    margin:0 auto;
+
+    padding:
+        28px 30px 45px;
+
+}
+
+
+/* ==========================================================
+   RESULT CARD
+========================================================== */
+
+.card{
+
+    width:100%;
+
+    background:#fff;
+
+    border:
+        1px solid #e0e8f4;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 10px 30px rgba(31,70,130,.08);
+
+    overflow:hidden;
+
+}
+
+
+/* ==========================================================
+   TABLE TOOLBAR
+========================================================== */
+
+.table-toolbar{
+
+    min-height:78px;
+
+    padding:
+        17px 27px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    border-bottom:
+        1px solid #e8edf5;
+
+}
+
+
+.search-box{
+
+    width:280px;
+
+    height:43px;
+
+    border:
+        1px solid #d7e3f2;
+
+    border-radius:10px;
+
+    background:#fff;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:
+        0 13px;
+
+    transition:
+        border .2s ease,
+        box-shadow .2s ease;
+
+}
+
+
+.search-box:focus-within{
+
+    border-color:#80b4f7;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(17,103,234,.08);
+
+}
+
+
+.search-box i{
+
+    color:#7b9ac5;
+
+    font-size:14px;
+
+}
+
+
+.search-box input{
+
+    width:100%;
+
+    border:0;
+
+    outline:0;
+
+    background:transparent;
+
+    color:#17315d;
+
+    font-size:12px;
+
+}
+
+
+.search-box input::placeholder{
+
+    color:#9aaac3;
+
+}
+
+
+.view-control{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+
+.view-control label{
+
+    color:#7487a8;
+
+    font-size:11px;
+
+}
+
+
+.view-control select{
+
+    width:82px;
+
+    height:43px;
+
+    border:
+        1px solid #d7e3f2;
+
+    border-radius:10px;
+
+    background:#fff;
+
+    color:#17315d;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    padding:
+        0 10px;
+
+    outline:none;
+
+    cursor:pointer;
+
+}
+
+
+/* ==========================================================
+   TABLE
+========================================================== */
+
+.table-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+
+.table-wrapper table{
+
+    width:100%;
+
+    min-width:850px;
+
+    border-collapse:collapse;
+
+}
+
+
+.table-wrapper thead{
+
+    background:#f7faff;
+
+}
+
+
+.table-wrapper th{
+
+    padding:
+        16px 20px;
+
+    text-align:left;
+
+    font-size:11px;
+
+    font-weight:600;
+
+    text-transform:uppercase;
+
+    letter-spacing:.35px;
+
+    color:#60769d;
+
+    border-bottom:
+        1px solid #e1e9f4;
+
+    white-space:nowrap;
+
+}
+
+
+.table-wrapper td{
+
+    padding:
+        18px 20px;
+
+    border-bottom:
+        1px solid #e9eef6;
+
+    font-size:14px;
+
+    color:#26385e;
+
+    vertical-align:middle;
+
+}
+
+
+.table-wrapper tbody tr{
+
+    transition:
+        background .15s ease;
+
+}
+
+
+.table-wrapper tbody tr:hover{
+
+    background:#f9fbff;
+
+}
+
+
+.table-wrapper tbody tr:last-child td{
+
+    border-bottom:0;
+
+}
+
+
+.project-name{
+
+    color:#123a76;
+
+    font-weight:600;
+
+}
+
+
+.assessment-date{
+
+    color:#506b97;
+
+    white-space:nowrap;
+
+}
+
+
+.participant-name{
+
+    color:#172f5c;
+
+    font-weight:600;
+
+}
+
+
+.result-btn{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:8px;
+
+    min-width:120px;
+
+    height:40px;
+
+    padding:
+        0 16px;
+
+    border:0;
+
+    border-radius:9px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #1265e7,
+            #1388f5
+        );
+
+    color:#fff;
+
+    font-size:12px;
+
+    font-weight:600;
+
+    box-shadow:
+        0 7px 16px
+        rgba(15,106,233,.16);
+
+    cursor:pointer;
+
+    transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+
+}
+
+
+.result-btn:hover{
+
+    transform:translateY(-1px);
+
+    box-shadow:
+        0 10px 20px
+        rgba(15,106,233,.22);
+
+}
+
+
+.result-btn i{
+
+    font-size:11px;
+
+}
+
+
+/* ==========================================================
+   TABLE FOOTER
+========================================================== */
+
+.table-footer{
+
+    min-height:48px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    padding:
+        0 27px;
+
+    border-top:
+        1px solid #edf1f7;
+
+    color:#7588aa;
+
+    font-size:11px;
+
+}
+
+
+.table-footer strong{
+
+    color:#1267e9;
+
+    font-weight:600;
+
+}
+
+
+/* ==========================================================
+   MATRIX CARD
+========================================================== */
+
+.matrix-card{
+
+    width:100%;
+
+    margin-top:22px;
+
+    background:#fff;
+
+    border:
+        1px solid #e0e8f4;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 10px 30px rgba(31,70,130,.08);
+
+    overflow:hidden;
+
+}
+
+
+.matrix-header{
+
+    padding:
+        20px 27px;
+
+    border-bottom:
+        1px solid #e5ebf4;
+
+}
+
+
+.matrix-header h2{
+
+    margin:0;
+
+    color:#10234b;
+
+    font-size:19px;
+
+    font-weight:650;
+
+}
+
+
+.matrix-header p{
+
+    margin:
+        5px 0 0;
+
+    color:#7b8ba8;
+
+    font-size:11px;
+
+}
+
+
+/* ==========================================================
+   MATRIX TABLE
+========================================================== */
+
+.matrix-wrapper{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+
+.matrix-table{
+
+    width:100%;
+
+    min-width:1050px;
+
+    border-collapse:collapse;
+
+}
+
+
+.matrix-table th{
+
+    padding:
+        16px 17px;
+
+    text-align:center;
+
+    font-size:11px;
+
+    line-height:1.45;
+
+    font-weight:600;
+
+    color:#60769d;
+
+    background:#f7faff;
+
+    border-bottom:
+        1px solid #e1e9f4;
+
+    white-space:nowrap;
+
+}
+
+
+.matrix-table th:first-child{
+
+    text-align:left;
+
+}
+
+
+.matrix-table td{
+
+    padding:
+        18px 17px;
+
+    text-align:center;
+
+    font-size:14px;
+
+    border-bottom:
+        1px solid #e9eef6;
+
+    color:#243b68;
+
+    white-space:nowrap;
+
+}
+
+
+.matrix-table td:first-child{
+
+    text-align:left;
+
+}
+
+
+.matrix-table tr:last-child td{
+
+    border-bottom:0;
+
+}
+
+
+.matrix-participant{
+
+    color:#172f5c;
+
+    font-weight:600;
+
+}
+
+
+/* ==========================================================
+   SCORE
+========================================================== */
+
+.score-wrap{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:9px;
+
+}
+
+
+.score-circle{
+
+    width:36px;
+
+    height:36px;
+
+    border-radius:50%;
+
+    display:grid;
+
+    place-items:center;
+
+    position:relative;
+
+}
+
+
+.score-circle:after{
+
+    content:"";
+
+    width:27px;
+
+    height:27px;
+
+    border-radius:50%;
+
+    background:#fff;
+
+    position:absolute;
+
+}
+
+
+.score-circle span{
+
+    position:relative;
+
+    z-index:2;
+
+    font-size:8px;
+
+    color:#17315d;
+
+    font-weight:700;
+
+}
+
+
+.score-value{
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:#17315d;
+
+}
+
+
+.matrix-score{
+
+    font-size:14px;
+
+    font-weight:600;
+
+}
+
+
+.score-green{
+
+    color:#12ad69;
+
+}
+
+
+.score-blue{
+
+    color:#1267e9;
+
+}
+
+
+/* ==========================================================
+   COMPLETION
+========================================================== */
+
+.complete-pill{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-width:82px;
+
+    height:29px;
+
+    padding:
+        0 11px;
+
+    border-radius:20px;
+
+    background:#e7f9ef;
+
+    border:
+        1px solid #cdf0dd;
+
+    color:#0eaa64;
+
+    font-size:10px;
+
+    font-weight:600;
+
+}
+
+
+/* ==========================================================
+   MATRIX FOOTER
+========================================================== */
+
+.matrix-footer{
+
+    min-height:48px;
+
+    padding:
+        0 27px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    gap:20px;
+
+    color:#7588aa;
+
+    font-size:10px;
+
+    border-top:
+        1px solid #edf1f7;
+
+}
+
+
+/* ==========================================================
+   EMPTY STATE
+========================================================== */
+
+.empty-result{
+
+    padding:
+        50px 20px;
+
+    text-align:center;
+
+    color:#7b8ba8;
+
+}
+
+
+.empty-result i{
+
+    font-size:28px;
+
+    color:#9bb5d9;
+
+    margin-bottom:12px;
+
+}
+
+
+.empty-result strong{
+
+    display:block;
+
+    color:#30476f;
+
+    font-size:14px;
+
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:1050px){
+
+    .content{
+
+        padding-left:22px;
+
+        padding-right:22px;
+
+    }
+
+}
+
+
+@media(max-width:820px){
+
+    .sidebar{
+
+        width:74px;
+
+    }
+
+
+    .brand{
+
+        justify-content:center;
+
+        padding:
+            22px 0 28px;
+
+    }
+
+
+    .brand > div:not(.brand-logo){
+
+        display:none;
+
+    }
+
+
+    .result-module{
+
+        padding:
+            15px 10px;
+
+        text-align:center;
+
+    }
+
+
+    .result-module-icon{
+
+        margin:
+            0 auto;
+
+    }
+
+
+    .result-module h3,
+    .result-module p,
+    .module-divider,
+    .module-status{
+
+        display:none;
+
+    }
+
+
+    .sidebar-footer{
+
+        left:10px;
+
+        right:10px;
+
+    }
+
+
+    .logout-btn{
+
+        width:54px;
+
+        margin:auto;
+
+        font-size:0;
+
+    }
+
+
+    .logout-btn i{
+
+        font-size:15px;
+
+    }
+
+
+    .platform-info{
+
+        display:none;
+
+    }
+
+
+    .main{
+
+        margin-left:74px;
+
+        width:
+            calc(100% - 74px);
+
+    }
+
+
+    .header{
+
+        padding:
+            18px 20px;
+
+    }
+
+
+    .header-title{
+
+        font-size:23px;
+
+    }
+
+
+    .header-user-info{
+
+        display:none;
+
+    }
+
+
+    .content{
+
+        padding:
+            22px 18px 35px;
+
+    }
+
+
+    .table-toolbar{
+
+        padding:
+            14px 18px;
+
+    }
+
+}
+
+
+@media(max-width:620px){
+
+    .header{
+
+        min-height:105px;
+
+    }
+
+
+    .header-title{
+
+        font-size:21px;
+
+    }
+
+
+    .header-description{
+
+        font-size:10px;
+
+    }
+
+
+    .table-toolbar{
+
+        align-items:stretch;
+
+        flex-direction:column;
+
+    }
+
+
+    .search-box{
+
+        width:100%;
+
+    }
+
+
+    .view-control{
+
+        justify-content:flex-end;
+
+    }
+
+
+    .table-footer,
+    .matrix-footer{
+
+        padding:
+            10px 18px;
+
+        min-height:50px;
+
+    }
+
+
+    .table-footer,
+    .matrix-footer{
+
+        align-items:flex-start;
+
+        flex-direction:column;
+
+    }
+
+
+    .matrix-header{
+
+        padding:18px;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =====================================================
+         SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+
+        <!-- BRAND -->
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                TS
+            </div>
+
+            <div>
+
+                <div class="brand-title">
+                    TalentScope
+                </div>
+
+                <div class="brand-version">
+                    Enterprise v1.0
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SIDEBAR BODY -->
+
+        <div class="sidebar-body">
+
+
+            <div class="result-module">
+
+                <div class="result-module-icon">
+
+                    <i class="fa-solid fa-chart-column"></i>
+
+                </div>
+
+
+                <h3>
+                    Assessment Results
+                </h3>
+
+
+                <p>
+                    View and monitor assessment
+                    results for project participants.
+                </p>
+
+
+                <div class="module-divider"></div>
+
+
+                <div class="module-status">
+
+                    <span class="module-status-dot"></span>
+
+                    <span>
+                        Results Module Active
+                    </span>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- SIDEBAR FOOTER -->
+
+        
+        
+        <div class="sidebar-footer">
+
+
+            <button
+                type="button"
+                class="logout-btn"
+                id="logoutBtn"
+            >
+
+                <i class="fa-solid fa-right-from-bracket"></i>
+
+                <span>
+                    Logout
+                </span>
+
+            </button>
+
+
+            
+
+
+        </div>
+
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <div class="main">
+
+
+        <!-- =================================================
+             HEADER
+        ================================================== -->
+
+        <header class="header">
+
+
+            <div class="header-left">
+
+
+                <div class="breadcrumb">
+
+                    <span>
+                        Participant Portal
+                    </span>
+
+                    <i class="fa-solid fa-chevron-right"></i>
+
+                    <span class="active">
+                        Test Result
+                    </span>
+
+                </div>
+
+
+                <h1 class="header-title">
+                    Assessment Results
+                </h1>
+
+
+                <p class="header-description">
+                    View assessment results for project participants
+                </p>
+
+
+            </div>
+
+
+            <!-- USER -->
+
+            <div class="header-user">
+
+
+                <div class="header-user-icon">
+
+                    <i class="fa-solid fa-user"></i>
+
+                </div>
+
+
+                <div class="header-user-info">
+
+                    <strong id="userRole">
+                        Administrator
+                    </strong>
+
+                    <span id="userLabel">
+                        Admin
+                    </span>
+
+                </div>
+
+
+            </div>
+
+
+        </header>
+
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <main class="content">
+
+
+            <!-- =================================================
+                 PARTICIPANT RESULT TABLE
+            ================================================== -->
+
+            <section class="card">
+
+
+                <!-- TOOLBAR -->
+
+                <div class="table-toolbar">
+
+
+                    <div class="search-box">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        <input
+                            type="text"
+                            id="searchParticipant"
+                            placeholder="Search participant..."
+                            autocomplete="off"
+                        >
+
+                    </div>
+
+
+                    <div class="view-control">
+
+                        <label for="viewLimit">
+                            View
+                        </label>
+
+                        <select id="viewLimit">
+
+                            <option value="5">
+                                5
+                            </option>
+
+                            <option value="10" selected>
+                                10
+                            </option>
+
+                            <option value="20">
+                                20
+                            </option>
+
+                            <option value="30">
+                                30
+                            </option>
+
+                            <option value="50">
+                                50
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                </div>
+
+
+
+                <!-- TABLE -->
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Project
+                                </th>
+
+                                <th>
+                                    Assessment Date
+                                </th>
+
+                                <th>
+                                    Participant
+                                </th>
+
+                                <th>
+                                    Test Results
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody id="resultTable">
+
+                            <!--
+                                DATA PESERTA AKAN DIMUAT
+                                OTOMATIS DARI LOCALSTORAGE
+                                MELALUI js/result.js
+                            -->
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+
+                <!-- TABLE FOOTER -->
+
+                <div class="table-footer">
+
+                    <span id="resultCount">
+                        Showing 0–0 of 0 results
+                    </span>
+
+                    <strong>
+                        TalentScope Assessment Results
+                    </strong>
+
+                </div>
+
+
+            </section>
+
+           
+                        </main>
+
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+/* ==========================================================
+   USER ROLE
+========================================================== */
+
+(function(){
+
+    const userRole =
+        document.getElementById("userRole");
+
+    const userLabel =
+        document.getElementById("userLabel");
+
+
+    let storedUser = null;
+
+
+    try{
+
+        storedUser =
+            JSON.parse(
+                localStorage.getItem("currentUser")
+                ||
+                localStorage.getItem("user")
+                ||
+                localStorage.getItem("loggedInUser")
+                ||
+                "null"
+            );
+
+    }catch(error){
+
+        storedUser = null;
+
+    }
+
+
+    if(!storedUser) return;
+
+
+    let role =
+        storedUser.role
+        ||
+        storedUser.userRole
+        ||
+        storedUser.type
+        ||
+        storedUser.accountType
+        ||
+        "";
+
+
+    role =
+        String(role)
+        .toLowerCase();
+
+
+    if(role.includes("admin")){
+
+        userRole.textContent =
+            "Administrator";
+
+        userLabel.textContent =
+            "Admin";
+
+    }
+
+    else if(role.includes("client")){
+
+        userRole.textContent =
+            "Client";
+
+        userLabel.textContent =
+            "Client";
+
+    }
+
+    else if(
+        role.includes("asesor") ||
+        role.includes("assessor")
+    ){
+
+        userRole.textContent =
+            "Asesor";
+
+        userLabel.textContent =
+            "Asesor";
+
+    }
+
+})();
+
+
+
+/* ==========================================================
+   LOGOUT
+========================================================== */
+
+const logoutBtn =
+    document.getElementById("logoutBtn");
+
+
+if(logoutBtn){
+
+    logoutBtn.addEventListener(
+        "click",
+        function(){
+
+            localStorage.removeItem(
+                "currentUser"
+            );
+
+            localStorage.removeItem(
+                "user"
+            );
+
+            localStorage.removeItem(
+                "loggedInUser"
+            );
+
+            window.location.href =
+                "login.html";
+
+        }
+    );
+
+}
+
+</script>
+
+
+<script src="js/result.js"></script>
+<!-- Panggil script kontrol akses di semua halaman -->
+<script src="app-access-control.js"></script>
+<script src="project-access-filter.js"></script>
+
+<script src="js/auth-guard.js"></script>
+
+<!-- SCRIPT STABILISASI SEMBUNYIKAN MENU SETTINGS -->
+<style id="hide-settings-style">
+  /* Sembunyikan elemen menu settings secara instan sejak CSS dimuat */
+  .dropdown-menu a[href*="setting"],
+  .dropdown-menu button[onclick*="setting"],
+  .dropdown-item[href*="setting"],
+  [class*="dropdown"] a:has(svg):first-child,
+  .user-dropdown a:first-child {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function() {
+  "use strict";
+
+  function enforceHideSettings() {
+    var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+    if (!userRaw) return;
+
+    var activeUser = JSON.parse(userRaw);
+    var isSystemAdmin = /system/i.test(activeUser.role || "");
+
+    var styleEl = document.getElementById("hide-settings-style");
+
+    // Jika user ADALAH System Admin, kembalikan tampilan menu Settings
+    if (isSystemAdmin) {
+      if (styleEl) styleEl.remove();
+      return;
+    }
+
+    // Jika BUKAN System Admin, pastikan semua elemen teks bertuliskan "Setting" tersembunyi
+    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
+    menuItems.forEach(function(item) {
+      var text = item.textContent.trim().toLowerCase();
+      if (text.includes("setting") || text.includes("pengaturan")) {
+        item.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+
+  // 1. Jalankan saat DOM dan Window siap
+  document.addEventListener("DOMContentLoaded", enforceHideSettings);
+  window.addEventListener("load", enforceHideSettings);
+
+  // 2. Pantau perubahan DOM (MutationObserver) agar jika dropdown baru dirender/diklik, Settings tetap tersembunyi
+  var observer = new MutationObserver(function() {
+    enforceHideSettings();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
+
+<script>
+(function() {
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        // =========================================================
+        // 1. AMBIL DATA USER LOGIN & KODE PROJECT DARINYA
+        // =========================================================
+        function getActiveUser() {
+            try {
+                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { 
+                return null; 
+            }
+        }
+
+        var activeUser = getActiveUser();
+        if (!activeUser) return;
+
+        var username = activeUser.username || activeUser.name || "";
+        var role = String(activeUser.role || "").toLowerCase();
+
+        // Ambil prefix sebelum titik pertama (Misal: "wwweee.clientuser" -> "wwweee")
+        var projectPrefix = username.includes(".") ? username.split(".")[0].trim().toLowerCase() : username.trim().toLowerCase();
+
+        var isAdmin = role.includes("admin") || role.includes("administrator") || role.includes("system");
+
+        // =========================================================
+        // 2. FUNGSI FILTERING TABEL HASIL
+        // =========================================================
+        function filterResultsByProject() {
+            var tableBody = document.querySelector(".assessment-table tbody, tbody");
+            var rows = document.querySelectorAll("tbody tr");
+            var selectedInfo = document.querySelector(".selected-info, .showing-info, small");
+
+            // Jika role Admin/System, tampilkan semua tanpa filter
+            if (isAdmin) {
+                rows.forEach(function(row) {
+                    row.style.display = "";
+                });
+                return;
+            }
+
+            var visibleCount = 0;
+
+            rows.forEach(function(row) {
+                // Ambil teks dari baris (Project Name / Code biasanya ada di kolom pertama)
+                var rowText = row.textContent.toLowerCase();
+
+                // Cek apakah baris mengandung prefix project pengguna
+                if (rowText.includes(projectPrefix)) {
+                    row.style.display = "";
+                    visibleCount++;
+                } else {
+                    row.style.display = "none"; // Sembunyikan jika tidak cocok dengan project user
+                }
+            });
+
+            // Jika tidak ada data yang cocok dengan project user
+            if (visibleCount === 0 && tableBody) {
+                // Sembunyikan baris default atau tampilkan pesan "Tidak ada data untuk project ini"
+                var emptyMessageRow = document.getElementById("emptyProjectNotice");
+                if (!emptyMessageRow) {
+                    emptyMessageRow = document.createElement("tr");
+                    emptyMessageRow.id = "emptyProjectNotice";
+                    emptyMessageRow.innerHTML = `
+                        <td colspan="6" style="text-align: center; padding: 40px 20px; color: #64748b;">
+                            <i class="fa-solid fa-folder-open" style="font-size: 32px; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
+                            <strong style="color: #0f172a; display: block; font-size: 15px;">Tidak Ada Hasil Asesmen untuk Project (${projectPrefix.toUpperCase()})</strong>
+                            <small>Belum ada peserta yang menyelesaikan asesmen pada project ini.</small>
+                        </td>
+                    `;
+                    tableBody.appendChild(emptyMessageRow);
+                }
+            }
+        }
+
+        // =========================================================
+        // 3. JALANKAN FILTER SAAT ISI TABEL DI-RENDER
+        // =========================================================
+        // Jalankan langsung
+        setTimeout(filterResultsByProject, 300);
+
+        // Pantau jika ada perubahan data pada tabel (MutationObserver)
+        var tableBody = document.querySelector("tbody");
+        if (tableBody) {
+            var observer = new MutationObserver(function() {
+                filterResultsByProject();
+            });
+            observer.observe(tableBody, { childList: true, subtree: true });
+        }
+    });
+})();
+</script>
+
+<script>
+(function() {
+    "use strict";
+
+    // 1. Ambil URL Parameter '?id=...' jika ada
+    var urlParams = new URLSearchParams(window.location.search);
+    var projectIdFromUrl = urlParams.get('id');
+
+    // 2. Ambil data user yang sedang login
+    function getActiveUser() {
+        try {
+            var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+            return d ? JSON.parse(d) : null;
+        } catch(e) { 
+            return null; 
+        }
+    }
+
+    var activeUser = getActiveUser();
+
+    if (activeUser) {
+        var username = activeUser.username || activeUser.name || "";
+        // Ambil nama project sebelum titik pertama (Misal: "wwweee.clientuser" -> "wwweee")
+        var userProject = username.includes(".") ? username.split(".")[0].trim() : username.trim();
+
+        // 3. JIKA URL BELUM MEMILIKI PARAMETER '?id=...', AUTO REDIRECT DENGAN '?id=...'
+        if (!projectIdFromUrl && userProject) {
+            var newUrl = window.location.pathname + "?id=" + encodeURIComponent(userProject);
+            window.location.replace(newUrl); // Redirect otomatis tanpa reload berulang
+            return;
+        }
+    }
+})();
+</script>
+
+<!-- Bagian ini diletakkan di dalam hasil.html atau dashboard admin Anda -->
+<div id="admin-result-container">
+    <h2>Rekap Hasil PAPI Kostick (Admin View)</h2>
+    <div id="hasil-tabel"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Tarik data hasil dari localStorage
+        const dataHasilRaw = localStorage.getItem('papi_final_result');
+        const container = document.getElementById('hasil-tabel');
+
+        if (dataHasilRaw) {
+            const dataHasil = JSON.parse(dataHasilRaw);
+            const skor = dataHasil.skorDimensi;
+            
+            let html = `
+                <p><strong>Nama Peserta:</strong> ${dataHasil.peserta}</p>
+                <p><strong>Tanggal Pengerjaan:</strong> ${dataHasil.tanggal}</p>
+                <table border="1" style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <tr style="background: #f1f5f9;">
+                        <th style="padding: 8px;">Dimensi</th>
+                        <th style="padding: 8px;">Skor</th>
+                    </tr>
+            `;
+
+            // Looping untuk menampilkan skor tiap dimensi
+            for (const [dimensi, nilai] of Object.entries(skor)) {
+                html += `
+                    <tr>
+                        <td style="padding: 8px;"><strong>${dimensi}</strong></td>
+                        <td style="padding: 8px;">${nilai}</td>
+                    </tr>
+                `;
+            }
+
+            html += `</table>`;
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = "<p>Belum ada data pengerjaan yang disubmit.</p>";
+        }
+    });
+</script>
+
+</body>
+
+</html>

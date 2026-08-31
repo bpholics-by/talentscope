@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Peserta | TalentScope</title>
+    
+    <!-- FontAwesome Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #0f172a;
+            padding: 24px;
+        }
+
+        .page-container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        /* Navigation */
+        .top-back-wrapper { margin-bottom: 16px; }
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #5c738a;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .btn-back:hover { color: #0075ff; }
+
+        /* Hero Banner */
+        .hero-banner-settings {
+            background: linear-gradient(110deg, #01386e 0%, #0056b3 45%, #0075ff 100%);
+            border-radius: 16px;
+            padding: 28px 32px;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 86, 179, 0.08);
+        }
+
+        .circle-overlay {
+            position: absolute;
+            top: -60px;
+            right: -80px;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 45px solid rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .brand-logo-box {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            color: #ffffff;
+        }
+
+        .brand-info h2 { margin: 0; font-size: 15px; font-weight: 700; color: #ffffff; }
+        .brand-info span { font-size: 11px; color: rgba(255, 255, 255, 0.75); }
+
+        .hero-category {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: #6bb3ff;
+            margin-bottom: 4px;
+        }
+
+        .hero-title { font-size: 28px; font-weight: 800; margin: 0 0 6px 0; color: #ffffff; }
+        .hero-desc { font-size: 13.5px; margin: 0; color: rgba(255, 255, 255, 0.85); }
+
+        /* Role Notice Bar */
+        .user-role-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e0f2fe;
+            border: 1px solid #bae6fd;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #0369a1;
+        }
+
+        .user-role-badge {
+            background: #0284c7;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11.5px;
+        }
+
+        /* Card Content */
+        .content-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Toolbar & Search Bar */
+        .toolbar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .search-box-wrapper {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+            max-width: 480px;
+        }
+
+        .search-box-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 13.5px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: #0075ff;
+            box-shadow: 0 0 0 3px rgba(0, 117, 255, 0.12);
+        }
+
+        .action-buttons-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .btn-outline-danger {
+            background: #fff;
+            border-color: #fca5a5;
+            color: #dc2626;
+        }
+        .btn-outline-danger:hover { background: #fef2f2; border-color: #ef4444; }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border-color: #e2e8f0;
+        }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        /* Table Area */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 13.5px;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            padding: 14px 16px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+
+        .data-table tbody tr:hover { background: #f8fafc; }
+        .participant-name { font-weight: 700; color: #0f172a; }
+
+        .table-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-icon-action {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-view { background: #f0f7ff; color: #0284c7; border-color: #bae6fd; }
+        .btn-view:hover { background: #e0f2fe; }
+
+        .btn-edit { background: #fefce8; color: #ca8a04; border-color: #fef08a; }
+        .btn-edit:hover { background: #fef9c3; }
+
+        .btn-result { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+        .btn-result:hover { background: #dcfce7; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 { font-size: 18px; font-weight: 800; color: #0f172a; }
+        .btn-close-modal { background: none; border: none; font-size: 18px; color: #94a3b8; cursor: pointer; }
+        .modal-body { padding: 24px; }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px 24px;
+        }
+
+        .detail-item { display: flex; flex-direction: column; gap: 4px; }
+        .detail-item-full { grid-column: span 2; }
+        .detail-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .detail-value { font-size: 14px; font-weight: 600; color: #0f172a; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11.5px;
+            font-weight: 700;
+            width: fit-content;
+        }
+
+        .status-badge.success { background: #dcfce7; color: #15803d; }
+        .status-badge.pending { background: #fef9c3; color: #a16207; }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f1f5f9;
+            text-align: right;
+            background: #f8fafc;
+        }
+
+        .empty-state { text-align: center; padding: 40px; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<main class="page-container">
+
+    <!-- TOP BACK LINK -->
+    <div class="top-back-wrapper">
+        <a href="dashboard.html" class="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+        </a>
+    </div>
+
+    <!-- HERO BANNER -->
+    <section class="hero-banner-settings">
+        <div class="circle-overlay"></div>
+        <div class="brand-header">
+            <div class="brand-logo-box">TS</div>
+            <div class="brand-info">
+                <h2>TalentScope</h2>
+                <span>Enterprise v1.0</span>
+            </div>
+        </div>
+        <div class="hero-content">
+            <span class="hero-category">DATABASE TERPUSAT</span>
+            <h1 class="hero-title">Database Peserta</h1>
+            <p class="hero-desc">Pusat pencarian, pengawasan identitas, dan hasil asesmen peserta secara terpusat.</p>
+        </div>
+    </section>
+
+    <!-- USER ROLE NOTICE BAR -->
+    <div class="user-role-bar">
+        <div>
+            <i class="fa-solid fa-user-shield"></i> Terhubung sebagai: <strong id="currentUsername">-</strong>
+        </div>
+        <div>
+            Akses Role: <span class="user-role-badge" id="currentRoleBadge">-</span>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT CARD -->
+    <section class="content-card">
+        
+        <!-- TOOLBAR (Search & Batch Action) -->
+        <div class="toolbar-header">
+            <div class="search-box-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="globalSearchInput" class="search-input" placeholder="Cari nama peserta, ID project, perusahaan...">
+            </div>
+
+            <div class="action-buttons-group" id="adminBatchActions">
+                <button class="btn-action btn-secondary" onclick="toggleSelectAll()">
+                    <i class="fa-solid fa-check-double"></i> Pilih Semua
+                </button>
+                <button class="btn-action btn-outline-danger" onclick="removeSelected()">
+                    <i class="fa-solid fa-trash-can"></i> Hapus Terpilih
+                </button>
+            </div>
+        </div>
+
+        <!-- DATA TABLE -->
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;" class="admin-only-col">
+                            <input type="checkbox" id="selectAllCheckbox" onchange="handleSelectAllChange(this)">
+                        </th>
+                        <th>Nama Peserta</th>
+                        <th>Nama Project</th>
+                        <th>ID Project</th>
+                        <th>Tanggal Asesmen</th>
+                        <th>Perusahaan</th>
+                        <th style="text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="participantTableBody">
+                    <tr><td colspan="7" class="empty-state">Memuat data dari LocalStorage...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </section>
+
+</main>
+
+<!-- MODAL DETAIL PESERTA -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Detail Informasi Peserta</h3>
+            <button class="btn-close-modal" onclick="closeModal('detailModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" id="modalDetailContent">
+            <!-- Dynamic Content -->
+        </div>
+        <div class="modal-footer">
+            <button class="btn-action btn-secondary" onclick="closeModal('detailModal')">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DISAMAKAN Kuncinya agar membaca data asli dari project
+    const STORAGE_KEY = 'talentscope_participants';
+
+    // Data Sesi Pengguna
+    const currentUserSession = JSON.parse(localStorage.getItem('talentscope_current_user')) || 
+                               JSON.parse(localStorage.getItem('userSession')) || {
+        username: "admin",
+        role: "System Administrator",
+        assignedProjects: []
+    };
+
+    let rawDatabaseParticipants = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+    initUserPermissions();
+
+    const urlParams =
+        new URLSearchParams(window.location.search);
+
+    const searchQueryParam =
+        urlParams.get("search") || "";
+
+    const searchInput =
+        document.getElementById("globalSearchInput");
+
+    let initialSearchValue = "";
+
+    if (searchQueryParam) {
+
+        initialSearchValue =
+            decodeURIComponent(searchQueryParam);
+
+        if (searchInput) {
+            searchInput.value = initialSearchValue;
+        }
+    }
+
+    loadParticipantsFromLocalStorage(initialSearchValue);
+
+    setupRealtimeSearch();
+
+    setupDatabaseAutoRefresh();
+});
+
+
+/* ==========================================================
+   DATABASE REALTIME AUTO REFRESH
+   Sinkronisasi perubahan:
+   - talentscope_participants
+   - talentscope_projects
+========================================================== */
+
+let lastParticipantsSnapshot = "";
+let lastProjectsSnapshot = "";
+
+
+function setupDatabaseAutoRefresh() {
+
+    /* ======================================================
+       SIMPAN SNAPSHOT AWAL
+    ====================================================== */
+
+    lastParticipantsSnapshot =
+        localStorage.getItem("talentscope_participants") || "[]";
+
+    lastProjectsSnapshot =
+        localStorage.getItem("talentscope_projects") || "[]";
+
+
+    /* ======================================================
+       DETEKSI PERUBAHAN DARI TAB / HALAMAN LAIN
+    ====================================================== */
+
+    window.addEventListener("storage", function(event) {
+
+        if (
+            event.key === "talentscope_participants" ||
+            event.key === "talentscope_projects"
+        ) {
+
+            refreshDatabaseIfChanged();
+
+        }
+
+    });
+
+
+    /* ======================================================
+       BACKUP PENGECEKAN SETIAP 2 DETIK
+    ====================================================== */
+
+    setInterval(function() {
+
+        refreshDatabaseIfChanged();
+
+    }, 2000);
+
+}
+
+
+/* ==========================================================
+   REFRESH DATABASE JIKA ADA PERUBAHAN
+========================================================== */
+
+function refreshDatabaseIfChanged() {
+
+    /* ======================================================
+       AMBIL DATA TERBARU DARI KEDUA STORAGE
+    ====================================================== */
+
+    const latestParticipants =
+        localStorage.getItem("talentscope_participants") || "[]";
+
+    const latestProjects =
+        localStorage.getItem("talentscope_projects") || "[]";
+
+
+    /* ======================================================
+       CEK APAKAH ADA PERUBAHAN
+    ====================================================== */
+
+    const participantsChanged =
+        latestParticipants !== lastParticipantsSnapshot;
+
+    const projectsChanged =
+        latestProjects !== lastProjectsSnapshot;
+
+
+    /* ======================================================
+       JIKA TIDAK ADA PERUBAHAN, TIDAK PERLU REFRESH
+    ====================================================== */
+
+    if (
+        !participantsChanged &&
+        !projectsChanged
+    ) {
+
+        return;
+
+    }
+
+
+    /* ======================================================
+       UPDATE SNAPSHOT
+    ====================================================== */
+
+    lastParticipantsSnapshot =
+        latestParticipants;
+
+    lastProjectsSnapshot =
+        latestProjects;
+
+
+    /* ======================================================
+       PERTAHANKAN NILAI SEARCH YANG SEDANG DIGUNAKAN
+    ====================================================== */
+
+    const searchInput =
+        document.getElementById("globalSearchInput");
+
+    const currentSearch =
+        searchInput
+            ? searchInput.value
+            : "";
+
+
+    /* ======================================================
+       RELOAD DATA PESERTA
+       Fungsi ini nantinya akan menjalankan:
+       hydrateParticipantActivityFromProjects()
+       sehingga data login/logout dari project ikut masuk
+       ke data database.
+    ====================================================== */
+
+    loadParticipantsFromLocalStorage(currentSearch);
+
+}
+
+
+function getProjectPurposeForParticipant(item, projects) {
+        if (!item || !Array.isArray(projects)) return "";
+
+        const itemProjectId =
+            item.projectId ||
+            item.idProject ||
+            item.project_id ||
+            item.projectID ||
+            "";
+
+        const itemProjectName =
+            item.namaProject ||
+            item.projectName ||
+            item.project_name ||
+            "";
+
+        const itemCompany =
+            item.perusahaan ||
+            item.company ||
+            "";
+
+        const itemParticipantId =
+            item.id ||
+            item.participantId ||
+            "";
+
+        let project = null;
+
+        if (itemProjectId) {
+            project = projects.find(function (p) {
+                return p &&
+                    String(p.id) === String(itemProjectId);
+            }) || null;
+        }
+
+        if (!project && itemProjectName) {
+            project = projects.find(function (p) {
+                return p &&
+                    String(p.name || "").trim().toLowerCase() ===
+                    String(itemProjectName).trim().toLowerCase();
+            }) || null;
+        }
+
+        // Fallback terakhir: cari participant yang sama di project.
+        if (!project && itemParticipantId) {
+            for (const p of projects) {
+                const list = Array.isArray(p && p.participants)
+                    ? p.participants
+                    : [];
+
+                if (list.some(function (participant) {
+                    const pid =
+                        participant &&
+                        (participant.id || participant.participantId);
+                    const pem =
+                        participant &&
+                        (participant.email || participant.emailAddress);
+
+                    return (
+                        pid &&
+                        String(pid) === String(itemParticipantId)
+                    ) || (
+                        pem &&
+                        item.email &&
+                        String(pem).toLowerCase() ===
+                        String(item.email).toLowerCase()
+                    );
+                })) {
+                    project = p;
+                    break;
+                }
+            }
+        }
+
+        if (!project) return "";
+
+        return (
+            // Tujuan Tes pada flow TalentScope = Project Type.
+            project.tujuanTes ||
+            project.purpose ||
+            project.testPurpose ||
+            project.assessmentPurpose ||
+            project.objective ||
+            project.objectiveTest ||
+            project.tujuan ||
+            project.type ||
+            ""
+        );
+    }
+
+
+    // Sinkronkan field operasional peserta dari project.participants.
+    // Database Peserta tetap menjadi tampilan pusat, sementara sumber status
+    // login/logout/invitation/assessment mengikuti record participant di project.
+    function hydrateParticipantActivityFromProjects(parsedData) {
+        if (!Array.isArray(parsedData)) return parsedData;
+
+        let projects = [];
+        try {
+            projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+        } catch (e) {
+            projects = [];
+        }
+
+        if (!Array.isArray(projects) || !projects.length) return parsedData;
+
+        const norm = value => String(value ?? "").trim().toLowerCase();
+
+        function findProject(item) {
+            const pid = item?.projectId || item?.idProject || item?.projectID || item?.project_id || "";
+            const pname = item?.namaProject || item?.projectName || item?.project_name || item?.project || "";
+            const company = item?.perusahaan || item?.company || "";
+            const participantId = item?.participantId || item?.participantID || item?.id || "";
+            const email = item?.email || item?.emailUser || item?.emailAddress || "";
+
+            let project = null;
+
+            if (pid) {
+                project = projects.find(project => {
+                    const ids = [
+                        project?.id,
+                        project?.projectId,
+                        project?.projectID,
+                        project?.project_id
+                    ].filter(Boolean);
+                    return ids.some(id => norm(id) === norm(pid));
+                }) || null;
+            }
+
+            if (!project && pname) {
+                project = projects.find(project =>
+                    norm(project?.name || project?.projectName || project?.project_name) === norm(pname)
+                ) || null;
+            }
+
+            if (!project && (participantId || email)) {
+                project = projects.find(project => {
+                    const list = Array.isArray(project?.participants) ? project.participants : [];
+                    return list.some(person => {
+                        const id = person?.id || person?.participantId || person?.participantID || "";
+                        const em = person?.email || person?.emailAddress || "";
+                        return (participantId && norm(id) === norm(participantId)) ||
+                               (email && norm(em) === norm(email));
+                    });
+                }) || null;
+            }
+
+            if (!project && company) {
+                project = projects.find(project =>
+                    norm(project?.company || project?.perusahaan || project?.organization) === norm(company)
+                ) || null;
+            }
+
+            return project;
+        }
+
+        let changed = false;
+
+        const hydrated = parsedData.map(item => {
+            const project = findProject(item);
+            if (!project) return item;
+
+            const list = Array.isArray(project.participants) ? project.participants : [];
+            const participantId = item?.participantId || item?.participantID || item?.id || "";
+            const email = item?.email || item?.emailUser || item?.emailAddress || "";
+
+            const projectParticipant = list.find(person => {
+                const id = person?.id || person?.participantId || person?.participantID || "";
+                const em = person?.email || person?.emailAddress || "";
+                return (participantId && norm(id) === norm(participantId)) ||
+                       (email && norm(em) === norm(email));
+            });
+
+            if (!projectParticipant) return item;
+
+            const operationalFields = [
+                "invitationStatus",
+                "invitedAt",
+                "invitationSentAt",
+                "accountStatus",
+                "access",
+                "loginTime",
+                "loggedInAt",
+                "loginAt",
+                "lastLoginAt",
+                "logoutTime",
+                "loggedOutAt",
+                "logoutAt",
+                "lastLogoutAt",
+                "isLoggedIn",
+                "assessmentStatus",
+                "statusAsesmen",
+                "activity",
+                "currentActivity",
+                "lastActivity",
+                "activityUpdatedAt",
+                "lastSeen",
+                "lastSeenAt",
+                "activityHistory",
+                "history"
+            ];
+
+            const next = { ...item };
+            let itemChanged = false;
+
+            operationalFields.forEach(field => {
+                if (projectParticipant[field] !== undefined && projectParticipant[field] !== null) {
+                    if (JSON.stringify(next[field]) !== JSON.stringify(projectParticipant[field])) {
+                        next[field] = projectParticipant[field];
+                        itemChanged = true;
+                    }
+                }
+            });
+
+            // Alias penting untuk database lama.
+            if (projectParticipant.status !== undefined &&
+                projectParticipant.status !== null &&
+                next.assessmentStatus === undefined) {
+                next.assessmentStatus = projectParticipant.status;
+                itemChanged = true;
+            }
+
+            if (projectParticipant.username && !next.username) {
+                next.username = projectParticipant.username;
+                itemChanged = true;
+            }
+
+            if (projectParticipant.password && !next.password) {
+                next.password = projectParticipant.password;
+                itemChanged = true;
+            }
+
+            if (itemChanged) changed = true;
+            return next;
+        });
+
+        if (changed) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(hydrated));
+            } catch (e) {
+                console.warn("Gagal sinkronisasi status peserta:", e);
+            }
+        }
+
+        return hydrated;
+    }
+
+    function hydrateParticipantPurposeFromProjects(parsedData) {
+        if (!Array.isArray(parsedData)) return parsedData;
+
+        let projects = [];
+        try {
+            projects =
+                JSON.parse(
+                    localStorage.getItem("talentscope_projects") || "[]"
+                );
+        } catch (e) {
+            projects = [];
+        }
+
+        if (!Array.isArray(projects) || !projects.length) {
+            return parsedData;
+        }
+
+        let changed = false;
+
+        const hydrated = parsedData.map(function (item) {
+            const existingPurpose =
+                item.tujuanTes ||
+                item.purpose ||
+                item.testPurpose ||
+                item.assessmentPurpose ||
+                "";
+
+            if (existingPurpose) {
+                return item;
+            }
+
+            const projectPurpose =
+                getProjectPurposeForParticipant(item, projects);
+
+            if (!projectPurpose) {
+                return item;
+            }
+
+            changed = true;
+
+            return {
+                ...item,
+                tujuanTes: projectPurpose,
+                purpose: projectPurpose
+            };
+        });
+
+        // Simpan kembali agar Database tetap menjadi sumber data pusat.
+        if (changed) {
+            try {
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify(hydrated)
+                );
+            } catch (e) {
+                console.warn(
+                    "Gagal menyimpan sinkronisasi Tujuan Tes:",
+                    e
+                );
+            }
+        }
+
+        return hydrated;
+    }
+
+    function loadParticipantsFromLocalStorage(searchQuery = '') {
+        let storedData = localStorage.getItem(STORAGE_KEY);
+        let parsedData = [];
+
+        if (storedData) {
+            try { parsedData = JSON.parse(storedData); } catch(e) { parsedData = []; }
+        }
+
+        // Ambil Tujuan Tes langsung dari project jika field belum ada
+        // di record participant lama.
+        parsedData = hydrateParticipantPurposeFromProjects(parsedData);
+        parsedData = hydrateParticipantActivityFromProjects(parsedData);
+
+        rawDatabaseParticipants = parsedData.map((item, index) => ({
+            ...item,
+            id: item.id || index,
+            nama: item.nama || item.fullName || item.name || '-',
+            namaProject: item.namaProject || item.projectName || '-',
+            projectId: item.projectId || item.idProject || 'P001',
+            tanggal: item.tanggal || item.date || item.assessmentDate || item.tanggalAsesmen || '-',
+            perusahaan: item.perusahaan || item.company || '-'
+        }));
+
+        const query = (searchQuery || '').toLowerCase().trim();
+        const filteredData = rawDatabaseParticipants.filter(item => {
+            const nama = (item.nama || '').toLowerCase();
+            const projectId = (item.projectId || '').toLowerCase();
+            const perusahaan = (item.perusahaan || '').toLowerCase();
+            const namaProject = (item.namaProject || '').toLowerCase();
+
+            return nama.includes(query) || 
+                   projectId.includes(query) || 
+                   perusahaan.includes(query) || 
+                   namaProject.includes(query);
+        });
+
+        renderParticipantTable(filteredData);
+    }
+
+    function setupRealtimeSearch() {
+        const searchInput = document.getElementById('globalSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                loadParticipantsFromLocalStorage(this.value);
+            });
+        }
+    }
+
+    function initUserPermissions() {
+        const usernameEl = document.getElementById('currentUsername');
+        const badgeEl = document.getElementById('currentRoleBadge');
+
+        if (usernameEl) usernameEl.innerText = currentUserSession.username || 'admin';
+        if (badgeEl) badgeEl.innerText = currentUserSession.role || 'System Administrator';
+    }
+
+    function renderParticipantTable(data) {
+        const tbody = document.getElementById('participantTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!data || data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="empty-state">
+                        <i class="fa-solid fa-folder-open" style="font-size: 28px; margin-bottom: 8px; color: #cbd5e1;"></i><br>
+                        Belum ada data peserta yang tersimpan.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: center;"><input type="checkbox" class="row-checkbox" value="${item.id}"></td>
+                <td class="participant-name">${item.nama || '-'}</td>
+                <td>${item.namaProject || '-'}</td>
+                <td><strong>${item.projectId || '-'}</strong></td>
+                <td>${item.tanggal || '-'}</td>
+                <td>${item.perusahaan || '-'}</td>
+                <td style="text-align: center;">
+                    <div class="table-actions">
+                        <button class="btn-icon-action btn-view" onclick="openDetailModal('${item.id}')">
+                            <i class="fa-solid fa-eye"></i> Detail
+                        </button>
+                        <button class="btn-icon-action btn-edit" onclick="openEditModal('${item.id}')">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                        </button>
+                        <a href="participant-result.html?projectId=${item.projectId || ''}&participantId=${item.id}" class="btn-icon-action btn-result">
+                            <i class="fa-solid fa-chart-simple"></i> Hasil
+                        </a>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openDetailModal(participantId) {
+    const p = rawDatabaseParticipants.find(item => item.id == participantId);
+    if (!p) return;
+
+    let projects = [];
+    try {
+        const primary = JSON.parse(localStorage.getItem('talentscope_projects') || '[]');
+        const legacy = JSON.parse(localStorage.getItem('projects') || '[]');
+        projects = Array.isArray(primary) && primary.length ? primary : (Array.isArray(legacy) ? legacy : []);
+    } catch (e) {
+        projects = [];
+    }
+
+    const norm = value => String(value ?? '').trim().toLowerCase();
+    const projectId = p.projectId || p.idProject || p.projectID || '';
+    const projectName = p.namaProject || p.projectName || p.project || '';
+    const company = p.perusahaan || p.company || '';
+    const participantIdValue = p.participantId || p.participantID || p.id || '';
+    const email = p.email || p.emailUser || p.emailAddress || '';
+
+    let matchedProject = null;
+
+    if (projectId) {
+        matchedProject = projects.find(proj =>
+            norm(proj?.id || proj?.projectId || proj?.projectID) === norm(projectId)
+        ) || null;
+    }
+
+    if (!matchedProject && projectName) {
+        matchedProject = projects.find(proj =>
+            norm(proj?.name || proj?.projectName || proj?.project) === norm(projectName)
+        ) || null;
+    }
+
+    if (!matchedProject && (participantIdValue || email)) {
+        matchedProject = projects.find(proj => {
+            const list = Array.isArray(proj?.participants) ? proj.participants : [];
+            return list.some(participant => {
+                const pid = participant?.id || participant?.participantId || participant?.participantID || '';
+                const pem = participant?.email || participant?.emailAddress || '';
+                return (participantIdValue && norm(pid) === norm(participantIdValue)) ||
+                       (email && norm(pem) === norm(email));
+            });
+        }) || null;
+    }
+
+    if (!matchedProject && company) {
+        matchedProject = projects.find(proj =>
+            norm(proj?.company || proj?.perusahaan || proj?.organization || proj?.client || proj?.clientName) === norm(company)
+        ) || null;
+    }
+
+    function readPic(source) {
+        if (!source) return '';
+        const value = source.pic ?? source.PIC ?? source.picName ?? source.picProyek ?? source.admin ?? source.adminName ?? '';
+        if (value && typeof value === 'object') {
+            return String(value.name || value.fullName || value.nama || value.label || value.username || '').trim();
+        }
+        return String(value ?? '').trim();
+    }
+
+    const matchedProjectParticipant = (() => {
+        const list = Array.isArray(matchedProject?.participants) ? matchedProject.participants : [];
+        return list.find(person => {
+            const pid = person?.id || person?.participantId || person?.participantID || '';
+            const pem = person?.email || person?.emailAddress || '';
+            return (participantIdValue && norm(pid) === norm(participantIdValue)) ||
+                   (email && norm(pem) === norm(email));
+        }) || null;
+    })();
+
+    const detailParticipant = matchedProjectParticipant
+        ? { ...p, ...matchedProjectParticipant }
+        : p;
+
+    const picValue = readPic(matchedProject) || readPic(p) || '-';
+
+    const invitationStatus =
+        detailParticipant.invitationStatus ||
+        detailParticipant.invitation_status ||
+        (detailParticipant.access === 'Invited' ? 'Invited' : '') ||
+        'Pending';
+
+    const assessmentStatus =
+        detailParticipant.assessmentStatus ||
+        detailParticipant.statusAsesmen ||
+        detailParticipant.assessment_status ||
+        detailParticipant.status ||
+        'Not Started';
+
+    const loginTime =
+        detailParticipant.loginTime ||
+        detailParticipant.loggedInAt ||
+        detailParticipant.loginAt ||
+        detailParticipant.lastLoginAt ||
+        '';
+
+    const logoutTime =
+        detailParticipant.logoutTime ||
+        detailParticipant.loggedOutAt ||
+        detailParticipant.logoutAt ||
+        detailParticipant.lastLogoutAt ||
+        '';
+
+    function formatNiceDate(isoStr) {
+        if (!isoStr) return '-';
+        try {
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            return d.toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            });
+        } catch (e) {
+            return isoStr;
+        }
+    }
+
+    const participantName = detailParticipant.nama || detailParticipant.name || 'Tanpa Nama';
+    const participantEmail = detailParticipant.email || detailParticipant.emailUser || '-';
+    const participantPhone = detailParticipant.telepon || detailParticipant.phone || detailParticipant.noTelepon || '-';
+    const participantEdu = detailParticipant.pendidikan || detailParticipant.education || '-';
+    const participantCompany = detailParticipant.perusahaan || detailParticipant.company || '-';
+    const participantPos = detailParticipant.posisi || detailParticipant.position || 'Posisi belum diatur';
+    const participantPurpose = detailParticipant.tujuanTes || detailParticipant.purpose || '-';
+    const participantUsername = detailParticipant.username || participantEmail;
+    const participantPass = detailParticipant.password || detailParticipant.accessCode || '-';
+
+    const detailHtml = `
+        <style>
+            /* Styling Scrollbar Utama Modal agar berwarna biru muda & rapi */
+            ::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            ::-webkit-scrollbar-track {
+                background: #f1f5f9;
+                border-radius: 8px;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: #bfdbfe; /* Warna biru muda (blue-200) */
+                border-radius: 8px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: #93c5fd; /* Warna biru sedikit lebih tua saat di-hover */
+            }
+            
+            /* Untuk Firefox */
+            * {
+                scrollbar-width: thin;
+                scrollbar-color: #bfdbfe #f1f5f9;
+            }
+
+            .hide-scroll::-webkit-scrollbar { display: none; }
+            .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+            
+            .premium-card {
+                background: #ffffff;
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                border-radius: 12px;
+                padding: 16px;
+                transition: all 0.2s ease;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+                position: relative;
+                overflow: hidden;
+            }
+            .premium-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.08);
+                border-color: #93c5fd;
+            }
+        </style>
+    
+    <style>
+            /* Menyembunyikan scrollbar tapi tetap bisa digulir */
+            .hide-scroll::-webkit-scrollbar {
+                display: none;
+            }
+            .hide-scroll {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        </style>
+
+        <div style="font-family: inherit; color: #1e293b; padding: 4px;">
+            
+            <!-- Header Banner Profil Singkat -->
+            <div style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; padding: 20px; border-radius: 12px; display: flex; align-items: center; gap: 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);">
+                <div style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; border: 2px solid rgba(255,255,255,0.4);">
+                    ${participantName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: white;">${participantName}</h2>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; opacity: 0.9;"><i class="fa-solid fa-briefcase"></i> ${participantPos} &bull; <i class="fa-solid fa-building"></i> ${participantCompany}</p>
+                </div>
+            </div>
+
+            <!-- Grid Informasi Utama (Card Berwarna Halus) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+                
+                <!-- Kolom Kiri: Informasi Personal -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #3b82f6; font-weight: 600;"><i class="fa-solid fa-user-shield"></i> Informasi Personal</h4>
+                    
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">Email / Username</span>
+                        <span style="font-size: 13px; font-weight: 600; color: #0f172a;">${participantEmail}</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">No. Telepon</span>
+                        <span style="font-size: 13px; font-weight: 600; color: #0f172a;">${participantPhone}</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">Pendidikan</span>
+                        <span style="font-size: 13px; font-weight: 600; color: #0f172a;">${participantEdu}</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">Perusahaan & PIC</span>
+                        <span style="font-size: 13px; font-weight: 600; color: #0f172a;">${participantCompany} (PIC: ${picValue})</span>
+                    </div>
+                    <div>
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">Password / Kode Akses</span>
+                        <span style="font-size: 13px; font-weight: 600; font-family: monospace; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #334155;">${participantPass}</span>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Status & Sesi Asesmen -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #10b981; font-weight: 600;"><i class="fa-solid fa-clipboard-list"></i> Status & Sesi Asesmen</h4>
+                    
+                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">Status Invitation</span>
+                        <span class="status-badge ${invitationStatus === 'Accepted' || invitationStatus === 'Invited' ? 'success' : 'pending'}" style="font-size: 11px;">${invitationStatus}</span>
+                    </div>
+                    <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">Status Asesmen</span>
+                        <span class="status-badge ${/^(Selesai|Completed|Complete)$/i.test(assessmentStatus) ? 'success' : 'pending'}" style="font-size: 11px;">${assessmentStatus}</span>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">Waktu Login</span>
+                        <span style="font-size: 12px; font-weight: 600; color: #0f172a;"><i class="fa-regular fa-clock" style="color: #3b82f6;"></i> ${formatNiceDate(loginTime)}</span>
+                    </div>
+                    <div>
+                        <span style="display: block; font-size: 11px; color: #64748b; font-weight: 500;">Waktu Logout</span>
+                        <span style="font-size: 12px; font-weight: 600; color: #0f172a;"><i class="fa-regular fa-clock" style="color: #ef4444;"></i> ${formatNiceDate(logoutTime)}</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bagian Bawah: Log Aktivitas / History (Tanpa Scrollbar tapi Tetap Bisa Digulir) -->
+            <div style="background: #0f172a; border-radius: 10px; padding: 16px; color: #e2e8f0;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #1e293b; padding-bottom: 8px;">
+                    <span style="font-size: 13px; font-weight: 600; color: #38bdf8;"><i class="fa-solid fa-terminal"></i> History Asesmen & Activity Log</span>
+                    <span style="font-size: 10px; background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #94a3b8;">Realtime Log</span>
+                </div>
+                
+                <div class="hide-scroll" style="font-family: monospace; font-size: 11.5px; line-height: 1.6; max-height: 120px; overflow-y: auto; color: #cbd5e1;">
+                    ${
+                        detailParticipant.history && detailParticipant.history.length 
+                            ? detailParticipant.history.map(h => {
+                                if (typeof h === 'object' && h !== null) {
+                                    const text = h.description || h.activity || h.type || JSON.stringify(h);
+                                    const time = h.timestamp || h.date || h.time || h.createdAt || '';
+                                    return `• ${text} ${time ? '(' + formatNiceDate(time) + ')' : ''}`;
+                                }
+                                return `• ${h}`;
+                              }).join('<br>') 
+                            : (detailParticipant.activityHistory && detailParticipant.activityHistory.length 
+                                ? detailParticipant.activityHistory.map(h => {
+                                    const text = h.description || h.activity || h.type || '';
+                                    const time = h.timestamp || h.date || h.time || h.createdAt || '';
+                                    return `• ${text} ${time ? '(' + formatNiceDate(time) + ')' : ''}`;
+                                  }).join('<br>') 
+                                : '• Belum ada riwayat aktivitas tercatat.')
+                    }
+                </div>
+            </div>
+
+        </div>
+    `;
+
+    const modalContent = document.getElementById('modalDetailContent') || document.getElementById('detailModalContent');
+    if (modalContent) {
+        modalContent.innerHTML = detailHtml;
+    }
+
+    const detailModal = document.getElementById('detailModal');
+    if (detailModal) {
+        detailModal.style.display = 'flex';
+    }
+
+// Fungsi kecil untuk merapikan format tanggal dan waktu
+function formatNiceDate(isoStr) {
+    if (!isoStr) return '-';
+    try {
+        const d = new Date(isoStr);
+        if (isNaN(d.getTime())) return isoStr; // Jika bukan format tanggal valid, tampilkan aslinya
+        return d.toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+    } catch (e) {
+        return isoStr;
+    }
+}
+
+        document.getElementById('modalDetailContent').innerHTML = detailHtml;
+        document.getElementById('detailModal').style.display = 'flex';
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    function handleSelectAllChange(mainCheckbox) {
+        document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = mainCheckbox.checked);
+    }
+
+    function toggleSelectAll() {
+        const mainCb = document.getElementById('selectAllCheckbox');
+        if (mainCb) {
+            mainCb.checked = !mainCb.checked;
+            handleSelectAllChange(mainCb);
+        }
+    }
+
+    function removeSelected() {
+        const selectedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (selectedBoxes.length === 0) {
+            alert('Pilih setidaknya satu peserta untuk dihapus.');
+            return;
+        }
+
+        if (confirm(`Apakah Anda yakin ingin menghapus ${selectedBoxes.length} data?`)) {
+            const idsToDelete = Array.from(selectedBoxes).map(cb => cb.value);
+            
+            rawDatabaseParticipants = rawDatabaseParticipants.filter(item => !idsToDelete.includes(item.id));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(rawDatabaseParticipants));
+            
+            loadParticipantsFromLocalStorage();
+            
+            const mainCb = document.getElementById('selectAllCheckbox');
+            if (mainCb) mainCb.checked = false;
+        }
+    }
+
+    function openEditModal(id) {
+    let participant = rawDatabaseParticipants.find(item => {
+        const itemId = item.id || item.participantId || item.employeeId || "";
+        return String(itemId) === String(id);
+    });
+
+    if (!participant) {
+        alert('Data peserta tidak ditemukan.');
+        return;
+    }
+
+    if (typeof closeModal === 'function') {
+        closeModal('detailModal');
+    }
+
+    const setSafeVal = (elementId, value) => {
+        let el = document.getElementById(elementId);
+        if (el) el.value = value || "";
+    };
+
+    setSafeVal('editRowId', participant.id || id);
+    setSafeVal('editProjectId', participant.projectId || participant.idProject || "");
+    setSafeVal('editName', participant.name || participant.fullName);
+    setSafeVal('editEmail', participant.email || participant.username);
+    setSafeVal('editPassword', participant.password || participant.accessCode);
+    setSafeVal('editEducation', participant.education || participant.pendidikan);
+    setSafeVal('editPosition', participant.position || participant.jobTitle);
+    setSafeVal('editPhone', participant.phone || participant.phoneNumber);
+    setSafeVal('editAssessmentDate', participant.assessmentDate || participant.date);
+    setSafeVal('editAssessmentStatus', participant.assessmentStatus || participant.status || "Not Started");
+
+    const editModal = document.getElementById('editParticipantModal');
+    if (editModal) {
+        editModal.style.display = 'flex';
+    }
+}
+</script>
+<!-- Modal Edit Peserta (Desain Profesional & Lengkap) -->
+<div id="editParticipantModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 99999; align-items: center; justify-content: center; font-family: inherit;">
+    <div style="background: white; width: 100%; max-width: 600px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; animation: fadeIn 0.2s ease-in-out;">
+        
+        <!-- Header Modal -->
+        <div style="background: #f8fafc; padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #1e293b;">Edit Data Peserta</h3>
+            <button type="button" onclick="closeModal('editParticipantModal')" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+
+        <!-- Form Body -->
+        <form onsubmit="saveParticipantDetail(event)" style="padding: 24px; max-height: 80vh; overflow-y: auto;">
+            <input type="hidden" id="editRowId">
+            <input type="hidden" id="editProjectId">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Nama Peserta</label>
+                    <input type="text" id="editName" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;" required>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Email / Username</label>
+                    <input type="email" id="editEmail" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;" required>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Password / Kode Akses</label>
+                    <input type="text" id="editPassword" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Pendidikan</label>
+                    <input type="text" id="editEducation" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Posisi / Jabatan</label>
+                    <input type="text" id="editPosition" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">No. Telepon / WhatsApp</label>
+                    <input type="text" id="editPhone" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Tanggal Asesmen</label>
+                    <input type="date" id="editAssessmentDate" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">Status Asesmen</label>
+                    <select id="editAssessmentStatus" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white;">
+                        <option value="Not Started">Not Started</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Footer Tombol Aksi -->
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="closeModal('editParticipantModal')" style="padding: 10px 18px; background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 500; cursor: pointer;">Batal</button>
+                <button type="submit" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer;">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+</body>
+</html>

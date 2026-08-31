@@ -1,0 +1,35 @@
+:root{
+
+    --primary:#2563EB;
+
+    --secondary:#1E3A8A;
+
+    --success:#22C55E;
+
+    --danger:#EF4444;
+
+    --warning:#F59E0B;
+
+    --background:#F5F7FA;
+
+    --card:#FFFFFF;
+
+    --text:#1F2937;
+
+    --border:#E5E7EB;
+
+    --radius:12px;
+
+    --shadow:0 8px 20px rgba(0,0,0,.08);
+
+}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:#eef3fb;
+}

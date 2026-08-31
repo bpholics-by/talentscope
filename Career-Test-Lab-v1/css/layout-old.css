@@ -1,0 +1,443 @@
+/* ==========================================================
+   CAREER TEST LAB ENTERPRISE
+   Layout System v2.0
+   Part 1 - Foundation
+========================================================== */
+
+/* ==========================================================
+   APP LAYOUT
+========================================================== */
+
+.app{
+
+    display:flex;
+
+    min-height:100vh;
+
+    background:#F8FAFC;
+
+}
+
+/* ==========================================================
+   SIDEBAR
+========================================================== */
+
+.sidebar{
+
+    width:280px;
+
+    background:#0F172A;
+
+    color:#FFFFFF;
+
+    display:flex;
+
+    flex-direction:column;
+
+    flex-shrink:0;
+
+    border-right:1px solid rgba(255,255,255,.06);
+
+    overflow:hidden;
+
+}
+
+/* ==========================================================
+   MAIN
+========================================================== */
+
+.main{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    min-width:0;
+
+    background:#F8FAFC;
+
+}
+
+/* ==========================================================
+   CONTENT
+========================================================== */
+
+.content{
+
+    flex:1;
+
+    padding:32px;
+
+    overflow-y:auto;
+
+}
+
+/* ==========================================================
+   BRAND
+========================================================== */
+
+.brand{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+    padding:24px;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+}
+
+.brand-logo{
+
+    width:56px;
+
+    height:56px;
+
+    border-radius:16px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-shrink:0;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #3B82F6
+    );
+
+    color:#FFFFFF;
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+.brand-info{
+
+    flex:1;
+
+}
+
+.brand-title{
+
+    color:#FFFFFF;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    line-height:1.1;
+
+}
+
+.brand-version{
+
+    margin-top:4px;
+
+    color:#60A5FA;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.brand-tagline{
+
+    margin-top:8px;
+
+    color:rgba(255,255,255,.65);
+
+    font-size:12px;
+
+    line-height:1.5;
+
+}
+
+/* ==========================================================
+   SIDEBAR BODY
+========================================================== */
+
+.sidebar-body{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    padding:20px 16px;
+
+}
+
+/* ==========================================================
+   SIDEBAR FOOTER
+========================================================== */
+
+.sidebar-footer{
+
+    padding:18px;
+
+    border-top:1px solid rgba(255,255,255,.08);
+
+}
+
+/* ==========================================================
+   MENU
+========================================================== */
+
+.menu{
+
+    display:flex;
+
+    flex-direction:column;
+
+    height:100%;
+
+}
+
+.menu-title{
+
+    padding:0 12px;
+
+    margin-bottom:18px;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    letter-spacing:2px;
+
+    text-transform:uppercase;
+
+    color:rgba(255,255,255,.45);
+
+}
+
+.menu ul{
+
+    list-style:none;
+
+    margin:0;
+
+    padding:0;
+
+}
+
+.menu li{
+
+    margin-bottom:6px;
+
+}
+
+.menu a{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    height:50px;
+
+    padding:0 16px;
+
+    border-radius:14px;
+
+    text-decoration:none;
+
+    color:#CBD5E1;
+
+    font-size:15px;
+
+    font-weight:500;
+
+    transition:
+        background .25s ease,
+        color .25s ease,
+        transform .25s ease;
+
+}
+
+.menu a i{
+
+    width:22px;
+
+    text-align:center;
+
+    font-size:18px;
+
+    color:#94A3B8;
+
+    transition:.25s ease;
+
+}
+
+.menu a span{
+
+    flex:1;
+
+}
+
+/* ==========================================================
+   MENU HOVER
+========================================================== */
+
+.menu a:hover{
+
+    background:rgba(255,255,255,.08);
+
+    color:#FFFFFF;
+
+    transform:translateX(4px);
+
+}
+
+.menu a:hover i{
+
+    color:#FFFFFF;
+
+}
+
+/* ==========================================================
+   ACTIVE MENU
+========================================================== */
+
+.menu li.active a{
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #1D4ED8
+    );
+
+    color:#FFFFFF;
+
+    box-shadow:
+        0 10px 24px rgba(37,99,235,.35);
+
+}
+
+.menu li.active a i{
+
+    color:#FFFFFF;
+
+}
+
+/* ==========================================================
+   USER CARD
+========================================================== */
+
+.user-card{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:14px;
+
+    border-radius:16px;
+
+    background:rgba(255,255,255,.05);
+
+    transition:.25s ease;
+
+}
+
+.user-card:hover{
+
+    background:rgba(255,255,255,.10);
+
+}
+
+.user-avatar{
+
+    width:48px;
+
+    height:48px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    flex-shrink:0;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #3B82F6
+    );
+
+    color:#FFFFFF;
+
+    font-size:18px;
+
+    font-weight:700;
+
+}
+
+.user-detail{
+
+    flex:1;
+
+    min-width:0;
+
+}
+
+.user-name{
+
+    color:#FFFFFF;
+
+    font-size:15px;
+
+    font-weight:600;
+
+}
+
+.user-role{
+
+    margin-top:4px;
+
+    color:#94A3B8;
+
+    font-size:12px;
+
+}
+
+/* ==========================================================
+   SCROLLBAR
+========================================================== */
+
+.sidebar-body::-webkit-scrollbar{
+
+    width:6px;
+
+}
+
+.sidebar-body::-webkit-scrollbar-thumb{
+
+    background:rgba(255,255,255,.12);
+
+    border-radius:20px;
+
+}
+
+.sidebar-body::-webkit-scrollbar-thumb:hover{
+
+    background:rgba(255,255,255,.22);
+
+}

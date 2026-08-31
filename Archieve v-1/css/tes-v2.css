@@ -1,0 +1,998 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+     --test-version: "V2-AKTIF";
+    --primary: #2563EB;
+    --primary-dark: #1D4ED8;
+    --background: #F5F7FA;
+    --card: #FFFFFF;
+    --text: #1F2937;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --danger: #DC2626;
+    --radius: 16px;
+}
+
+body {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        var(--background);
+
+    color:
+        var(--text);
+
+    min-height: 100vh;
+}
+
+.test-page {
+    min-height: 100vh;
+}
+
+
+/* HEADER */
+
+.test-header {
+    background: white;
+
+    border-bottom:
+        1px solid var(--border);
+
+    padding:
+        20px 5%;
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    gap: 20px;
+}
+
+.brand {
+    font-size: 12px;
+
+    font-weight: 700;
+
+    color:
+        var(--primary);
+
+    letter-spacing:
+        1px;
+
+    margin-bottom:
+        5px;
+}
+
+.test-header h1 {
+    font-size: 24px;
+}
+
+
+/* TIMER */
+
+.timer-box {
+    background:
+        #EFF6FF;
+
+    border-radius:
+        12px;
+
+    padding:
+        10px 20px;
+
+    min-width:
+        120px;
+
+    text-align:
+        center;
+}
+
+.timer-label {
+    display: block;
+
+    font-size:
+        11px;
+
+    color:
+        var(--muted);
+
+    margin-bottom:
+        3px;
+}
+
+.timer-box strong {
+    font-size:
+        22px;
+
+    color:
+        var(--primary);
+}
+
+.timer-box.warning {
+    background:
+        #FEF2F2;
+}
+
+.timer-box.warning strong {
+    color:
+        var(--danger);
+}
+
+
+/* PROGRESS */
+
+.progress-wrapper {
+    background:
+        white;
+
+    padding:
+        15px 5%;
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.progress-info {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    margin-bottom:
+        8px;
+
+    font-size:
+        13px;
+
+    color:
+        var(--muted);
+}
+
+.progress-bar {
+    height:
+        6px;
+
+    background:
+        #E5E7EB;
+
+    border-radius:
+        10px;
+
+    overflow:
+        hidden;
+}
+
+.progress-fill {
+    height:
+        100%;
+
+    width:
+        0%;
+
+    background:
+        var(--primary);
+
+    transition:
+        width .2s ease;
+}
+
+
+/* CONTENT */
+
+.test-content {
+    width:
+        90%;
+
+    max-width:
+        1000px;
+
+    margin:
+        30px auto;
+}
+
+
+/* SECTION */
+
+.section-navigation {
+    display:
+        flex;
+
+    gap:
+        8px;
+
+    overflow-x:
+        auto;
+
+    margin-bottom:
+        20px;
+
+    padding-bottom:
+        5px;
+}
+
+.section-btn {
+    border:
+        1px solid var(--border);
+
+    background:
+        white;
+
+    padding:
+        9px 15px;
+
+    border-radius:
+        20px;
+
+    white-space:
+        nowrap;
+
+    font-size:
+        13px;
+
+    color:
+        var(--muted);
+}
+
+.section-btn.active {
+    background:
+        var(--primary);
+
+    border-color:
+        var(--primary);
+
+    color:
+        white;
+}
+
+
+/* QUESTION */
+
+.question-card {
+    background:
+        white;
+
+    border:
+        1px solid var(--border);
+
+    border-radius:
+        var(--radius);
+
+    padding:
+        35px;
+
+    min-height:
+        380px;
+}
+
+.question-number {
+    color:
+        var(--primary);
+
+    font-size:
+        14px;
+
+    font-weight:
+        700;
+
+    margin-bottom:
+        20px;
+}
+
+    .question-text {
+    font-size: 20px;
+    line-height: 1.7;
+    margin-bottom: 30px;
+    white-space: pre-line;
+
+}
+
+
+/* OPTIONS */
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.option {
+    border: 1px solid var(--border);
+
+    background: white;
+
+    border-radius: 12px;
+
+    padding: 16px;
+
+    cursor: pointer;
+
+    display: flex;
+
+    gap: 12px;
+
+    align-items: flex-start;
+
+    transition:
+        border-color .15s ease,
+        background .15s ease,
+        transform .15s ease;
+
+    color: #111827;
+}
+
+
+/* HOVER */
+
+.option:hover {
+    border-color: var(--primary);
+
+    background: #F8FAFF;
+
+    color: #111827;
+}
+
+
+/* TEKS PILIHAN */
+
+.option-text {
+    color: #111827;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+
+    flex: 1;
+}
+
+
+/* HOVER TEKS */
+
+.option:hover .option-text {
+    color: #111827;
+}
+
+
+/* PILIHAN TERPILIH */
+
+.option.selected {
+    border-color: var(--primary);
+
+    background: #EFF6FF;
+
+    color: #111827;
+}
+
+
+/* TEKS PILIHAN TERPILIH */
+
+.option.selected .option-text {
+    color: #111827;
+}
+
+
+/* HURUF A B C D E */
+
+.option-letter {
+    width: 28px;
+
+    height: 28px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #F3F4F6;
+
+    color: #374151;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+
+/* HURUF SAAT DIPILIH */
+
+.option.selected .option-letter {
+    background: var(--primary);
+
+    color: white;
+}
+
+
+/* NAVIGATION */
+
+.question-navigation {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    gap:
+        15px;
+
+    margin-top:
+        20px;
+}
+
+.nav-btn {
+    border:
+        none;
+
+    border-radius:
+        10px;
+
+    padding:
+        13px 22px;
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+}
+
+.nav-btn.primary {
+    background:
+        var(--primary);
+
+    color:
+        white;
+}
+
+.nav-btn.primary:hover {
+    background:
+        var(--primary-dark);
+}
+
+.nav-btn.secondary {
+    background:
+        white;
+
+    border:
+        1px solid var(--border);
+
+    color:
+        var(--text);
+}
+
+
+/* MODAL */
+
+.modal {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    background:
+        rgba(0,0,0,.45);
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    padding:
+        20px;
+
+    z-index:
+        100;
+}
+
+.modal-card {
+    background:
+        white;
+
+    border-radius:
+        18px;
+
+    padding:
+        30px;
+
+    max-width:
+        420px;
+
+    width:
+        100%;
+}
+
+.modal-card h2 {
+    margin-bottom:
+        10px;
+}
+
+.modal-card p {
+    color:
+        var(--muted);
+
+    line-height:
+        1.6;
+
+    margin-bottom:
+        25px;
+}
+
+.modal-actions {
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        10px;
+}
+
+.hidden {
+    display:
+        none;
+}
+
+
+/* MOBILE */
+
+@media(max-width:600px) {
+
+    .test-header {
+        padding:
+            16px 4%;
+    }
+
+    .test-header h1 {
+        font-size:
+            19px;
+    }
+
+    .timer-box {
+        min-width:
+            95px;
+
+        padding:
+            8px 10px;
+    }
+
+    .timer-box strong {
+        font-size:
+            18px;
+    }
+
+    .test-content {
+        width:
+            94%;
+
+        margin-top:
+            20px;
+    }
+
+    .question-card {
+        padding:
+            22px;
+
+        min-height:
+            350px;
+    }
+
+    .question-text {
+        font-size:
+            17px;
+    }
+
+    .question-navigation {
+        position:
+            sticky;
+
+        bottom:
+            0;
+
+        background:
+            var(--background);
+
+        padding:
+            10px 0;
+    }
+
+    .nav-btn {
+        padding:
+            12px 15px;
+    }
+}
+/* =====================================================
+   FIX WARNA TEKS PILIHAN - FINAL
+   ===================================================== */
+
+.options .option .option-text {
+    color: #111827 !important;
+}
+
+.options .option:hover .option-text {
+    color: #111827 !important;
+}
+
+.options .option:focus .option-text {
+    color: #111827 !important;
+}
+
+.options .option:active .option-text {
+    color: #111827 !important;
+}
+
+.options .option.selected .option-text {
+    color: #111827 !important;
+}
+
+
+/* Pastikan seluruh teks dalam pilihan tetap gelap */
+
+.options .option {
+    color: #111827 !important;
+}
+
+.options .option:hover {
+    color: #111827 !important;
+}
+
+.options .option.selected {
+    color: #111827 !important;
+}
+
+
+/* Huruf A-E */
+
+.options .option .option-letter {
+    color: #374151 !important;
+}
+
+
+/* Huruf A-E ketika dipilih */
+
+.options .option.selected .option-letter {
+    background: var(--primary) !important;
+    color: #FFFFFF !important;
+}
+/* =====================================================
+   FIX: WARNA TEKS PILIHAN JAWABAN
+   ===================================================== */
+
+.test-page .question-card .options .option {
+    color: #111827 !important;
+}
+
+/* Saat mouse diarahkan ke pilihan */
+.test-page .question-card .options .option:hover {
+    color: #111827 !important;
+}
+
+/* Saat pilihan dipilih */
+.test-page .question-card .options .option.selected {
+    color: #111827 !important;
+}
+
+/* Jika pilihan menggunakan elemen anak */
+.test-page .question-card .options .option > span:not(.option-letter) {
+    color: #111827 !important;
+}
+
+/* Huruf A, B, C, D, E tetap putih ketika terpilih */
+.test-page .question-card .options .option.selected .option-letter {
+    color: #ffffff !important;
+}
+/* =========================================================
+   CAREER TEST LAB - CBT PROFESSIONAL UI
+   Tambahan visual - tidak mengubah struktur existing
+   ========================================================= */
+
+/* Background lebih modern */
+body {
+    background:
+        linear-gradient(
+            180deg,
+            #f4f7fb 0%,
+            #eef3f8 100%
+        );
+}
+
+/* Container utama */
+.test-content {
+    max-width: 1080px;
+}
+
+/* Navigasi subtes */
+.section-navigation {
+    gap: 10px;
+    padding: 6px 2px 12px;
+}
+
+/* Tombol subtes */
+.section-btn {
+    position: relative;
+
+    border: 1px solid #dfe5ec;
+    background: #ffffff;
+
+    color: #475569;
+
+    padding: 11px 18px;
+
+    border-radius: 999px;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition:
+        all .2s ease;
+
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, .04);
+}
+
+/* Hover hanya untuk tombol aktif */
+.section-btn:not(.locked):not(.completed):hover {
+    transform: translateY(-1px);
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 5px 12px rgba(37, 99, 235, .12);
+}
+
+/* Subtes aktif */
+.section-btn.active {
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #1d4ed8
+        );
+
+    border-color: #2563eb;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 5px 14px rgba(37, 99, 235, .22);
+}
+
+/* Subtes terkunci */
+.section-btn.locked {
+    background: #f8fafc;
+
+    color: #94a3b8;
+
+    border-color: #e2e8f0;
+
+    cursor: not-allowed;
+
+    opacity: .72;
+}
+
+/* Icon kunci */
+.section-btn.locked::before {
+    content: "🔒";
+
+    margin-right: 6px;
+
+    font-size: 11px;
+}
+
+/* Subtes selesai */
+.section-btn.completed {
+    background: #f0fdf4;
+
+    border-color: #bbf7d0;
+
+    color: #15803d;
+
+    cursor: default;
+}
+
+/* tanda selesai */
+.section-btn.completed::before {
+    content: "✓";
+
+    display: inline-flex;
+
+    justify-content: center;
+    align-items: center;
+
+    width: 18px;
+    height: 18px;
+
+    margin-right: 6px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    color: white;
+
+    font-size: 11px;
+}
+
+/* Kartu soal */
+.question-card {
+    border: 1px solid #e2e8f0;
+
+    box-shadow:
+        0 10px 30px rgba(15, 23, 42, .06);
+
+    transition:
+        box-shadow .25s ease,
+        transform .25s ease;
+}
+
+.question-card:hover {
+    box-shadow:
+        0 14px 35px rgba(15, 23, 42, .08);
+}
+
+/* Nomor soal */
+.question-number {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 6px 12px;
+
+    border-radius: 8px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-size: 12px;
+
+    letter-spacing: .3px;
+}
+
+/* Pertanyaan */
+.question-text {
+    color: #0f172a;
+
+    font-weight: 500;
+
+    letter-spacing: .1px;
+}
+
+/* Pilihan jawaban */
+.option {
+    border: 1px solid #e2e8f0;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, .025);
+
+    transition:
+        all .18s ease;
+}
+
+.option:hover {
+    transform: translateX(3px);
+
+    border-color: #93c5fd;
+
+    background: #f8fbff;
+
+    box-shadow:
+        0 4px 12px rgba(37, 99, 235, .08);
+}
+
+/* Huruf pilihan */
+.option-letter {
+    background: #f1f5f9;
+
+    color: #334155;
+
+    transition: all .18s ease;
+}
+
+/* Pilihan aktif */
+.option.selected {
+    border-color: #2563eb;
+
+    background: #eff6ff;
+
+    box-shadow:
+        0 4px 12px rgba(37, 99, 235, .10);
+}
+
+.option.selected .option-letter {
+    background: #2563eb;
+
+    color: #ffffff;
+}
+
+/* Navigasi bawah */
+.question-navigation {
+    margin-top: 24px;
+}
+
+/* Tombol */
+.nav-btn {
+    transition:
+        all .18s ease;
+}
+
+.nav-btn.primary {
+    box-shadow:
+        0 5px 12px rgba(37, 99, 235, .18);
+}
+
+.nav-btn.primary:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 16px rgba(37, 99, 235, .24);
+}
+
+/* Progress */
+.progress-wrapper {
+    box-shadow:
+        0 2px 8px rgba(15, 23, 42, .03);
+}
+
+.progress-fill {
+    background:
+        linear-gradient(
+            90deg,
+            #2563eb,
+            #3b82f6
+        );
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+
+    .section-navigation {
+        gap: 7px;
+    }
+
+    .section-btn {
+        padding: 9px 13px;
+
+        font-size: 12px;
+    }
+
+    .question-card {
+        border-radius: 14px;
+
+        padding: 20px;
+    }
+
+    .option {
+        padding: 14px;
+    }
+
+    .question-text {
+        font-size: 17px;
+
+        line-height: 1.65;
+    }
+}

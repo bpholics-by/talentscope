@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Career Test Lab | Dashboard</title>
+
+<link rel="preconnect"
+href="https://fonts.googleapis.com">
+
+<link rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+rel="stylesheet">
+
+<link rel="stylesheet" href="../css/global.css">
+<link rel="stylesheet" href="../css/layout.css">
+<link rel="stylesheet" href="../css/ui.css">
+<link rel="stylesheet" href="../css/sidebar.css">
+<link rel="stylesheet" href="../css/button.css">
+<link rel="stylesheet" href="../css/card.css">
+<link rel="stylesheet" href="../css/hero.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/responsive.css">
+
+</head>
+
+<body>
+
+<div class="wrapper">
+
+    <!-- ==========================
+         SIDEBAR
+    =========================== -->
+
+    <aside class="sidebar">
+
+    <div class="logo">
+
+        <h2>Career Test Lab</h2>
+
+        <p>Assessment Center</p>
+
+    </div>
+
+    <nav class="sidebar-menu">
+
+    <ul>
+
+       
+<li class="active">
+<a href="dashboard.html">
+<i class="fa-solid fa-house"></i>
+<span>Dashboard</span>
+</a>
+</li>
+
+<li>
+<a href="identitas.html">
+<i class="fa-solid fa-user"></i>
+<span>Identitas Peserta</span>
+</a>
+</li>
+
+<li>
+<a href="petunjuk.html">
+<i class="fa-solid fa-book-open"></i>
+<span>Petunjuk Tes</span>
+</a>
+</li>
+
+<li>
+<a href="pilih-tes.html">
+<i class="fa-solid fa-clipboard-list"></i>
+<span>Tes Assessment</span>
+</a>
+</li>
+
+<li>
+<a href="hasil.html">
+<i class="fa-solid fa-chart-column"></i>
+<span>Hasil Assessment</span>
+</a>
+</li>
+
+
+    </ul>
+
+</nav>
+
+<div class="sidebar-session">
+
+
+    <div class="session-status online">
+
+        <span class="status-dot"></span>
+
+        <span>Session Active</span>
+
+    </div>
+
+    <div class="session-user user-panel glass">
+
+        <div class="avatar" id="avatar">
+
+            P
+            
+        </div>
+
+        <h3 id="namaPeserta">
+            Peserta
+        </h3>
+
+        <p>
+            Assessment Participant
+        </p>
+
+        <button
+            id="logoutBtn"
+            class="logout-btn">
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+
+            Logout
+
+        </button>
+
+    </div>
+
+</div>
+
+</aside>
+
+
+</aside>
+    <!-- ==========================
+     MAIN CONTENT
+========================== -->
+
+<main class="content">
+
+    
+
+    <section class="hero-banner">
+
+    <div class="hero-left">
+
+        <span class="hero-badge">
+
+            <i class="fa-solid fa-shield-halved"></i>
+
+            Assessment Platform
+
+        </span>
+
+        <h2>
+
+            Selamat Datang di Career Test Lab
+
+        </h2>
+
+        <p>
+
+            Lengkapi identitas peserta, ikuti assessment, dan pantau seluruh progres tes secara real-time.
+
+        </p>
+
+    </div>
+
+    <div class="hero-right">
+
+        <div class="hero-circle">
+
+            <i class="fa-solid fa-brain"></i>
+
+        </div>
+
+    </div>
+
+</section>
+
+    <!-- PAGE BODY -->
+
+    <div class="page-body">
+       
+
+        <!-- MENU -->
+
+        <section class="menu-grid">
+
+            <!-- IDENTITAS -->
+
+            <div class="card">
+
+    <div class="card-top">
+
+        <div class="card-icon blue">
+
+            <i class="fa-solid fa-user"></i>
+
+        </div>
+
+        <span class="step-badge">
+
+            STEP 1
+
+        </span>
+
+    </div>
+
+    <h3>
+
+        Identitas Peserta
+
+    </h3>
+
+    <p>
+
+        Lengkapi identitas peserta sebelum memulai seluruh rangkaian assessment.
+
+    </p>
+
+    <div class="status ready">
+
+        Ready
+
+    </div>
+
+    <a href="identitas.html" class="btn-primary">
+    Mulai
+</a>
+
+</div>
+
+            <!-- PETUNJUK -->
+
+            <div class="card">
+
+                <div class="card-icon green">
+
+    <i class="fa-solid fa-book-open"></i>
+
+</div>
+
+                <h3>Petunjuk Tes</h3>
+
+                <p>
+                    Pelajari petunjuk dan tata cara pengerjaan tes.
+                </p>
+
+                <a href="petunjuk.html" class="btn-primary">
+    Buka
+</a>
+
+            </div>
+
+            <!-- TES -->
+
+            <div class="card">
+
+                <div class="card-icon orange">
+
+    <i class="fa-solid fa-clipboard-list"></i>
+
+</div>
+
+                <h3>Tes Assessment</h3>
+
+                <p>
+                    Pilih kategori assessment yang ingin dikerjakan.
+                </p>
+
+                <a href="pilih-tes.html" class="btn-primary">
+    Pilih Tes
+</a>
+
+                
+            </div>
+
+            <!-- HASIL -->
+
+            <div class="card">
+
+                <div class="card-icon purple">
+
+    <i class="fa-solid fa-chart-column"></i>
+
+</div>
+
+                <h3>Hasil Assessment</h3>
+
+                <p>
+                    Lihat hasil assessment setelah tes selesai.
+                </p>
+
+                <a href="hasil.html" class="btn-primary">
+    Lihat Hasil
+</a>
+
+            </div>
+
+        </section>
+
+ <!-- ==========================
+     QUICK STATS
+========================== -->
+
+<section class="stats-grid">
+
+    <div class="stat-card">
+
+        <div class="stat-icon blue">
+            <i class="fa-solid fa-user"></i>
+        </div>
+
+        <div>
+
+            <h3 id="statNama">
+                -
+            </h3>
+
+            <p>Peserta</p>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card">
+
+        <div class="stat-icon green">
+            <i class="fa-solid fa-list-check"></i>
+        </div>
+
+        <div>
+
+            <h3 id="statTes">
+                0 / 4
+            </h3>
+
+            <p>Tes Selesai</p>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card">
+
+        <div class="stat-icon orange">
+            <i class="fa-solid fa-clock"></i>
+        </div>
+
+        <div>
+
+            <h3 id="statWaktu">
+                --
+            </h3>
+
+            <p>Estimasi Waktu</p>
+
+        </div>
+
+    </div>
+
+    <div class="stat-card">
+
+        <div class="stat-icon purple">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+
+        <div>
+
+            <h3 id="statProgress">
+                0%
+            </h3>
+
+            <p>Progress</p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+        <!-- PROGRESS -->
+
+        <section class="progress-card">
+
+            <div class="progress-header">
+
+                <h2>Progress Tes</h2>
+
+                <span id="progressValue">0%</span>
+
+            </div>
+
+            <div class="progress-bar">
+
+                <div
+                    class="progress-fill"
+                    id="progressBar">
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- AKTIVITAS -->
+
+        <section class="activity">
+
+            <h2>Aktivitas Terakhir</h2>
+
+            <ul>
+
+                <li>✅ Login berhasil</li>
+
+                <li>📝 Silakan pilih assessment yang ingin dikerjakan</li>
+
+                <li>🔒 Tes belum dimulai</li>
+
+            </ul>
+
+        </section>
+
+    </div>
+        </main>
+
+</div>
+
+<!-- =====================================
+     JAVASCRIPT
+====================================== -->
+
+<script src="../js/dashboard.js"></script>
+
+<script src="../js/config.js"></script>
+
+<script src="../js/auth.js"></script>
+
+<script>
+
+if(typeof Auth !== "undefined"){
+
+    if(!Auth.check()){
+
+        location.href="../index.html";
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>

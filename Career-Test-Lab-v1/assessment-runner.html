@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Assessment Runner | TalentScope</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f7f9fc;color:#10233f}
+.top{height:68px;background:#09182c;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px}.wrap{max-width:900px;margin:28px auto;padding:0 18px}.card{background:#fff;border:1px solid #e5ebf2;border-radius:16px;padding:24px}
+.muted{color:#6f8198}.q{font-size:18px;font-weight:700;margin:22px 0}.option{display:block;padding:14px;border:1px solid #dce4ee;border-radius:10px;margin:10px 0;cursor:pointer}.option input{margin-right:10px}.btn{padding:11px 16px;border:1px solid #d7e0ea;border-radius:9px;background:#fff;font-weight:700;cursor:pointer}.primary{background:#0878e8;color:#fff;border-color:#0878e8}.danger{background:#fff0f0;color:#d64545;border-color:#f0b7b7}
+.bar{height:8px;background:#e9eef5;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:#0878e8;width:0}.footer{display:flex;justify-content:space-between;gap:10px;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="top"><strong>TalentScope Assessment</strong><span id="progress">Assessment</span></div>
+<div class="wrap"><div id="root" class="card"></div></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const pms=new URLSearchParams(location.search), pid=pms.get("project"), uid=pms.get("participant"), code=pms.get("code");
+function load(){try{return JSON.parse(localStorage.getItem("talentscope_projects")||"[]")}catch(e){return[]}}
+function save(x){localStorage.setItem("talentscope_projects",JSON.stringify(x))}
+const projects=load(), project=projects.find(x=>String(x.id)===String(pid)), p=project&&(project.participants||[]).find(x=>String(x.id)===String(uid));
+if(!project||!p||p.accessCode!==code){$("root").innerHTML="<h2>Access not found</h2><p class='muted'>Access tidak valid.</p>";return;}
+if(p.status!=="In Progress"&&!p.startedAt){$("root").innerHTML="<h2>Assessment belum dimulai</h2><p class='muted'>Kembali ke Participant Access lalu klik Start Assessment.</p>";return;}
+const assessments=(project.assessments||[]).map((a,i)=>typeof a==="string"?{name:a,code:"A"+(i+1)}:a);
+let ai=Number(p.currentAssessmentIndex||0);
+if(!assessments.length){$("root").innerHTML="<h2>No assessment assigned</h2>";return;}
+function render(){
+ const a=assessments[ai], total=assessments.length;
+ $("progress").textContent=(ai+1)+" / "+total;
+ $("root").innerHTML=`<div class="muted">${a.category||"Assessment"}</div><h1>${a.name||"Assessment"}</h1>
+ <div class="bar"><i style="width:${((ai+1)/total)*100}%"></i></div>
+ <div class="q">Assessment ${ai+1} siap dikerjakan.</div>
+ <p class="muted">Ini adalah runner prototype. Engine soal untuk masing-masing assessment akan disambungkan pada tahap berikutnya.</p>
+ <div class="footer">${ai>0?'<button class="btn" id="back">Back</button>':'<span></span>'}
+ <button class="btn primary" id="next">${ai===total-1?"Submit Assessment":"Next Assessment"}</button></div>`;
+ $("next").onclick=function(){
+   if(ai<total-1){ai++;p.currentAssessmentIndex=ai;save(projects);render();}
+   else{p.status="Completed";p.completedAt=new Date().toISOString();p.currentAssessmentIndex=0;save(projects);$("root").innerHTML="<h1>Assessment Completed</h1><p class='muted'>Terima kasih. Assessment berhasil disubmit.</p>";}
+ };
+ if($("back"))$("back").onclick=function(){ai--;p.currentAssessmentIndex=ai;save(projects);render()};
+}
+render();
+})();
+</script>
+</body>
+</html>

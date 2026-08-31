@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Test Result | TalentScope</title>
+    
+    <!-- FontAwesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ==========================================
+           1. BASE LAYOUT & SETTINGS CENTER STYLES
+           ========================================== */
+
+        body {
+            background-color: #f8fafc;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 24px;
+            color: #0f172a;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Top Back Link */
+        .top-back-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #5c738a;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .btn-back:hover {
+            color: #0075ff;
+        }
+
+        /* Hero Banner Settings Center */
+        .hero-banner-settings {
+            background: linear-gradient(110deg, #01386e 0%, #0056b3 45%, #0075ff 100%);
+            border-radius: 16px;
+            padding: 28px 32px;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 86, 179, 0.08);
+        }
+
+        .circle-overlay {
+            position: absolute;
+            top: -60px;
+            right: -80px;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 45px solid rgba(255, 255, 255, 0.03);
+            pointer-events: none;
+        }
+
+        .brand-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .brand-logo-box {
+            width: 38px;
+            height: 38px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+            color: #ffffff;
+        }
+
+        .brand-info h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.1;
+            color: #ffffff;
+        }
+
+        .brand-info span {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .hero-category {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: #6bb3ff;
+            margin-bottom: 4px;
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .hero-desc {
+            font-size: 13.5px;
+            margin: 0;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 400;
+        }
+
+        /* Nav Tabs */
+        .settings-nav-tabs {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .nav-tab-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: transparent;
+        }
+
+        .nav-tab-item.active {
+            background: #0075ff;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 117, 255, 0.25);
+        }
+
+        .tab-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #eef6ff;
+            color: #0075ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .nav-tab-item.active .tab-icon-box {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .tab-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-title {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .nav-tab-item.active .tab-title {
+            color: #ffffff;
+        }
+
+        .tab-subtitle {
+            font-size: 11px;
+            color: #8a99ad;
+            font-weight: 500;
+        }
+
+        .nav-tab-item.active .tab-subtitle {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Content Card */
+        .settings-card-container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 32px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .card-top-flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .card-subtitle-tag {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: #0075ff;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+
+        .card-main-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 6px 0;
+        }
+
+        .card-desc-text {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0;
+        }
+
+        .badge-icon-blue {
+            width: 44px;
+            height: 44px;
+            background: #0075ff;
+            color: #ffffff;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(0, 117, 255, 0.22);
+        }
+
+        .card-divider-line {
+            border: 0;
+            height: 1px;
+            background: #f1f5f9;
+            margin: 24px 0;
+        }
+
+        /* ==========================================
+           2. COMBINED RESULT SPECIFIC STYLES
+           ========================================== */
+
+        .combined-reports-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .report-item-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .report-item-card:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        .report-item-icon {
+            width: 40px;
+            height: 40px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0075ff;
+            font-size: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .report-item-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .badge-status-included {
+            display: inline-block;
+            font-size: 12px;
+            color: #0284c7;
+            font-weight: 600;
+        }
+
+        .combined-pdf-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background-color: #f0f7ff;
+            border: 1px solid #d0e7ff;
+            border-radius: 12px;
+            color: #0369a1;
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        .pdf-icon {
+            font-size: 18px;
+            color: #0284c7;
+        }
+    
+        .combined-detail{display:flex;flex-direction:column;gap:14px;margin:0 0 24px}
+        .combined-section{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff}
+        .combined-section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:17px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
+        .combined-section-title{display:flex;align-items:center;gap:12px}
+        .combined-section-title h3{margin:0;font-size:15px;color:#0f172a}
+        .combined-section-title small{display:block;margin-top:3px;color:#64748b;font-size:11px}
+        .combined-section-score{font-weight:800;color:#0075ff;font-size:14px;white-space:nowrap}
+        .combined-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 20px}
+        .combined-metric{padding:12px;background:#f8fafc;border:1px solid #edf2f7;border-radius:10px}
+        .combined-metric span{display:block;color:#8a99ad;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+        .combined-metric strong{display:block;margin-top:5px;font-size:16px;color:#0f172a}
+        .combined-empty{padding:20px;color:#64748b;font-size:13px}
+        .combined-error{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:14px 16px;border-radius:12px;font-size:13px;margin-bottom:18px}
+        .combined-section{
+            border:1px solid #e2e8f0;
+            border-radius:14px;
+            overflow:hidden;
+            background:#fff;
+            margin-bottom:16px;
+            scroll-margin-top:20px;
+        }
+        .combined-section-head{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:14px;
+            padding:15px 18px;
+            background:#f8fafc;
+            border-bottom:1px solid #e2e8f0;
+        }
+        .combined-section-title{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            min-width:0;
+        }
+        .combined-section-title h3{
+            margin:0;
+            font-size:15px;
+            color:#0f172a;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .combined-section-title small{
+            display:block;
+            margin-top:3px;
+            color:#64748b;
+            font-size:10px;
+        }
+        .combined-section-badge{
+            flex:0 0 auto;
+            border:1px solid #dbeafe;
+            background:#eff6ff;
+            color:#2563eb;
+            border-radius:999px;
+            padding:6px 10px;
+            font-size:10px;
+            font-weight:800;
+        }
+        .combined-frame-wrap{
+            width:100%;
+            background:#f8fafc;
+        }
+        .combined-frame{
+            display:block;
+            width:100%;
+            min-height:760px;
+            height:760px;
+            border:0;
+            background:#fff;
+        }
+        .combined-frame-loading{
+            min-height:180px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            color:#64748b;
+            font-size:12px;
+        }
+        .combined-frame-note{
+            padding:11px 15px;
+            border-top:1px solid #e2e8f0;
+            background:#f8fafc;
+            color:#64748b;
+            font-size:10px;
+        }
+        @media(max-width:760px){
+            .combined-section-head{align-items:flex-start}
+            .combined-section-badge{display:none}
+            .combined-frame{min-height:900px;height:900px}
+        }
+        .report-item-card.is-available{cursor:pointer}
+        .report-item-card.is-available:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,23,42,.06)}
+        .report-item-action{margin-left:auto;color:#0075ff;font-size:12px;font-weight:800;white-space:nowrap}
+        @media(max-width:760px){.combined-metrics{grid-template-columns:repeat(2,1fr)}}
+
+    
+        .combined-reports-list{display:none!important;}
+        .combined-detail{display:flex;flex-direction:column;gap:10px;margin:0;}
+        .combined-section{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff;margin:0;scroll-margin-top:20px;}
+        .combined-frame-wrap{width:100%;background:#fff;overflow:visible;}
+        .combined-frame{
+            display:block;
+            width:100%;
+            min-height:0;
+            height:100px;
+            border:0;
+            background:#fff;
+            overflow:hidden;
+            scrollbar-width:none;
+        }
+        .combined-frame::-webkit-scrollbar{display:none;width:0;height:0;}
+        .combined-frame-loading{
+            min-height:180px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            color:#64748b;
+            font-size:12px;
+        }
+        .combined-frame-note{display:none!important;}
+        @media(max-width:760px){
+            .direct-results-card{padding:10px;}
+            .combined-section-head{align-items:flex-start}
+            .combined-frame{min-height:0;height:100px;}
+        }
+
+    </style>
+</head>
+
+<div class="app">
+
+
+    
+    <!-- MAIN -->
+
+    <div class="main">
+
+        <header class="header">
+        </header>
+
+
+        <main class="content">
+
+    <!-- TOP BACK LINK -->
+    <div class="top-back-wrapper">
+        <a href="participant-result.html" class="btn-back">
+            <i class="fa-solid fa-arrow-left"></i> Back to Participant Results
+        </a>
+    </div>
+
+    <!-- HERO BANNER -->
+    <section class="hero-banner-settings">
+        <div class="circle-overlay"></div>
+        
+        <div class="brand-header">
+            <div class="brand-logo-box">TS</div>
+            <div class="brand-info">
+                <h2>TalentScope</h2>
+                <span>Enterprise v1.0</span>
+            </div>
+        </div>
+        
+        <div class="hero-content">
+            <span class="hero-category">COMBINED ASSESSMENT REPORT</span>
+            <h1 class="hero-title">Combined Test Result</h1>
+            <p class="hero-desc">Laporan gabungan seluruh hasil evaluasi dan penilaian kompetensi peserta.</p>
+        </div>
+    </section>
+
+    <!-- NAVIGATION TABS -->
+    <section class="settings-nav-tabs">
+        <div class="nav-tab-item active">
+            <div class="tab-icon-box">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <div class="tab-text">
+                <span class="tab-title" id="participantName">-</span>
+                <span class="tab-subtitle">Participant</span>
+            </div>
+        </div>
+
+        <div class="nav-tab-item">
+            <div class="tab-icon-box">
+                <i class="fa-solid fa-folder"></i>
+            </div>
+            <div class="tab-text">
+                <span class="tab-title" id="projectName">-</span>
+                <span class="tab-subtitle">Project</span>
+            </div>
+        </div>
+
+        <div class="nav-tab-item">
+            <div class="tab-icon-box">
+                <i class="fa-solid fa-calendar-days"></i>
+            </div>
+            <div class="tab-text">
+                <span class="tab-title" id="assessmentDate">-</span>
+                <span class="tab-subtitle">Assessment Date</span>
+            </div>
+        </div>
+    </section>
+    <!-- HASIL TES LANGSUNG -->
+    <section class="settings-card-container direct-results-card">
+        <div id="combinedDetail" class="combined-detail"></div>
+    </section>
+</section>
+
+</main>
+
+    </div>
+
+</div>
+
+
+<script src="js/app.js"></script>
+
+
+<script>
+(function () {
+  "use strict";
+
+  const params = new URLSearchParams(window.location.search);
+  const projectId = String(params.get("projectId") || "").trim();
+  const participantId = String(params.get("participantId") || "").trim();
+
+  const $ = (id) => document.getElementById(id);
+  const safe = (value, fallback = "-") => {
+    const v = value == null ? "" : String(value).trim();
+    return v ? v : fallback;
+  };
+
+  function esc(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, (c) => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[c]));
+  }
+
+  function getProjects() {
+    try {
+      const raw = localStorage.getItem("talentscope_projects") || "[]";
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error("Gagal membaca talentscope_projects:", e);
+      return [];
+    }
+  }
+
+  function getProject() {
+    const projects = getProjects();
+    return projects.find((p) => {
+      const id = p && (p.id || p.projectId || p.project_id || "");
+      return String(id) === projectId;
+    }) || null;
+  }
+
+  function getParticipant(project) {
+    if (!project) return null;
+    const participants = Array.isArray(project.participants)
+      ? project.participants
+      : [];
+
+    return participants.find((p) => {
+      const id = p && (p.id || p.participantId || p.employeeId || p.employee_id || "");
+      return String(id) === participantId;
+    }) || null;
+  }
+
+  function getAssessmentName(item, index) {
+    if (typeof item === "string") return safe(item, `Assessment ${index + 1}`);
+    if (!item || typeof item !== "object") return `Assessment ${index + 1}`;
+    return safe(
+      item.name ||
+      item.title ||
+      item.assessmentName ||
+      item.testName ||
+      item.label ||
+      item.code,
+      `Assessment ${index + 1}`
+    );
+  }
+
+  function getAssessments(project) {
+    const source = Array.isArray(project?.assessments)
+      ? project.assessments
+      : Array.isArray(project?.assessment)
+        ? project.assessment
+        : [];
+
+    return source.map((item, index) => ({
+      raw: item,
+      index,
+      name: getAssessmentName(item, index),
+      code:
+        typeof item === "object" && item
+          ? safe(item.code || item.id || item.assessmentId || item.testId, "")
+          : ""
+    }));
+  }
+
+  function formatDate(value) {
+    if (!value || value === "-") return "-";
+    const raw = String(value);
+    const date = new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw + "T00:00:00" : raw);
+    if (Number.isNaN(date.getTime())) return raw;
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    }).format(date);
+  }
+
+  function iconFor(name) {
+    const s = String(name || "").toLowerCase();
+    if (/disc|papi|personality|behavior|behavioral|big five|16pf|epps|rmib/.test(s)) return "fa-brain";
+    if (/verbal/.test(s)) return "fa-file-lines";
+    if (/numeric|numerical|kraepelin|pauli/.test(s)) return "fa-calculator";
+    if (/abstract|spatial|intelligence|cfit|ist/.test(s)) return "fa-shapes";
+    if (/visual|attention|matching|speed|performance/.test(s)) return "fa-eye";
+    if (/situational|judgement|sjt/.test(s)) return "fa-list-check";
+    return "fa-clipboard-check";
+  }
+
+  function renderSection(test) {
+    const iframeSrc =
+      "test-result.html" +
+      "?projectId=" + encodeURIComponent(projectId) +
+      "&participantId=" + encodeURIComponent(participantId) +
+      "&assessmentIndex=" + encodeURIComponent(test.index);
+
+    return `
+      <section class="combined-section" id="combined-test-${test.index}">
+        <div class="combined-section-head">
+          <div class="combined-section-title">
+            <div class="report-item-icon">
+              <i class="fa-solid ${iconFor(test.name)}"></i>
+            </div>
+            <div>
+              <h3>${esc(test.name)}</h3>
+              <small>${test.code ? esc(test.code) : "Assessment Result"}</small>
+            </div>
+          </div>
+          <div class="combined-section-badge">${esc(test.index + 1)}</div>
+        </div>
+        <div class="combined-frame-wrap">
+          <div class="combined-frame-loading" id="frame-loading-${test.index}">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Memuat hasil ${esc(test.name)}…
+          </div>
+          <iframe
+            class="combined-frame"
+            id="result-frame-${test.index}"
+            title="Hasil ${esc(test.name)}"
+            src="${esc(iframeSrc)}"
+            loading="eager"
+            data-assessment-index="${test.index}">
+          </iframe>
+        </div>
+      </section>
+    `;
+  }
+
+  function resizeFrame(frame) {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      const body = doc.body;
+      const root = doc.documentElement;
+
+      // Paksa dokumen hasil tidak membuat scrollbar internal.
+      if (root) {
+        root.style.setProperty("overflow", "visible", "important");
+        root.style.setProperty("height", "auto", "important");
+        root.style.setProperty("min-height", "0", "important");
+      }
+      if (body) {
+        body.style.setProperty("overflow", "visible", "important");
+        body.style.setProperty("height", "auto", "important");
+        body.style.setProperty("min-height", "0", "important");
+        body.style.setProperty("margin", "0", "important");
+        body.style.setProperty("padding-bottom", "0", "important");
+      }
+
+      // Hilangkan sumber ruang kosong dari layout halaman hasil asli.
+      if (doc.head && !doc.getElementById("__combined_compact_style")) {
+        const style = doc.createElement("style");
+        style.id = "__combined_compact_style";
+        style.textContent = `
+          html, body, .app, .main, .content {
+            min-height: 0 !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+          }
+          body { margin: 0 !important; padding-bottom: 0 !important; }
+          .app, .main, .content { margin-bottom: 0 !important; }
+          script, style, link, meta, title { display:none !important; }
+        `;
+        doc.head.appendChild(style);
+      }
+
+      requestAnimationFrame(() => {
+        let measured = 0;
+
+        // Ukur batas bawah konten yang benar-benar terlihat, bukan tinggi
+        // container yang mungkin memiliki min-height 100vh / layout kosong.
+        if (body) {
+          Array.from(body.children).forEach((node) => {
+            const tag = node.tagName;
+            if (/SCRIPT|STYLE|LINK|META|TITLE/.test(tag)) return;
+            const rect = node.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) {
+              measured = Math.max(measured, rect.bottom);
+            }
+          });
+
+          // Fallback ke elemen konten terbesar bila wrapper body tidak cukup.
+          if (!measured) {
+            const candidates = Array.from(doc.querySelectorAll("main, section, article, .result-card, .content, .card"));
+            candidates.forEach((node) => {
+              const rect = node.getBoundingClientRect();
+              if (rect.width > 0 && rect.height > 0) measured = Math.max(measured, rect.bottom);
+            });
+          }
+        }
+
+        if (!measured) {
+          measured = Math.max(
+            body ? body.scrollHeight : 0,
+            root ? root.scrollHeight : 0,
+            120
+          );
+        }
+
+        frame.style.height = Math.max(120, Math.ceil(measured + 6)) + "px";
+      });
+    } catch (e) {
+      // Fallback kecil; sama-origin seharusnya memungkinkan pengukuran penuh.
+      frame.style.height = "500px";
+    }
+  }
+
+  function bindFrames() {
+    document.querySelectorAll(".combined-frame").forEach((frame) => {
+      const onLoad = () => {
+        const loading = $("frame-loading-" + frame.dataset.assessmentIndex);
+        if (loading) loading.style.display = "none";
+        resizeFrame(frame);
+        [150, 400, 800, 1500].forEach(ms => setTimeout(() => resizeFrame(frame), ms));
+
+        // Observasi perubahan ukuran konten hasil agar iframe selalu mengikuti tinggi sebenarnya.
+        try {
+          const doc = frame.contentDocument;
+          if (doc && window.ResizeObserver) {
+            const ro = new ResizeObserver(() => resizeFrame(frame));
+            ro.observe(doc.body || doc.documentElement);
+            frame._combinedResizeObserver = ro;
+          }
+        } catch (e) {}
+      };
+      frame.addEventListener("load", onLoad);
+    });
+  }
+
+  function render() {
+    if (!projectId || !participantId) {
+      $("combinedReportsList").innerHTML = `
+        <div class="combined-error">
+          <strong>Data project atau peserta tidak lengkap.</strong><br>
+          Halaman Combined Result membutuhkan <code>projectId</code> dan <code>participantId</code>.
+        </div>`;
+      return;
+    }
+
+    const project = getProject();
+    const participant = getParticipant(project);
+
+    if (!project) {
+      $("combinedReportsList").innerHTML = `
+        <div class="combined-error">
+          <strong>Project tidak ditemukan.</strong><br>
+          Tidak ada project dengan ID <code>${esc(projectId)}</code> pada data aplikasi.
+        </div>`;
+      return;
+    }
+
+    if (!participant) {
+      $("combinedReportsList").innerHTML = `
+        <div class="combined-error">
+          <strong>Peserta tidak ditemukan.</strong><br>
+          Tidak ada peserta dengan ID <code>${esc(participantId)}</code> pada project ini.
+        </div>`;
+      return;
+    }
+
+    $("participantName").textContent = safe(
+      participant.name ||
+      participant.fullName ||
+      participant.participantName,
+      "-"
+    );
+
+    $("projectName").textContent = safe(
+      project.projectName ||
+      project.name ||
+      project.project ||
+      project.title,
+      "-"
+    );
+
+    $("assessmentDate").textContent = formatDate(
+      participant.assessmentDate ||
+      participant.assessment_date ||
+      project.assessmentDate ||
+      project.assessment_date ||
+      project.startDate ||
+      project.start
+    );
+
+    const tests = getAssessments(project);
+    const list = $("combinedReportsList");
+    const detail = $("combinedDetail");
+
+    if (!tests.length) {
+      list.innerHTML = `
+        <div class="combined-error">
+          <strong>Paket assessment kosong.</strong><br>
+          Tidak ada assessment yang tersimpan pada project ini.
+        </div>`;
+      detail.innerHTML = "";
+      return;
+    }
+
+    // Langsung tampilkan hasil tes sesuai urutan yang tersimpan di project.assessments.
+    detail.innerHTML = tests.map(renderSection).join("");
+    bindFrames();
+  }
+
+  window.addEventListener("DOMContentLoaded", render);
+
+  // Sinkronkan ketika data project/results berubah dari tab lain.
+  window.addEventListener("storage", (event) => {
+    if (event.key === "talentscope_projects") {
+      render();
+      bindFrames();
+    }
+  });
+})();
+</script>
+</script>
+
+<script src="js/combined-result.js"></script>
+
+</body>
+
+</html>

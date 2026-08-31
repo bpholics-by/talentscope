@@ -1,0 +1,104 @@
+/* ==========================================================
+   APPLICATION LAYOUT
+========================================================== */
+
+html,
+body{
+
+    height:100%;
+
+    margin:0;
+
+    overflow:hidden;
+
+}
+
+.app{
+
+    display:flex;
+
+    height:100vh;
+
+    width:100%;
+
+    background:#F8FAFC;
+
+    overflow:hidden;
+
+}
+
+/* ==========================================================
+   SIDEBAR
+========================================================== */
+
+.sidebar{
+
+    width:280px;
+
+    flex-shrink:0;
+
+    height:100vh;
+
+    overflow:hidden;
+
+}
+
+/* ==========================================================
+   MAIN
+========================================================== */
+
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    overflow:hidden;
+}
+
+/* ==========================================================
+   CONTENT
+========================================================== */
+
+.content{
+
+    flex:1;
+
+    overflow-y:auto;
+
+    overflow-x:hidden;
+
+    padding:40px 32px;
+
+    background:#F8FAFC;
+
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:992px){
+
+    .sidebar{
+
+        width:240px;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .sidebar{
+
+        display:none;
+
+    }
+
+    .content{
+
+        padding:20px;
+
+    }
+
+}

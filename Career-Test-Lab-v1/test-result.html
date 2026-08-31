@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Result | Career Test Lab</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<style>
+/* ==========================================
+   SETTINGS CENTER EXACT MATCH
+   ========================================== */
+.top-back-wrapper { margin-bottom: 16px; }
+.btn-back { display: inline-flex; align-items: center; gap: 8px; color: #5c738a; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: color 0.2s ease; }
+.btn-back:hover { color: #0075ff; }
+
+.hero-banner-settings { background: linear-gradient(110deg, #01386e 0%, #0056b3 45%, #0075ff 100%); border-radius: 16px; padding: 28px 32px; color: #ffffff; position: relative; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0, 86, 179, 0.08); }
+.circle-overlay { position: absolute; top: -60px; right: -80px; width: 380px; height: 380px; border-radius: 50%; background: rgba(255, 255, 255, 0.04); border: 45px solid rgba(255, 255, 255, 0.03); pointer-events: none; }
+
+.brand-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.brand-logo-box { width: 38px; height: 38px; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: #ffffff; }
+.brand-info h2 { margin: 0; font-size: 15px; font-weight: 700; line-height: 1.1; color: #ffffff; }
+.brand-info span { font-size: 11px; color: rgba(255, 255, 255, 0.75); }
+
+.hero-category { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.8px; color: #6bb3ff; margin-bottom: 4px; }
+.hero-title { font-size: 28px; font-weight: 800; margin: 0 0 6px 0; color: #ffffff; letter-spacing: -0.3px; }
+.hero-desc { font-size: 13.5px; margin: 0; color: rgba(255, 255, 255, 0.85); font-weight: 400; }
+
+.settings-nav-tabs { background: #ffffff; border-radius: 16px; padding: 8px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; border: 1px solid #eef2f7; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02); }
+.nav-tab-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: transparent; transition: all 0.2s ease; }
+.nav-tab-item.active { background: #0075ff; color: #ffffff; box-shadow: 0 4px 12px rgba(0, 117, 255, 0.25); }
+
+.tab-icon-box { width: 32px; height: 32px; border-radius: 8px; background: #eef6ff; color: #0075ff; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.nav-tab-item.active .tab-icon-box { background: rgba(255, 255, 255, 0.2); color: #ffffff; }
+
+.tab-text { display: flex; flex-direction: column; }
+.tab-title { font-size: 13.5px; font-weight: 700; color: #0f172a; line-height: 1.2; }
+.nav-tab-item.active .tab-title { color: #ffffff; }
+.tab-subtitle { font-size: 11px; color: #8a99ad; font-weight: 500; }
+.nav-tab-item.active .tab-subtitle { color: rgba(255, 255, 255, 0.8); }
+
+.settings-card-container { background: #ffffff; border-radius: 16px; padding: 32px; border: 1px solid #eef2f7; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02); }
+.card-top-flex { display: flex; justify-content: space-between; align-items: flex-start; }
+.card-subtitle-tag { display: block; font-size: 11px; font-weight: 700; color: #0075ff; letter-spacing: 0.8px; margin-bottom: 4px; }
+.card-main-title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; }
+.card-desc-text { font-size: 13px; color: #64748b; margin: 0; }
+
+.badge-icon-blue { width: 44px; height: 44px; background: #0075ff; color: #ffffff; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 4px 12px rgba(0, 117, 255, 0.22); }
+.card-divider-line { border: 0; height: 1px; background: #f1f5f9; margin: 24px 0; }
+</style>
+
+<body>
+<div class="app">
+    <div class="main">
+        <header class="header"></header>
+
+        <main class="content">
+            <!-- TOP BACK LINK -->
+            <div class="top-back-wrapper">
+                <a href="participant-result.html" class="btn-back">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Participant Results
+                </a>
+            </div>
+
+            <!-- HERO BANNER -->
+            <section class="hero-banner-settings">
+                <div class="circle-overlay"></div>
+                <div class="brand-header">
+                    <div class="brand-logo-box">TS</div>
+                    <div class="brand-info">
+                        <h2>TalentScope</h2>
+                        <span>Enterprise v1.0</span>
+                    </div>
+                </div>
+                <div class="hero-content">
+                    <span class="hero-category">DETAILED ASSESSMENT RESULT</span>
+                    <h1 class="hero-title" id="testTitle">DISC Personality Test</h1>
+                    <p class="hero-desc">Laporan hasil penilaian evaluasi kompetensi dan tipe perilaku kerja peserta.</p>
+                </div>
+            </section>
+
+            <!-- NAVIGATION TABS (Informasi Peserta, Proyek, Tanggal) -->
+            <section class="settings-nav-tabs">
+                <div class="nav-tab-item active">
+                    <div class="tab-icon-box"><i class="fa-solid fa-user"></i></div>
+                    <div class="tab-text">
+                        <span class="tab-title" id="participantName">Budi Santoso</span>
+                        <span class="tab-subtitle">Participant</span>
+                    </div>
+                </div>
+
+                <div class="nav-tab-item">
+                    <div class="tab-icon-box"><i class="fa-solid fa-folder"></i></div>
+                    <div class="tab-text">
+                        <span class="tab-title" id="projectName">Asesmen CDN</span>
+                        <span class="tab-subtitle">Project</span>
+                    </div>
+                </div>
+
+                <div class="nav-tab-item">
+                    <div class="tab-icon-box"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div class="tab-text">
+                        <span class="tab-title" id="assessmentDate">26 Agu 2026</span>
+                        <span class="tab-subtitle">Assessment Date</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONTENT CARD UTAMA (DISINI HASIL SKORING & INTERPRETASI AKAN DIRENDER JS) -->
+<section class="settings-card-container">
+    <div class="card-top-flex">
+        <div>
+            <span class="card-subtitle-tag">ASSESSMENT DETAIL</span>
+            <!-- Tambahkan id="sectionTitle" di sini -->
+            <h2 class="card-main-title" id="sectionTitle">Memuat Asesmen...</h2>
+            <!-- Tambahkan id="sectionDesc" di sini -->
+            <p class="card-desc-text" id="sectionDesc">Menyiapkan data evaluasi dan penilaian.</p>
+        </div>
+        <div class="badge-icon-blue" id="dominantBadge">-</div>
+    </div>
+
+    <hr class="card-divider-line">
+
+    <!-- KONTEN DINAMIS DARI TEST-RESULT.JS -->
+    <div id="resultContent">
+        <!-- Placeholder awal sebelum JS me-render -->
+        <div class="alert-info-box" style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; background-color: #f0f7ff; border: 1px solid #d0e7ff; border-radius: 10px; color: #0284c7; font-size: 13.5px; font-weight: 500;">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Memproses kalkulasi skor asesmen...</span>
+        </div>
+    </div>
+</section>
+        </main>
+    </div>
+</div>
+
+<!-- SCRIPTS -->
+
+<script src="js/app.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/papikostik.js"></script>
+<script src="js/disc.js"></script>
+<script src="js/test-result.js"></script>
+
+<!-- SCRIPT PENGAMAN MENU SETTINGS -->
+<style id="hide-settings-style">
+  .dropdown-menu a[href*="setting"], .dropdown-menu button[onclick*="setting"], .dropdown-item[href*="setting"], [class*="dropdown"] a:has(svg):first-child, .user-dropdown a:first-child { display: none !important; }
+</style>
+<script>
+(function() {
+  "use strict";
+  function enforceHideSettings() {
+    var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+    if (!userRaw) return;
+    var activeUser = JSON.parse(userRaw);
+    var isSystemAdmin = /system/i.test(activeUser.role || "");
+    var styleEl = document.getElementById("hide-settings-style");
+    if (isSystemAdmin) { if (styleEl) styleEl.remove(); return; }
+    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
+    menuItems.forEach(function(item) {
+      var text = item.textContent.trim().toLowerCase();
+      if (text.includes("setting") || text.includes("pengaturan")) {
+        item.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+  document.addEventListener("DOMContentLoaded", enforceHideSettings);
+  window.addEventListener("load", enforceHideSettings);
+  var observer = new MutationObserver(function() { enforceHideSettings(); });
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+</body>
+</html>

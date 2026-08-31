@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login | TalentScope</title>
+
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;}
+body{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
+  background:radial-gradient(circle at 8% 15%, rgba(42,166,255,.20) 0 8%, transparent 24%),
+             radial-gradient(circle at 92% 82%, rgba(0,180,255,.18) 0 10%, transparent 27%),
+             linear-gradient(135deg,#061b31 0%,#073e68 38%,#0875c5 72%,#087eea 100%);
+}
+.shell{width:min(460px,calc(100vw - 32px));position:relative;z-index:2;}
+.brand{text-align:center;margin-bottom:18px;}
+.logo{
+  width:54px;height:54px;margin:0 auto 10px;border-radius:15px;
+  display:grid;place-items:center;background:linear-gradient(145deg,#0d8cff,#0669ce);
+  color:#fff;font-weight:900;font-size:20px;box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+.card{
+  background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.8);
+  border-radius:16px;padding:28px 32px 25px;box-shadow:0 30px 80px rgba(0,15,35,.32);
+}
+h1{text-align:center;margin:0 0 22px;color:#14263d;font-size:21px;line-height:1.25;}
+.field{margin-bottom:15px;}
+label{display:block;font-size:11px;font-weight:700;color:#53677e;margin-bottom:7px;}
+input{
+  width:100%;height:44px;border:1px solid #d7e0ea;border-radius:9px;
+  padding:0 13px;outline:none;font-size:12px;color:#182b42;background:#fff;
+}
+input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
+.password{position:relative;}
+.password input{padding-right:58px;}
+.show{
+  position:absolute;right:7px;top:6px;height:32px;border:0;
+  background:transparent;color:#0878e8;font-size:10px;font-weight:800;cursor:pointer;
+}
+.btn{
+  width:100%;height:44px;border:0;border-radius:9px;
+  background:linear-gradient(135deg,#0878e8,#0669ca);color:#fff;
+  font-weight:800;font-size:12px;cursor:pointer;margin-top:4px;
+}
+.btn:hover{transform:translateY(-1px);}
+.message{display:none;margin:0 0 14px;padding:10px 11px;border-radius:8px;font-size:11px;}
+.message.show{display:block;}
+.message.error{background:#fff3f3;border:1px solid #efcccc;color:#b33d3d;}
+.footer{text-align:center;color:rgba(255,255,255,.68);font-size:9px;margin-top:14px;}
+</style>
+</head>
+
+<body>
+
+<main class="shell">
+  <div class="brand">
+    <div class="logo">TS</div>
+  </div>
+
+  <section class="card">
+    <h1>Login Integrated Assessment Platform</h1>
+    <div id="message" class="message"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="username">Email / Username</label>
+        <input id="username" type="text" placeholder="Masukkan email atau username" required>
+      </div>
+
+      <div class="field">
+        <label for="password">Password / Access Code</label>
+        <div class="password">
+          <input id="password" type="password" placeholder="Masukkan password atau access code" required>
+          <button type="button" class="show" id="togglePassword">Show</button>
+        </div>
+      </div>
+
+      <button class="btn" id="loginBtn" type="submit">Login</button>
+    </form>
+  </section>
+
+  <div class="footer">TalentScope</div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  // 1. TOGGLE SHOW / HIDE PASSWORD
+  const toggleBtn = document.getElementById("togglePassword");
+  const passInput = document.getElementById("password");
+
+  if (toggleBtn && passInput) {
+    toggleBtn.addEventListener("click", function () {
+      const isPassword = passInput.type === "password";
+      passInput.type = isPassword ? "text" : "password";
+      toggleBtn.textContent = isPassword ? "Hide" : "Show";
+    });
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    
+    const userIn = document.getElementById("username").value.trim().toLowerCase();
+    const passIn = document.getElementById("password").value.trim();
+
+    if (!userIn || !passIn) {
+      alert("Masukkan Username dan Password!");
+      return;
+    }
+
+    // ==========================================
+    // JALUR PAKSA PESERTA (JIKA ADA KARAKTER '@')
+    // ==========================================
+    if (userIn.includes("@")) {
+      let matchedParticipant = null;
+      let matchedProject = null;
+
+      // Cari data peserta dan project-nya secara akurat di localStorage
+      try {
+        const rawProjects = localStorage.getItem("talentscope_projects") || "[]";
+        let projects = JSON.parse(rawProjects);
+        if (Array.isArray(projects)) {
+          for (const project of projects) {
+            const participants = Array.isArray(project?.participants) ? project.participants : [];
+            const found = participants.find(p => String(p?.email || p?.username || "").trim().toLowerCase() === userIn);
+            if (found) {
+              matchedParticipant = found;
+              matchedProject = project;
+
+              // === TAMBAHKAN INI AGAR STATUS BERUBAH JADI ONLINE & TERCATAT ===
+              const loginNow = new Date().toISOString();
+              const newSessionId =
+                "TS-" +
+                Date.now() +
+                "-" +
+                Math.random().toString(36).slice(2, 10);
+
+              found.isLoggedIn = true;
+              found.status = "Online";
+              found.onlineStatus = "Online";
+              found.activeSessionId = newSessionId;
+              found.lastSeen = loginNow;
+              found.lastSeenAt = loginNow;
+              found.loginTime = loginNow;
+              found.loggedInAt = loginNow;
+              found.loginAt = loginNow;
+              found.currentActivity = "Online";
+              found.activity = "Online";
+              found.lastActivity = "Online";
+              
+              if (!found.activityHistory) found.activityHistory = [];
+              found.activityHistory.push({
+                type: "login",
+                activity: "Login ke Portal Peserta",
+                timestamp: loginNow,
+                time: loginNow,
+                description: "Peserta berhasil masuk ke sistem assessment.",
+                sessionId: newSessionId
+              });
+              // =============================================================
+
+              break;
+            }
+          }
+          // Simpan kembali perubahan status online ke projects di localStorage
+          localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+        }
+      } catch (err) {}
+
+      // Peserta wajib ditemukan dari data project. Jangan pernah membuat
+      // session fallback P001 karena itu dapat mencampur hasil antar peserta.
+      if (!matchedParticipant || !matchedProject) {
+        alert("Akun peserta tidak ditemukan atau belum ditugaskan ke project.");
+        return;
+      }
+
+      // Ambil daftar asesmen jika ada di dalam project atau data peserta
+      let assignedAssessments =
+        matchedParticipant.assessments ||
+        matchedProject.assessments ||
+        matchedProject.tests ||
+        [];
+
+      const participantSession = {
+        participantId: matchedParticipant.id || matchedParticipant.participantId,
+        projectId: matchedProject?.id || matchedProject?.projectId || matchedProject?.project_id || "",
+        activeSessionId: matchedParticipant?.activeSessionId || "",
+        username: userIn,
+        name: matchedParticipant?.name || matchedParticipant?.fullName || matchedParticipant?.nama || userIn.split("@")[0],
+        email: userIn,
+        role: "participant",
+        permission: "Participant",
+        projectName: matchedProject?.name || matchedProject?.projectName || "Assessment Project",
+        assessments: assignedAssessments,
+        loginAt: new Date().toISOString()
+      };
+
+      sessionStorage.clear();
+      sessionStorage.setItem("ts_participant_session", JSON.stringify(participantSession));
+      // Participant session is intentionally tab-scoped.
+      // Identity stays in sessionStorage only; project data remains in localStorage.
+
+      window.location.replace("participant-dashboard.html");
+      return;
+    }
+
+    // ==========================================
+    // JALUR ADMIN / CLIENT / ASESOR
+    // ==========================================
+    let allSavedUsers = [];
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        let key = localStorage.key(i);
+        let val = localStorage.getItem(key);
+        if (val && (val.startsWith("[") || val.startsWith("{"))) {
+          let parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) {
+            allSavedUsers = allSavedUsers.concat(parsed);
+          } else if (typeof parsed === "object") {
+            allSavedUsers.push(parsed);
+          }
+        }
+      }
+    } catch(err) {}
+
+    let matchedAdmin = allSavedUsers.find(u => {
+      if (!u) return false;
+      let uName = String(u.username || u.user || u.email || "").toLowerCase();
+      let uPass = String(u.password || u.pass || u.accessCode || "");
+      return uName === userIn && uPass === passIn;
+    });
+
+    if (matchedAdmin) {
+      let sessionData = {
+        username: matchedAdmin.username || userIn,
+        role: matchedAdmin.role || "Client Administrator",
+        name: matchedAdmin.name || matchedAdmin.username || userIn,
+        email: matchedAdmin.email || "",
+        projectId: matchedAdmin.projectId || "ALL"
+      };
+      sessionStorage.setItem("ts_admin_session", JSON.stringify(sessionData));
+      window.location.replace("dashboard.html");
+      return;
+    }
+
+    // Akun Generate (Titik)
+    if (userIn.includes(".")) {
+      let parts = userIn.split(".");
+      let projectCode = parts[0];
+      let roleRaw = parts[1];
+
+      let detectedRole = "Client Administrator";
+      if (roleRaw.includes("clientuser") || roleRaw.includes("user") || roleRaw.includes("asesor") || roleRaw.includes("assessor")) {
+        detectedRole = "Asesor";
+      } else if (roleRaw.includes("clientadmin") || roleRaw.includes("admin")) {
+        detectedRole = "Client Administrator";
+      } else if (roleRaw.includes("peserta")) {
+        detectedRole = "Peserta";
+      }
+
+      let sessionData = {
+        username: userIn,
+        role: detectedRole,
+        permission: (detectedRole === "Asesor") ? "Assessor" : "Client",
+        name: userIn,
+        email: "",
+        projectId: projectCode
+      };
+      sessionStorage.setItem("ts_admin_session", JSON.stringify(sessionData));
+
+      if (detectedRole === "Peserta") {
+        window.location.replace("participant-dashboard.html");
+      } else {
+        window.location.replace("dashboard.html");
+      }
+      return;
+    }
+
+    // Akun Default Admin
+    if (userIn === "admin" && passIn === "admin123") {
+      let sessionData = {
+        username: "admin",
+        role: "System Administrator",
+        name: "System Admin",
+        projectId: "ALL"
+      };
+      sessionStorage.setItem("ts_admin_session", JSON.stringify(sessionData));
+      window.location.replace("dashboard.html");
+      return;
+    }
+
+    alert("Username atau Password tidak sesuai dengan data sistem!");
+  });
+})();
+</script>
+
+</body>
+</html>

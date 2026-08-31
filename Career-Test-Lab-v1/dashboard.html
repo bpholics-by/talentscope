@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<head>
+    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+    <script>
+    (function() {
+        "use strict";
+
+        // 1. Ambil session user asli dari login
+        function getSavedUser() {
+            try {
+                var d = sessionStorage.getItem("ts_admin_session") || sessionStorage.getItem("ts_participant_session") || localStorage.getItem("talentscope_current_user");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
+        }
+
+        var activeUser = getSavedUser();
+
+        if (activeUser) {
+            // Session login dipertahankan di sessionStorage; jangan menulis identity ke localStorage.
+            
+            // Terapkan penyesuaian tampilan setelah DOM siap
+            document.addEventListener("DOMContentLoaded", function() {
+                var role = String(activeUser.role || "").trim();
+
+                // A. Ubah Teks Header Kanan Atas
+                var allEls = document.querySelectorAll("div, span, p, strong, b, h1, h2, h3");
+                allEls.forEach(function(el) {
+                    if (el.children.length === 0) {
+                        if (el.textContent.trim() === "Administrator") {
+                            el.textContent = activeUser.name || activeUser.username || "User";
+                        }
+                        if (el.textContent.trim() === "System Admin") {
+                            el.textContent = role;
+                        }
+                    }
+                });
+
+                // B. Filter Menu Sidebar
+                var isClient = /client/i.test(role);
+                var isAsesor = /asesor|assessor/i.test(role);
+                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+
+                var hideList = [];
+                if (isClient) {
+                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAsesor) {
+                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                } else if (isAdmin) {
+                    hideList = ["Settings"];
+                }
+
+                if (hideList.length > 0) {
+                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
+                    menuLinks.forEach(function(item) {
+                        var text = item.textContent.trim();
+                        hideList.forEach(function(m) {
+                            if (text.indexOf(m) !== -1) {
+                                item.style.setProperty("display", "none", "important");
+                            }
+                        });
+                    });
+                }
+
+                // C. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
+                if (isClient || isAsesor) {
+                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
+                        var bt = btn.textContent.toLowerCase();
+                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
+                            btn.style.setProperty("display", "none", "important");
+                        }
+                    });
+                }
+            });
+        }
+    })();
+    </script>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Career Test Lab</title>
+
+    <link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/header.css">
+
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages.css">
+
+<link rel="stylesheet" href="css/dashboard.css">
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ====================================================== -->
+    <!-- SIDEBAR -->
+    <!-- ====================================================== -->
+
+    <aside class="sidebar"></aside>
+
+       
+    <!-- ====================================================== -->
+    <!-- MAIN -->
+    <!-- ====================================================== -->
+
+    <div class="main">
+
+        <!-- ================================================== -->
+        <!-- HEADER -->
+        <!-- ================================================== -->
+
+        <header class="header"></header>
+
+        <main class="content">
+            
+
+                        <!-- ======================================================
+     HERO
+====================================================== -->
+
+<section class="hero">
+
+    <!-- LEFT -->
+    <div class="hero-left">
+
+        <span class="hero-badge">
+            TalentScope Enterprise
+        </span>
+
+        <h2 class="hero-title">
+            Selamat Datang,
+             👋
+        </h2>
+
+        <p class="hero-description">
+            Kelola seluruh proses assessment,
+            peserta, hasil, laporan,
+            dan project dalam satu dashboard
+            modern yang cepat dan profesional.
+        </p>
+
+    </div>
+
+
+    <!-- PREMIUM INFORMATION CARD -->
+<div class="welcome-card">
+
+    <div class="welcome-icon">
+        <i class="fa-solid fa-chart-line"></i>
+    </div>
+
+    <div class="welcome-label">
+        TalentScope Enterprise
+    </div>
+
+    <h3>
+        Assessment<br>
+        Management
+    </h3>
+
+    <p>
+       
+    </p>
+
+    <div class="welcome-divider"></div>
+
+    <div class="welcome-footer">
+
+        <div class="welcome-date">
+
+            
+            <span id="current-dashboard-date"><i class="fa-regular fa-calendar" style="margin-right: 8px;"></i> Loading...</span>
+
+        </div>
+
+        <div class="system-status">
+
+            <span class="system-dot"></span>
+
+            <span>
+                System operational
+            </span>
+
+        </div>
+
+    </div>
+
+</div>
+
+</section>
+
+           <!-- ======================================================
+     DASHBOARD NAVIGATION
+====================================================== -->
+
+<section class="dashboard-tools">
+
+    
+    <!-- ==================================================
+         MAIN TOOLS
+    ================================================== -->
+
+    <div class="dashboard-tools-grid">
+
+
+        <!-- 1. CARA MENGGUNAKAN -->
+
+        <a href="#cara-menggunakan"
+           class="dashboard-tool-card tool-guide">
+
+            <div class="tool-card-top">
+
+                <div class="tool-icon tool-blue">
+                    <i class="fa-solid fa-circle-play"></i>
+                </div>
+
+                <div class="tool-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+            </div>
+
+            <h3>
+                Cara Menggunakan
+            </h3>
+
+            <p>
+                Panduan langkah demi langkah untuk memahami
+                alur penggunaan TalentScope.
+            </p>
+
+            <span class="tool-link">
+                Lihat panduan
+            </span>
+
+        </a>
+
+
+        <!-- 2. ALAT TES TERSEDIA -->
+
+        <a href="assessment-catalog.html"
+           class="dashboard-tool-card">
+
+            <div class="tool-card-top">
+
+                <div class="tool-icon tool-purple">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <div class="tool-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+            </div>
+
+            <h3>
+                Alat Tes Tersedia
+            </h3>
+
+            <p>
+                Lihat dan kelola seluruh katalog assessment
+                dan alat tes yang tersedia.
+            </p>
+
+            <span class="tool-link">
+                Buka katalog
+            </span>
+
+        </a>
+
+
+                <!-- 4. KELOLA PROJECT -->
+
+        <a href="assessment-project.html"
+           class="dashboard-tool-card">
+
+            <div class="tool-card-top">
+
+                <div class="tool-icon tool-orange">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+
+                <div class="tool-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+            </div>
+
+            <h3>
+                Kelola Project
+            </h3>
+
+            <p>
+                Buat, atur, dan pantau seluruh project
+                assessment dalam satu workspace.
+            </p>
+
+            <span class="tool-link">
+                Kelola project
+            </span>
+
+        </a>
+
+
+        <!-- 5. KELOLA PESERTA -->
+
+        <a href="participants.html"
+           class="dashboard-tool-card">
+
+            <div class="tool-card-top">
+
+                <div class="tool-icon tool-teal">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+
+                <div class="tool-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+            </div>
+
+            <h3>
+                Kelola Peserta
+            </h3>
+
+            <p>
+                Tambahkan, lihat, dan kelola data peserta
+                yang mengikuti assessment.
+            </p>
+
+            <span class="tool-link">
+                Buka peserta
+            </span>
+
+        </a>
+
+
+        <!-- 6. LIHAT HASIL -->
+<a href="hasil.html" id="cardLihatHasil" class="dashboard-tool-card">
+    <div class="tool-card-top">
+        <div class="tool-icon tool-red">
+            <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="tool-arrow">
+            <i class="fa-solid fa-arrow-right"></i>
+        </div>
+    </div>
+    <h3>
+        Lihat Hasil
+    </h3>
+    <p>
+        Pantau hasil assessment, laporan, dan
+        analisis peserta secara terpusat.
+    </p>
+    <span class="tool-link">
+        Lihat hasil
+    </span>
+</a>
+
+
+               <!-- 8. AKSES PROJECT -->
+
+        <a href="projects.html"
+           class="dashboard-tool-card">
+
+            <div class="tool-card-top">
+
+                <div class="tool-icon tool-navy">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+
+                <div class="tool-arrow">
+                    <i class="fa-solid fa-arrow-right"></i>
+                </div>
+
+            </div>
+
+            <h3>
+                Project Access
+            </h3>
+
+            <p>
+                Kelola akses dan hak penggunaan project
+                untuk administrator atau klien.
+            </p>
+
+            <span class="tool-link">
+                Kelola akses
+            </span>
+
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- ======================================================
+     START GUIDE
+====================================================== -->
+
+<section class="start-guide" id="cara-menggunakan">
+
+    <div class="guide-content">
+
+        <span class="section-eyebrow">
+            QUICK START GUIDE
+        </span>
+
+        <h2>
+            Cara menggunakan TalentScope
+        </h2>
+
+        <p>
+            Ikuti alur sederhana berikut untuk memulai
+            proses assessment dari awal hingga melihat hasil.
+        </p>
+
+
+        <div class="guide-steps">
+
+            <div class="guide-step">
+
+                <span class="guide-number">
+                    01
+                </span>
+
+                <div>
+
+                    <h4>
+                        Pilih Alat Tes
+                    </h4>
+
+                    <p>
+                        Buka Assessment Catalog dan pilih
+                        alat tes yang sesuai kebutuhan.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="guide-step">
+
+                <span class="guide-number">
+                    02
+                </span>
+
+                <div>
+
+                    <h4>
+                        Buat Project
+                    </h4>
+
+                    <p>
+                        Susun assessment project dan
+                        tentukan konfigurasi pelaksanaannya.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="guide-step">
+
+                <span class="guide-number">
+                    03
+                </span>
+
+                <div>
+
+                    <h4>
+                        Tambahkan Peserta
+                    </h4>
+
+                    <p>
+                        Input peserta secara manual atau
+                        gunakan template Excel.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="guide-step">
+
+                <span class="guide-number">
+                    04
+                </span>
+
+                <div>
+
+                    <h4>
+                        Pantau dan Lihat Hasil
+                    </h4>
+
+                    <p>
+                        Monitor pelaksanaan assessment
+                        dan akses hasil setelah selesai.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="guide-visual">
+
+        <div class="guide-visual-header">
+
+            <div class="guide-window-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <span>
+                TalentScope Workflow
+            </span>
+
+        </div>
+
+
+        <div class="workflow-preview">
+
+            <div class="workflow-item active">
+
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+
+                <span>
+                    Pilih Tes
+                </span>
+
+            </div>
+
+
+            <div class="workflow-line"></div>
+
+
+            <div class="workflow-item">
+
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+
+                <span>
+                    Buat Project
+                </span>
+
+            </div>
+
+
+            <div class="workflow-line"></div>
+
+
+            <div class="workflow-item">
+
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+
+                <span>
+                    Tambah Peserta
+                </span>
+
+            </div>
+
+
+            <div class="workflow-line"></div>
+
+
+            <div class="workflow-item">
+
+                <div class="workflow-icon">
+                    <i class="fa-solid fa-chart-column"></i>
+                </div>
+
+                <span>
+                    Lihat Hasil
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+            <!-- Panel Kiri: Assessment Schedule -->
+<div class="panel">
+    <div class="panel-header">
+        <h3>Assessment Schedule</h3>
+        <span style="font-size: 12px; color: #64748b;"></span>
+    </div>
+    <div class="activity-list" id="assessmentScheduleList">
+        <!-- Jadwal akan dimuat otomatis oleh JavaScript -->
+    </div>
+</div>
+
+                <!-- Panel Kanan: Announcement -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>Announcement</h3>
+                    </div>
+                    <div class="announcement">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <p>
+                            Selamat datang di Career Test Lab Enterprise Edition. 
+                            Sistem assessment sedang dalam tahap pengembangan menuju versi 1.0.
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+
+                    </main>
+
+    </div>
+
+</div>
+
+
+<script src="js/layout/layout-loader.js"></script>
+
+<!-- Application -->
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/global-search.js"></script>
+
+<!-- Panggil script kontrol akses di semua halaman -->
+<script src="js/app-access-control.js"></script>
+<script src="js/project-access-filter.js"></script>
+
+<script src="js/auth-guard.js"></script>
+
+<!-- KONTROL AKSES OTOMATIS BERDASARKAN ROLE -->
+<script>
+(function() {
+    "use strict";
+
+    function syncUserRole() {
+        // 1. Ambil Session User Login
+        var keys = ["talentscope_current_user", "ts_admin_session", "user", "currentUser"];
+        var user = null;
+
+        for (var i = 0; i < keys.length; i++) {
+            var data = localStorage.getItem(keys[i]) || sessionStorage.getItem(keys[i]);
+            if (data) {
+                try {
+                    var parsed = JSON.parse(data);
+                    if (parsed && (parsed.role || parsed.username || parsed.name)) {
+                        user = parsed;
+                        break;
+                    }
+                } catch(e) {}
+            }
+        }
+
+        if (!user) return;
+
+        var role = String(user.role || "").trim();
+
+        // 2. Timpa Profil Kanan Atas
+        var allElements = document.querySelectorAll("div, span, p, h1, h2, h3, h4, h5, strong, b");
+        allElements.forEach(function(el) {
+            if (el.children.length === 0) {
+                if (el.textContent.trim() === "Administrator") {
+                    el.textContent = user.name || user.username || "User";
+                }
+                if (el.textContent.trim() === "System Admin") {
+                    el.textContent = role;
+                }
+            }
+        });
+
+        // 3. Filter Menu Sidebar Berdasarkan Role
+        var isSystemAdmin = /system/i.test(role);
+        var isAdmin = /administrator/i.test(role) && !isSystemAdmin;
+        var isClient = /client/i.test(role);
+        var isAsesor = /asesor|assessor/i.test(role);
+
+        var hideMap = {
+            "client": ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"],
+            "asesor": ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"],
+            "administrator": ["Settings"]
+        };
+
+        var currentRoleKey = isClient ? "client" : (isAsesor ? "asesor" : (isAdmin ? "administrator" : "system"));
+        var toHide = hideMap[currentRoleKey] || [];
+
+        if (toHide.length > 0) {
+            var menuItems = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
+            menuItems.forEach(function(item) {
+                var txt = item.textContent.trim();
+                toHide.forEach(function(targetMenu) {
+                    if (txt.indexOf(targetMenu) !== -1) {
+                        item.style.setProperty("display", "none", "important");
+                    }
+                });
+            });
+        }
+
+        // 4. Batasi Tombol Aksi jika Role Client / Asesor
+        if (isClient || isAsesor) {
+            document.querySelectorAll("button, .btn, .btn-primary").forEach(function(b) {
+                var t = b.textContent.toLowerCase();
+                if (t.includes("remove") || t.includes("create") || t.includes("add") || t.includes("tambah") || t.includes("delete")) {
+                    b.style.setProperty("display", "none", "important");
+                }
+            });
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", syncUserRole);
+    } else {
+        syncUserRole();
+    }
+    window.addEventListener("load", syncUserRole);
+})();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var userRaw = sessionStorage.getItem("ts_admin_session") || sessionStorage.getItem("ts_participant_session");
+    if (userRaw) {
+        var activeUser = JSON.parse(userRaw);
+        // Sembunyikan menu Settings jika bukan System Administrator
+        if (!/system/i.test(activeUser.role || "")) {
+            document.querySelectorAll(".dropdown-menu a, .dropdown-item").forEach(function(el) {
+                if (el.textContent.trim().toLowerCase().includes("setting")) {
+                    el.style.setProperty("display", "none", "important");
+                }
+            });
+        }
+    }
+});
+</script>
+
+<!-- SCRIPT STABILISASI SEMBUNYIKAN MENU SETTINGS -->
+<style id="hide-settings-style">
+  /* Sembunyikan elemen menu settings secara instan sejak CSS dimuat */
+  .dropdown-menu a[href*="setting"],
+  .dropdown-menu button[onclick*="setting"],
+  .dropdown-item[href*="setting"],
+  [class*="dropdown"] a:has(svg):first-child,
+  .user-dropdown a:first-child {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function() {
+  "use strict";
+
+  function enforceHideSettings() {
+    var userRaw = sessionStorage.getItem("ts_admin_session") || sessionStorage.getItem("ts_participant_session");
+    if (!userRaw) return;
+
+    var activeUser = JSON.parse(userRaw);
+    var isSystemAdmin = /system/i.test(activeUser.role || "");
+
+    var styleEl = document.getElementById("hide-settings-style");
+
+    // Jika user ADALAH System Admin, kembalikan tampilan menu Settings
+    if (isSystemAdmin) {
+      if (styleEl) styleEl.remove();
+      return;
+    }
+
+    // Jika BUKAN System Admin, pastikan semua elemen teks bertuliskan "Setting" tersembunyi
+    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
+    menuItems.forEach(function(item) {
+      var text = item.textContent.trim().toLowerCase();
+      if (text.includes("setting") || text.includes("pengaturan")) {
+        item.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+
+  // 1. Jalankan saat DOM dan Window siap
+  document.addEventListener("DOMContentLoaded", enforceHideSettings);
+  window.addEventListener("load", enforceHideSettings);
+
+  // 2. Pantau perubahan DOM (MutationObserver) agar jika dropdown baru dirender/diklik, Settings tetap tersembunyi
+  var observer = new MutationObserver(function() {
+    enforceHideSettings();
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var dateEl = document.getElementById("current-dashboard-date");
+    if (dateEl) {
+        var today = new Date();
+        var options = { day: 'numeric', month: 'long', year: 'numeric' };
+        var formattedDate = today.toLocaleDateString('en-US', options);
+        
+        dateEl.innerHTML = '<i class="fa-regular fa-calendar" style="margin-right: 8px;"></i>' + formattedDate;
+    }
+});
+</script>
+
+<script>
+// Skrip otomatis untuk menyisipkan id="globalSearchInput" jika header dimuat secara dinamis
+document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
+        var searchInput = document.querySelector('.main header input[type="text"], .header input[type="text"], .main input[placeholder*="Cari"]');
+        if (searchInput && !searchInput.id) {
+            searchInput.id = "globalSearchInput";
+        }
+    }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var card = document.getElementById("cardLihatHasil");
+    if (!card) return;
+
+    // Ambil data role user dari localStorage (sesuaikan key dengan sistem login Anda, misal: 'userRole', 'role', dll)
+    var userRole = "";
+    try {
+        var userData = JSON.parse(localStorage.getItem("talentscope_user") || sessionStorage.getItem("talentscope_user") || "{}");
+        userRole = (userData.role || localStorage.getItem("userRole") || sessionStorage.getItem("userRole") || "").toLowerCase();
+    } catch (e) {
+        userRole = "";
+    }
+
+    // Jika role adalah client atau asesor/assessor, arahkan ke halaman project (misal: projects.html)
+    // Jika system administrator atau administrator, arahkan ke database.html
+    card.addEventListener("click", function (e) {
+        e.preventDefault();
+        
+        if (userRole === "client" || userRole === "asesor" || userRole === "assessor") {
+            window.location.href = "projects.html"; // Sesuaikan nama file halaman project Anda
+        } else {
+            window.location.href = "database.html"; // Untuk Administrator / System Administrator
+        }
+    });
+});
+</script>
+</body>
+</html>

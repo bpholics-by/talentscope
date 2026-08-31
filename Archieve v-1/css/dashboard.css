@@ -1,0 +1,1513 @@
+/* =====================================================
+   CAREER TEST LAB DESIGN SYSTEM
+===================================================== */
+
+:root{
+
+    /* Primary */
+
+    --primary:#2563EB;
+    --primary-dark:#1D4ED8;
+    --primary-light:#EAF2FF;
+
+    /* Success */
+
+    --success:#16A34A;
+    --success-bg:#ECFDF3;
+
+    /* Warning */
+
+    --warning:#EA580C;
+    --warning-bg:#FFF7ED;
+
+    /* Purple */
+
+    --purple:#9333EA;
+    --purple-bg:#F3E8FF;
+
+    /* Text */
+
+    --text:#0F172A;
+    --text-soft:#64748B;
+
+    /* Background */
+
+    --surface:#FFFFFF;
+    --background:#F4F7FC;
+
+    /* Border */
+
+    --border:#E8EDF5;
+
+    /* Radius */
+
+    --radius-xl:26px;
+    --radius-lg:18px;
+    --radius-md:14px;
+
+    /* Shadow */
+
+    --shadow-soft:
+        0 12px 30px rgba(15,23,42,.06);
+
+    --shadow-hover:
+        0 24px 55px rgba(37,99,235,.12);
+
+}
+
+/* ===============================
+   DASHBOARD - CAREER TEST LAB
+   =============================== */
+
+
+.profile{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    padding:12px 18px;
+
+    background:#FFFFFF;
+
+    border:1px solid #E8EDF5;
+
+    border-radius:18px;
+
+    box-shadow:
+        0 8px 20px rgba(15,23,42,.05);
+
+}
+
+.avatar{
+
+    width:54px;
+
+    height:54px;
+
+    border-radius:16px;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #60A5FA
+    );
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:#FFFFFF;
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+.profile-info h3{
+
+    font-size:18px;
+
+    font-weight:700;
+
+    color:#16345F;
+
+    margin-bottom:3px;
+
+}
+
+.profile-info span{
+
+    color:#6B7280;
+
+    font-size:13px;
+
+}
+
+
+
+/* ===============================
+   PROGRESS
+=================================*/
+
+.progress-card{
+
+     margin-top:0;
+
+    margin-bottom:40px;
+
+    background:#FFFFFF;
+
+    border:1px solid #E8EDF5;
+
+    border-radius:22px;
+
+    padding:30px;
+
+    box-shadow:
+        0 10px 30px rgba(15,23,42,.06);
+
+}
+
+.progress-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:22px;
+
+}
+
+.progress-header h2{
+
+    font-size:22px;
+
+    font-weight:700;
+
+    color:#16345F;
+
+}
+
+.progress-header span{
+
+    background:#EEF4FF;
+
+    color:#2563EB;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    font-weight:700;
+
+    font-size:15px;
+
+}
+
+.progress-bar{
+
+    width:100%;
+
+    height:14px;
+
+    background:#EEF2F7;
+
+    border-radius:999px;
+
+    overflow:hidden;
+
+}
+
+.progress-fill{
+
+    width:25%;
+
+    height:100%;
+
+    border-radius:999px;
+
+    background:linear-gradient(
+        90deg,
+        #2563EB,
+        #3B82F6,
+        #60A5FA
+    );
+
+    transition:width .4s ease;
+
+}
+
+/* ===============================
+   MENU CARD
+=================================*/
+
+.card{
+
+    background:#FFFFFF;
+
+    border:1px solid #E8EDF5;
+
+    border-radius:26px;
+
+    padding:30px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:flex-start;
+
+    height:420px;
+
+    box-shadow:
+        0 12px 30px rgba(15,23,42,.06);
+
+    transition:.30s;
+
+}
+
+.card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:
+        0 24px 60px rgba(37,99,235,.12);
+
+}
+
+.menu-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:28px;
+
+    align-items:stretch;
+
+}
+/* =====================================================
+   ENTERPRISE CARD SYSTEM
+===================================================== */
+
+.menu-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,minmax(260px,1fr));
+
+    gap:28px;
+
+    align-items:stretch;
+
+}
+
+.card{
+
+    display:flex;
+
+    flex-direction:column;
+
+    padding:32px;
+
+    min-height:430px;
+
+}
+
+.card p{
+
+    flex:1;
+
+}
+
+.card a{
+
+    display:block;
+
+    margin-top:auto;
+
+    width:100%;
+
+}
+
+.btn-primary{
+
+    width:100%;
+
+}
+.card a{
+
+    display:block;
+
+    width:100%;
+
+    margin-top:auto;
+
+    text-decoration:none;
+
+}
+
+/* ===============================
+   CARD ICON
+=================================*/
+
+.card-icon{
+
+    width:72px;
+
+    height:72px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:30px;
+
+    margin-bottom:22px;
+
+    transition:.30s;
+
+}
+/* ===============================
+   CARD HEADER
+=================================*/
+
+.card-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    margin-bottom:20px;
+
+}
+.step-badge{
+
+    background:#EEF4FF;
+
+    color:#2563EB;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:700;
+
+}
+.status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    width:max-content;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+    margin-bottom:24px;
+
+}
+.status.ready{
+
+    background:#ECFDF3;
+
+    color:#15803D;
+
+}
+.card-icon.blue{
+
+    background:#EAF2FF;
+
+    color:#2563EB;
+
+}
+
+.card-icon.green{
+
+    background:#ECFDF3;
+
+    color:#16A34A;
+
+}
+
+.card-icon.orange{
+
+    background:#FFF7ED;
+
+    color:#EA580C;
+
+}
+
+.card-icon.purple{
+
+    background:#F3E8FF;
+
+    color:#9333EA;
+
+}
+
+.card h3{
+
+    font-size:18px;
+
+    line-height:1.45;
+
+    margin-top:22px;
+
+    margin-bottom:14px;
+
+    color:#0F172A;
+
+}
+
+.card p{
+
+    flex:1;
+
+    color:#64748B;
+
+    line-height:1.8;
+
+    margin:16px 0 24px;
+
+}
+
+.btn-primary{
+
+    width:100%;
+
+    height:54px;
+
+    border:none;
+
+    border-radius:16px;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #1D4ED8
+    );
+
+    color:#FFFFFF;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:10px;
+
+    cursor:pointer;
+
+    transition:.30s;
+
+    box-shadow:
+        0 10px 24px rgba(37,99,235,.22);
+        text-decoration:none;
+
+}
+
+.card a.btn-primary{
+
+    width:100%;
+
+    margin-top:auto;
+
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:
+        0 18px 36px rgba(37,99,235,.32);
+
+}
+
+.btn-primary i{
+
+    transition:.30s;
+
+}
+
+.btn-primary:hover i{
+
+    transform:translateX(4px);
+
+}
+
+/* ===============================
+   ACTIVITY
+=================================*/
+
+.activity{
+
+    margin-top:0;
+
+    background:white;
+
+    border-radius:18px;
+
+    padding:30px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.08);
+
+}
+
+.activity h2{
+
+    margin-bottom:18px;
+
+    color:#1E40AF;
+
+}
+
+.activity ul{
+
+    padding-left:20px;
+
+}
+
+.activity li{
+
+    margin-bottom:12px;
+
+    color:#4B5563;
+
+}
+/* ===============================
+   QUICK STATS
+=================================*/
+
+.stats-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:24px;
+
+    margin-bottom:40px;
+
+}
+
+.stat-card{
+
+    background:#FFFFFF;
+
+    border:none;
+
+    border-radius:22px;
+
+    padding:26px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:18px;
+
+    box-shadow:
+        0 12px 32px rgba(15,23,42,.06);
+
+    transition:.3s;
+
+}
+
+.stat-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:
+        0 20px 45px rgba(37,99,235,.12);
+
+}
+.stat-icon{
+
+    width:62px;
+
+    height:62px;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:24px;
+
+    flex-shrink:0;
+
+}
+
+.stat-icon.blue{
+
+    background:#EAF2FF;
+
+    color:#2563EB;
+
+}
+
+.stat-icon.green{
+
+    background:#ECFDF3;
+
+    color:#16A34A;
+
+}
+
+.stat-icon.orange{
+
+    background:#FFF7ED;
+
+    color:#EA580C;
+
+}
+
+.stat-icon.purple{
+
+    background:#F3E8FF;
+
+    color:#9333EA;
+
+}
+.stat-card h3{
+
+    font-size:24px;
+
+    color:#16345F;
+
+    margin-bottom:4px;
+
+    font-weight:700;
+
+}
+
+.stat-card p{
+
+    color:#6B7280;
+
+    font-size:14px;
+
+}
+/* ======================================
+   LOGOUT BUTTON
+====================================== */
+
+.logout-btn{
+
+    margin-left:18px;
+
+    height:42px;
+
+    padding:0 18px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#F3F6FC;
+
+    color:#64748B;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.logout-btn:hover{
+
+    background:#DC2626;
+
+    color:#FFFFFF;
+
+}
+
+.logout-btn i{
+
+    font-size:15px;
+
+}
+/* ===============================
+   RESPONSIVE DASHBOARD
+=================================*/
+
+@media (max-width:900px){
+
+    .stats-grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+@media (max-width:768px){
+
+    .stats-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+/* ======================================
+   HERO BANNER
+====================================== */
+
+.hero-banner{
+    margin-top:13px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #1D4ED8
+    );
+
+    border-radius:24px;
+
+    padding:42px;
+
+    color:#FFFFFF;
+
+    margin-bottom:32px;
+
+    overflow:visible;
+
+}
+
+.hero-left{
+
+    max-width:600px;
+
+}
+
+.hero-left h2{
+
+    margin:18px 0 12px;
+
+    font-size:34px;
+
+    font-weight:700;
+
+}
+
+.hero-left p{
+
+    opacity:.9;
+
+    line-height:1.8;
+
+}
+
+.hero-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    background:rgba(255,255,255,.15);
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+}
+
+.hero-circle{
+
+    width:170px;
+
+    height:170px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.10);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+.hero-circle i{
+
+    font-size:70px;
+
+}
+
+/* =====================================================
+   RELEASE 3.4.2
+   CARD HEADER PREMIUM
+===================================================== */
+
+.card-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    margin-bottom:26px;
+
+}
+
+.card-icon{
+
+    width:74px;
+
+    height:74px;
+
+    border-radius:22px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:30px;
+
+    transition:.35s;
+
+}
+
+.card:hover .card-icon{
+
+    transform:translateY(-5px) scale(1.06);
+
+}
+
+.step-badge{
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    letter-spacing:.4px;
+
+}
+
+.card h3{
+
+    font-size:17px;
+
+    font-weight:700;
+
+    line-height:1.5;
+
+    margin-bottom:16px;
+
+    color:#0F172A;
+
+}
+
+.card p{
+
+    font-size:15px;
+
+    line-height:1.9;
+
+    color:#64748B;
+
+}
+
+/* =====================================================
+   RELEASE 3.4.3
+   ENTERPRISE BUTTON
+===================================================== */
+
+.card a{
+
+    display:block;
+
+    width:100%;
+
+    margin-top:auto;
+
+}
+
+.card .btn-primary{
+
+    width:100%;
+
+    height:56px;
+
+    border:none;
+
+    border-radius:18px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    letter-spacing:.2px;
+
+    background:linear-gradient(
+        135deg,
+        #2563EB,
+        #1D4ED8
+    );
+
+    color:#FFFFFF;
+
+    box-shadow:
+        0 10px 24px rgba(37,99,235,.20);
+
+    transition:
+        transform .25s,
+        box-shadow .25s,
+        background .25s;
+
+}
+
+.card .btn-primary:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:
+        0 18px 36px rgba(37,99,235,.30);
+
+}
+
+.card .btn-primary:active{
+
+    transform:scale(.98);
+
+}
+
+.card .btn-primary i{
+
+    transition:.25s;
+
+}
+
+.card .btn-primary:hover i{
+
+    transform:translateX(5px);
+
+}
+
+/* =====================================================
+   RELEASE 3.5.1
+   ENTERPRISE STATS
+===================================================== */
+
+.stats-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(4,1fr);
+
+    gap:28px;
+
+}
+
+.stat-card{
+
+    position:relative;
+
+    overflow:hidden;
+
+    padding:28px;
+
+    border-radius:24px;
+
+    background:#FFFFFF;
+
+    transition:.35s;
+
+    border:1px solid #EEF3F8;
+
+}
+
+.stat-card::before{
+
+    content:"";
+
+    position:absolute;
+
+    top:0;
+
+    left:0;
+
+    width:5px;
+
+    height:100%;
+
+    background:#2563EB;
+
+    opacity:0;
+
+    transition:.35s;
+
+}
+
+.stat-card:hover{
+
+    transform:translateY(-8px);
+
+    box-shadow:
+
+        0 22px 50px rgba(37,99,235,.10);
+
+}
+
+.stat-card:hover::before{
+
+    opacity:1;
+
+}
+
+.stat-icon{
+
+    width:70px;
+
+    height:70px;
+
+    border-radius:22px;
+
+    font-size:28px;
+
+}
+
+.stat-card h3{
+
+    font-size:30px;
+
+    font-weight:700;
+
+    color:#16345F;
+
+    margin-bottom:6px;
+
+}
+
+.stat-card p{
+
+    font-size:14px;
+
+    color:#64748B;
+
+}
+
+/* =====================================================
+   RELEASE 3.5.2
+   ENTERPRISE PROGRESS CARD
+===================================================== */
+
+.progress-card{
+
+    position:relative;
+
+    overflow:hidden;
+
+    background:#FFFFFF;
+
+    border-radius:26px;
+
+    padding:34px;
+
+    border:1px solid #EEF2F7;
+
+    box-shadow:
+        0 16px 40px rgba(15,23,42,.06);
+
+    transition:.35s;
+
+}
+
+.progress-card:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+        0 24px 55px rgba(37,99,235,.10);
+
+}
+
+.progress-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:24px;
+
+}
+
+.progress-header h2{
+
+    font-size:24px;
+
+    font-weight:700;
+
+    color:#16345F;
+
+}
+
+.progress-header span{
+
+    min-width:78px;
+
+    text-align:center;
+
+    padding:10px 18px;
+
+    border-radius:999px;
+
+    background:#EEF4FF;
+
+    color:#2563EB;
+
+    font-weight:700;
+
+    font-size:16px;
+
+}
+
+.progress-bar{
+
+    width:100%;
+
+    height:18px;
+
+    border-radius:999px;
+
+    background:#E8EEF7;
+
+    overflow:hidden;
+
+}
+
+.progress-fill{
+
+    height:100%;
+
+    border-radius:999px;
+
+    background:linear-gradient(
+        90deg,
+        #2563EB,
+        #3B82F6,
+        #60A5FA
+    );
+
+    transition:width .6s ease;
+
+    box-shadow:
+        0 0 18px rgba(37,99,235,.35);
+
+}
+
+/* =====================================================
+   RELEASE 3.5.3
+   ENTERPRISE ACTIVITY TIMELINE
+===================================================== */
+
+.activity{
+
+    position:relative;
+
+    background:#FFFFFF;
+
+    border-radius:26px;
+
+    padding:34px;
+
+    border:1px solid #EEF2F7;
+
+    box-shadow:
+        0 16px 40px rgba(15,23,42,.06);
+
+    transition:.35s;
+
+}
+
+.activity:hover{
+
+    transform:translateY(-5px);
+
+    box-shadow:
+        0 24px 55px rgba(37,99,235,.10);
+
+}
+
+.activity h2{
+
+    font-size:23px;
+
+    color:#16345F;
+
+    margin-bottom:28px;
+
+}
+
+.activity ul{
+
+    list-style:none;
+
+    padding:0;
+
+    margin:0;
+
+}
+
+.activity li{
+
+    position:relative;
+
+    padding-left:38px;
+
+    padding-bottom:22px;
+
+    color:#475569;
+
+    line-height:1.7;
+
+    font-size:15px;
+
+}
+
+.activity li:last-child{
+
+    padding-bottom:0;
+
+}
+
+.activity li::before{
+
+    content:"";
+
+    position:absolute;
+
+    left:8px;
+
+    top:6px;
+
+    width:12px;
+
+    height:12px;
+
+    border-radius:50%;
+
+    background:#2563EB;
+
+    box-shadow:
+        0 0 12px rgba(37,99,235,.45);
+
+}
+
+.activity li::after{
+
+    content:"";
+
+    position:absolute;
+
+    left:13px;
+
+    top:22px;
+
+    width:2px;
+
+    height:calc(100% - 10px);
+
+    background:#DCE8FA;
+
+}
+
+.activity li:last-child::after{
+
+    display:none;
+
+}
+
+/* =====================================================
+   RELEASE 3.6.1
+   ENTERPRISE PAGE ANIMATION
+===================================================== */
+
+@keyframes fadeUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(24px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+/* Hero */
+
+.hero-banner{
+
+    animation:fadeUp .55s ease both;
+
+}
+
+/* Stats */
+
+.stats-grid{
+
+    animation:fadeUp .65s ease both;
+
+}
+
+/* Menu */
+
+.menu-grid{
+
+    animation:fadeUp .80s ease both;
+
+}
+
+/* Progress */
+
+.progress-card{
+
+    animation:fadeUp .95s ease both;
+
+}
+
+/* Activity */
+
+.activity{
+
+    animation:fadeUp 1.1s ease both;
+
+}
+
+/* =====================================================
+   RELEASE 3.6.2
+   PREMIUM MICRO INTERACTION
+===================================================== */
+
+/* Animasi umum card */
+.card,
+.stat-card,
+.progress-card,
+.activity{
+
+    transition:
+        transform .30s ease,
+        box-shadow .30s ease,
+        border-color .30s ease;
+
+}
+
+/* Hover Card Menu */
+.card:hover{
+
+    transform:translateY(-8px);
+
+    border-color:#D6E4FF;
+
+    box-shadow:
+        0 24px 48px rgba(37,99,235,.12);
+
+}
+
+/* Hover Statistik */
+.stat-card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+/* Hover Progress */
+.progress-card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+/* Hover Activity */
+.activity:hover{
+
+    transform:translateY(-5px);
+
+}
+
+/* Icon Card */
+.card-icon{
+
+    transition:
+        transform .30s ease,
+        box-shadow .30s ease;
+
+}
+
+.card:hover .card-icon{
+
+    transform:translateY(-4px) scale(1.08);
+
+    box-shadow:
+        0 12px 24px rgba(37,99,235,.18);
+
+}
+
+/* Icon Statistik */
+.stat-icon{
+
+    transition:
+        transform .30s ease;
+
+}
+
+.stat-card:hover .stat-icon{
+
+    transform:scale(1.08);
+
+}

@@ -1,0 +1,4390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+>
+
+<title>Assessment Project | TalentScope</title>
+
+<style>
+
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+*{
+    box-sizing:border-box;
+}
+
+html,
+body{
+    margin:0;
+    min-height:100%;
+}
+
+body{
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    background:#f7f9fc;
+    color:#10233f;
+}
+
+:root{
+    --navy:#09182c;
+    --blue:#0878e8;
+    --muted:#708198;
+    --line:#e4eaf1;
+}
+
+
+/* =========================================================
+   APP
+   ========================================================= */
+
+.app{
+    display:flex;
+    min-height:100vh;
+}
+
+
+/* =========================================================
+TALENTSCOPE ADMIN SIDEBAR
+FINAL
+========================================================= */
+/* =========================================================
+   MENU
+========================================================= */
+
+.sidebar .menu {
+    width: 100% !important;
+
+    display: block !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+
+/* =========================================================
+   MENU TITLE
+========================================================= */
+
+.sidebar .menu-title {
+    display: block !important;
+
+    width: 100% !important;
+
+    padding: 22px 28px 12px !important;
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+
+    color: #70849e !important;
+
+    font-size: 11px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 1.8px !important;
+
+    line-height: 1.2 !important;
+
+    text-transform: uppercase !important;
+}
+
+
+/* =========================================================
+   UL
+========================================================= */
+
+.sidebar .menu ul {
+    width: 100% !important;
+
+    display: block !important;
+
+    list-style: none !important;
+
+    padding: 0 0 40px 0 !important;
+    margin: 0 !important;
+}
+
+
+/* =========================================================
+   LI
+========================================================= */
+
+.sidebar .menu ul li {
+    width: 100% !important;
+
+    display: block !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================================
+   MENU LINK
+========================================================= */
+
+.sidebar .menu ul li a {
+    width: calc(100% - 28px) !important;
+
+    height: 50px !important;
+    min-height: 50px !important;
+
+    margin: 2px 14px !important;
+    padding: 0 14px !important;
+
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 16px !important;
+
+    border-radius: 14px !important;
+
+    background: transparent !important;
+
+    color: #dce7f5 !important;
+
+    text-decoration: none !important;
+
+    font-size: 16px !important;
+    font-weight: 400 !important;
+
+    line-height: 1 !important;
+
+    transition:
+        background .18s ease,
+        color .18s ease !important;
+}
+
+
+/* =========================================================
+   ICON
+========================================================= */
+
+.sidebar .menu ul li a > i,
+.sidebar .menu ul li a .nav-icon {
+    width: 22px !important;
+    min-width: 22px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    color: inherit !important;
+
+    font-size: 16px !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* =========================================================
+   TEXT MENU
+========================================================= */
+
+.sidebar .menu ul li a span {
+    color: inherit !important;
+
+    font-size: 16px !important;
+    font-weight: 400 !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   HOVER
+========================================================= */
+
+.sidebar .menu ul li a:hover {
+    background: rgba(255,255,255,.06) !important;
+
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   ACTIVE
+========================================================= */
+
+.sidebar .menu ul li a.active {
+    background: #0878e8 !important;
+
+    color: #ffffff !important;
+
+    font-weight: 500 !important;
+}
+
+
+/* =========================================================
+   ACTIVE ICON + TEXT
+========================================================= */
+
+.sidebar .menu ul li a.active i,
+.sidebar .menu ul li a.active .nav-icon,
+.sidebar .menu ul li a.active span {
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   ACTIVE TIDAK BERUBAH SAAT HOVER
+========================================================= */
+
+.sidebar .menu ul li a.active:hover {
+    background: #0878e8 !important;
+
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   SIDEBAR FOOTER
+========================================================= */
+
+.sidebar .sidebar-footer {
+    width: 100% !important;
+
+    min-height: 65px !important;
+
+    padding: 18px 24px !important;
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    background: #09182c !important;
+
+    border-top: 1px solid rgba(255,255,255,.10) !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.sidebar .sidebar-status {
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 10px !important;
+
+    color: #ffffff !important;
+
+    font-size: 14px !important;
+    font-weight: 400 !important;
+}
+
+
+/* =========================================================
+   STATUS DOT
+========================================================= */
+
+.sidebar .status-dot {
+    width: 10px !important;
+    height: 10px !important;
+
+    min-width: 10px !important;
+    min-height: 10px !important;
+
+    display: inline-block !important;
+
+    background: #19d37a !important;
+
+    border-radius: 50% !important;
+}
+
+
+/* =========================================================
+   PASTIKAN CONTENT TIDAK MENIMPA SIDEBAR
+========================================================= */
+
+body {
+    overflow-x: hidden !important;
+}
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media (min-width: 769px) {
+
+    .sidebar {
+        width: 280px !important;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        width: 260px !important;
+    }
+
+}
+
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.main{
+    margin-left:280px;
+
+    width:calc(100% - 280px);
+
+    min-height:100vh;
+}
+
+
+/* =========================================================
+   TOP HEADER
+   ========================================================= */
+
+.topbar{
+    width:100%;
+    height:104px;
+
+    background:#fff;
+
+    border-bottom:1px solid var(--line);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 34px;
+
+    position:relative;
+    z-index:20;
+}
+
+
+/* LEFT HEADER */
+
+.header-left{
+    display:flex;
+    align-items:center;
+
+    min-width:0;
+}
+
+#pageHeader{
+    min-width:0;
+}
+
+#pageTitle{
+    margin:0;
+    padding:0;
+
+    font-size:34px;
+    line-height:1.15;
+
+    font-weight:750;
+
+    color:#10233f;
+
+    letter-spacing:-.8px;
+
+    white-space:nowrap;
+}
+
+#pageSubtitle{
+    margin:6px 0 0;
+    padding:0;
+
+    font-size:15px;
+    line-height:1.4;
+
+    font-weight:400;
+
+    color:#708198;
+
+    white-space:nowrap;
+}
+
+
+/* RIGHT HEADER */
+
+.header-right{
+    display:flex;
+    align-items:center;
+
+    gap:18px;
+
+    flex-shrink:0;
+}
+
+
+/* SEARCH */
+
+.search{
+    width:320px;
+    height:44px;
+
+    border:1px solid #dce4ee;
+
+    border-radius:13px;
+
+    background:#fff;
+
+    display:flex;
+    align-items:center;
+
+    padding:0 14px;
+
+    color:#8291a5;
+}
+
+.search i{
+    font-size:14px;
+
+    flex-shrink:0;
+}
+
+.search input{
+    width:100%;
+
+    margin-left:8px;
+
+    border:0;
+    outline:0;
+
+    background:transparent;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    color:#33485f;
+}
+
+.search input::placeholder{
+    color:#8291a5;
+}
+
+
+/* NOTIFICATION */
+
+.header-icon{
+    width:42px;
+    height:42px;
+
+    border:0;
+
+    background:#f7f9fc;
+
+    border-radius:12px;
+
+    display:grid;
+    place-items:center;
+
+    color:#52657c;
+
+    cursor:pointer;
+
+    position:relative;
+
+    transition:
+        background .18s ease,
+        color .18s ease;
+}
+
+.header-icon:hover{
+    background:#eef5ff;
+    color:#0878e8;
+}
+
+
+/* PROFILE */
+
+.profile{
+    display:flex;
+    align-items:center;
+
+    gap:12px;
+
+    cursor:pointer;
+}
+
+.avatar{
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+
+    background:#0878e8;
+
+    color:#fff;
+
+    display:grid;
+    place-items:center;
+
+    font-size:16px;
+    font-weight:700;
+
+    flex-shrink:0;
+}
+
+.profile-info{
+    display:flex;
+    flex-direction:column;
+}
+
+.profile strong{
+    display:block;
+
+    font-size:14px;
+    font-weight:700;
+
+    color:#10233f;
+
+    line-height:1.2;
+}
+
+.profile small{
+    display:block;
+
+    margin-top:4px;
+
+    font-size:12px;
+
+    color:var(--muted);
+}
+
+.profile > i{
+    margin-left:3px;
+
+    font-size:11px;
+
+    color:#10233f;
+}
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.content{
+    padding:30px 32px;
+}
+
+
+/* =========================================================
+   BREADCRUMB
+   ========================================================= */
+
+.breadcrumb{
+    font-size:13px;
+
+    color:var(--muted);
+
+    margin-bottom:18px;
+}
+
+.breadcrumb a{
+    color:var(--blue);
+
+    text-decoration:none;
+}
+
+.breadcrumb a:hover{
+    text-decoration:underline;
+}
+
+
+/* =========================================================
+   PAGE HEADING
+   ========================================================= */
+
+.head{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.title{
+    margin:0 0 7px;
+
+    font-size:34px;
+
+    line-height:1.15;
+
+    font-weight:750;
+
+    color:#10233f;
+
+    letter-spacing:-.8px;
+}
+
+.sub{
+    margin:0;
+
+    color:var(--muted);
+
+    font-size:15px;
+}
+
+
+/* =========================================================
+   BUTTON
+   ========================================================= */
+
+.btn{
+    height:42px;
+
+    padding:0 16px;
+
+    border:1px solid #d4deea;
+
+    background:#fff;
+
+    border-radius:9px;
+
+    color:#10233f;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    font-family:inherit;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease;
+}
+
+.btn:hover{
+    background:#f5f8fc;
+}
+
+.btn-primary{
+    background:var(--blue);
+
+    border-color:var(--blue);
+
+    color:#fff;
+}
+
+.btn-primary:hover{
+    background:#066bd1;
+
+    border-color:#066bd1;
+
+    color:#fff;
+}
+
+
+/* =========================================================
+   PROJECT CARD
+   ========================================================= */
+
+.card{
+    background:#fff;
+
+    border:1px solid var(--line);
+
+    border-radius:15px;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 2px 8px rgba(25,48,75,.03);
+}
+
+
+/* TOOLBAR */
+
+.toolbar{
+    padding:18px 20px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:15px;
+}
+
+.toolbar strong{
+    font-size:16px;
+    font-weight:700;
+}
+
+
+/* FILTERS */
+
+.filters{
+    display:flex;
+
+    gap:10px;
+}
+
+.input,
+.select{
+    height:42px;
+
+    border:1px solid #d4deea;
+
+    border-radius:9px;
+
+    padding:0 12px;
+
+    outline:0;
+
+    background:#fff;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+    color:#33485f;
+}
+
+.input{
+    width:250px;
+}
+
+.select{
+    width:135px;
+}
+
+.input:focus,
+.select:focus{
+    border-color:#0878e8;
+
+    box-shadow:
+        0 0 0 3px rgba(8,120,232,.08);
+}
+
+
+/* =========================================================
+   TABLE
+   ========================================================= */
+
+.table-wrap{
+    overflow:auto;
+
+    padding:0 20px 20px;
+}
+
+.table{
+    width:100%;
+
+    border-collapse:collapse;
+}
+
+.table th{
+    background:#f7f9fc;
+
+    color:#71839a;
+
+    font-size:11px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.5px;
+
+    text-align:left;
+
+    padding:14px 12px;
+
+    white-space:nowrap;
+}
+
+.table td{
+    border-top:1px solid var(--line);
+
+    padding:16px 12px;
+
+    font-size:13px;
+
+    color:#10233f;
+
+    vertical-align:middle;
+}
+
+.project-name{
+    font-weight:700;
+}
+
+.company{
+    color:var(--muted);
+
+    font-size:12px;
+
+    margin-top:4px;
+}
+
+
+/* STATUS */
+
+.status{
+    display:inline-flex;
+
+    padding:7px 11px;
+
+    border-radius:999px;
+
+    font-size:11px;
+
+    font-weight:700;
+
+    white-space:nowrap;
+}
+
+.draft{
+    background:#f1f3f6;
+
+    color:#657387;
+}
+
+.scheduled{
+    background:#fff7e6;
+
+    color:#b7791f;
+}
+
+.ongoing{
+    background:#e8faf3;
+
+    color:#0e9f6e;
+}
+
+.completed{
+    background:#edf3ff;
+
+    color:#2865b5;
+}
+
+.cancelled{
+    background:#fff0f0;
+
+    color:#d64545;
+}
+
+
+/* ACTION */
+
+.action{
+    width:36px;
+    height:36px;
+
+    border:1px solid #d7e0eb;
+
+    border-radius:9px;
+
+    background:#fff;
+
+    color:#0878e8;
+
+    font-size:18px;
+
+    cursor:pointer;
+
+    transition:
+        background .18s ease,
+        border-color .18s ease;
+}
+
+.action:hover{
+    background:#eef5ff;
+
+    border-color:#0878e8;
+}
+
+
+/* EMPTY */
+
+.empty{
+    text-align:center;
+
+    color:var(--muted);
+
+    padding:45px;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.modal-backdrop{
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(8,22,40,.48);
+
+    z-index:500;
+
+    align-items:center;
+
+    justify-content:center;
+}
+
+.modal{
+    width:min(700px,94vw);
+
+    max-height:90vh;
+
+    overflow:auto;
+
+    background:#fff;
+
+    border-radius:16px;
+
+    padding:25px;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.2);
+}
+
+
+/* MODAL HEADER */
+
+.modal-head{
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+}
+
+.modal-head h2{
+    margin:0 0 5px;
+
+    font-size:21px;
+}
+
+.modal-head p{
+    margin:0;
+
+    color:#708198;
+
+    font-size:13px;
+}
+
+.close{
+    border:0;
+
+    background:#f3f6f9;
+
+    width:34px;
+    height:34px;
+
+    border-radius:8px;
+
+    font-size:22px;
+
+    color:#66788e;
+
+    cursor:pointer;
+}
+
+.close:hover{
+    background:#e9eef4;
+}
+
+
+/* =========================================================
+   STEPPER
+   ========================================================= */
+
+.stepper{
+    display:grid;
+
+    grid-template-columns:repeat(3,1fr);
+
+    gap:8px;
+
+    margin:24px 0;
+}
+
+.step{
+    display:flex;
+
+    align-items:center;
+
+    gap:9px;
+
+    padding:10px 12px;
+
+    border-bottom:2px solid #e5ebf2;
+
+    color:#8291a5;
+
+    font-size:12px;
+}
+
+.step b{
+    width:25px;
+    height:25px;
+
+    border-radius:50%;
+
+    display:grid;
+    place-items:center;
+
+    background:#edf1f5;
+}
+
+.step.active{
+    color:#0878e8;
+
+    border-color:#0878e8;
+}
+
+.step.active b{
+    background:#0878e8;
+
+    color:#fff;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.form-step{
+    display:none;
+
+    min-height:190px;
+}
+
+.form-step.active{
+    display:block;
+}
+
+.form-grid{
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:15px;
+}
+
+.field{
+    margin-bottom:15px;
+}
+
+.field.full{
+    grid-column:1/-1;
+}
+
+.field label{
+    display:block;
+
+    font-size:12px;
+
+    font-weight:650;
+
+    margin-bottom:7px;
+}
+
+.field input,
+.field select{
+    width:100%;
+
+    height:43px;
+
+    border:1px solid #d4deea;
+
+    border-radius:9px;
+
+    padding:0 12px;
+
+    outline:0;
+
+    font-family:inherit;
+
+    background:#fff;
+}
+
+.field input:focus,
+.field select:focus{
+    border-color:#0878e8;
+
+    box-shadow:
+        0 0 0 3px rgba(8,120,232,.08);
+}
+
+
+/* NOTICE */
+
+.notice{
+    background:#f4f8fd;
+
+    border:1px solid #e2ebf5;
+
+    border-radius:10px;
+
+    padding:13px;
+
+    font-size:12px;
+
+    color:#60748c;
+
+    line-height:1.5;
+}
+
+
+/* REVIEW */
+
+.review{
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    border:1px solid #e4eaf1;
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+    margin-bottom:15px;
+}
+
+.review div{
+    padding:15px;
+
+    border-bottom:1px solid #e4eaf1;
+}
+
+.review div:nth-child(odd){
+    border-right:1px solid #e4eaf1;
+}
+
+.review span{
+    display:block;
+
+    color:#708198;
+
+    font-size:11px;
+
+    margin-bottom:5px;
+}
+
+.review strong{
+    font-size:13px;
+}
+
+
+/* MODAL FOOTER */
+
+.modal-foot{
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-top:20px;
+
+    padding-top:18px;
+
+    border-top:1px solid #e5ebf2;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media(max-width:1100px){
+
+    .search{
+        width:260px;
+    }
+
+    .header-right{
+        gap:12px;
+    }
+
+}
+
+@media(max-width:900px){
+
+    .sidebar{
+        width:220px;
+    }
+
+    .main{
+        margin-left:220px;
+
+        width:calc(100% - 220px);
+    }
+
+    .topbar{
+        padding:0 24px;
+    }
+
+    #pageTitle{
+        font-size:30px;
+    }
+
+    .search{
+        width:220px;
+    }
+
+    .filters{
+        flex-wrap:wrap;
+    }
+
+    .input{
+        width:200px;
+    }
+
+}
+
+@media(max-width:760px){
+
+    .sidebar{
+        display:none;
+    }
+
+    .main{
+        margin-left:0;
+
+        width:100%;
+    }
+
+    .topbar{
+        height:auto;
+
+        min-height:90px;
+
+        padding:18px 20px;
+
+        gap:20px;
+
+        flex-wrap:wrap;
+    }
+
+    .header-left{
+        width:100%;
+    }
+
+    .header-right{
+        width:100%;
+
+        justify-content:flex-end;
+    }
+
+    .search{
+        flex:1;
+
+        max-width:320px;
+    }
+
+    .content{
+        padding:22px 15px;
+    }
+
+    .head{
+        flex-direction:column;
+
+        gap:15px;
+    }
+
+    .toolbar{
+        align-items:flex-start;
+
+        flex-direction:column;
+    }
+
+    .filters{
+        width:100%;
+    }
+
+    .input,
+    .select{
+        width:100%;
+    }
+
+    .form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .field.full{
+        grid-column:auto;
+    }
+
+    .review{
+        grid-template-columns:1fr;
+    }
+
+    .review div:nth-child(odd){
+        border-right:0;
+    }
+
+    .header-user-name,
+    .header-user-role{
+        display:none;
+    }
+
+}
+
+/* =========================================================
+   SIDEBAR ASSESSMENT PROJECT
+   SAMAKAN DENGAN DASHBOARD
+   ========================================================= */
+
+.sidebar {
+    width: 280px !important;
+    height: 100vh !important;
+
+    background: #09182c !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    box-sizing: border-box !important;
+}
+
+
+/* =========================================================
+   BRAND
+   ========================================================= */
+
+.sidebar .brand {
+    width: 100% !important;
+    height: 120px !important;
+    min-height: 120px !important;
+
+    padding: 0 24px !important;
+    margin: 0 !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 16px !important;
+
+    box-sizing: border-box !important;
+
+    border-bottom: 1px solid rgba(255,255,255,.10) !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.sidebar .brand-logo {
+    width: 58px !important;
+    height: 58px !important;
+
+    min-width: 58px !important;
+    min-height: 58px !important;
+
+    border-radius: 14px !important;
+
+    background: #0878e8 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    color: #ffffff !important;
+
+    font-size: 20px !important;
+    font-weight: 800 !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* =========================================================
+   BRAND TITLE
+   ========================================================= */
+
+.sidebar .brand-title {
+    font-size: 26px !important;
+    font-weight: 750 !important;
+
+    line-height: 1.1 !important;
+
+    color: #ffffff !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   BRAND VERSION
+   ========================================================= */
+
+.sidebar .brand-version {
+    margin-top: 5px !important;
+
+    font-size: 13px !important;
+
+    color: #58a9ff !important;
+
+    line-height: 1.2 !important;
+}
+
+
+/* =========================================================
+   SIDEBAR BODY
+   ========================================================= */
+
+.sidebar .sidebar-body {
+    width: 100% !important;
+
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255,255,255,.25) transparent !important;
+
+    box-sizing: border-box !important;
+}
+
+/* =========================================================
+   MENU
+   ========================================================= */
+
+.sidebar .menu {
+    width: 100% !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+
+/* =========================================================
+   MENU TITLE
+   ========================================================= */
+
+.sidebar .menu-title {
+    padding: 22px 28px 12px !important;
+
+    font-size: 11px !important;
+    font-weight: 700 !important;
+
+    letter-spacing: 1.8px !important;
+
+    color: #70849e !important;
+
+    line-height: 1.2 !important;
+}
+
+
+/* =========================================================
+   UL
+   ========================================================= */
+
+.sidebar .menu ul {
+    width: 100% !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+
+    list-style: none !important;
+}
+
+
+/* =========================================================
+   LI
+   ========================================================= */
+
+.sidebar .menu ul li {
+    width: 100% !important;
+
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+
+/* =========================================================
+   MENU LINK
+   ========================================================= */
+
+.sidebar .menu ul li a {
+    width: calc(100% - 28px) !important;
+
+    height: 50px !important;
+    min-height: 50px !important;
+
+    margin: 2px 14px !important;
+
+    padding: 0 14px !important;
+
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 16px !important;
+
+    border-radius: 14px !important;
+
+    background: transparent !important;
+
+    color: #dce7f5 !important;
+
+    text-decoration: none !important;
+
+    font-size: 16px !important;
+    font-weight: 400 !important;
+
+    line-height: 1 !important;
+}
+
+
+/* =========================================================
+   ICON
+   ========================================================= */
+
+.sidebar .menu ul li a > i,
+.sidebar .menu ul li a .nav-icon {
+    width: 22px !important;
+    min-width: 22px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 16px !important;
+
+    color: inherit !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* =========================================================
+   TEXT
+   ========================================================= */
+
+.sidebar .menu ul li a span {
+    font-size: 16px !important;
+    font-weight: 400 !important;
+
+    color: inherit !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* =========================================================
+   HOVER
+   ========================================================= */
+
+.sidebar .menu ul li a:hover {
+    background: rgba(255,255,255,.06) !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   ACTIVE
+   ========================================================= */
+
+.sidebar .menu ul li a.active {
+    background: #0878e8 !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   ACTIVE HOVER
+   ========================================================= */
+
+.sidebar .menu ul li a.active:hover {
+    background: #0878e8 !important;
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.sidebar .sidebar-footer {
+    width: 100% !important;
+
+    min-height: 65px !important;
+
+    padding: 18px 24px !important;
+    margin: 0 !important;
+
+    box-sizing: border-box !important;
+
+    display: flex !important;
+    align-items: center !important;
+
+    background: #09182c !important;
+
+    border-top: 1px solid rgba(255,255,255,.10) !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* =========================================================
+   ONLINE
+   ========================================================= */
+
+.sidebar .sidebar-status {
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 10px !important;
+
+    font-size: 14px !important;
+
+    color: #ffffff !important;
+}
+
+
+.sidebar .status-dot {
+    width: 10px !important;
+    height: 10px !important;
+
+    min-width: 10px !important;
+    min-height: 10px !important;
+
+    background: #19d37a !important;
+
+    border-radius: 50% !important;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+   ========================================================= */
+
+.sidebar .sidebar-body::-webkit-scrollbar {
+    width: 7px !important;
+}
+
+.sidebar .sidebar-body::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.sidebar .sidebar-body::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.25) !important;
+    border-radius: 10px !important;
+}
+
+.sidebar .sidebar-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,.40) !important;
+}
+
+/* =========================================================
+   FINAL ADJUSTMENT - SIDEBAR
+   ========================================================= */
+
+/* Tulisan menu */
+.sidebar .menu ul li a,
+.sidebar .menu ul li a span {
+    font-size: 17px !important;
+}
+
+/* Sedikit lebih tebal seperti Dashboard */
+.sidebar .menu ul li a {
+    font-weight: 400 !important;
+}
+
+/* Jarak antar menu sedikit diperbesar */
+.sidebar .menu ul li a {
+    height: 52px !important;
+    min-height: 52px !important;
+    margin: 3px 14px !important;
+}
+
+/* Icon ikut sedikit diperbesar */
+.sidebar .menu ul li a > i,
+.sidebar .menu ul li a .nav-icon {
+    font-size: 17px !important;
+}
+
+/* Jarak logo dengan tulisan */
+.sidebar .brand {
+    gap: 17px !important;
+}
+
+/* Tulisan TalentScope */
+.sidebar .brand-title {
+    font-size: 27px !important;
+}
+
+/* Version */
+.sidebar .brand-version {
+    font-size: 13px !important;
+}
+
+/* =========================================================
+   USER HEADER - FIX
+   ========================================================= */
+
+.header-user {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+
+/* Trigger harus tetap SATU BARIS */
+
+.header-user-trigger {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+
+    cursor: pointer;
+}
+
+
+/* Avatar */
+
+.header-avatar {
+    flex-shrink: 0;
+}
+
+
+/* Informasi user */
+
+.header-user-info {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* Nama */
+
+.header-user-name {
+    white-space: nowrap !important;
+}
+
+
+/* Role */
+
+.header-user-role {
+    white-space: nowrap !important;
+}
+
+
+/* Panah */
+
+.arrow-icon {
+    flex-shrink: 0 !important;
+}
+
+
+/* ==========================================================
+   HEADER USER
+   ========================================================== */
+
+.header-user {
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+
+/* User trigger */
+
+.header-user-trigger {
+    display: flex !important;
+    align-items: center !important;
+
+    gap: 10px !important;
+
+    cursor: pointer;
+
+    position: relative;
+}
+
+
+/* Avatar */
+
+.header-avatar {
+    width: 42px !important;
+    height: 42px !important;
+
+    border-radius: 50% !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* User information */
+
+.header-user-info {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    justify-content: center !important;
+
+    line-height: 1.2 !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* Name */
+
+.header-user-name {
+    white-space: nowrap !important;
+}
+
+
+/* Role */
+
+.header-user-role {
+    white-space: nowrap !important;
+}
+
+
+/* Arrow */
+
+.arrow-icon {
+    flex-shrink: 0 !important;
+
+    transition: transform .2s ease;
+}
+
+.head{
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.head-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.btn-danger{
+    color:#dc2626;
+    background:#fff;
+    border-color:#fecaca;
+}
+
+.btn-danger:hover{
+    color:#b91c1c;
+    background:#fef2f2;
+    border-color:#fca5a5;
+}
+
+.btn-danger:disabled{
+    color:#94a3b8;
+    background:#f8fafc;
+    border-color:#dbe3ec;
+    cursor:not-allowed;
+    opacity:.75;
+}
+
+.btn i{
+    margin-right:7px;
+}
+
+/* ==========================================================
+   DROPDOWN
+   ========================================================== */
+
+#userDropdown .dropdown-menu {
+    position: absolute !important;
+
+    top: calc(100% + 10px) !important;
+
+    right: 0 !important;
+
+    left: auto !important;
+
+    width: 180px !important;
+
+    display: none !important;
+
+    flex-direction: column !important;
+
+    padding: 0 !important;
+
+    margin: 0 !important;
+
+    background: #ffffff !important;
+
+    border: 1px solid #e2e8f0 !important;
+
+    border-radius: 12px !important;
+
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.12) !important;
+
+    overflow: hidden !important;
+
+    z-index: 99999 !important;
+}
+
+
+/* DROPDOWN TERBUKA */
+
+#userDropdown .dropdown-menu.show {
+    display: flex !important;
+}
+
+
+/* ==========================================================
+   DROPDOWN ITEM
+   ========================================================== */
+
+#userDropdown .dropdown-item {
+    display: flex !important;
+
+    align-items: center !important;
+
+    gap: 10px !important;
+
+    width: 100% !important;
+
+    min-height: 52px !important;
+
+    padding: 0 16px !important;
+
+    box-sizing: border-box !important;
+
+    background: #ffffff !important;
+
+    color: #475569 !important;
+
+    text-decoration: none !important;
+
+    font-size: 14px !important;
+
+    font-weight: 500 !important;
+}
+
+
+/* icon */
+
+#userDropdown .dropdown-item i {
+    width: 18px !important;
+
+    text-align: center !important;
+
+    color: #64748b !important;
+
+    font-size: 14px !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* ==========================================================
+   SETTINGS HOVER = BIRU
+   ========================================================== */
+
+#userDropdown .dropdown-item:not(.logout-item):hover {
+    background: #eff6ff !important;
+
+    color: #2563eb !important;
+}
+
+#userDropdown .dropdown-item:not(.logout-item):hover i {
+    color: #2563eb !important;
+}
+
+
+/* ==========================================================
+   DIVIDER
+   ========================================================== */
+
+#userDropdown .dropdown-divider {
+    width: 100% !important;
+
+    height: 1px !important;
+
+    min-height: 1px !important;
+
+    margin: 0 !important;
+
+    padding: 0 !important;
+
+    background: #e2e8f0 !important;
+}
+
+
+/* ==========================================================
+   LOGOUT HOVER = MERAH
+   ========================================================== */
+
+#userDropdown .logout-item:hover {
+    background: #fef2f2 !important;
+
+    color: #dc2626 !important;
+}
+
+#userDropdown .logout-item:hover i {
+    color: #dc2626 !important;
+}
+
+
+/* Arrow ketika dropdown terbuka */
+
+#userDropdown.open .arrow-icon {
+    transform: rotate(180deg);
+}
+
+/* ==========================================================
+   HEADER USER - SAMAKAN DENGAN ASSESSMENT CATALOG
+   ========================================================== */
+
+#userDropdown {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+
+/* Area yang diklik */
+
+#userDropdown .header-user-trigger {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+
+    cursor: pointer;
+
+    height: 52px;
+
+    padding: 0;
+
+    white-space: nowrap;
+}
+
+
+/* ==========================================================
+   AVATAR
+   ========================================================== */
+
+#userDropdown .header-avatar {
+    width: 42px !important;
+    height: 42px !important;
+
+    min-width: 42px !important;
+    min-height: 42px !important;
+
+    border-radius: 50% !important;
+
+    background: #0F7FEF !important;
+
+    color: #FFFFFF !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    font-size: 16px !important;
+    font-weight: 600 !important;
+
+    line-height: 1 !important;
+
+    flex-shrink: 0 !important;
+}
+
+
+/* ==========================================================
+   USER INFO
+   ========================================================== */
+
+#userDropdown .header-user-info {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    justify-content: center !important;
+
+    gap: 2px !important;
+
+    line-height: 1.15 !important;
+
+    white-space: nowrap !important;
+}
+
+
+/* Nama Administrator */
+
+#userDropdown .header-user-name {
+   font-weight: 650;
+    color: #0F172A;
+    font-size: 17px;
+}
+
+
+/* System Admin */
+
+#userDropdown .header-user-role {
+    font-size: 12px;
+    color: #64748B;
+}
+
+
+/* ==========================================================
+   CHEVRON
+   ========================================================== */
+
+#userDropdown .arrow-icon {
+    margin-left: 4px !important;
+
+    font-size: 14px !important;
+
+    color: #0F172A !important;
+
+    flex-shrink: 0 !important;
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+<aside class="sidebar">
+
+    <!-- BRAND -->
+    <div class="brand">
+
+        <div class="brand-logo">
+            TS
+        </div>
+
+        <div class="brand-info">
+
+            <div class="brand-title">
+                TalentScope
+            </div>
+
+            <div class="brand-version">
+                Enterprise v1.0
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- SIDEBAR BODY -->
+    <div class="sidebar-body">
+
+        <nav class="menu">
+
+            <div class="menu-title">
+                MAIN MENU
+            </div>
+
+
+            <ul>
+
+                <!-- DASHBOARD -->
+                <li>
+                    <a href="dashboard.html">
+
+                        <i class="fa-solid fa-house"></i>
+
+                        <span>
+                            Dashboard
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <!-- ASSESSMENT CATALOG -->
+                <li>
+                    <a href="assessment-catalog.html">
+
+                        <i class="fa-solid fa-layer-group"></i>
+
+                        <span>
+                            Assessment Catalog
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <!-- ASSESSMENT PROJECT -->
+                <li>
+                    <a href="assessment-project.html">
+
+                        <i class="fa-solid fa-folder-open"></i>
+
+                        <span>
+                            Assessment Project
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <!-- ASSESSMENT DETAIL -->
+                <li>
+                    <a href="project-detail.html">
+
+                        <i class="fa-solid fa-list-check"></i>
+
+                        <span>
+                            Assessment Detail
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <!-- PARTICIPANTS -->
+                <li>
+                    <a href="participants.html">
+
+                        <i class="fa-solid fa-users"></i>
+
+                        <span>
+                            Participants
+                        </span>
+
+                    </a>
+                </li>
+
+
+                
+                <!-- PROJECT ACCESS -->
+                <li>
+                    <a href="projects.html">
+
+                        <i class="fa-solid fa-key"></i>
+
+                        <span>
+                            Project Access
+                        </span>
+
+                    </a>
+                </li>
+
+
+                <!-- TEST BANK -->
+                <li>
+                    <a href="test-bank.html">
+
+                        <i class="fa-solid fa-file-circle-question"></i>
+
+                        <span>
+                            Test Bank
+                        </span>
+
+                    </a>
+                </li>
+
+            </ul>
+
+        </nav>
+
+    </div>
+
+
+    <!-- FOOTER -->
+    <div class="sidebar-footer">
+
+        <div class="sidebar-status">
+
+            <span class="status-dot"></span>
+
+            <span>
+                Online
+            </span>
+
+        </div>
+
+    </div>
+
+</aside>
+
+
+
+<!-- =====================================================
+     MAIN
+     ===================================================== -->
+
+<main class="main">
+
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header class="topbar">
+
+
+    <!-- HEADER LEFT -->
+
+    <div class="header-left">
+
+        <div id="pageHeader">
+
+            <h1 id="pageTitle">
+                Assessment Project
+            </h1>
+
+            <p id="pageSubtitle">
+                Monitor and manage assessment projects
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- HEADER RIGHT -->
+
+    <div class="header-right">
+
+
+        <!-- SEARCH -->
+
+<div class="search global-search">
+
+    <i class="fa-solid fa-magnifying-glass"></i>
+
+    <input
+        type="text"
+        id="globalSearchInput"
+        placeholder="Search participants, assessments..."
+        autocomplete="off"
+    >
+
+    <div
+        id="globalSearchSuggestions"
+        class="global-search-suggestions"
+    ></div>
+
+</div>
+
+
+                <div class="header-user" id="userDropdown">
+
+    <div class="header-user-trigger" id="dropdownTrigger">
+
+        <div class="header-avatar">
+            A
+        </div>
+
+        <div class="header-user-info">
+            <div class="header-user-name">
+                Administrator
+            </div>
+
+            <div class="header-user-role">
+                System Admin
+            </div>
+        </div>
+
+        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+
+    </div>
+
+    <div class="dropdown-menu" id="dropdownMenu">
+
+        <a href="settings.html" class="dropdown-item">
+            <i class="fa-solid fa-gear"></i>
+            <span>Settings</span>
+        </a>
+
+        <div class="dropdown-divider"></div>
+
+        <a href="#" class="dropdown-item logout-item" id="logoutBtn">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Log Out</span>
+        </a>
+
+    </div>
+
+</div>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     PAGE CONTENT
+     ===================================================== -->
+
+<div class="content">
+
+    <div class="breadcrumb">
+        <a href="assessment-catalog.html">Assessment Catalog</a>
+        &nbsp;›&nbsp;
+        <span>Assessment Project</span>
+    </div>
+
+    <div class="head">
+        <div class="head">
+
+    <div class="head-actions">
+
+        <button
+            class="btn btn-danger"
+            id="removeProjectBtn"
+            type="button"
+            disabled
+        >
+            <i class="fa-solid fa-trash"></i>
+            Remove Project
+        </button>
+
+        <button
+            class="btn btn-primary"
+            id="createBtn"
+            type="button"
+        >
+            + Create Project
+        </button>
+
+    </div>
+
+</div>
+
+    
+    </div>
+
+
+    <!-- =================================================
+         PROJECT CARD
+         ================================================= -->
+
+    <section class="card">
+
+
+        <!-- TOOLBAR -->
+
+        <div class="toolbar">
+
+            <strong>
+                Projects
+            </strong>
+
+
+            <div class="filters">
+
+                <input
+                    id="search"
+                    class="input"
+                    placeholder="Search project..."
+                >
+
+
+                <select
+                    id="statusFilter"
+                    class="select"
+                >
+
+                    <option>
+                        All Status
+                    </option>
+
+                    <option>
+                        Draft
+                    </option>
+
+                    <option>
+                        Scheduled
+                    </option>
+
+                    <option>
+                        Ongoing
+                    </option>
+
+                    <option>
+                        Completed
+                    </option>
+
+                    <option>
+                        Cancelled
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TABLE -->
+
+        <div class="table-wrap">
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+        <th style="width: 50px; text-align: center;">
+            <input type="checkbox" id="selectAllProjects">
+        </th>
+
+                        <th>
+                            Project
+                        </th>
+
+                        <th>
+                            Company
+                        </th>
+
+                        <th>
+                            Type
+                        </th>
+
+                        <th>
+                            Schedule
+                        </th>
+
+                        <th>
+                            Participants
+                        </th>
+
+                        <th>
+                            Status
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="rows"></tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+</div>
+
+</main>
+
+</div>
+
+
+
+<!-- =====================================================
+     CREATE PROJECT MODAL
+     ===================================================== -->
+
+<div
+    class="modal-backdrop"
+    id="projectModal"
+>
+
+
+    <div class="modal">
+
+
+        <!-- MODAL HEADER -->
+
+        <div class="modal-head">
+
+            <div>
+
+                <h2 id="modalTitle">
+                    Create Assessment Project
+                </h2>
+
+                <p>
+                    Configure the project before adding participants and assessments.
+                </p>
+
+            </div>
+
+
+            <button
+                class="close"
+                id="closeModal"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+
+        <!-- STEPPER -->
+
+        <div class="stepper">
+
+            <div class="step active">
+
+                <b>
+                    1
+                </b>
+
+                <span>
+                    Project
+                </span>
+
+            </div>
+
+
+            <div class="step">
+
+                <b>
+                    2
+                </b>
+
+                <span>
+                    Schedule
+                </span>
+
+            </div>
+
+
+            <div class="step">
+
+                <b>
+                    3
+                </b>
+
+                <span>
+                    Review
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             STEP 1
+             ================================================= -->
+
+        <div
+            class="form-step active"
+            id="step1"
+        >
+
+            <div class="form-grid">
+
+
+                <div class="field full">
+
+                    <label>
+                        Project Name *
+                    </label>
+
+                    <input
+                        id="pName"
+                        placeholder="e.g. Recruitment Assessment Batch 01"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        Company / Client *
+                    </label>
+
+                    <input
+                        id="pCompany"
+                        placeholder="Company name"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        Project Type *
+                    </label>
+
+                    <select id="pType">
+
+                        <option>
+                            Recruitment
+                        </option>
+
+                        <option>
+                            Development
+                        </option>
+
+                        <option>
+                            Promotion
+                        </option>
+
+                        <option>
+                            Assessment
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             STEP 2
+             ================================================= -->
+
+        <div
+            class="form-step"
+            id="step2"
+        >
+
+            <div class="form-grid">
+
+
+                <div class="field">
+
+                    <label>
+                        Start Date *
+                    </label>
+
+                    <input
+                        id="pStart"
+                        type="date"
+                    >
+
+                </div>
+
+
+                <div class="field">
+
+                    <label>
+                        End Date *
+                    </label>
+
+                    <input
+                        id="pEnd"
+                        type="date"
+                    >
+
+                </div>
+
+
+            </div>
+
+
+            <div class="notice">
+
+                Project yang dibuat disimpan sebagai Draft.
+                Project belum terlihat oleh peserta sampai administrator
+                menekan Publish Project.
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             STEP 3
+             ================================================= -->
+
+        <div
+            class="form-step"
+            id="step3"
+        >
+
+            <div class="review">
+
+
+                <div>
+
+                    <span>
+                        Project
+                    </span>
+
+                    <strong id="rName">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Company
+                    </span>
+
+                    <strong id="rCompany">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Type
+                    </span>
+
+                    <strong id="rType">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Schedule
+                    </span>
+
+                    <strong id="rSchedule">
+                        -
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Initial Status
+                    </span>
+
+                    <strong>
+                        Draft
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+            <div class="notice">
+
+                Setelah dibuat, project akan masuk ke Assessment Project
+                dan otomatis membuka Project Detail.
+
+            </div>
+
+        </div>
+
+
+
+        <!-- MODAL FOOTER -->
+
+        <div class="modal-foot">
+
+            <button
+                class="btn"
+                id="prevStep"
+            >
+                Back
+            </button>
+
+
+            <div>
+
+                <button
+                    class="btn"
+                    id="cancelProject"
+                >
+                    Cancel
+                </button>
+
+
+                <button
+                    class="btn btn-primary"
+                    id="nextStep"
+                >
+                    Continue
+                </button>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+/* =========================================================
+   SIDEBAR ACTIVE MENU
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", function () {
+
+    const currentPage =
+        window.location.pathname.split("/").pop() || "dashboard.html";
+
+    document.querySelectorAll(".sidebar .menu a").forEach(function (link) {
+
+        link.classList.remove("active");
+
+        const parent = link.closest("li");
+
+        if (parent) {
+            parent.classList.remove("active");
+        }
+
+        const href = link.getAttribute("href") || "";
+
+        const hrefPage = href
+            .split("?")[0]
+            .split("#")[0]
+            .split("/")
+            .pop();
+
+        if (hrefPage === currentPage) {
+
+            link.classList.add("active");
+
+            if (parent) {
+                parent.classList.add("active");
+            }
+
+        }
+
+    });
+
+});
+
+
+/* =========================================================
+   DEFAULT PROJECT DATA
+   ========================================================= */
+
+const fallback = [
+
+    {
+        id:"by",
+        name:"by",
+        company:"-",
+        type:"Recruitment",
+        start:"2026-08-08",
+        end:"2026-08-09",
+        status:"Draft",
+
+        participants:[
+            {
+                id:"EMP001",
+                name:"Budi Santoso",
+                email:"budi@company.com",
+                position:"Manager",
+                status:"Not Started"
+            },
+            {
+                id:"EMP002",
+                name:"Siti Rahma",
+                email:"siti@company.com",
+                position:"Staff",
+                status:"Not Started"
+            }
+        ],
+
+        assessments:[
+            "Verbal Reasoning",
+            "Personality Assessment"
+        ]
+    },
+
+
+    {
+        id:"wwwweee",
+        name:"wwwweee",
+        company:"rew",
+        type:"Recruitment",
+        start:"2028-09-08",
+        end:"2029-10-08",
+        status:"Draft",
+
+        participants:[
+            {
+                id:"EMP003",
+                name:"Andi Wijaya",
+                email:"andi@company.com",
+                position:"Staff",
+                status:"Not Started"
+            },
+            {
+                id:"EMP004",
+                name:"Rina Putri",
+                email:"rina@company.com",
+                position:"Supervisor",
+                status:"Not Started"
+            }
+        ],
+
+        assessments:[
+            "Numerical Reasoning",
+            "Personality Assessment"
+        ]
+    }
+
+];
+
+
+/* =========================================================
+   LOCAL STORAGE
+   ========================================================= */
+
+function get(){
+
+    try{
+
+        const x = localStorage.getItem(
+            "talentscope_projects"
+        );
+
+        // IMPORTANT:
+        // Missing project storage means there are no persisted projects.
+        // Never substitute fallback/dummy projects into real storage.
+        if(x === null){
+            return [];
+        }
+
+        const parsed = JSON.parse(x);
+
+        return Array.isArray(parsed)
+            ? parsed
+            : [];
+
+    }catch(e){
+
+        console.error(
+            "TalentScope: gagal membaca talentscope_projects.",
+            e
+        );
+
+        return [];
+
+    }
+
+}
+
+
+function set(x){
+
+    localStorage.setItem(
+        "talentscope_projects",
+        JSON.stringify(x)
+    );
+
+}
+
+
+/* =========================================================
+   PROJECT STATUS
+   ========================================================= */
+
+function lifecycle(p){
+
+    if(
+        p.status === "Draft" ||
+        p.status === "Cancelled"
+    ){
+
+        return p.status;
+
+    }
+
+
+    let n = new Date();
+
+    n.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    let s = new Date(
+        p.start + "T00:00:00"
+    );
+
+
+    let e = new Date(
+        p.end + "T23:59:59"
+    );
+
+
+    let participants =
+        p.participants || [];
+
+
+    let all =
+        participants.length &&
+        participants.every(
+            x => x.status === "Completed"
+        );
+
+
+    return all || n > e
+        ? "Completed"
+        : n >= s && n <= e
+        ? "Ongoing"
+        : "Scheduled";
+
+}
+
+
+/* =========================================================
+   DATE FORMAT
+   ========================================================= */
+
+function fmt(x){
+
+    return new Date(
+        x + "T00:00:00"
+    ).toLocaleDateString(
+        "en-GB",
+        {
+            day:"2-digit",
+            month:"short",
+            year:"numeric"
+        }
+    );
+
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
+
+function esc(x){
+
+    return String(
+        x ?? ""
+    ).replace(
+        /[&<>"']/g,
+        m => ({
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+        }[m])
+    );
+
+}
+
+
+/* =========================================================
+   RENDER PROJECT TABLE
+   ========================================================= */
+
+function render(){
+
+    const storageExists =
+        localStorage.getItem(
+            "talentscope_projects"
+        ) !== null;
+
+    let data =
+        get().map(
+            p => ({
+                ...p,
+                status:lifecycle(p)
+            })
+        );
+
+    // Only persist calculated lifecycle status when the real
+    // project storage already exists. Never create/overwrite it
+    // from fallback data during page initialization.
+    if(storageExists){
+        set(data);
+    }
+
+
+    let q =
+        document
+        .getElementById("search")
+        .value
+        .toLowerCase();
+
+
+    let f =
+        document
+        .getElementById("statusFilter")
+        .value;
+
+
+    let list =
+        data.filter(
+            p =>
+                (
+                    !q ||
+                    [
+                        p.name,
+                        p.company,
+                        p.type
+                    ]
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(q)
+                )
+                &&
+                (
+                    f === "All Status" ||
+                    p.status === f
+                )
+        );
+
+
+    document.getElementById(
+        "rows"
+    ).innerHTML = list.length
+
+        ? list.map(
+            p => `
+
+            <tr>
+
+    <td style="text-align:center;">
+        <input
+            type="checkbox"
+            class="project-checkbox"
+            value="${esc(p.id)}"
+        >
+    </td>
+
+    <td>
+
+        <div class="project-name">
+            ${esc(p.name)}
+        </div>
+
+        <div class="company">
+            ID: ${esc(p.id)}
+        </div>
+
+    </td>
+
+
+                <td>
+                    ${esc(p.company)}
+                </td>
+
+
+                <td>
+                    ${esc(p.type)}
+                </td>
+
+
+                <td>
+                    ${fmt(p.start)}
+                    -
+                    ${fmt(p.end)}
+                </td>
+
+
+                <td>
+                    ${(p.participants || []).length}
+                </td>
+
+
+                <td>
+
+                    <span class="status ${p.status.toLowerCase()}">
+                        ${esc(p.status)}
+                    </span>
+
+                </td>
+
+
+                <td>
+
+                    <button
+                        class="action"
+                        title="Open Project Detail"
+                        onclick="openProject('${esc(p.id)}')"
+                    >
+                        →
+                    </button>
+
+                </td>
+
+            </tr>
+
+            `
+        ).join("")
+
+        :
+
+        `
+        <tr>
+
+            <td
+                colspan="8"
+                class="empty"
+            >
+                No assessment projects found.
+            </td>
+
+        </tr>
+        `;
+
+}
+
+/* =========================================================
+   SELECT ALL PROJECTS
+   ========================================================= */
+
+document.addEventListener("change", function(e){
+
+    if(e.target.id === "selectAllProjects"){
+
+        document
+            .querySelectorAll(".project-checkbox")
+            .forEach(function(cb){
+
+                cb.checked = e.target.checked;
+
+            });
+
+    }
+
+});
+
+
+/* =========================================================
+   REMOVE SELECTED PROJECTS
+   ========================================================= */
+
+document
+    .getElementById("removeProjectBtn")
+    .addEventListener("click", function(){
+
+        const selected =
+            Array.from(
+                document.querySelectorAll(".project-checkbox:checked")
+            ).map(function(cb){
+
+                return cb.value;
+
+            });
+
+
+        if(selected.length === 0){
+
+            alert("Silakan pilih project yang ingin dihapus.");
+
+            return;
+
+        }
+
+
+        const confirmDelete =
+            confirm(
+                "Apakah Anda yakin ingin menghapus " +
+                selected.length +
+                " project?"
+            );
+
+
+        if(!confirmDelete){
+
+            return;
+
+        }
+
+
+        const data = get();
+
+
+        const remaining =
+            data.filter(function(project){
+
+                return !selected.includes(
+                    String(project.id)
+                );
+
+            });
+
+
+        set(remaining);
+
+
+        document.getElementById(
+            "selectAllProjects"
+        ).checked = false;
+
+
+        render();
+
+    });
+
+/* =========================================================
+   OPEN PROJECT DETAIL
+   ========================================================= */
+
+function openProject(id){
+
+    location.href =
+        "project-detail.html?id=" +
+        encodeURIComponent(id);
+
+}
+
+
+/* =========================================================
+   SEARCH / FILTER
+   ========================================================= */
+
+document
+    .getElementById("search")
+    .addEventListener(
+        "input",
+        render
+    );
+
+
+document
+    .getElementById("statusFilter")
+    .addEventListener(
+        "change",
+        render
+    );
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+let currentStep = 1;
+
+const modal =
+    document.getElementById(
+        "projectModal"
+    );
+
+
+/* =========================================================
+   OPEN CREATE MODAL
+   ========================================================= */
+
+function openCreate(){
+
+    currentStep = 1;
+
+
+    document.getElementById(
+        "pName"
+    ).value = "";
+
+
+    document.getElementById(
+        "pCompany"
+    ).value = "";
+
+
+    document.getElementById(
+        "pType"
+    ).value = "Recruitment";
+
+
+    let d = new Date();
+
+
+    d.setMinutes(
+        d.getMinutes() -
+        d.getTimezoneOffset()
+    );
+
+
+    let s =
+        d.toISOString()
+        .slice(0,10);
+
+
+    document.getElementById(
+        "pStart"
+    ).value = s;
+
+
+    document.getElementById(
+        "pEnd"
+    ).value = s;
+
+
+    updateStep();
+
+
+    modal.style.display = "flex";
+
+}
+
+
+/* =========================================================
+   CLOSE MODAL
+   ========================================================= */
+
+function closeCreate(){
+
+    modal.style.display = "none";
+
+}
+
+
+/* =========================================================
+   UPDATE STEP
+   ========================================================= */
+
+function updateStep(){
+
+    document
+        .querySelectorAll(".form-step")
+        .forEach(
+            (x,i) => {
+
+                x.classList.toggle(
+                    "active",
+                    i === currentStep - 1
+                );
+
+            }
+        );
+
+
+    document
+        .querySelectorAll(".step")
+        .forEach(
+            (x,i) => {
+
+                x.classList.toggle(
+                    "active",
+                    i === currentStep - 1
+                );
+
+            }
+        );
+
+
+    document.getElementById(
+        "prevStep"
+    ).style.visibility =
+        currentStep === 1
+            ? "hidden"
+            : "visible";
+
+
+    document.getElementById(
+        "nextStep"
+    ).textContent =
+        currentStep === 3
+            ? "Create Project"
+            : "Continue";
+
+
+    if(currentStep === 3){
+
+        document.getElementById(
+            "rName"
+        ).textContent =
+            document.getElementById(
+                "pName"
+            ).value || "-";
+
+
+        document.getElementById(
+            "rCompany"
+        ).textContent =
+            document.getElementById(
+                "pCompany"
+            ).value || "-";
+
+
+        document.getElementById(
+            "rType"
+        ).textContent =
+            document.getElementById(
+                "pType"
+            ).value;
+
+
+        document.getElementById(
+            "rSchedule"
+        ).textContent =
+            document.getElementById(
+                "pStart"
+            ).value
+            +
+            " – "
+            +
+            document.getElementById(
+                "pEnd"
+            ).value;
+
+    }
+
+}
+
+
+/* =========================================================
+   VALIDATION
+   ========================================================= */
+
+function valid(){
+
+    if(
+        currentStep === 1 &&
+        (
+            !document
+                .getElementById("pName")
+                .value
+                .trim()
+            ||
+            !document
+                .getElementById("pCompany")
+                .value
+                .trim()
+        )
+    ){
+
+        alert(
+            "Project Name dan Company / Client wajib diisi."
+        );
+
+        return false;
+
+    }
+
+
+    if(currentStep === 2){
+
+        let s =
+            document
+            .getElementById("pStart")
+            .value;
+
+
+        let e =
+            document
+            .getElementById("pEnd")
+            .value;
+
+
+        if(!s || !e){
+
+            alert(
+                "Tanggal wajib diisi."
+            );
+
+            return false;
+
+        }
+
+
+        if(
+            new Date(e) <
+            new Date(s)
+        ){
+
+            alert(
+                "End Date tidak boleh sebelum Start Date."
+            );
+
+            return false;
+
+        }
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   CREATE PROJECT
+   ========================================================= */
+
+/* =========================================================
+   CREATE PROJECT
+   ========================================================= */
+
+function createProject(){
+
+    /* =====================================================
+       AMBIL PROJECT LAMA
+    ===================================================== */
+
+    let data = get();
+
+
+    /* =====================================================
+       GENERATE PROJECT ID
+    ===================================================== */
+
+    let id =
+        "PRJ-" +
+        Date.now()
+        .toString()
+        .slice(-8);
+
+
+    /* =====================================================
+       AMBIL ASSESSMENT DARI ASSESSMENT CATALOG
+    ===================================================== */
+
+    let selectedAssessments = [];
+
+
+    try {
+
+        const saved =
+            sessionStorage.getItem(
+                "talentscope_selected_assessments"
+            );
+
+
+        if (saved) {
+
+            selectedAssessments =
+                JSON.parse(saved);
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "Gagal membaca assessment terpilih:",
+            error
+        );
+
+        selectedAssessments = [];
+
+    }
+
+
+    /* =====================================================
+       PASTIKAN FORMAT ARRAY
+    ===================================================== */
+
+    if (
+        !Array.isArray(
+            selectedAssessments
+        )
+    ) {
+
+        selectedAssessments = [];
+
+    }
+
+
+    /* =====================================================
+       NORMALISASI ASSESSMENT
+    ===================================================== */
+
+    selectedAssessments =
+        selectedAssessments.map(
+            function (assessment, index) {
+
+                return {
+
+                    id:
+                        assessment.id ||
+                        assessment.code ||
+                        assessment.name,
+
+                    code:
+                        assessment.code ||
+                        "",
+
+                    name:
+                        assessment.name ||
+                        "",
+
+                    category:
+                        assessment.category ||
+                        "",
+
+                    duration:
+                        Number(
+                            assessment.duration
+                        ) || 0,
+
+                    questions:
+                        Number(
+                            assessment.questions
+                        ) || 0,
+
+                    required:
+                        assessment.required !== false,
+
+                    active:
+                        assessment.active !== false,
+
+                    order:
+                        index + 1
+
+                };
+
+            }
+        );
+
+
+    /* =====================================================
+       CREATE PROJECT OBJECT
+    ===================================================== */
+
+    let project = {
+
+        id:
+            id,
+
+        name:
+            document
+            .getElementById("pName")
+            .value
+            .trim(),
+
+        company:
+            document
+            .getElementById("pCompany")
+            .value
+            .trim(),
+
+        type:
+            document
+            .getElementById("pType")
+            .value,
+
+        start:
+            document
+            .getElementById("pStart")
+            .value,
+
+        end:
+            document
+            .getElementById("pEnd")
+            .value,
+
+        status:
+            "Draft",
+
+        participants:
+            [],
+
+        /*
+         * INI YANG PENTING
+         *
+         * Assessment yang dipilih dari
+         * Assessment Catalog masuk ke sini.
+         */
+        assessments:
+            selectedAssessments,
+
+        createdBy:
+            "Administrator",
+
+        createdAt:
+            new Date().toISOString(),
+
+        updatedAt:
+            new Date().toISOString()
+
+    };
+
+
+    /* =====================================================
+       ACTIVITY LOG
+    ===================================================== */
+
+    project.activityLog = [
+
+        {
+
+            id:
+                "ACT-" +
+                Date.now(),
+
+            title:
+                "Project created",
+
+            detail:
+                selectedAssessments.length +
+                " assessment(s) selected",
+
+            at:
+                new Date().toISOString(),
+
+            by:
+                "Administrator"
+
+        }
+
+    ];
+
+
+    /* =====================================================
+       MASUKKAN PROJECT KE DATA
+    ===================================================== */
+
+    data.push(
+        project
+    );
+
+
+    /* =====================================================
+       SIMPAN KE LOCAL STORAGE
+    ===================================================== */
+
+    set(
+        data
+    );
+
+
+    /* =====================================================
+       HAPUS DATA SEMENTARA
+    ===================================================== */
+
+    sessionStorage.removeItem(
+        "talentscope_selected_assessments"
+    );
+
+
+    /* =====================================================
+       BUKA PROJECT DETAIL
+    ===================================================== */
+
+    location.href =
+        "project-detail.html?id=" +
+        encodeURIComponent(id);
+
+}
+
+
+/* =========================================================
+   EVENT LISTENERS
+   ========================================================= */
+
+document
+    .getElementById("createBtn")
+    .onclick =
+        openCreate;
+
+
+document
+    .getElementById("closeModal")
+    .onclick =
+        closeCreate;
+
+
+document
+    .getElementById("cancelProject")
+    .onclick =
+        closeCreate;
+
+
+document
+    .getElementById("prevStep")
+    .onclick =
+        () => {
+
+            if(currentStep > 1){
+
+                currentStep--;
+
+                updateStep();
+
+            }
+
+        };
+
+
+document
+    .getElementById("nextStep")
+    .onclick =
+        () => {
+
+            if(!valid()){
+
+                return;
+
+            }
+
+
+            if(currentStep < 3){
+
+                currentStep++;
+
+                updateStep();
+
+            }
+
+            else{
+
+                createProject();
+
+            }
+
+        };
+
+
+/* CLICK OUTSIDE MODAL */
+
+modal.addEventListener(
+    "click",
+    e => {
+
+        if(e.target === modal){
+
+            closeCreate();
+
+        }
+
+    }
+);
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const userDropdown = document.getElementById("userDropdown");
+    const dropdownTrigger = document.getElementById("dropdownTrigger");
+    const dropdownMenu = document.getElementById("dropdownMenu");
+
+    if (!userDropdown || !dropdownTrigger || !dropdownMenu) {
+        return;
+    }
+
+
+    /* Klik user */
+
+    dropdownTrigger.addEventListener("click", function (event) {
+
+        event.stopPropagation();
+
+        dropdownMenu.classList.toggle("show");
+
+        userDropdown.classList.toggle(
+            "open",
+            dropdownMenu.classList.contains("show")
+        );
+
+    });
+
+
+    /* Klik isi dropdown jangan menutup sebelum link bekerja */
+
+    dropdownMenu.addEventListener("click", function (event) {
+
+        event.stopPropagation();
+
+    });
+
+
+    /* Klik di luar dropdown */
+
+    document.addEventListener("click", function () {
+
+        dropdownMenu.classList.remove("show");
+
+        userDropdown.classList.remove("open");
+
+    });
+
+});
+
+function updateRemoveButton(){
+
+    const checked =
+        document.querySelectorAll(
+            ".project-checkbox:checked"
+        ).length;
+
+    const removeBtn =
+        document.getElementById(
+            "removeProjectBtn"
+        );
+
+    removeBtn.disabled =
+        checked === 0;
+
+}
+
+document.addEventListener(
+    "change",
+    function(e){
+
+        if(
+            e.target.id === "selectAllProjects"
+        ){
+
+            document
+                .querySelectorAll(
+                    ".project-checkbox"
+                )
+                .forEach(function(cb){
+
+                    cb.checked =
+                        e.target.checked;
+
+                });
+
+            updateRemoveButton();
+
+        }
+
+
+        if(
+            e.target.classList.contains(
+                "project-checkbox"
+            )
+        ){
+
+            updateRemoveButton();
+
+        }
+
+    }
+);
+
+document.addEventListener(
+    "change",
+    function(e){
+
+        if(
+            e.target.classList.contains(
+                "project-checkbox"
+            )
+        ){
+
+            const boxes =
+                document.querySelectorAll(
+                    ".project-checkbox"
+                );
+
+            const checked =
+                document.querySelectorAll(
+                    ".project-checkbox:checked"
+                );
+
+            const selectAll =
+                document.getElementById(
+                    "selectAllProjects"
+                );
+
+            selectAll.checked =
+                boxes.length > 0 &&
+                checked.length === boxes.length;
+
+            updateRemoveButton();
+
+        }
+
+    }
+);
+
+/* =========================================================
+   INITIAL RENDER
+   ========================================================= */
+
+render();
+
+</script>
+
+<!-- GLOBAL SEARCH -->
+<script src="js/global-search.js"></script>
+
+
+<script>
+/* ==========================================================
+   TALENTSCOPE PROJECT DATA SAFETY + SAFE LOGOUT
+   ----------------------------------------------------------
+   Session logout must never delete project application data.
+========================================================== */
+(function () {
+    "use strict";
+
+    const PROJECT_KEY = "talentscope_projects";
+    const PROJECT_BACKUP_KEY = "talentscope_projects_backup";
+
+    function backupProjects() {
+        try {
+            const raw = localStorage.getItem(PROJECT_KEY);
+
+            if (raw === null) return;
+
+            const parsed = JSON.parse(raw);
+
+            if (Array.isArray(parsed)) {
+                localStorage.setItem(
+                    PROJECT_BACKUP_KEY,
+                    JSON.stringify(parsed)
+                );
+            }
+        } catch (error) {
+            console.warn(
+                "TalentScope: project backup gagal dibuat.",
+                error
+            );
+        }
+    }
+
+    function restoreProjectsIfAccidentallyMissing() {
+        try {
+            const current = localStorage.getItem(PROJECT_KEY);
+
+            // Do not overwrite valid current data.
+            if (current !== null) return;
+
+            const backup = localStorage.getItem(
+                PROJECT_BACKUP_KEY
+            );
+
+            if (!backup) return;
+
+            const parsed = JSON.parse(backup);
+
+            if (Array.isArray(parsed)) {
+                localStorage.setItem(
+                    PROJECT_KEY,
+                    JSON.stringify(parsed)
+                );
+
+                console.warn(
+                    "TalentScope: talentscope_projects dipulihkan dari backup."
+                );
+            }
+        } catch (error) {
+            console.warn(
+                "TalentScope: gagal memulihkan project.",
+                error
+            );
+        }
+    }
+
+    // Capture the current real project data.
+    backupProjects();
+
+    // Safe logout: session only. Never clear application data.
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const logoutBtn =
+            document.getElementById("logoutBtn");
+
+        if (!logoutBtn) return;
+
+        logoutBtn.addEventListener("click", function (event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            const yakin = confirm(
+                "Apakah Anda yakin ingin Log Out?"
+            );
+
+            if (!yakin) return;
+
+            // Ensure project data is backed up before session is removed.
+            backupProjects();
+
+            // ONLY session/auth keys are removed.
+            sessionStorage.removeItem("ts_admin_session");
+            sessionStorage.removeItem("ts_participant_session");
+            sessionStorage.removeItem("talentscope_current_user");
+            sessionStorage.removeItem("talentscope_session");
+            sessionStorage.removeItem("talentscope_user");
+
+            // Explicitly preserve project data.
+            restoreProjectsIfAccidentallyMissing();
+
+            window.location.href = "login.html";
+        });
+    });
+
+    // Safety check when this page becomes active again.
+    window.addEventListener("pageshow", function () {
+        restoreProjectsIfAccidentallyMissing();
+    });
+
+})();
+</script>
+
+</body>
+</html>

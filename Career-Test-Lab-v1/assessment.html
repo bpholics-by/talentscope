@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petunjuk Asesmen — TalentScope</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            /* Background gradasi biru premium dengan efek kedalaman */
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
+            background-attachment: fixed;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            padding: 20px;
+        }
+
+        .container { 
+            /* Gradasi biru muda premium yang lembut dan elegan */
+            background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%); 
+            width: 100%; 
+            max-width: 700px; 
+            padding: 40px; 
+            border-radius: 16px; 
+            /* Efek bayangan dan border tipis bernuansa biru */
+            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.4), 0 0 20px rgba(59, 130, 246, 0.15); 
+            border: 1px solid rgba(191, 219, 254, 0.6);
+        }
+
+        .meta-info { 
+            /* Kotak informasi dengan warna biru muda solid yang elegan */
+            background: #e0f2fe; 
+            border: 1px solid #bae6fd;
+            padding: 15px 18px; 
+            border-radius: 10px; 
+            margin-bottom: 25px; 
+            font-size: 13px; 
+            color: #0369a1; 
+            font-weight: 500;
+            display: flex; 
+            justify-content: space-between; 
+        }
+
+        .header { 
+            border-bottom: 1px solid #f1f5f9; 
+            padding-bottom: 20px; 
+            margin-bottom: 25px; 
+        }
+
+        .header h1 { 
+            font-size: 24px; 
+            color: #0f172a; 
+            margin-bottom: 8px; 
+            font-weight: 700;
+        }
+
+        .header p { 
+            color: #64748b; 
+            font-size: 14px; 
+        }
+
+        
+        .instructions { 
+            margin-bottom: 30px; 
+            line-height: 1.7; 
+            color: #475569; 
+            font-size: 14px;
+        }
+
+        .instructions h3 { 
+            margin-bottom: 12px; 
+            color: #1e293b; 
+            font-size: 15px; 
+            font-weight: 600;
+        }
+
+        .instructions ul { 
+            padding-left: 20px; 
+        }
+
+        .instructions li { 
+            margin-bottom: 10px; 
+        }
+
+        .btn-start { 
+            display: block; 
+            width: 100%; 
+            padding: 15px; 
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff; 
+            text-align: center; 
+            font-weight: 600; 
+            border: none; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            font-size: 15px; 
+            text-decoration: none; 
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-start:hover { 
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+        }
+                </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1 id="assessment-title">Petunjuk Pengerjaan Asesmen</h1>
+            <p>Harap baca petunjuk dengan teliti sebelum memulai tes.</p>
+        </div>
+
+        <div class="meta-info">
+            <span id="info-project">Project ID: -</span>
+            <span id="info-participant">Participant ID: -</span>
+        </div>
+
+        <div class="instructions">
+            <h3>Ketentuan Umum:</h3>
+            <ul>
+                <li>Pastikan koneksi internet Anda stabil selama proses pengerjaan berlangsung.</li>
+                <li>Jawablah setiap pertanyaan atau pernyataan sesuai dengan kondisi diri Anda yang sebenarnya.</li>
+                <li>Tidak ada jawaban benar atau salah, kejujuran adalah kunci utama.</li>
+                <li>Waktu tes berjalan otomatis setelah Anda menekan tombol "Mulai Tes" di bawah ini.</li>
+            </ul>
+        </div>
+
+        <!-- Tombol untuk menuju ke paket asesmen masing-masing -->
+        <button id="btnMulaiUjian" class="btn-start">Mulai Tes Sekarang</button>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Canonical parameters are projectId / participantId / assessmentIndex.
+        // Keep project / participant / step as backward-compatible aliases.
+        const projectId =
+            urlParams.get('projectId') ||
+            urlParams.get('project') ||
+            '';
+
+        const participantId =
+            urlParams.get('participantId') ||
+            urlParams.get('participant') ||
+            '';
+
+        let currentStep = parseInt(
+            urlParams.get('assessmentIndex') ??
+            urlParams.get('step') ??
+            '0',
+            10
+        );
+
+        if (!projectId || !participantId) {
+            console.error('IDENTITAS ASSESSMENT TIDAK VALID:', {
+                projectId,
+                participantId,
+                url: window.location.href
+            });
+        }
+
+        document.getElementById('info-project').innerText = "Project ID: " + projectId;
+        document.getElementById('info-participant').innerText = "Participant ID: " + participantId;
+
+        let currentProjectPackages = [];
+
+        try {
+            const projectsData = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+            const currentProj = projectsData.find(p => String(p.id || p.projectId) === String(projectId));
+            
+            if (currentProj) {
+                if (currentProj.projectName) {
+                    document.getElementById('assessment-title').innerText = "Asesmen: " + currentProj.projectName;
+                }
+                currentProjectPackages = currentProj.assessmentPackage || currentProj.assessments || currentProj.packages || [];
+            }
+        } catch(e) {
+            console.error("Gagal memuat detail proyek:", e);
+        }
+
+
+        function getSelectedAssessmentName() {
+            const item =
+                currentProjectPackages.length > 0
+                    ? currentProjectPackages[currentStep]
+                    : null;
+
+            if (typeof item === "string") {
+                return item.trim() || "Assessment";
+            }
+
+            return String(
+                item?.name ||
+                item?.title ||
+                item?.assessmentName ||
+                item?.testName ||
+                item?.label ||
+                item?.code ||
+                "Assessment"
+            ).trim();
+        }
+
+
+                // Aksi ketika tombol "Mulai Tes Sekarang" diklik
+        document.getElementById('btnMulaiUjian').addEventListener('click', function() {
+
+    let targetTestUrl = "disc_test.html"; // fallback tes pertama
+
+    if (!projectId || !participantId) {
+        alert('Identitas project atau peserta tidak valid. Silakan login ulang.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const activePkg =
+        currentProjectPackages.length > 0
+            ? currentProjectPackages[currentStep]
+            : null;
+
+    const packageName =
+        typeof activePkg === "string"
+            ? activePkg
+            : (
+                activePkg?.name ||
+                activePkg?.title ||
+                activePkg?.assessmentName ||
+                activePkg?.testName ||
+                activePkg?.label ||
+                activePkg?.code ||
+                ""
+            );
+
+    const assessmentName =
+        String(packageName || "Assessment").trim();
+
+    const assessmentCode =
+        String(
+            typeof activePkg === "object" && activePkg
+                ? (
+                    activePkg.code ||
+                    activePkg.id ||
+                    activePkg.assessmentId ||
+                    activePkg.testId ||
+                    ""
+                )
+                : ""
+        ).trim();
+
+    const pkgLower = assessmentName.toLowerCase();
+
+    // Mapping halaman tes sesuai assessment yang benar-benar ada di project.
+    if (pkgLower.includes("disc")) {
+        targetTestUrl = "disc_test.html";
+    } else if (pkgLower.includes("papi")) {
+        targetTestUrl = "papi_kostick_test.html";
+    } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance")) {
+        targetTestUrl = "speedtest_revisi_final_v4.html";
+    } else {
+        targetTestUrl = "general-test.html";
+    }
+
+    /*
+       Simpan assessment yang benar ke participant.
+       Ini menjadi sumber activity untuk halaman monitoring.
+    */
+    try {
+        const projectsData =
+            JSON.parse(
+                localStorage.getItem("talentscope_projects") || "[]"
+            );
+
+        if (Array.isArray(projectsData)) {
+
+            const now =
+                new Date().toISOString();
+
+            projectsData.forEach(function(project) {
+
+                const pid =
+                    String(
+                        project?.id ||
+                        project?.projectId ||
+                        project?.project_id ||
+                        ""
+                    ).trim();
+
+                if (pid !== String(projectId).trim()) {
+                    return;
+                }
+
+                const participants =
+                    Array.isArray(project.participants)
+                        ? project.participants
+                        : [];
+
+                participants.forEach(function(participant) {
+
+                    const participantPid =
+                        String(
+                            participant?.id ||
+                            participant?.participantId ||
+                            participant?.employeeId ||
+                            participant?.employee_id ||
+                            ""
+                        ).trim();
+
+                    if (
+                        participantPid !==
+                        String(participantId).trim()
+                    ) {
+                        return;
+                    }
+
+                    const activity =
+                        "Sedang mengerjakan tes (" +
+                        assessmentName +
+                        ")";
+
+                    participant.currentTest =
+                        assessmentName;
+
+                    participant.currentAssessmentIndex =
+                        Number(currentStep);
+
+                    participant.currentAssessmentCode =
+                        assessmentCode;
+
+                    participant.currentActivity =
+                        activity;
+
+                    participant.activity =
+                        activity;
+
+                    participant.testActivity =
+                        activity;
+
+                    participant.lastActivity =
+                        activity;
+
+                    participant.activityUpdatedAt =
+                        now;
+
+                    if (
+                        !Array.isArray(
+                            participant.activityHistory
+                        )
+                    ) {
+                        participant.activityHistory = [];
+                    }
+
+                    participant.activityHistory.push({
+                        type: "test-start",
+                        activity: activity,
+                        title: activity,
+                        action: "Start Assessment",
+                        test: assessmentName,
+                        testName: assessmentName,
+                        assessmentName: assessmentName,
+                        assessmentCode: assessmentCode,
+                        assessmentIndex: Number(currentStep),
+                        projectId: String(projectId),
+                        participantId: String(participantId),
+                        timestamp: now,
+                        time: now,
+                        description:
+                            "Peserta mulai mengerjakan " +
+                            assessmentName + "."
+                    });
+
+                });
+
+            });
+
+            localStorage.setItem(
+                "talentscope_projects",
+                JSON.stringify(projectsData)
+            );
+        }
+
+    } catch (e) {
+        console.warn(
+            "Gagal menyimpan activity assessment:",
+            e
+        );
+    }
+
+    // Kirim context lengkap ke halaman tes.
+    window.location.href =
+        `${targetTestUrl}?projectId=${encodeURIComponent(projectId)}` +
+        `&participantId=${encodeURIComponent(participantId)}` +
+        `&assessmentIndex=${encodeURIComponent(currentStep)}` +
+        `&assessmentName=${encodeURIComponent(assessmentName)}` +
+        `&assessmentCode=${encodeURIComponent(assessmentCode)}`;
+
+});</script>
+</body>
+</html>

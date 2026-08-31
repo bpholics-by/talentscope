@@ -1,0 +1,613 @@
+/* ===========================================================
+   CAREER TEST LAB
+   Assessment Center v2
+   =========================================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+
+    --primary:#2563EB;
+    --primary-dark:#1D4ED8;
+
+    --success:#16A34A;
+    --danger:#DC2626;
+
+    --text:#1F2937;
+    --muted:#6B7280;
+
+    --background:#F5F7FB;
+
+    --white:#FFFFFF;
+
+    --border:#E5E7EB;
+
+    --shadow:
+        0 12px 35px rgba(0,0,0,.06);
+
+    --radius:22px;
+
+}
+
+body{
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    background:var(--background);
+
+    color:var(--text);
+
+}
+
+.page{
+
+    min-height:100vh;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+/* ===========================================================
+   HEADER
+   =========================================================== */
+
+.page-header{
+
+    background:#fff;
+
+    padding:34px 6%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.brand{
+
+    font-size:13px;
+
+    font-weight:700;
+
+    letter-spacing:2px;
+
+    color:var(--primary);
+
+    text-transform:uppercase;
+
+}
+
+.page-header h1{
+
+    margin-top:8px;
+
+    font-size:34px;
+
+    font-weight:700;
+
+}
+
+.page-header p{
+
+    margin-top:8px;
+
+    color:var(--muted);
+
+}
+
+.participant{
+
+    background:#EEF4FF;
+
+    color:var(--primary);
+
+    padding:12px 18px;
+
+    border-radius:40px;
+
+    font-weight:600;
+
+}
+
+/* ===========================================================
+   CONTENT
+   =========================================================== */
+
+.content{
+
+    width:min(1180px,92%);
+
+    margin:45px auto;
+
+    flex:1;
+
+}
+
+.section-title{
+
+    margin-bottom:35px;
+
+}
+
+.section-title h2{
+
+    font-size:28px;
+
+    margin-bottom:8px;
+
+}
+
+.section-title p{
+
+    color:var(--muted);
+
+}
+
+/* ===========================================================
+   GRID
+   =========================================================== */
+
+.category-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:28px;
+
+}
+/* ===========================================================
+   CARD
+=========================================================== */
+
+.category-card{
+
+    background:var(--white);
+
+    border:1px solid var(--border);
+
+    border-radius:24px;
+
+    padding:34px;
+
+    min-height:280px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    transition:
+    transform .30s ease,
+    box-shadow .30s ease,
+    border-color .30s ease;
+
+box-shadow:
+    0 8px 24px rgba(15,23,42,.05);
+
+}
+
+.category-card:hover{
+
+    transform:translateY(-6px);
+
+    border-color:#D9E6FF;
+
+    box-shadow:
+        0 18px 40px rgba(15,23,42,.10);
+
+}
+
+
+/* ===========================================================
+   ICON
+=========================================================== */
+
+.category-icon{
+
+    width:72px;
+
+    height:72px;
+
+    border-radius:20px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    margin-bottom:28px;
+
+    transition:
+        transform .30s ease,
+        background .30s ease;
+.category-card:hover .category-icon{
+
+    transform:scale(1.08) rotate(-3deg);
+
+}
+}
+.category-icon svg{
+
+    width:36px;
+
+    height:36px;
+
+    stroke-width:2;
+
+}
+
+.category-icon.intelligence{
+
+    background:#EEF5FF;
+
+    color:#2563EB;
+
+}
+
+.category-icon.personality{
+
+    background:#F3EEFF;
+
+    color:#7C3AED;
+
+}
+
+.category-icon.competency{
+
+    background:#FFF4E5;
+
+    color:#D97706;
+
+}
+
+.category-icon.leadership{
+
+    background:#FFF8DB;
+
+    color:#CA8A04;
+
+}
+
+
+/* ===========================================================
+   CONTENT
+=========================================================== */
+
+.category-content{
+
+    display:flex;
+
+    flex-direction:column;
+
+    flex:1;
+
+    gap:12px;
+
+}
+
+.category-content h3{
+
+    font-size:26px;
+
+    line-height:1.35;
+
+    color:#16345F;
+
+    font-weight:700;
+
+    margin-bottom:18px;
+
+}
+/* ===========================================================
+   STATUS
+=========================================================== */
+
+.status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    width:max-content;
+
+    padding:9px 18px;
+
+    border-radius:40px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    margin-bottom:0;
+
+    align-self:flex-start;
+
+}
+
+.ready{
+
+    background:#ECFDF3;
+
+    color:#15803D;
+
+}
+
+.locked{
+
+    background:#F3F4F6;
+
+    color:#6B7280;
+
+}
+/* ===========================================================
+   BUTTON
+=========================================================== */
+
+.start-btn{
+
+    margin-top:auto;
+
+    width:100%;
+
+    height:54px;
+
+    border:none;
+
+    border-radius:14px;
+
+    background:var(--primary);
+
+    color:#fff;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:
+    background .25s ease,
+    transform .25s ease,
+    box-shadow .25s ease;
+
+}
+
+.start-btn:hover{
+
+    background:var(--primary-dark);
+
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 12px 24px rgba(37,99,235,.25);
+
+}
+
+.start-btn:active{
+
+    transform:translateY(-1px) scale(.98);
+
+}
+
+.start-btn:disabled{
+
+    background:#E5E7EB;
+
+    color:#9CA3AF;
+
+    cursor:not-allowed;
+
+    transform:none;
+
+    box-shadow:none;
+
+    opacity:.85;
+
+}
+/* ===========================================================
+   PERSONALITY PANEL
+=========================================================== */
+
+.personality-options{
+
+    margin-top:40px;
+
+    background:#FFFFFF;
+
+    border:1px solid var(--border);
+
+    border-radius:24px;
+
+    padding:34px;
+
+    box-shadow:var(--shadow);
+
+}
+
+.personality-header{
+
+    margin-bottom:28px;
+
+}
+
+.personality-header h2{
+
+    font-size:24px;
+
+    margin-bottom:6px;
+
+}
+
+.personality-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:24px;
+
+}
+
+.personality-card{
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:28px;
+
+    transition:.25s;
+
+}
+
+.personality-card:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 12px 28px rgba(0,0,0,.08);
+
+}
+
+.small-icon{
+
+    width:56px;
+
+    height:56px;
+
+    border-radius:16px;
+
+    background:#EEF4FF;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    color:var(--primary);
+
+    font-size:22px;
+
+    font-weight:700;
+
+    margin-bottom:18px;
+
+}
+
+.personality-card h3{
+
+    font-size:22px;
+
+    margin-bottom:20px;
+
+}
+/* ===========================================================
+   FOOTER
+=========================================================== */
+
+footer{
+
+    margin-top:60px;
+
+    background:#FFFFFF;
+
+    border-top:1px solid var(--border);
+
+    padding:28px;
+
+    text-align:center;
+
+    color:#6B7280;
+
+    font-size:14px;
+
+}
+/* ===========================================================
+   UTILITIES
+=========================================================== */
+
+.hidden{
+
+    display:none;
+
+}
+/* ===========================================================
+   RESPONSIVE
+=========================================================== */
+
+@media(max-width:992px){
+
+    .category-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .personality-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .page-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:18px;
+
+        padding:28px;
+
+    }
+
+    .page-header h1{
+
+        font-size:30px;
+
+    }
+
+    .content{
+
+        width:94%;
+
+    }
+
+    .category-card{
+
+        min-height:240px;
+
+        padding:28px;
+
+    }
+
+    .category-card:hover .category-content h3{
+
+    color:var(--primary);
+
+    transition:color .30s ease;
+
+}
+
+}

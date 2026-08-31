@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Participant Access | TalentScope</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f7f9fc;color:#10233f}
+.top{height:72px;background:#09182c;color:#fff;display:flex;align-items:center;padding:0 28px}
+.brand{font-size:22px;font-weight:800}.wrap{max-width:980px;margin:34px auto;padding:0 20px}
+.card{background:#fff;border:1px solid #e5ebf2;border-radius:16px;padding:26px;box-shadow:0 5px 20px rgba(9,24,44,.05);margin-bottom:18px}
+h1,h2{margin:0 0 10px}.muted{color:#6f8198}.pill{display:inline-flex;padding:6px 10px;border-radius:999px;background:#eef3f8;font-size:12px;font-weight:700}
+.ok{background:#e8faf3;color:#0e9f6e}.warn{background:#fff7e6;color:#b7791f}.danger{background:#fff0f0;color:#d64545}
+.btn{border:1px solid #d7e0ea;background:#fff;padding:11px 16px;border-radius:9px;font-weight:700;cursor:pointer}
+.primary{background:#0878e8;border-color:#0878e8;color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;justify-content:space-between;gap:20px;align-items:center}.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:18px}
+.meta div{padding:12px;background:#f8fafc;border-radius:10px}.meta small{display:block;color:#6f8198;margin-bottom:4px}
+.assessment{display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-bottom:1px solid #e5ebf2}.assessment:last-child{border-bottom:0}
+.notice{padding:14px;border-radius:10px;background:#f3f7fc;margin:16px 0;line-height:1.5}
+.hidden{display:none!important}
+@media(max-width:650px){.row{flex-direction:column;align-items:flex-start}.meta{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand">TalentScope <span style="font-size:12px;font-weight:500;opacity:.7">Participant Portal</span></div></div>
+<div class="wrap">
+  <div id="error" class="card hidden"></div>
+  <div id="access" class="hidden">
+    <div class="card">
+      <div class="row">
+        <div><div class="muted" id="company"></div><h1 id="projectName">Assessment Project</h1><div class="muted" id="participantName"></div></div>
+        <span id="accessStatus" class="pill ok">Access Granted</span>
+      </div>
+      <div class="meta">
+        <div><small>Access From</small><strong id="from">-</strong></div>
+        <div><small>Access Until</small><strong id="until">-</strong></div>
+      </div>
+    </div>
+
+    <div id="instructions" class="card">
+      <h2>Assessment Instructions</h2>
+      <div class="notice">
+        Please read the instructions before starting. Once you click <strong>Start Assessment</strong>,
+        the participant status will change to <strong>In Progress</strong>.
+      </div>
+      <ul>
+        <li>Complete the assessment within the active access window.</li>
+        <li>Follow the instructions shown for each assessment.</li>
+        <li>Do not close the assessment page while working unless your project allows it.</li>
+        <li>Submit the assessment when you have finished.</li>
+      </ul>
+      <h2 style="margin-top:26px">Your Assessments</h2>
+      <div id="assessmentList"></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px">
+        <button id="startBtn" class="btn primary">Start Assessment</button>
+      </div>
+    </div>
+
+    <div id="started" class="card hidden">
+      <span class="pill ok">In Progress</span>
+      <h2 style="margin-top:14px">Assessment Started</h2>
+      <p class="muted">Assessment runner siap dibuka. Klik Continue untuk masuk ke test.</p>
+      <button id="continueBtn" class="btn primary">Continue Assessment</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const params=new URLSearchParams(location.search);
+const projectId=params.get("project");
+const participantId=params.get("participant");
+const code=params.get("code");
+
+function load(){
+  try{const raw=localStorage.getItem("talentscope_projects");return raw?JSON.parse(raw):[]}
+  catch(e){return[]}
+}
+function save(data){localStorage.setItem("talentscope_projects",JSON.stringify(data))}
+function find(){
+  const projects=load();
+  const project=projects.find(x=>String(x.id)===String(projectId));
+  if(!project)return null;
+  const participant=(project.participants||[]).find(x=>String(x.id)===String(participantId));
+  if(!participant)return null;
+  if(!code || participant.accessCode!==code)return null;
+  return {projects,project,participant};
+}
+function fmt(v){
+  if(!v)return "-"; const d=new Date(v); return isNaN(d)?v:d.toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+}
+function isWithin(p){
+  const now=new Date();
+  const a=p.accessStart?new Date(p.accessStart):null;
+  const b=p.accessEnd?new Date(p.accessEnd):null;
+  return (!a||isNaN(a)||now>=a)&&(!b||isNaN(b)||now<=b);
+}
+const ctx=find();
+if(!ctx){
+  $("error").classList.remove("hidden");
+  $("error").innerHTML="<h2>Access not found</h2><p class='muted'>Access code tidak valid atau participant/project tidak ditemukan.</p>";
+  return;
+}
+const {projects,project,participant}=ctx;
+$("access").classList.remove("hidden");
+$("company").textContent=project.company||"";
+$("projectName").textContent=project.name||"Assessment Project";
+$("participantName").textContent=(participant.name||"Participant")+" • "+(participant.email||"");
+$("from").textContent=fmt(participant.accessStart);
+$("until").textContent=fmt(participant.accessEnd);
+
+const active=isWithin(participant);
+const status=participant.status==="Completed"?"Completed":participant.status==="In Progress"||participant.startedAt?"In Progress":"Access Granted";
+$("accessStatus").textContent=status;
+$("accessStatus").className="pill "+(status==="Completed"?"warn":"ok");
+
+const assessments=(project.assessments||[]).map((a,i)=>typeof a==="string"?{name:a,code:"A"+(i+1)}:a);
+$("assessmentList").innerHTML=assessments.length?assessments.map((a,i)=>`<div class="assessment"><div><strong>${esc(a.name||"Assessment "+(i+1))}</strong><div class="muted">${esc(a.category||"Assessment")} ${a.duration?"• "+esc(a.duration)+" min":""}</div></div><span class="pill">Assessment ${i+1}</span></div>`).join(""):"<p class='muted'>No assessment assigned.</p>";
+
+if(!active && status!=="In Progress"){
+  $("startBtn").disabled=true;
+  $("accessStatus").textContent="Outside Access Window";
+  $("accessStatus").className="pill danger";
+  $("startBtn").textContent="Access Not Available";
+}
+if(status==="In Progress"){
+  $("instructions").classList.add("hidden");
+  $("started").classList.remove("hidden");
+}
+
+$("startBtn").onclick=function(){
+  if(!isWithin(participant)){alert("Assessment belum atau sudah tidak dapat diakses pada waktu ini.");return;}
+  participant.status="In Progress";
+  participant.startedAt=participant.startedAt||new Date().toISOString();
+  participant.currentAssessmentIndex=0;
+  save(projects);
+  $("instructions").classList.add("hidden");
+  $("started").classList.remove("hidden");
+};
+$("continueBtn").onclick=function(){
+  location.href="assessment-runner.html?project="+encodeURIComponent(project.id)+"&participant="+encodeURIComponent(participant.id)+"&code="+encodeURIComponent(participant.accessCode);
+};
+})();
+</script>
+</body>
+</html>
