@@ -5,57 +5,242 @@
 
 <head>
 
-     <!-- Tombol Menu Garis Tiga (Hanya muncul di HP) -->
-<button id="hamburger-btn" class="hamburger-toggle" aria-label="Menu">
-    ☰ Menu
-</button>
-<style>
-    /* Sembunyikan tombol hamburger secara default di Laptop/Desktop */
-.hamburger-toggle {
+     <style>
+
+/* =========================================================
+   MOBILE SIDEBAR - FINAL FIX
+========================================================= */
+
+/* DESKTOP */
+.menu-toggle {
     display: none;
 }
 
-/* Aturan Khusus Layar HP (Maksimal 768px) */
-@media screen and (max-width: 768px) {
-    /* Tampilkan tombol hamburger di HP */
-    .hamburger-toggle {
-        display: block;
-        background: #0f172a;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        font-size: 1rem;
-        border-radius: 6px;
-        margin: 10px;
-        cursor: pointer;
-        z-index: 1001;
+.sidebar-overlay {
+    display: none;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
     }
 
-    /* Sidebar disembunyikan secara default saat di HP */
-    .sidebar {
-        display: none;
-        width: 100% !important;
-        height: auto;
-        background-color: #0b132b;
-        position: absolute;
-        top: 50px;
-        left: 0;
-        z-index: 1000;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
 
-    /* Kelas aktif untuk memunculkan sidebar saat tombol diklik */
-    .sidebar.active {
+    /* APP */
+
+    .app {
+        width: 100%;
+        max-width: 100%;
         display: block !important;
     }
 
-    /* Konten utama melebar penuh */
-    .main-content, .content-area {
-        width: 100% !important;
-        margin-left: 0 !important;
-        padding: 15px !important;
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar {
+
+        display: block !important;
+
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+
+        width: 280px !important;
+        max-width: 82vw !important;
+
+        height: 100dvh !important;
+
+        margin: 0 !important;
+
+        z-index: 9999 !important;
+
+        transform: translateX(-110%) !important;
+
+        transition: transform 0.3s ease !important;
+
+        overflow-y: auto !important;
+
+        -webkit-overflow-scrolling: touch;
+
+        pointer-events: none;
+
     }
+
+
+    /* SIDEBAR TERBUKA */
+
+    .sidebar.mobile-open {
+
+        transform: translateX(0) !important;
+
+        pointer-events: auto;
+
+    }
+
+
+    /* =====================================================
+       OVERLAY
+    ===================================================== */
+
+    .sidebar-overlay {
+
+        display: block !important;
+
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+
+        width: 100% !important;
+        height: 100dvh !important;
+
+        background: rgba(0, 0, 0, 0.45);
+
+        z-index: 9998 !important;
+
+        opacity: 0;
+
+        visibility: hidden;
+
+        pointer-events: none;
+
+        transition:
+            opacity 0.3s ease,
+            visibility 0.3s ease;
+
+    }
+
+
+    .sidebar-overlay.active {
+
+        opacity: 1;
+
+        visibility: visible;
+
+        pointer-events: auto;
+
+    }
+
+
+    /* =====================================================
+       MAIN CONTENT
+    ===================================================== */
+
+    .main {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin-left: 0 !important;
+
+    }
+
+
+    main,
+    .content,
+    .page-content,
+    .main-content {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        margin-left: 0 !important;
+
+    }
+
+
+    /* =====================================================
+       HEADER
+    ===================================================== */
+
+    .header {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        margin-left: 0 !important;
+
+    }
+
+
+    /* =====================================================
+       MENU BUTTON
+    ===================================================== */
+
+    .menu-toggle {
+
+        display: flex !important;
+
+        align-items: center;
+        justify-content: center;
+
+        position: relative !important;
+
+        z-index: 10000 !important;
+
+        cursor: pointer !important;
+
+        pointer-events: auto !important;
+
+        -webkit-tap-highlight-color: transparent;
+
+    }
+
+
+    /* Prevent horizontal overflow */
+
+    .content * {
+        max-width: 100%;
+    }
+
 }
+
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media (min-width: 769px) {
+
+    .sidebar {
+
+        transform: translateX(0) !important;
+
+        pointer-events: auto !important;
+
+    }
+
+
+    .sidebar-overlay {
+
+        display: none !important;
+
+    }
+
+
+    .menu-toggle {
+
+        display: none !important;
+
+    }
+
+}
+
 </style>
 
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
@@ -176,7 +361,11 @@
 
     <aside class="sidebar"></aside>
 
-       
+       <div
+    class="sidebar-overlay"
+    id="sidebarOverlay"
+></div>
+
     <!-- ====================================================== -->
     <!-- MAIN -->
     <!-- ====================================================== -->
@@ -937,16 +1126,164 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const hamburgerBtn = document.getElementById("hamburger-btn");
-    const sidebar = document.querySelector(".sidebar");
+(function () {
 
-    if (hamburgerBtn && sidebar) {
-        hamburgerBtn.addEventListener("click", function () {
-            sidebar.classList.toggle("active");
-        });
+    function initMobileSidebar() {
+
+        const sidebar =
+            document.querySelector(".sidebar");
+
+        const overlay =
+            document.getElementById("sidebarOverlay");
+
+        const menuButton =
+            document.querySelector(".menu-toggle");
+
+
+        if (!sidebar) {
+            return;
+        }
+
+
+        function openSidebar() {
+
+            sidebar.classList.add(
+                "mobile-open"
+            );
+
+            if (overlay) {
+
+                overlay.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+
+
+        function closeSidebar() {
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+
+            if (overlay) {
+
+                overlay.classList.remove(
+                    "active"
+                );
+
+            }
+
+        }
+
+
+        if (menuButton) {
+
+            menuButton.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+                    const isOpen =
+                        sidebar.classList.contains(
+                            "mobile-open"
+                        );
+
+
+                    if (isOpen) {
+
+                        closeSidebar();
+
+                    } else {
+
+                        openSidebar();
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        if (overlay) {
+
+            overlay.addEventListener(
+                "click",
+                closeSidebar
+            );
+
+        }
+
+
+        /* Tutup sidebar setelah klik menu */
+
+        sidebar.addEventListener(
+            "click",
+            function (event) {
+
+                const link =
+                    event.target.closest("a");
+
+                if (
+                    link &&
+                    window.innerWidth <= 768
+                ) {
+
+                    setTimeout(
+                        closeSidebar,
+                        150
+                    );
+
+                }
+
+            }
+        );
+
+
+        /* Jika kembali ke desktop */
+
+        window.addEventListener(
+            "resize",
+            function () {
+
+                if (
+                    window.innerWidth > 768
+                ) {
+
+                    closeSidebar();
+
+                }
+
+            }
+        );
+
     }
-});
+
+
+    /*
+       Layout sidebar/header mungkin
+       dimuat secara dinamis
+    */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            setTimeout(
+                initMobileSidebar,
+                500
+            );
+
+        }
+    );
+
+})();
 </script>
 </body>
 </html>
