@@ -4,6 +4,60 @@
 <head>
 
 <head>
+
+     <!-- Tombol Menu Garis Tiga (Hanya muncul di HP) -->
+<button id="hamburger-btn" class="hamburger-toggle" aria-label="Menu">
+    ☰ Menu
+</button>
+<style>
+    /* Sembunyikan tombol hamburger secara default di Laptop/Desktop */
+.hamburger-toggle {
+    display: none;
+}
+
+/* Aturan Khusus Layar HP (Maksimal 768px) */
+@media screen and (max-width: 768px) {
+    /* Tampilkan tombol hamburger di HP */
+    .hamburger-toggle {
+        display: block;
+        background: #0f172a;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        font-size: 1rem;
+        border-radius: 6px;
+        margin: 10px;
+        cursor: pointer;
+        z-index: 1001;
+    }
+
+    /* Sidebar disembunyikan secara default saat di HP */
+    .sidebar {
+        display: none;
+        width: 100% !important;
+        height: auto;
+        background-color: #0b132b;
+        position: absolute;
+        top: 50px;
+        left: 0;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Kelas aktif untuk memunculkan sidebar saat tombol diklik */
+    .sidebar.active {
+        display: block !important;
+    }
+
+    /* Konten utama melebar penuh */
+    .main-content, .content-area {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding: 15px !important;
+    }
+}
+</style>
+
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
     (function() {
@@ -879,6 +933,19 @@ document.addEventListener("DOMContentLoaded", function () {
             window.location.href = "database.html"; // Untuk Administrator / System Administrator
         }
     });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const hamburgerBtn = document.getElementById("hamburger-btn");
+    const sidebar = document.querySelector(".sidebar");
+
+    if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener("click", function () {
+            sidebar.classList.toggle("active");
+        });
+    }
 });
 </script>
 </body>
