@@ -332,6 +332,70 @@
     }
 
 }
+/* =====================================================
+   MOBILE HEADER FIX
+===================================================== */
+
+@media (max-width: 768px) {
+
+    /* Header utama */
+    .top-header,
+    .header,
+    .dashboard-header {
+        position: relative;
+    }
+
+
+    /* Area kanan header */
+    .header-right {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding-right: 85px;
+        box-sizing: border-box;
+    }
+
+
+    /* Search */
+    .header-search,
+    .global-search {
+        width: 100%;
+        max-width: 100%;
+        flex: 1 1 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+
+    .header-search input,
+    .global-search input {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        padding-right: 15px;
+    }
+
+
+    /* Tombol menu kanan */
+    #mobileMenuButton {
+        position: fixed;
+        top: 203px;
+        right: 28px;
+
+        width: 76px;
+        height: 76px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        z-index: 9999;
+
+        border-radius: 22px;
+    }
+
+}
 </style>
 
 
