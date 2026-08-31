@@ -411,6 +411,193 @@
     }
 
 }
+/* =====================================================
+   DASHBOARD MOBILE HEADER - STACKED LAYOUT
+===================================================== */
+
+@media (max-width: 768px) {
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    .header {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+
+        padding: 36px 28px 28px !important;
+
+        overflow: visible !important;
+    }
+
+
+    /* =========================================
+       HEADER LEFT
+    ========================================= */
+
+    .header-left {
+        width: 100% !important;
+        padding-right: 70px !important;
+        box-sizing: border-box !important;
+    }
+
+
+    /* Judul Dashboard */
+    .header-left h1,
+    .header-title {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+
+    /* =========================================
+       HEADER RIGHT
+    ========================================= */
+
+    .header-right {
+        width: 100% !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 18px !important;
+
+        margin-top: 24px !important;
+
+        padding: 0 !important;
+    }
+
+
+    /* =========================================
+       SEARCH FULL WIDTH
+    ========================================= */
+
+    .header-search,
+    .header-search.global-search,
+    .global-search {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        flex: none !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    .header-search input,
+    .global-search input {
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =========================================
+       USER PROFILE
+    ========================================= */
+
+    .header-profile,
+    .profile-menu,
+    .user-profile {
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+        margin: 0 !important;
+
+        justify-content: flex-start !important;
+
+        cursor: pointer !important;
+    }
+
+
+    /* Pastikan profile tidak keluar layar */
+    .profile-info,
+    .user-info {
+        min-width: 0 !important;
+        flex: 1 !important;
+    }
+
+
+    /* =========================================
+       AVATAR BULAT
+    ========================================= */
+
+    .profile-avatar,
+    .avatar {
+        width: 56px !important;
+        height: 56px !important;
+
+        min-width: 56px !important;
+        min-height: 56px !important;
+
+        aspect-ratio: 1 / 1 !important;
+
+        border-radius: 50% !important;
+
+        flex-shrink: 0 !important;
+    }
+
+
+    /* =========================================
+       MOBILE MENU
+    ========================================= */
+
+    #mobileMenuButton {
+        position: absolute !important;
+
+        top: 28px !important;
+        right: 24px !important;
+        left: auto !important;
+
+        width: 58px !important;
+        height: 58px !important;
+
+        z-index: 10002 !important;
+    }
+
+
+    /* =========================================
+       HERO CARD
+    ========================================= */
+
+    .hero-card {
+        overflow: visible !important;
+    }
+
+
+    /* Label TalentScope Enterprise */
+    .hero-badge,
+    .hero-label,
+    .hero-card .badge {
+        position: relative !important;
+
+        top: auto !important;
+
+        transform: none !important;
+
+        margin: -22px auto 20px !important;
+
+        width: max-content !important;
+        max-width: calc(100% - 40px) !important;
+
+        white-space: nowrap !important;
+
+        overflow: visible !important;
+
+        z-index: 5 !important;
+    }
+
+}
 </style>
 
 
