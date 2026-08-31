@@ -374,3 +374,28 @@
         margin: 0 0 15px 0 !important;
     }
 }
+
+/* Aturan khusus untuk tampilan HP / Layar Kecil */
+@media screen and (max-width: 768px) {
+    /* Buat kontainer utama menjadi vertikal ke bawah */
+    .app-container, .dashboard-layout {
+        display: flex;
+        flex-direction: column !important;
+        width: 100% !important;
+        overflow-x: hidden;
+    }
+
+    /* Sidebar mengambil lebar penuh layar atas */
+    .sidebar {
+        width: 100% !important;
+        height: auto !important;
+        position: relative !important;
+    }
+
+    /* Konten utama bergeser ke bawah sidebar dan lebar 100% */
+    .main-content, .content-area {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding: 15px !important;
+    }
+}
