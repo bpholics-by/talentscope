@@ -3,8 +3,6 @@
 
 <head>
 
-<head>
-
        <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
     (function() {
@@ -101,74 +99,21 @@
 <style>
 
 /* =========================================================
-   DASHBOARD MOBILE FIX
-   KHUSUS HALAMAN dashboard.html
+   DASHBOARD MOBILE SIDEBAR
+   KHUSUS dashboard.html
 ========================================================= */
 
 @media (max-width: 768px) {
 
-    /* ==========================================
-       RESET APP LAYOUT KHUSUS DASHBOARD
-    ========================================== */
-
     html,
     body {
-
-        width: 100% !important;
-
-        max-width: 100% !important;
-
         overflow-x: hidden !important;
-
     }
 
 
-    .app {
-
-        width: 100% !important;
-
-        min-width: 0 !important;
-
-        overflow-x: hidden !important;
-
-    }
-
-
-    /* ==========================================
-       MAIN CONTENT
-    ========================================== */
-
-    .main {
-
-        width: 100% !important;
-
-        min-width: 0 !important;
-
-        height: 100vh !important;
-
-        margin: 0 !important;
-
-    }
-
-
-    .content {
-
-        width: 100% !important;
-
-        max-width: 100% !important;
-
-        min-width: 0 !important;
-
-        padding: 20px !important;
-
-        overflow-x: hidden !important;
-
-    }
-
-
-    /* ==========================================
-       SIDEBAR MOBILE
-    ========================================== */
+    /* =========================================
+       SIDEBAR
+    ========================================= */
 
     .sidebar {
 
@@ -177,20 +122,21 @@
         position: fixed !important;
 
         top: 0 !important;
-
         left: 0 !important;
 
         width: 280px !important;
-
         max-width: 85vw !important;
 
         height: 100vh !important;
 
+        margin: 0 !important;
+
         z-index: 10001 !important;
 
-        transform: translateX(-100%) !important;
+        transform: translateX(-105%) !important;
 
-        transition: transform 0.3s ease !important;
+        transition:
+            transform 0.3s ease !important;
 
         overflow-y: auto !important;
 
@@ -199,7 +145,7 @@
     }
 
 
-    /* SIDEBAR SAAT DIBUKA */
+    /* SIDEBAR OPEN */
 
     .sidebar.mobile-open {
 
@@ -210,9 +156,9 @@
     }
 
 
-    /* ==========================================
+    /* =========================================
        OVERLAY
-    ========================================== */
+    ========================================= */
 
     .sidebar-overlay {
 
@@ -220,19 +166,13 @@
 
         position: fixed !important;
 
-        top: 0 !important;
-
-        right: 0 !important;
-
-        bottom: 0 !important;
-
-        left: 0 !important;
+        inset: 0 !important;
 
         width: 100% !important;
-
         height: 100% !important;
 
-        background: rgba(15, 23, 42, 0.45) !important;
+        background:
+            rgba(15, 23, 42, 0.55) !important;
 
         z-index: 10000 !important;
 
@@ -260,54 +200,197 @@
     }
 
 
-    /* ==========================================
-       PREVENT PAGE SHIFT
-    ========================================== */
+    /* =========================================
+       FLOATING MENU BUTTON
+    ========================================= */
 
-    .app,
-    .main {
+    #mobileMenuButton {
 
-        margin-left: 0 !important;
+        display: flex !important;
+
+        position: fixed !important;
+
+        top: 16px !important;
+        left: 16px !important;
+
+        width: 46px !important;
+        height: 46px !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        border: none !important;
+
+        border-radius: 12px !important;
+
+        background: #0F172A !important;
+
+        color: #FFFFFF !important;
+
+        font-size: 20px !important;
+
+        cursor: pointer !important;
+
+        z-index: 9999 !important;
+
+        box-shadow:
+            0 8px 25px rgba(15,23,42,.25) !important;
 
     }
 
 
-    /* ==========================================
-       DASHBOARD ELEMENTS
-    ========================================== */
+    #mobileMenuButton i {
 
-    .hero {
-
-        min-height: auto !important;
-
-        padding: 28px 22px !important;
-
-        margin-bottom: 28px !important;
-
-        flex-direction: column !important;
-
-        align-items: flex-start !important;
-
-        gap: 24px !important;
+        pointer-events: none !important;
 
     }
 
 
-    .hero-right {
+    /* SAAT SIDEBAR TERBUKA */
 
-        width: 100% !important;
+    body.sidebar-is-open
+    #mobileMenuButton {
 
-    }
-
-
-    .dashboard-tools-grid {
-
-        grid-template-columns: 1fr !important;
+        left: calc(
+            min(85vw, 280px) + 12px
+        ) !important;
 
     }
 
 }
 
+
+/* DESKTOP */
+
+@media (min-width: 769px) {
+
+    #mobileMenuButton {
+
+        display: none !important;
+
+    }
+
+}
+/* =========================================================
+   HEADER SEARCH MOBILE FIX
+   KHUSUS DASHBOARD.HTML
+========================================================= */
+
+@media (max-width: 768px) {
+
+    /* HEADER RIGHT */
+
+    .header-right {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        flex: 1 !important;
+
+        display: flex !important;
+
+        align-items: center !important;
+
+        justify-content: flex-end !important;
+
+        box-sizing: border-box !important;
+
+        overflow: hidden !important;
+
+    }
+
+
+    /* SEARCH WRAPPER */
+
+    .header-right .header-search,
+    .header-right .global-search {
+
+        flex: 1 1 auto !important;
+
+        width: auto !important;
+
+        min-width: 0 !important;
+
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+
+    /* SEARCH INPUT */
+
+    .header-right .header-search input {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+
+    /* SEARCH SUGGESTIONS */
+
+    .header-right .global-search-suggestions {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+    }
+
+}
+@media (max-width: 768px) {
+
+    .header {
+
+        height: auto !important;
+
+        min-height: auto !important;
+
+        padding: 18px 20px !important;
+
+        flex-wrap: wrap !important;
+
+        gap: 14px !important;
+
+    }
+
+
+    .header-left {
+
+        width: 100% !important;
+
+        flex: none !important;
+
+    }
+
+
+    .header-right {
+
+        width: 100% !important;
+
+        flex: none !important;
+
+    }
+
+
+    .header-right .header-search {
+
+        width: 100% !important;
+
+    }
+
+}
 </style>
 
 
@@ -1103,39 +1186,83 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 (function () {
 
-    function setupMobileMenu() {
+    "use strict";
 
-        const sidebar =
-            document.querySelector(".sidebar");
 
-        const overlay =
-            document.querySelector(".sidebar-overlay");
-
-        const menuButton =
-            document.querySelector(".menu-toggle");
-
+    function createMobileMenuButton() {
 
         if (
-            !sidebar ||
-            !menuButton ||
-            menuButton.dataset.mobileReady === "true"
+            document.getElementById(
+                "mobileMenuButton"
+            )
         ) {
             return;
         }
 
 
-        menuButton.dataset.mobileReady =
-            "true";
+        var button =
+            document.createElement(
+                "button"
+            );
 
 
-        menuButton.addEventListener(
+        button.id =
+            "mobileMenuButton";
+
+
+        button.type =
+            "button";
+
+
+        button.setAttribute(
+            "aria-label",
+            "Open menu"
+        );
+
+
+        button.innerHTML =
+            '<i class="fa-solid fa-bars"></i>';
+
+
+        document.body.appendChild(
+            button
+        );
+
+
+        button.addEventListener(
             "click",
-            function (e) {
+            function () {
 
-                e.preventDefault();
+                var sidebar =
+                    document.querySelector(
+                        ".sidebar"
+                    );
+
+
+                var overlay =
+                    document.querySelector(
+                        ".sidebar-overlay"
+                    );
+
+
+                if (!sidebar) {
+
+                    console.warn(
+                        "Sidebar belum ditemukan"
+                    );
+
+                    return;
+
+                }
+
 
                 sidebar.classList.toggle(
                     "mobile-open"
+                );
+
+
+                document.body.classList.toggle(
+                    "sidebar-is-open"
                 );
 
 
@@ -1150,25 +1277,88 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         );
 
+    }
 
-        if (overlay) {
 
-            overlay.addEventListener(
-                "click",
-                function () {
+    function closeMobileSidebar() {
 
-                    sidebar.classList.remove(
-                        "mobile-open"
-                    );
+        var sidebar =
+            document.querySelector(
+                ".sidebar"
+            );
 
-                    overlay.classList.remove(
-                        "active"
-                    );
 
-                }
+        var overlay =
+            document.querySelector(
+                ".sidebar-overlay"
+            );
+
+
+        if (sidebar) {
+
+            sidebar.classList.remove(
+                "mobile-open"
             );
 
         }
+
+
+        if (overlay) {
+
+            overlay.classList.remove(
+                "active"
+            );
+
+        }
+
+
+        document.body.classList.remove(
+            "sidebar-is-open"
+        );
+
+    }
+
+
+    function setupOverlay() {
+
+        var overlay =
+            document.querySelector(
+                ".sidebar-overlay"
+            );
+
+
+        if (
+            !overlay ||
+            overlay.dataset.ready === "true"
+        ) {
+            return;
+        }
+
+
+        overlay.dataset.ready =
+            "true";
+
+
+        overlay.addEventListener(
+            "click",
+            closeMobileSidebar
+        );
+
+    }
+
+
+    function initializeMobileMenu() {
+
+        if (
+            window.innerWidth > 768
+        ) {
+            return;
+        }
+
+
+        createMobileMenuButton();
+
+        setupOverlay();
 
     }
 
@@ -1177,13 +1367,19 @@ document.addEventListener("DOMContentLoaded", function () {
         "DOMContentLoaded",
         function () {
 
-            setupMobileMenu();
+            initializeMobileMenu();
 
-            const observer =
+
+            /*
+               Karena sidebar/header
+               dimuat oleh layout-loader.js
+            */
+
+            var observer =
                 new MutationObserver(
                     function () {
 
-                        setupMobileMenu();
+                        initializeMobileMenu();
 
                     }
                 );
@@ -1196,6 +1392,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     subtree: true
                 }
             );
+
+        }
+    );
+
+
+    window.addEventListener(
+        "resize",
+        function () {
+
+            if (
+                window.innerWidth > 768
+            ) {
+
+                closeMobileSidebar();
+
+            }
 
         }
     );
