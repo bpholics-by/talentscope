@@ -8,49 +8,20 @@
      <style>
 
 /* =========================================================
-   MOBILE SIDEBAR - FINAL FIX
-========================================================= */
-
-/* DESKTOP */
-.menu-toggle {
-    display: none;
-}
-
-.sidebar-overlay {
-    display: none;
-}
-
-
-/* =========================================================
-   MOBILE
+   MOBILE SIDEBAR FIX - SAFE VERSION
 ========================================================= */
 
 @media (max-width: 768px) {
 
     html,
     body {
-        width: 100%;
-        max-width: 100%;
         overflow-x: hidden;
     }
 
 
-    /* APP */
-
-    .app {
-        width: 100%;
-        max-width: 100%;
-        display: block !important;
-    }
-
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
+    /* SIDEBAR */
 
     .sidebar {
-
-        display: block !important;
 
         position: fixed !important;
 
@@ -58,57 +29,41 @@
         left: 0 !important;
 
         width: 280px !important;
-        max-width: 82vw !important;
+        max-width: 85vw !important;
 
-        height: 100dvh !important;
-
-        margin: 0 !important;
+        height: 100vh !important;
 
         z-index: 9999 !important;
 
-        transform: translateX(-110%) !important;
+        transform: translateX(-100%) !important;
 
         transition: transform 0.3s ease !important;
 
         overflow-y: auto !important;
-
-        -webkit-overflow-scrolling: touch;
-
-        pointer-events: none;
-
     }
 
 
-    /* SIDEBAR TERBUKA */
+    /* SIDEBAR OPEN */
 
     .sidebar.mobile-open {
 
         transform: translateX(0) !important;
-
-        pointer-events: auto;
-
     }
 
 
-    /* =====================================================
-       OVERLAY
-    ===================================================== */
+    /* OVERLAY */
 
     .sidebar-overlay {
 
-        display: block !important;
+        display: block;
 
-        position: fixed !important;
+        position: fixed;
 
-        top: 0 !important;
-        left: 0 !important;
+        inset: 0;
 
-        width: 100% !important;
-        height: 100dvh !important;
+        background: rgba(0,0,0,0.45);
 
-        background: rgba(0, 0, 0, 0.45);
-
-        z-index: 9998 !important;
+        z-index: 9998;
 
         opacity: 0;
 
@@ -116,10 +71,7 @@
 
         pointer-events: none;
 
-        transition:
-            opacity 0.3s ease,
-            visibility 0.3s ease;
-
+        transition: 0.3s;
     }
 
 
@@ -130,114 +82,10 @@
         visibility: visible;
 
         pointer-events: auto;
-
     }
 
 
-    /* =====================================================
-       MAIN CONTENT
-    ===================================================== */
-
-    .main {
-
-        width: 100% !important;
-
-        min-width: 0 !important;
-
-        margin-left: 0 !important;
-
-    }
-
-
-    main,
-    .content,
-    .page-content,
-    .main-content {
-
-        width: 100% !important;
-
-        max-width: 100% !important;
-
-        margin-left: 0 !important;
-
-    }
-
-
-    /* =====================================================
-       HEADER
-    ===================================================== */
-
-    .header {
-
-        width: 100% !important;
-
-        max-width: 100% !important;
-
-        margin-left: 0 !important;
-
-    }
-
-
-    /* =====================================================
-       MENU BUTTON
-    ===================================================== */
-
-    .menu-toggle {
-
-        display: flex !important;
-
-        align-items: center;
-        justify-content: center;
-
-        position: relative !important;
-
-        z-index: 10000 !important;
-
-        cursor: pointer !important;
-
-        pointer-events: auto !important;
-
-        -webkit-tap-highlight-color: transparent;
-
-    }
-
-
-    /* Prevent horizontal overflow */
-
-    .content * {
-        max-width: 100%;
-    }
-
-}
-
-
-/* =========================================================
-   DESKTOP
-========================================================= */
-
-@media (min-width: 769px) {
-
-    .sidebar {
-
-        transform: translateX(0) !important;
-
-        pointer-events: auto !important;
-
-    }
-
-
-    .sidebar-overlay {
-
-        display: none !important;
-
-    }
-
-
-    .menu-toggle {
-
-        display: none !important;
-
-    }
+    /* JANGAN UBAH HEIGHT / DISPLAY CONTAINER UTAMA */
 
 }
 
@@ -1128,116 +976,46 @@ document.addEventListener("DOMContentLoaded", function () {
 <script>
 (function () {
 
-    function initMobileSidebar() {
+    function setupMobileMenu() {
 
         const sidebar =
             document.querySelector(".sidebar");
 
         const overlay =
-            document.getElementById("sidebarOverlay");
+            document.querySelector(".sidebar-overlay");
 
         const menuButton =
             document.querySelector(".menu-toggle");
 
 
-        if (!sidebar) {
+        if (
+            !sidebar ||
+            !menuButton ||
+            menuButton.dataset.mobileReady === "true"
+        ) {
             return;
         }
 
 
-        function openSidebar() {
-
-            sidebar.classList.add(
-                "mobile-open"
-            );
-
-            if (overlay) {
-
-                overlay.classList.add(
-                    "active"
-                );
-
-            }
-
-        }
+        menuButton.dataset.mobileReady =
+            "true";
 
 
-        function closeSidebar() {
-
-            sidebar.classList.remove(
-                "mobile-open"
-            );
-
-            if (overlay) {
-
-                overlay.classList.remove(
-                    "active"
-                );
-
-            }
-
-        }
-
-
-        if (menuButton) {
-
-            menuButton.addEventListener(
-                "click",
-                function (event) {
-
-                    event.preventDefault();
-
-                    event.stopPropagation();
-
-                    const isOpen =
-                        sidebar.classList.contains(
-                            "mobile-open"
-                        );
-
-
-                    if (isOpen) {
-
-                        closeSidebar();
-
-                    } else {
-
-                        openSidebar();
-
-                    }
-
-                }
-            );
-
-        }
-
-
-        if (overlay) {
-
-            overlay.addEventListener(
-                "click",
-                closeSidebar
-            );
-
-        }
-
-
-        /* Tutup sidebar setelah klik menu */
-
-        sidebar.addEventListener(
+        menuButton.addEventListener(
             "click",
-            function (event) {
+            function (e) {
 
-                const link =
-                    event.target.closest("a");
+                e.preventDefault();
 
-                if (
-                    link &&
-                    window.innerWidth <= 768
-                ) {
+                sidebar.classList.toggle(
+                    "mobile-open"
+                );
 
-                    setTimeout(
-                        closeSidebar,
-                        150
+
+                if (overlay) {
+
+                    overlay.classList.toggle(
+                        "active"
                     );
 
                 }
@@ -1246,38 +1024,50 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
 
-        /* Jika kembali ke desktop */
+        if (overlay) {
 
-        window.addEventListener(
-            "resize",
-            function () {
+            overlay.addEventListener(
+                "click",
+                function () {
 
-                if (
-                    window.innerWidth > 768
-                ) {
+                    sidebar.classList.remove(
+                        "mobile-open"
+                    );
 
-                    closeSidebar();
+                    overlay.classList.remove(
+                        "active"
+                    );
 
                 }
+            );
 
-            }
-        );
+        }
 
     }
 
-
-    /*
-       Layout sidebar/header mungkin
-       dimuat secara dinamis
-    */
 
     document.addEventListener(
         "DOMContentLoaded",
         function () {
 
-            setTimeout(
-                initMobileSidebar,
-                500
+            setupMobileMenu();
+
+            const observer =
+                new MutationObserver(
+                    function () {
+
+                        setupMobileMenu();
+
+                    }
+                );
+
+
+            observer.observe(
+                document.body,
+                {
+                    childList: true,
+                    subtree: true
+                }
             );
 
         }
