@@ -238,7 +238,38 @@
     #mobileMenuButton:active {
         transform: scale(0.96);
     }
+/* ==========================================================
+   FIX MOBILE SCROLL
+========================================================== */
 
+@media (max-width: 768px) {
+
+    html,
+    body {
+
+        height: auto;
+
+        min-height: 100%;
+
+        overflow-x: hidden;
+
+        overflow-y: auto;
+    }
+
+
+    .app-layout,
+    .main-layout,
+    .main-content,
+    .content {
+
+        height: auto !important;
+
+        min-height: 100vh;
+
+        overflow: visible !important;
+    }
+
+}
 
     /* =========================================
        HEADER
@@ -487,6 +518,81 @@
         right: 14px;
 
         border-radius: 14px;
+    }
+
+}
+/* ==========================================================
+   MOBILE – ASSESSMENT CATALOG
+========================================================== */
+
+@media (max-width: 768px) {
+
+    .main-content,
+    .content {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+
+    /* HEADER */
+
+    .page-header,
+    .dashboard-header,
+    .content-header {
+
+        display: flex;
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 14px;
+
+        width: 100%;
+
+        padding-right: 24px;
+    }
+
+
+    /* TITLE */
+
+    .header-left {
+
+        width: 100%;
+    }
+
+
+    /* SEARCH */
+
+    .header-right {
+
+        width: 100%;
+
+        display: block;
+
+        margin-top: 0;
+    }
+
+
+    .header-search,
+    .global-search {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        box-sizing: border-box;
+    }
+
+
+    .header-search input,
+    .global-search input {
+
+        width: 100%;
+
+        min-width: 0;
+
+        box-sizing: border-box;
     }
 
 }
