@@ -980,6 +980,206 @@
 .table-container {
     padding-bottom: 10px !important;
 }
+/* =====================================================
+   PREMIUM ASSESSMENT PAGINATION
+===================================================== */
+
+.pagination-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    margin-top: 18px;
+    margin-bottom: 24px;
+
+    padding: 0 4px;
+    box-sizing: border-box;
+
+    position: relative;
+    clear: both;
+    z-index: 10;
+
+    overflow: visible !important;
+}
+
+.pagination-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+    padding: 4px;
+
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    box-shadow:
+        0 4px 12px rgba(15, 23, 42, 0.07);
+
+    white-space: nowrap;
+}
+
+/* Base Button */
+.pagination-container .pg-btn {
+    min-width: 32px;
+    height: 32px;
+
+    padding: 0 9px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid transparent;
+    border-radius: 7px;
+
+    background: transparent;
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    font-family: inherit;
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+.pagination-container #prevPage,
+.pagination-container #nextPage {
+    padding-left: 11px;
+    padding-right: 11px;
+
+    min-width: auto;
+    color: #475569;
+}
+
+/* Hover */
+.pagination-container .pg-btn:hover:not(.active) {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+
+    color: #2563eb;
+
+    transform: translateY(-1px);
+}
+
+/* Active Page */
+.pagination-container .pg-num.active {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border-color: #2563eb;
+
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.22);
+
+    transform: none;
+}
+
+/* Click effect */
+.pagination-container .pg-btn:active {
+    transform: scale(0.96);
+}
+
+/* Disabled */
+.pagination-container .pg-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+
+    background: transparent;
+    color: #94a3b8;
+
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* =====================================================
+   TABLE AREA SAFETY
+   Agar pagination tidak hilang/terpotong
+===================================================== */
+
+.assessment-table-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.pagination-wrapper,
+.pagination-container,
+#assessmentPagination {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .pagination-wrapper {
+        justify-content: center;
+
+        margin-top: 20px;
+        margin-bottom: 24px;
+
+        padding: 0 12px;
+    }
+
+    .pagination-container {
+        gap: 5px;
+        padding: 5px;
+
+        max-width: 100%;
+    }
+
+    .pagination-container .pg-btn {
+        min-width: 38px;
+        height: 38px;
+
+        padding: 0 11px;
+
+        font-size: 13px;
+    }
+
+    .pagination-container #prevPage,
+    .pagination-container #nextPage {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+
+/* HP kecil */
+@media (max-width: 420px) {
+
+    .pagination-wrapper {
+        padding: 0 8px;
+    }
+
+    .pagination-container {
+        gap: 4px;
+        padding: 4px;
+        border-radius: 12px;
+    }
+
+    .pagination-container .pg-btn {
+        min-width: 36px;
+        height: 36px;
+
+        padding: 0 9px;
+
+        font-size: 12px;
+    }
+
+    .pagination-container #prevPage,
+    .pagination-container #nextPage {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
 </style>
 
     <!-- Font -->
