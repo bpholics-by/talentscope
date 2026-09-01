@@ -5,58 +5,7 @@
 
     <head>
 
-        <!-- Tombol Menu Garis Tiga (Hanya muncul di HP) -->
-<button id="hamburger-btn" class="hamburger-toggle" aria-label="Menu">
-    ☰ Menu
-</button>
-<style>
-    /* Sembunyikan tombol hamburger secara default di Laptop/Desktop */
-.hamburger-toggle {
-    display: none;
-}
-
-/* Aturan Khusus Layar HP (Maksimal 768px) */
-@media screen and (max-width: 768px) {
-    /* Tampilkan tombol hamburger di HP */
-    .hamburger-toggle {
-        display: block;
-        background: #0f172a;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        font-size: 1rem;
-        border-radius: 6px;
-        margin: 10px;
-        cursor: pointer;
-        z-index: 1001;
-    }
-
-    /* Sidebar disembunyikan secara default saat di HP */
-    .sidebar {
-        display: none;
-        width: 100% !important;
-        height: auto;
-        background-color: #0b132b;
-        position: absolute;
-        top: 50px;
-        left: 0;
-        z-index: 1000;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    /* Kelas aktif untuk memunculkan sidebar saat tombol diklik */
-    .sidebar.active {
-        display: block !important;
-    }
-
-    /* Konten utama melebar penuh */
-    .main-content, .content-area {
-        width: 100% !important;
-        margin-left: 0 !important;
-        padding: 15px !important;
-    }
-}
-</style>
+        
 
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
@@ -150,6 +99,399 @@
     <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/assessment-catalog.css">
+
+    <style>
+
+/* =========================================================
+   MOBILE RESPONSIVE
+   ASSESSMENT CATALOG
+========================================================= */
+
+#mobileMenuButton {
+    display: none;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media screen and (max-width: 768px) {
+
+
+    /* =========================================
+       APP LAYOUT
+    ========================================= */
+
+    html,
+    body {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+
+    .app {
+        display: block;
+        width: 100%;
+    }
+
+
+    .main {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+
+    .content {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 20px 16px 30px;
+    }
+
+
+    /* =========================================
+       SIDEBAR
+    ========================================= */
+
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        right: -320px !important;
+        left: auto !important;
+
+        width: 300px !important;
+        max-width: 85vw !important;
+        height: 100vh !important;
+
+        display: block !important;
+
+        z-index: 9998 !important;
+
+        transition: right 0.3s ease;
+
+        overflow-y: auto;
+    }
+
+
+    .sidebar.mobile-open {
+        right: 0 !important;
+    }
+
+
+    /* =========================================
+       OVERLAY
+    ========================================= */
+
+    .sidebar-overlay {
+        position: fixed;
+        inset: 0;
+
+        display: none;
+
+        background: rgba(15, 23, 42, 0.45);
+
+        z-index: 9997;
+    }
+
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+
+
+    /* =========================================
+       MOBILE MENU BUTTON
+    ========================================= */
+
+    #mobileMenuButton {
+        display: flex;
+
+        position: fixed;
+
+        top: 18px;
+        right: 18px;
+
+        width: 52px;
+        height: 52px;
+
+        align-items: center;
+        justify-content: center;
+
+        border: none;
+        border-radius: 16px;
+
+        background: #0f172a;
+        color: #ffffff;
+
+        font-size: 20px;
+
+        cursor: pointer;
+
+        z-index: 10000;
+
+        box-shadow:
+            0 8px 20px
+            rgba(15, 23, 42, 0.25);
+    }
+
+
+    #mobileMenuButton:active {
+        transform: scale(0.96);
+    }
+
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    .header {
+        width: 100%;
+        min-height: auto;
+        box-sizing: border-box;
+
+        padding:
+            24px
+            84px
+            18px
+            20px;
+    }
+
+
+    /* =========================================
+       PAGE ACTION
+    ========================================= */
+
+    .page-header {
+        margin-bottom: 18px !important;
+    }
+
+
+    .page-action {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px;
+    }
+
+
+    .page-action > button {
+        width: 100%;
+    }
+
+
+    #selectionPanel {
+        width: 100% !important;
+
+        box-sizing: border-box;
+
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 10px !important;
+
+        padding: 14px !important;
+    }
+
+
+    #selectionPanel button {
+        width: 100%;
+    }
+
+
+    /* =========================================
+       STATISTICS
+    ========================================= */
+
+    .catalog-stats {
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 12px;
+    }
+
+
+    .stat-card {
+        min-width: 0;
+        padding: 14px;
+    }
+
+
+    .stat-content span,
+    .stat-content small {
+        font-size: 11px;
+    }
+
+
+    .stat-content h3 {
+        font-size: 22px;
+    }
+
+
+    /* =========================================
+       TOOLBAR
+    ========================================= */
+
+    .catalog-toolbar {
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 12px;
+    }
+
+
+    .toolbar-left,
+    .toolbar-right {
+        width: 100%;
+    }
+
+
+    .search-box {
+        width: 100%;
+    }
+
+
+    .search-box input {
+        width: 100%;
+        min-width: 0;
+    }
+
+
+    .toolbar-right button {
+        width: 100%;
+    }
+
+
+    /* =========================================
+       FILTER PANEL
+    ========================================= */
+
+    #assessmentFilterPanel > div:nth-of-type(2) {
+        grid-template-columns: 1fr !important;
+    }
+
+
+    /* =========================================
+       TABLE
+    ========================================= */
+
+    .table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+
+    .assessment-table {
+        min-width: 850px;
+    }
+
+
+    /* =========================================
+       PAGINATION
+    ========================================= */
+
+    .pagination-wrapper {
+        justify-content: flex-start !important;
+        overflow-x: auto;
+    }
+
+
+    .pagination-container {
+        min-width: max-content;
+    }
+
+
+    /* =========================================
+       BOTTOM SELECTION PANEL
+    ========================================= */
+
+    .selection-panel {
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 12px;
+    }
+
+
+    .selection-panel button {
+        width: 100%;
+    }
+
+
+    /* =========================================
+       MODAL
+    ========================================= */
+
+    .modal-overlay {
+        padding: 14px;
+        box-sizing: border-box;
+    }
+
+
+    .modal-card {
+        width: 100%;
+        max-width: 100%;
+
+        max-height: 90vh;
+
+        overflow-y: auto;
+    }
+
+
+    .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+
+    .modal-footer {
+        flex-direction: column-reverse;
+    }
+
+
+    .modal-footer button {
+        width: 100%;
+    }
+
+}
+
+
+/* =========================================================
+   EXTRA SMALL MOBILE
+========================================================= */
+
+@media screen and (max-width: 480px) {
+
+    .content {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+
+    .catalog-stats {
+        grid-template-columns: 1fr !important;
+    }
+
+
+    #mobileMenuButton {
+        width: 48px;
+        height: 48px;
+
+        font-size: 18px;
+
+        top: 14px;
+        right: 14px;
+
+        border-radius: 14px;
+    }
+
+}
+
+</style>
 
     <!-- Font -->
 
@@ -1436,20 +1778,241 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
 });
 </script>
-
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const hamburgerBtn = document.getElementById("hamburger-btn");
-    const sidebar = document.querySelector(".sidebar");
+(function () {
 
-    if (hamburgerBtn && sidebar) {
-        hamburgerBtn.addEventListener("click", function () {
-            sidebar.classList.toggle("active");
-        });
+    "use strict";
+
+
+    function createMobileMenuButton() {
+
+        if (
+            window.innerWidth > 768
+        ) {
+            return;
+        }
+
+
+        if (
+            document.getElementById(
+                "mobileMenuButton"
+            )
+        ) {
+            return;
+        }
+
+
+        var button =
+            document.createElement(
+                "button"
+            );
+
+
+        button.id =
+            "mobileMenuButton";
+
+
+        button.type =
+            "button";
+
+
+        button.setAttribute(
+            "aria-label",
+            "Open menu"
+        );
+
+
+        button.innerHTML =
+            '<i class="fa-solid fa-bars"></i>';
+
+
+        document.body.appendChild(
+            button
+        );
+
+
+        button.addEventListener(
+            "click",
+            function () {
+
+                var sidebar =
+                    document.querySelector(
+                        ".sidebar"
+                    );
+
+
+                var overlay =
+                    document.querySelector(
+                        ".sidebar-overlay"
+                    );
+
+
+                if (!sidebar) {
+                    return;
+                }
+
+
+                sidebar.classList.toggle(
+                    "mobile-open"
+                );
+
+
+                if (overlay) {
+
+                    overlay.classList.toggle(
+                        "active"
+                    );
+
+                }
+
+
+                document.body.classList.toggle(
+                    "sidebar-is-open"
+                );
+
+            }
+        );
+
     }
-});
-</script>
 
+
+    function createOverlay() {
+
+        var overlay =
+            document.querySelector(
+                ".sidebar-overlay"
+            );
+
+
+        if (overlay) {
+            return;
+        }
+
+
+        overlay =
+            document.createElement(
+                "div"
+            );
+
+
+        overlay.className =
+            "sidebar-overlay";
+
+
+        document.body.appendChild(
+            overlay
+        );
+
+
+        overlay.addEventListener(
+            "click",
+            closeMobileSidebar
+        );
+
+    }
+
+
+    function closeMobileSidebar() {
+
+        var sidebar =
+            document.querySelector(
+                ".sidebar"
+            );
+
+
+        var overlay =
+            document.querySelector(
+                ".sidebar-overlay"
+            );
+
+
+        if (sidebar) {
+
+            sidebar.classList.remove(
+                "mobile-open"
+            );
+
+        }
+
+
+        if (overlay) {
+
+            overlay.classList.remove(
+                "active"
+            );
+
+        }
+
+
+        document.body.classList.remove(
+            "sidebar-is-open"
+        );
+
+    }
+
+
+    function initializeMobileMenu() {
+
+        if (
+            window.innerWidth > 768
+        ) {
+
+            closeMobileSidebar();
+
+            return;
+
+        }
+
+
+        createOverlay();
+
+        createMobileMenuButton();
+
+    }
+
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            initializeMobileMenu();
+
+
+            /*
+               Sidebar dimuat
+               oleh layout-loader.js
+            */
+
+            var observer =
+                new MutationObserver(
+                    function () {
+
+                        initializeMobileMenu();
+
+                    }
+                );
+
+
+            observer.observe(
+                document.body,
+                {
+                    childList: true,
+                    subtree: true
+                }
+            );
+
+        }
+    );
+
+
+    window.addEventListener(
+        "resize",
+        initializeMobileMenu
+    );
+
+
+})();
+</script>
 </body>
 </html>
 
