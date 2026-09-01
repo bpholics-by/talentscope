@@ -869,6 +869,375 @@
     }
 
 }
+/* =========================================================
+   ASSESSMENT CATALOG - MOBILE FINAL FIX
+   MUST BE PLACED AT THE END OF CSS
+========================================================= */
+
+@media screen and (max-width: 768px) {
+
+    /* =========================================
+       RESET PAGE WIDTH
+    ========================================= */
+
+    html,
+    body {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+
+    /* =========================================
+       MAIN CONTENT
+    ========================================= */
+
+    .main-content,
+    main,
+    .content {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding: 16px !important;
+        box-sizing: border-box !important;
+    }
+
+
+    /* =========================================
+       PAGE HEADER
+    ========================================= */
+
+    .page-header {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+
+        margin: 0 0 20px 0 !important;
+        padding: 0 !important;
+    }
+
+
+    /* =========================================
+       TITLE AREA
+    ========================================= */
+
+    .page-header h1,
+    .page-title {
+        font-size: 34px !important;
+        line-height: 1.15 !important;
+
+        margin: 0 !important;
+
+        white-space: normal !important;
+        word-break: normal !important;
+    }
+
+    .page-header p,
+    .page-subtitle {
+        font-size: 16px !important;
+        line-height: 1.7 !important;
+
+        margin-top: 8px !important;
+        margin-bottom: 0 !important;
+    }
+
+
+    /* =========================================
+       TOP HEADER / SEARCH
+    ========================================= */
+
+    .top-header,
+    .header-content,
+    .header-right {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+    }
+
+    .top-header {
+        flex-wrap: wrap !important;
+    }
+
+
+    /* =========================================
+       SEARCH
+    ========================================= */
+
+    .global-search,
+    .header-search,
+    .search-container {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        flex: none !important;
+
+        margin: 0 !important;
+    }
+
+
+    /* =========================================
+       USER PROFILE
+    ========================================= */
+
+    .user-profile,
+    .admin-profile,
+    .profile-menu {
+        max-width: 100% !important;
+    }
+
+
+    /* =========================================
+       ACTION BUTTONS
+    ========================================= */
+
+    .catalog-action-row,
+    .page-action {
+        width: 100% !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        gap: 14px !important;
+
+        align-items: stretch !important;
+    }
+
+    #addAssessmentBtn,
+    #createProjectBtn {
+        width: 100% !important;
+        min-height: 58px !important;
+
+        justify-content: center !important;
+
+        font-size: 17px !important;
+    }
+
+
+    /* =========================================
+       SELECTION PANEL
+    ========================================= */
+
+    #selectionPanel {
+        width: 100% !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+        justify-content: center !important;
+
+        gap: 14px !important;
+
+        padding: 0 !important;
+        margin: 0 !important;
+
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    #selectedCount {
+        width: 100% !important;
+
+        text-align: center !important;
+
+        font-size: 16px !important;
+    }
+
+
+    /* =========================================
+       STATISTICS CARDS
+    ========================================= */
+
+    .catalog-stats,
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+
+        gap: 18px !important;
+    }
+
+    .stat-card {
+        width: 100% !important;
+        min-height: 150px !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =========================================
+       SEARCH FILTER
+    ========================================= */
+
+    .catalog-filter-row,
+    .filter-row {
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 12px !important;
+    }
+
+    .catalog-filter-row input,
+    .filter-row input,
+    #assessmentSearch {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .filter-btn {
+        width: 100% !important;
+    }
+
+
+    /* =========================================
+       TABLE SCROLL
+    ========================================= */
+
+    .table-container,
+    .assessment-table-wrapper {
+        width: 100% !important;
+
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .assessment-table {
+        min-width: 850px !important;
+    }
+
+
+    /* =========================================
+       PAGINATION
+       SINGLE PAGINATION ONLY
+    ========================================= */
+
+    .assessment-pagination {
+        width: 100% !important;
+
+        display: flex !important;
+
+        justify-content: center !important;
+        align-items: center !important;
+
+        gap: 6px !important;
+
+        margin: 20px 0 30px 0 !important;
+
+        padding: 8px !important;
+
+        flex-wrap: nowrap !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    .assessment-pagination .pagination-btn {
+        min-width: 38px !important;
+        height: 38px !important;
+
+        padding: 0 10px !important;
+
+        font-size: 14px !important;
+
+        flex-shrink: 0 !important;
+    }
+
+
+    .assessment-pagination .pagination-prev,
+    .assessment-pagination .pagination-next {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+
+
+    /* =========================================
+       PREVENT DUPLICATE OLD PAGINATION
+    ========================================= */
+
+    /* old duplicate pagination rule removed: active pagination must stay visible */
+}
+
+/* =========================================================
+   FINAL SAFE FIX — ASSESSMENT CATALOG
+   Single pagination + mobile header/sidebar compatibility
+========================================================= */
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
+    display:flex !important; position:relative !important; clear:both !important;
+    float:none !important; width:100% !important; min-height:58px !important;
+    height:auto !important; margin:0 !important; padding:14px 0 24px !important;
+    align-items:center !important; justify-content:flex-end !important;
+    overflow:visible !important; visibility:visible !important; opacity:1 !important;
+    box-sizing:border-box !important; z-index:2 !important;
+}
+.table-wrapper + .assessment-pagination-wrapper > #assessmentPagination {
+    width:auto !important; max-width:100% !important; min-height:44px !important;
+    display:inline-flex !important; align-items:center !important; justify-content:center !important;
+    gap:4px !important; padding:4px !important; margin:0 !important; position:relative !important;
+    visibility:visible !important; opacity:1 !important; overflow:visible !important; white-space:nowrap !important;
+    background:#fff !important; border:1px solid #dfe7f0 !important; border-radius:10px !important;
+    box-shadow:0 4px 14px rgba(15,23,42,.08) !important;
+}
+.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-btn {
+    display:inline-flex !important; align-items:center !important; justify-content:center !important;
+    min-width:34px !important; height:34px !important; padding:0 10px !important; margin:0 !important;
+    border:1px solid #e2e8f0 !important; border-radius:8px !important; background:#fff !important;
+    color:#475569 !important; font-size:13px !important; font-weight:600 !important; line-height:1 !important;
+    visibility:visible !important; opacity:1 !important;
+}
+.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-prev,
+.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-next {
+    min-width:auto !important; padding-left:13px !important; padding-right:13px !important;
+}
+.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-num.active {
+    background:linear-gradient(135deg,#2563eb,#1d4ed8) !important; border-color:#2563eb !important;
+    color:#fff !important; box-shadow:0 4px 10px rgba(37,99,235,.25) !important;
+}
+@media screen and (max-width:768px) {
+    .pagination-wrapper.assessment-pagination-wrapper,
+    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
+        display:flex !important; width:100% !important; min-height:62px !important;
+        justify-content:center !important; align-items:center !important; padding:14px 8px 28px !important;
+        margin:0 !important; overflow:visible !important; visibility:visible !important; opacity:1 !important;
+    }
+    .table-wrapper + .assessment-pagination-wrapper > #assessmentPagination {
+        display:inline-flex !important; width:auto !important; max-width:calc(100vw - 32px) !important;
+        min-height:42px !important; gap:4px !important; padding:4px !important;
+        overflow:visible !important; visibility:visible !important; opacity:1 !important;
+    }
+    .table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-btn {
+        min-width:32px !important; height:32px !important; padding:0 8px !important;
+        font-size:12px !important; flex:0 0 auto !important;
+    }
+    .table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-prev,
+    .table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-next {
+        padding-left:10px !important; padding-right:10px !important;
+    }
+    .header { position:relative !important; width:100% !important; height:auto !important; min-height:0 !important;
+        padding:18px 76px 18px 16px !important; box-sizing:border-box !important; overflow:visible !important; }
+    .header > *, .header .header-content, .header .header-inner, .header .top-header {
+        min-width:0 !important; max-width:100% !important; box-sizing:border-box !important; }
+    .header .header-content, .header .header-inner, .header .top-header {
+        display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:14px !important; }
+    .header-left, .header-right { width:100% !important; min-width:0 !important; max-width:100% !important;
+        margin:0 !important; box-sizing:border-box !important; }
+    .header-left h1, .header h1, .page-title { font-size:34px !important; line-height:1.16 !important;
+        margin:0 0 8px !important; max-width:100% !important; }
+    .header-left p, .header .page-subtitle, .page-subtitle { font-size:16px !important; line-height:1.55 !important; margin:0 !important; }
+    .header-right { display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:12px !important; }
+    .header-search, .global-search, .header .search-container { width:100% !important; max-width:100% !important;
+        min-width:0 !important; margin:0 !important; box-sizing:border-box !important; }
+    .header-search input, .global-search input { width:100% !important; max-width:100% !important; box-sizing:border-box !important; }
+    .user-profile, .admin-profile, .profile-menu { width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; }
+    .sidebar { display:block !important; position:fixed !important; top:0 !important; right:-320px !important; left:auto !important;
+        width:300px !important; max-width:85vw !important; height:100dvh !important; z-index:9998 !important; overflow-y:auto !important; }
+    .sidebar.mobile-open { right:0 !important; }
+    .content { padding-bottom:120px !important; }
+}
+
 </style>
 
     <!-- Font -->
@@ -1313,40 +1682,20 @@
             <!-- Render by JavaScript -->
 
         </tbody>
-</table>
+    </table>
+</div>
 
-<!-- PAGINATION: sengaja di luar table-wrapper agar tidak terpotong overflow -->
+<!-- SINGLE PAGINATION: sibling normal-flow setelah table-wrapper -->
 <div class="pagination-wrapper assessment-pagination-wrapper">
-    <div class="pagination-container" id="assessmentPagination">
+    <div class="pagination-container" id="assessmentPagination" role="navigation" aria-label="Assessment pagination">
         <button type="button" id="prevPage" class="pg-btn pg-prev">Previous</button>
-        <button type="button" class="pg-btn pg-num active">1</button>
-        <button type="button" class="pg-btn pg-num">2</button>
-        <button type="button" class="pg-btn pg-num">3</button>
+        <button type="button" class="pg-btn pg-num active" data-page="1">1</button>
+        <button type="button" class="pg-btn pg-num" data-page="2">2</button>
+        <button type="button" class="pg-btn pg-num" data-page="3">3</button>
         <button type="button" id="nextPage" class="pg-btn pg-next">Next</button>
     </div>
 </div>
-<!-- Pagination -->
-<div id="assessmentPagination" class="assessment-pagination">
-    <button type="button" class="pagination-btn pagination-prev">
-        Previous
-    </button>
 
-    <button type="button" class="pagination-btn active" data-page="1">
-        1
-    </button>
-
-    <button type="button" class="pagination-btn" data-page="2">
-        2
-    </button>
-
-    <button type="button" class="pagination-btn" data-page="3">
-        3
-    </button>
-
-    <button type="button" class="pagination-btn pagination-next">
-        Next
-    </button>
-</div>
 <!-- =====================================================
      PREMIUM ADD ASSESSMENT MODAL
 ===================================================== -->
@@ -1581,6 +1930,112 @@
   .user-dropdown a:first-child {
     display: none !important;
   }
+
+
+/* =========================================================
+   FINAL PAGINATION VISIBILITY FIX - SINGLE SOURCE OF TRUTH
+   Keep pagination as a normal-flow sibling directly below table
+========================================================= */
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
+    display: flex !important;
+    position: relative !important;
+    float: none !important;
+    clear: both !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 8px 0 12px !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 50 !important;
+}
+
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper > #assessmentPagination {
+    display: inline-flex !important;
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: calc(100% - 16px) !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 3px !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    white-space: nowrap !important;
+    background: #fff !important;
+    border: 1px solid #dbe3ee !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 12px rgba(15,23,42,.08) !important;
+}
+
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 auto !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 9px !important;
+    margin: 0 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 7px !important;
+    background: #fff !important;
+    color: #475569 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-num.active {
+    background: linear-gradient(135deg,#2563eb,#1d4ed8) !important;
+    border-color: #2563eb !important;
+    color: #fff !important;
+}
+
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-prev,
+.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-next {
+    padding-left: 11px !important;
+    padding-right: 11px !important;
+}
+
+@media screen and (max-width:768px) {
+    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
+        display: flex !important;
+        justify-content: center !important;
+        min-height: 50px !important;
+        padding: 8px 0 14px !important;
+        overflow: visible !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper > #assessmentPagination {
+        display: inline-flex !important;
+        width: max-content !important;
+        max-width: calc(100vw - 24px) !important;
+        min-height: 38px !important;
+        height: 38px !important;
+        overflow: visible !important;
+    }
+    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-btn {
+        min-width: 30px !important;
+        height: 30px !important;
+        padding: 0 7px !important;
+        font-size: 11px !important;
+    }
+}
 </style>
 
 <script>
@@ -1923,5 +2378,75 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+
+<!-- FINAL VIEWPORT PAGINATION FIX -->
+<style id="pagination-viewport-fix">
+/* Pagination must remain visible without changing table/JS behavior */
+.pagination-wrapper.assessment-pagination-wrapper{
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    position:fixed !important;
+    right:24px !important;
+    bottom:16px !important;
+    width:auto !important;
+    min-height:0 !important;
+    height:auto !important;
+    margin:0 !important;
+    padding:6px !important;
+    z-index:900 !important;
+    background:rgba(255,255,255,.96) !important;
+    border:1px solid #dbe3ee !important;
+    border-radius:12px !important;
+    box-shadow:0 8px 24px rgba(15,23,42,.14) !important;
+    backdrop-filter:blur(8px);
+}
+.pagination-wrapper.assessment-pagination-wrapper > #assessmentPagination{
+    display:inline-flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    position:static !important;
+    width:auto !important;
+    height:38px !important;
+    min-height:38px !important;
+    margin:0 !important;
+    padding:3px !important;
+    border:0 !important;
+    box-shadow:none !important;
+    background:transparent !important;
+}
+.pagination-wrapper.assessment-pagination-wrapper .pg-btn{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    min-width:32px !important;
+    height:32px !important;
+    padding:0 10px !important;
+    font-size:12px !important;
+}
+@media(max-width:768px){
+    .pagination-wrapper.assessment-pagination-wrapper{
+        left:50% !important;
+        right:auto !important;
+        bottom:12px !important;
+        transform:translateX(-50%) !important;
+        max-width:calc(100vw - 20px) !important;
+        padding:5px !important;
+    }
+    .pagination-wrapper.assessment-pagination-wrapper > #assessmentPagination{
+        height:36px !important;
+        min-height:36px !important;
+        max-width:calc(100vw - 32px) !important;
+    }
+    .pagination-wrapper.assessment-pagination-wrapper .pg-btn{
+        min-width:30px !important;
+        height:30px !important;
+        padding:0 8px !important;
+        font-size:11px !important;
+    }
+}
+</style>
 </body>
 </html>
