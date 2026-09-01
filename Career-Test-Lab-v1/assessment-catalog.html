@@ -3,6 +3,8 @@
 
 <head>
 
+    <head>
+
         
 
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
@@ -98,7 +100,8 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/assessment-catalog.css">
 
-<style>
+   <style>
+
 /* =========================================================
    MOBILE RESPONSIVE
    ASSESSMENT CATALOG
@@ -108,11 +111,13 @@
     display: none;
 }
 
+
 /* =========================================================
    MOBILE
 ========================================================= */
 
 @media screen and (max-width: 768px) {
+
 
     /* =====================================================
        ROOT & SCROLL FIX
@@ -127,6 +132,7 @@
         overflow-y: auto !important;
     }
 
+
     body {
         width: 100% !important;
         height: auto !important;
@@ -139,6 +145,7 @@
 
         position: relative !important;
     }
+
 
     /* =====================================================
        APP LAYOUT
@@ -155,6 +162,7 @@
         overflow: visible !important;
     }
 
+
     .app-layout,
     .main-layout {
         width: 100% !important;
@@ -164,6 +172,7 @@
 
         overflow: visible !important;
     }
+
 
     .main {
         width: 100% !important;
@@ -176,6 +185,7 @@
         overflow: visible !important;
     }
 
+
     .main-content {
         width: 100% !important;
         max-width: 100% !important;
@@ -187,6 +197,7 @@
 
         box-sizing: border-box !important;
     }
+
 
     .content {
         width: 100% !important;
@@ -204,6 +215,7 @@
             16px
             120px !important;
     }
+
 
     /* =====================================================
        SIDEBAR
@@ -233,9 +245,11 @@
         -webkit-overflow-scrolling: touch;
     }
 
+
     .sidebar.mobile-open {
         right: 0 !important;
     }
+
 
     /* =====================================================
        OVERLAY
@@ -253,9 +267,11 @@
         z-index: 9997 !important;
     }
 
+
     .sidebar-overlay.active {
         display: block !important;
     }
+
 
     /* =====================================================
        MOBILE MENU BUTTON
@@ -292,9 +308,11 @@
             rgba(15, 23, 42, 0.25);
     }
 
+
     #mobileMenuButton:active {
         transform: scale(0.96);
     }
+
 
     /* =====================================================
        HEADER
@@ -319,6 +337,7 @@
         overflow: visible !important;
     }
 
+
     .page-header,
     .dashboard-header,
     .content-header {
@@ -337,6 +356,7 @@
         box-sizing: border-box !important;
     }
 
+
     /* =====================================================
        HEADER LEFT
     ===================================================== */
@@ -348,6 +368,7 @@
 
         margin: 0 !important;
     }
+
 
     .header-left h1,
     .page-title {
@@ -365,6 +386,7 @@
         word-break: normal !important;
     }
 
+
     .header-left p,
     .page-subtitle {
 
@@ -374,6 +396,7 @@
 
         line-height: 1.55 !important;
     }
+
 
     /* =====================================================
        HEADER RIGHT
@@ -401,6 +424,7 @@
         box-sizing: border-box !important;
     }
 
+
     /* =====================================================
        SEARCH
     ===================================================== */
@@ -416,6 +440,7 @@
         box-sizing: border-box !important;
     }
 
+
     .header-search input,
     .global-search input {
 
@@ -426,6 +451,7 @@
 
         box-sizing: border-box !important;
     }
+
 
     /* =====================================================
        PAGE ACTION
@@ -443,9 +469,11 @@
         gap: 12px !important;
     }
 
+
     .page-action > button {
         width: 100% !important;
     }
+
 
     #selectionPanel {
         width: 100% !important;
@@ -461,9 +489,11 @@
         padding: 14px !important;
     }
 
+
     #selectionPanel button {
         width: 100% !important;
     }
+
 
     /* =====================================================
        STATISTICS
@@ -480,6 +510,7 @@
         width: 100% !important;
     }
 
+
     .stat-card {
         width: 100% !important;
 
@@ -490,14 +521,17 @@
         padding: 18px !important;
     }
 
+
     .stat-content span,
     .stat-content small {
         font-size: 12px !important;
     }
 
+
     .stat-content h3 {
         font-size: 26px !important;
     }
+
 
     /* =====================================================
        TOOLBAR
@@ -517,12 +551,14 @@
         box-sizing: border-box !important;
     }
 
+
     .toolbar-left,
     .toolbar-right {
         width: 100% !important;
 
         min-width: 0 !important;
     }
+
 
     .search-box {
         width: 100% !important;
@@ -532,6 +568,7 @@
         box-sizing: border-box !important;
     }
 
+
     .search-box input {
         width: 100% !important;
 
@@ -540,9 +577,11 @@
         box-sizing: border-box !important;
     }
 
+
     .toolbar-right button {
         width: 100% !important;
     }
+
 
     /* =====================================================
        FILTER PANEL
@@ -554,9 +593,11 @@
         box-sizing: border-box !important;
     }
 
+
     #assessmentFilterPanel > div:nth-of-type(2) {
         grid-template-columns: 1fr !important;
     }
+
 
     /* =====================================================
        TABLE
@@ -571,393 +612,222 @@
         -webkit-overflow-scrolling: touch;
     }
 
+
     .assessment-table {
-    min-width: 850px !important;
-}
-
-/* Tutup @media screen and (max-width: 768px) */
-}
-
-
-/* Pagination: independent normal-flow sibling below table */
-.pagination-wrapper.assessment-pagination-wrapper{
-    display:flex;
-    flex:0 0 auto;
-    align-items:center;
-    justify-content:flex-end;
-    width:100%;
-    min-height:72px;
-    padding:16px 0 24px;
-    margin:0;
-    box-sizing:border-box;
-    position:relative;
-    clear:both;
-    overflow:visible;
-    visibility:visible;
-    opacity:1;
-    background:transparent;
-}
-#assessmentPagination{
-    display:inline-flex;
-    flex:0 0 auto;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
-    min-height:44px;
-    padding:4px;
-    margin:0;
-    border:1px solid #dfe7f0;
-    border-radius:12px;
-    background:#fff;
-    box-shadow:0 6px 18px rgba(15,23,42,.07);
-    white-space:nowrap;
-    visibility:visible;
-    opacity:1;
-}
-#assessmentPagination .pg-btn{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    min-height:34px;
-    border-radius:9px;
-    padding:6px 11px;
-    color:#475569;
-    font-weight:600;
-    visibility:visible;
-    opacity:1;
-}
-#assessmentPagination .pg-num.active{
-    background:linear-gradient(135deg,var(--ts-blue),var(--ts-blue-dark));
-    color:#fff;
-    box-shadow:0 5px 12px rgba(37,99,235,.24);
-}
-
-/* Responsive only */
-@media(max-width:768px){
-    .catalog-action-row{
-        flex-direction:column;
-        align-items:stretch;
-    }
-    #addAssessmentBtn{width:100%;}
-    #selectionPanel{
-        width:100%;
-        margin-left:0;
-        justify-content:space-between;
-    }
-    .catalog-stats{grid-template-columns:1fr;gap:12px;}
-    .assessment-table{min-width:850px;}
-    .pagination-wrapper.assessment-pagination-wrapper{
-        justify-content:center;
-        padding-bottom:22px;
-    }
-}
-@media(max-width:480px){
-    #selectionPanel{
-        flex-direction:column;
-        align-items:stretch;
-        padding:12px;
-    }
-    #selectedCount{text-align:center;}
-    #createProjectBtn{width:100%;}
-}
-/* =====================================================
-   PREMIUM COMPACT PAGINATION
-   Small - Medium - Clear
-===================================================== */
-
-.assessment-pagination,
-#assessmentPagination {
-    width: 100%;
-    display: flex !important;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 5px;
-
-    margin-top: 16px;
-    margin-bottom: 24px;
-
-    padding: 0 4px;
-
-    position: relative !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    overflow: visible !important;
-    z-index: 10;
-}
-
-
-/* Pagination container jika menggunakan wrapper */
-#assessmentPagination {
-    width: auto;
-    padding: 5px;
-
-    background: #ffffff;
-    border: 1px solid #dbe3ee;
-    border-radius: 10px;
-
-    box-shadow:
-        0 4px 14px rgba(15, 23, 42, 0.08);
-}
-
-
-/* Semua tombol pagination */
-.assessment-pagination button,
-#assessmentPagination button,
-#assessmentPagination .pg-btn,
-.assessment-pagination .pagination-btn {
-
-    min-width: 34px !important;
-    height: 34px !important;
-
-    padding: 0 10px;
-
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-
-    background: #ffffff !important;
-
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 8px;
-
-    color: #475569 !important;
-
-    font-size: 13px !important;
-    font-weight: 600;
-
-    line-height: 1;
-    cursor: pointer;
-
-    opacity: 1 !important;
-    visibility: visible !important;
-
-    transition:
-        all 0.2s ease;
-}
-
-
-/* Previous & Next sedikit lebih lebar */
-#assessmentPagination .pagination-prev,
-#assessmentPagination .pagination-next,
-#assessmentPagination .pg-prev,
-#assessmentPagination .pg-next {
-
-    min-width: auto !important;
-    padding: 0 13px !important;
-}
-
-
-/* Hover */
-.assessment-pagination button:hover,
-#assessmentPagination button:hover,
-#assessmentPagination .pg-btn:hover,
-.assessment-pagination .pagination-btn:hover {
-
-    background: #f8fafc !important;
-    border-color: #93c5fd !important;
-
-    color: #2563eb !important;
-
-    transform: translateY(-1px);
-}
-
-
-/* Active page */
-#assessmentPagination .active,
-#assessmentPagination .pg-num.active,
-.assessment-pagination .active,
-.assessment-pagination .pagination-btn.active {
-
-    background: linear-gradient(
-        135deg,
-        #2563eb,
-        #1d4ed8
-    ) !important;
-
-    border-color: #2563eb !important;
-
-    color: #ffffff !important;
-
-    box-shadow:
-        0 4px 10px rgba(37, 99, 235, 0.25);
-}
-
-
-/* Disabled */
-#assessmentPagination button:disabled,
-.assessment-pagination button:disabled {
-
-    opacity: 0.45 !important;
-    cursor: not-allowed;
-
-    transform: none !important;
-}
-
-
-/* Responsive */
-@media (max-width: 768px) {
-
-    .assessment-pagination,
-    #assessmentPagination {
-        justify-content: center;
+        min-width: 850px !important;
     }
 
-}
-/* =====================================================
-   CATALOG ACTION BAR
-   Add Assessment kiri | Create Project kanan
-===================================================== */
 
-.catalog-action-row {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
+    /* =====================================================
+       PAGINATION
+    ===================================================== */
 
-    margin-bottom: 24px;
-}
+    .pagination-wrapper {
+        width: 100% !important;
 
+        justify-content: flex-start !important;
 
-/* Panel kanan */
-#selectionPanel {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 14px;
+        overflow-x: auto !important;
 
-    margin: 0 !important;
-    padding: 0 !important;
+        overflow-y: visible !important;
 
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-}
-
-
-/* Text selected */
-#selectedCount {
-    white-space: nowrap;
-
-    font-size: 14px;
-    font-weight: 600;
-    color: #64748b;
-}
-
-
-/* Tombol create project */
-#createProjectBtn {
-    white-space: nowrap;
-}
-
-
-/* Responsive */
-@media (max-width: 768px) {
-
-    .catalog-action-row {
-        flex-direction: column;
-        align-items: stretch;
+        -webkit-overflow-scrolling: touch;
     }
 
-    #addAssessmentBtn {
-        width: 100%;
+
+    .pagination-container {
+        min-width: max-content !important;
     }
 
-    #selectionPanel {
-        width: 100%;
-        justify-content: space-between;
+
+    /* =========================================
+   SELECTION PANEL
+========================================= */
+
+
+
+#selectionPanel button {
+    width: 100% !important;
+}
+
+
+    /* =====================================================
+       MODAL
+    ===================================================== */
+
+    .modal-overlay {
+        padding: 14px !important;
+
+        box-sizing: border-box !important;
     }
+
+
+    .modal-card {
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        max-height: 90dvh !important;
+
+        overflow-y: auto !important;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+
+    .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+
+    .modal-footer {
+        flex-direction: column-reverse !important;
+    }
+
+
+    .modal-footer button {
+        width: 100% !important;
+    }
+
+
+}
+
+
+/* =========================================================
+   EXTRA SMALL MOBILE
+========================================================= */
+
+@media screen and (max-width: 480px) {
+
+
+    .content {
+        padding:
+            18px
+            14px
+            120px !important;
+    }
+
+
+    .header {
+        padding:
+            22px
+            76px
+            18px
+            18px !important;
+    }
+
+
+    .header-left h1,
+    .page-title {
+        font-size: 38px !important;
+    }
+
+
+    .header-left p,
+    .page-subtitle {
+        font-size: 16px !important;
+    }
+
+
+    #mobileMenuButton {
+        width: 46px !important;
+        height: 46px !important;
+
+        font-size: 17px !important;
+
+        top: 16px !important;
+        right: 16px !important;
+
+        border-radius: 14px !important;
+    }
+
 
 }
 /* =========================================================
-   ASSESSMENT CATALOG - MOBILE FINAL FIX
-   MUST BE PLACED AT THE END OF CSS
+   FINAL FIX - ASSESSMENT CATALOG MOBILE
 ========================================================= */
 
 @media screen and (max-width: 768px) {
 
     /* =========================================
-       RESET PAGE WIDTH
+       HEADER MOBILE
     ========================================= */
 
-    html,
-    body {
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow-x: hidden !important;
-    }
-
-
-    /* =========================================
-       MAIN CONTENT
-    ========================================= */
-
-    .main-content,
-    main,
-    .content {
-        width: 100% !important;
-        margin-left: 0 !important;
-        padding: 16px !important;
-        box-sizing: border-box !important;
-    }
-
-
-    /* =========================================
-       PAGE HEADER
-    ========================================= */
-
-    .page-header {
-        width: 100% !important;
+    .header,
+    .page-header,
+    .dashboard-header,
+    .content-header {
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: 16px !important;
 
-        margin: 0 0 20px 0 !important;
-        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+        padding: 24px 20px 20px !important;
+
+        gap: 14px !important;
     }
 
 
-    /* =========================================
-       TITLE AREA
-    ========================================= */
+    /* Bagian kiri header */
 
-    .page-header h1,
+    .header-left {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+
+    /* Judul */
+
+    .header-left h1,
     .page-title {
-        font-size: 34px !important;
-        line-height: 1.15 !important;
+        font-size: 42px !important;
+        line-height: 1.1 !important;
+
+        margin: 0 0 8px !important;
+
+        max-width: 100% !important;
+    }
+
+
+    /* Subtitle */
+
+    .header-left p,
+    .page-subtitle {
+        font-size: 18px !important;
+        line-height: 1.5 !important;
 
         margin: 0 !important;
 
-        white-space: normal !important;
-        word-break: normal !important;
-    }
-
-    .page-header p,
-    .page-subtitle {
-        font-size: 16px !important;
-        line-height: 1.7 !important;
-
-        margin-top: 8px !important;
-        margin-bottom: 0 !important;
+        max-width: 100% !important;
     }
 
 
     /* =========================================
-       TOP HEADER / SEARCH
+       HEADER RIGHT
     ========================================= */
 
-    .top-header,
-    .header-content,
     .header-right {
         width: 100% !important;
         max-width: 100% !important;
 
-        box-sizing: border-box !important;
-    }
+        display: flex !important;
+        flex-direction: column !important;
 
-    .top-header {
-        flex-wrap: wrap !important;
+        align-items: stretch !important;
+
+        gap: 14px !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
     }
 
 
@@ -965,15 +835,32 @@
        SEARCH
     ========================================= */
 
-    .global-search,
     .header-search,
-    .search-container {
+    .global-search {
         width: 100% !important;
         max-width: 100% !important;
 
-        flex: none !important;
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+
+        position: relative !important;
 
         margin: 0 !important;
+    }
+
+
+    .header-search input,
+    .global-search input,
+    #globalSearchInput {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+
+        padding-right: 16px !important;
     }
 
 
@@ -982,262 +869,117 @@
     ========================================= */
 
     .user-profile,
-    .admin-profile,
-    .profile-menu {
+    .user-menu,
+    .header-user {
+        width: 100% !important;
         max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+        margin: 0 !important;
     }
 
 
     /* =========================================
-       ACTION BUTTONS
+       FIX CONTENT WIDTH
     ========================================= */
 
-    .catalog-action-row,
+    .main,
+    .main-content,
+    .content {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+
+        overflow-x: hidden !important;
+    }
+
+
+    
+        /* =========================================
+       PAGE ACTION BUTTON
+    ========================================= */
+
     .page-action {
         width: 100% !important;
 
         display: flex !important;
+
         flex-direction: column !important;
-
-        gap: 14px !important;
-
-        align-items: stretch !important;
-    }
-
-    #addAssessmentBtn,
-    #createProjectBtn {
-        width: 100% !important;
-        min-height: 58px !important;
-
-        justify-content: center !important;
-
-        font-size: 17px !important;
-    }
-
-
-    /* =========================================
-       SELECTION PANEL
-    ========================================= */
-
-    #selectionPanel {
-        width: 100% !important;
-
-        display: flex !important;
-        flex-direction: column !important;
-
-        align-items: stretch !important;
-        justify-content: center !important;
-
-        gap: 14px !important;
-
-        padding: 0 !important;
-        margin: 0 !important;
-
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
-
-    #selectedCount {
-        width: 100% !important;
-
-        text-align: center !important;
-
-        font-size: 16px !important;
-    }
-
-
-    /* =========================================
-       STATISTICS CARDS
-    ========================================= */
-
-    .catalog-stats,
-    .stats-grid {
-        grid-template-columns: 1fr !important;
-
-        gap: 18px !important;
-    }
-
-    .stat-card {
-        width: 100% !important;
-        min-height: 150px !important;
-
-        box-sizing: border-box !important;
-    }
-
-
-    /* =========================================
-       SEARCH FILTER
-    ========================================= */
-
-    .catalog-filter-row,
-    .filter-row {
-        flex-direction: column !important;
-
-        align-items: stretch !important;
 
         gap: 12px !important;
     }
 
-    .catalog-filter-row input,
-    .filter-row input,
-    #assessmentSearch {
+
+    .page-action > button {
         width: 100% !important;
         box-sizing: border-box !important;
     }
 
-    .filter-btn {
-        width: 100% !important;
-    }
+}
+/* =========================================
+   ASSESSMENT CATALOG - PAGINATION FIX
+   Aman tanpa mengganggu scroll halaman
+========================================= */
 
+.pagination-wrapper {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
 
-    /* =========================================
-       TABLE SCROLL
-    ========================================= */
+    width: 100% !important;
 
-    .table-container,
-    .assessment-table-wrapper {
-        width: 100% !important;
+    padding: 14px 0 16px 0 !important;
+    margin-top: 0 !important;
 
-        overflow-x: auto !important;
-        overflow-y: visible !important;
+    box-sizing: border-box !important;
 
-        -webkit-overflow-scrolling: touch;
-    }
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
 
-    .assessment-table {
-        min-width: 850px !important;
-    }
-
-
-    /* =========================================
-       PAGINATION
-       SINGLE PAGINATION ONLY
-    ========================================= */
-
-    .assessment-pagination {
-        width: 100% !important;
-
-        display: flex !important;
-
-        justify-content: center !important;
-        align-items: center !important;
-
-        gap: 6px !important;
-
-        margin: 20px 0 30px 0 !important;
-
-        padding: 8px !important;
-
-        flex-wrap: nowrap !important;
-
-        box-sizing: border-box !important;
-    }
-
-
-    .assessment-pagination .pagination-btn {
-        min-width: 38px !important;
-        height: 38px !important;
-
-        padding: 0 10px !important;
-
-        font-size: 14px !important;
-
-        flex-shrink: 0 !important;
-    }
-
-
-    .assessment-pagination .pagination-prev,
-    .assessment-pagination .pagination-next {
-        padding-left: 14px !important;
-        padding-right: 14px !important;
-    }
-
-
-    /* =========================================
-       PREVENT DUPLICATE OLD PAGINATION
-    ========================================= */
-
-    /* old duplicate pagination rule removed: active pagination must stay visible */
+    overflow: visible !important;
+    z-index: 1 !important;
 }
 
-/* =========================================================
-   FINAL SAFE FIX — ASSESSMENT CATALOG
-   Single pagination + mobile header/sidebar compatibility
-========================================================= */
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
-    display:flex !important; position:relative !important; clear:both !important;
-    float:none !important; width:100% !important; min-height:58px !important;
-    height:auto !important; margin:0 !important; padding:14px 0 24px !important;
-    align-items:center !important; justify-content:flex-end !important;
-    overflow:visible !important; visibility:visible !important; opacity:1 !important;
-    box-sizing:border-box !important; z-index:2 !important;
-}
-.table-wrapper + .assessment-pagination-wrapper > #assessmentPagination {
-    width:auto !important; max-width:100% !important; min-height:44px !important;
-    display:inline-flex !important; align-items:center !important; justify-content:center !important;
-    gap:4px !important; padding:4px !important; margin:0 !important; position:relative !important;
-    visibility:visible !important; opacity:1 !important; overflow:visible !important; white-space:nowrap !important;
-    background:#fff !important; border:1px solid #dfe7f0 !important; border-radius:10px !important;
-    box-shadow:0 4px 14px rgba(15,23,42,.08) !important;
-}
-.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-btn {
-    display:inline-flex !important; align-items:center !important; justify-content:center !important;
-    min-width:34px !important; height:34px !important; padding:0 10px !important; margin:0 !important;
-    border:1px solid #e2e8f0 !important; border-radius:8px !important; background:#fff !important;
-    color:#475569 !important; font-size:13px !important; font-weight:600 !important; line-height:1 !important;
-    visibility:visible !important; opacity:1 !important;
-}
-.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-prev,
-.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-next {
-    min-width:auto !important; padding-left:13px !important; padding-right:13px !important;
-}
-.table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-num.active {
-    background:linear-gradient(135deg,#2563eb,#1d4ed8) !important; border-color:#2563eb !important;
-    color:#fff !important; box-shadow:0 4px 10px rgba(37,99,235,.25) !important;
-}
-@media screen and (max-width:768px) {
-    .pagination-wrapper.assessment-pagination-wrapper,
-    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
-        display:flex !important; width:100% !important; min-height:62px !important;
-        justify-content:center !important; align-items:center !important; padding:14px 8px 28px !important;
-        margin:0 !important; overflow:visible !important; visibility:visible !important; opacity:1 !important;
-    }
-    .table-wrapper + .assessment-pagination-wrapper > #assessmentPagination {
-        display:inline-flex !important; width:auto !important; max-width:calc(100vw - 32px) !important;
-        min-height:42px !important; gap:4px !important; padding:4px !important;
-        overflow:visible !important; visibility:visible !important; opacity:1 !important;
-    }
-    .table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-btn {
-        min-width:32px !important; height:32px !important; padding:0 8px !important;
-        font-size:12px !important; flex:0 0 auto !important;
-    }
-    .table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-prev,
-    .table-wrapper + .assessment-pagination-wrapper #assessmentPagination .pg-next {
-        padding-left:10px !important; padding-right:10px !important;
-    }
-    .header { position:relative !important; width:100% !important; height:auto !important; min-height:0 !important;
-        padding:18px 76px 18px 16px !important; box-sizing:border-box !important; overflow:visible !important; }
-    .header > *, .header .header-content, .header .header-inner, .header .top-header {
-        min-width:0 !important; max-width:100% !important; box-sizing:border-box !important; }
-    .header .header-content, .header .header-inner, .header .top-header {
-        display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:14px !important; }
-    .header-left, .header-right { width:100% !important; min-width:0 !important; max-width:100% !important;
-        margin:0 !important; box-sizing:border-box !important; }
-    .header-left h1, .header h1, .page-title { font-size:34px !important; line-height:1.16 !important;
-        margin:0 0 8px !important; max-width:100% !important; }
-    .header-left p, .header .page-subtitle, .page-subtitle { font-size:16px !important; line-height:1.55 !important; margin:0 !important; }
-    .header-right { display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:12px !important; }
-    .header-search, .global-search, .header .search-container { width:100% !important; max-width:100% !important;
-        min-width:0 !important; margin:0 !important; box-sizing:border-box !important; }
-    .header-search input, .global-search input { width:100% !important; max-width:100% !important; box-sizing:border-box !important; }
-    .user-profile, .admin-profile, .profile-menu { width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; }
-    .sidebar { display:block !important; position:fixed !important; top:0 !important; right:-320px !important; left:auto !important;
-        width:300px !important; max-width:85vw !important; height:100dvh !important; z-index:9998 !important; overflow-y:auto !important; }
-    .sidebar.mobile-open { right:0 !important; }
-    .content { padding-bottom:120px !important; }
+#assessmentPagination,
+.pagination-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    position: relative !important;
+
+    min-height: 46px !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    margin: 0 !important;
 }
 
+/* Pastikan tombol pagination tidak terpotong */
+.pagination-wrapper button,
+#assessmentPagination button,
+.pagination-container button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+/* Beri ruang bawah tabel agar pagination tidak mepet */
+.assessment-table-container,
+.table-container {
+    padding-bottom: 10px !important;
+}
 </style>
 
     <!-- Font -->
@@ -1281,41 +1023,29 @@
     ====================================================== -->
 
     <!-- =====================================================
-         PAGE HEADER & TOP ACTION BAR
-         SAFE: Add Assessment kiri, selection + Create Project kanan
+         PAGE HEADER & TOP ACTION BAR (FIXED BINDING & CLOSING TAG)
     ====================================================== -->
-    <div class="catalog-action-row">
+    <section class="page-header" style="width: 100%; display: block; clear: both; margin-bottom: 24px;">
 
-    <!-- KIRI -->
-    <button
-        class="btn btn-primary"
-        id="addAssessmentBtn"
-        type="button"
-    >
-        <i class="fas fa-plus"></i>
-        Add Assessment
-    </button>
+        <div class="page-action" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            
+            <!-- Tombol Kiri -->
+            <button class="btn btn-primary" id="addAssessmentBtn" style="font-size: 14px; padding: 10px 18px; font-weight: 600;">
+                + Add Assessment
+            </button>
 
+            <!-- Panel Kanan (Terpisah ke Ujung Kanan) -->
+            <div id="selectionPanel" style="align-items: center; gap: 12px; background: #ffffff; padding: 6px 6px 6px 16px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <span id="selectedCount" style="font-size: 14px; font-weight: 500; color: #64748b;">0 assessment selected</span>
+                <button class="btn btn-primary" id="createProjectBtn" style="font-size: 14px; padding: 10px 18px; font-weight: 600;">
+                    <i class="fas fa-layer-group"></i> Create Assessment Project
+                </button>
+            </div>
 
-    <!-- KANAN -->
-    <div id="selectionPanel">
+        </div>
 
-        <span id="selectedCount">
-            0 assessments selected
-        </span>
+    </section> <!-- SEBELUMNYA TAG INI LUPA DITUTUP DI SINI -->
 
-        <button
-            class="btn btn-primary"
-            id="createProjectBtn"
-            type="button"
-        >
-            <i class="fas fa-layer-group"></i>
-            Create Assessment Project
-        </button>
-
-    </div>
-
-</div>
     <!-- =====================================================
          STATISTICS
     ====================================================== -->
@@ -1495,6 +1225,7 @@
 
     </div>
 
+
     <div style="
         display:grid;
         grid-template-columns:1fr 1fr;
@@ -1542,6 +1273,7 @@
 
         </div>
 
+
         <!-- STATUS -->
 
         <div>
@@ -1579,6 +1311,7 @@
         </div>
 
     </div>
+
 
     <div style="
         display:flex;
@@ -1624,7 +1357,6 @@
     </div>
 
 </div>
-
 <!-- =====================================================
      TABLE
 ===================================================== -->
@@ -1682,19 +1414,27 @@
             <!-- Render by JavaScript -->
 
         </tbody>
-    </table>
+</table>
 </div>
+<div class="pagination-wrapper">
+    <div class="pagination-container" id="assessmentPagination">
 
-<!-- SINGLE PAGINATION: sibling normal-flow setelah table-wrapper -->
-<div class="pagination-wrapper assessment-pagination-wrapper">
-    <div class="pagination-container" id="assessmentPagination" role="navigation" aria-label="Assessment pagination">
-        <button type="button" id="prevPage" class="pg-btn pg-prev">Previous</button>
-        <button type="button" class="pg-btn pg-num active" data-page="1">1</button>
-        <button type="button" class="pg-btn pg-num" data-page="2">2</button>
-        <button type="button" class="pg-btn pg-num" data-page="3">3</button>
-        <button type="button" id="nextPage" class="pg-btn pg-next">Next</button>
+        <button id="prevPage" class="pg-btn">
+            Previous
+        </button>
+
+        <button class="pg-btn pg-num active">1</button>
+        <button class="pg-btn pg-num">2</button>
+        <button class="pg-btn pg-num">3</button>
+
+        <button id="nextPage" class="pg-btn">
+            Next
+        </button>
+
     </div>
 </div>
+
+
 
 <!-- =====================================================
      PREMIUM ADD ASSESSMENT MODAL
@@ -1750,7 +1490,6 @@
     </option>
 
 </select>
-                </div>
 
                 <div class="form-group">
                     <label>Duration (Minutes)</label>
@@ -1780,10 +1519,6 @@
     </div>
 </div>
 
-        </main>
-    </div>
-</div>
-
 <!-- =========================================
      JAVASCRIPT
 ========================================= -->
@@ -1805,118 +1540,560 @@
 
 <script>
 /* =========================================================
-   TALENTSCOPE — ASSESSMENT SELECTION & PROJECT TRANSFER
-   Single source of truth: prevents Select All from being counted.
+   TALENTSCOPE - TRANSFER SELECTED ASSESSMENTS TO PROJECT
 ========================================================= */
+
 (function () {
     "use strict";
 
-    const assessmentTable = document.getElementById("assessmentTable");
-    const checkAll = document.getElementById("checkAll");
-    const selectedCount = document.getElementById("selectedCount");
-    const createProjectBtn = document.getElementById("createProjectBtn");
+    const createBtn = document.getElementById("createProjectBtn");
 
-    if (!assessmentTable) return;
+    if (!createBtn) return;
+
+    createBtn.addEventListener("click", function () {
+
+        /*
+         * Ambil semua assessment yang dicentang.
+         *
+         * Sesuaikan selector checkbox jika checkbox
+         * di tabel menggunakan class/id yang berbeda.
+         */
+        const selected = Array.from(
+            document.querySelectorAll(
+                'input[type="checkbox"]:checked'
+            )
+        )
+        .filter(function (checkbox) {
+
+    /*
+     * Hanya ambil checkbox yang berada
+     * di dalam baris assessment (tbody)
+     *
+     * Checkbox Select All berada di header (thead),
+     * jadi tidak akan ikut dihitung.
+     */
+    return checkbox.closest("tbody") !== null;
+
+})
+        .map(function (checkbox) {
+
+            /*
+             * Coba ambil data assessment dari row tabel
+             */
+            const row = checkbox.closest("tr");
+
+            if (!row) return null;
+
+            const cells = row.querySelectorAll("td");
+
+            /*
+             * Struktur tabel:
+             * Code
+             * Assessment Name
+             * Category
+             * Duration
+             * Questions
+             * Status
+             */
+            return {
+                id: checkbox.value || cells[1]?.textContent.trim(),
+                code: cells[1]?.textContent.trim() || "",
+                name: cells[2]?.textContent.trim() || "",
+                category: cells[3]?.textContent.trim() || "",
+                duration: parseInt(
+                    cells[4]?.textContent.replace(/\D/g, ""),
+                    10
+                ) || 0,
+                questions: parseInt(
+                    cells[5]?.textContent.replace(/\D/g, ""),
+                    10
+                ) || 0,
+                required: true,
+                active: true
+            };
+
+        })
+        .filter(Boolean);
+
+        /*
+         * Simpan pilihan assessment sementara.
+         */
+        sessionStorage.setItem(
+            "talentscope_selected_assessments",
+            JSON.stringify(selected)
+        );
+
+        /*
+         * Masuk ke halaman Assessment Project.
+         */
+        window.location.href = "assessment-project.html";
+
+    });
+
+})();
+</script>
+
+</script>
+
+<script>
+/* =========================================================
+   TALENTSCOPE
+   TRANSFER SELECTED ASSESSMENTS
+   FROM ASSESSMENT CATALOG
+   TO NEW PROJECT
+========================================================= */
+
+(function () {
+
+    "use strict";
+
+
+    /* =====================================================
+       ELEMENT
+    ===================================================== */
+
+    const assessmentTable =
+        document.getElementById("assessmentTable");
+
+    const checkAll =
+        document.getElementById("checkAll");
+
+    const selectedCount =
+        document.getElementById("selectedCount");
+
+    const createProjectBtn =
+        document.getElementById("createProject");
+
+
+    if (!assessmentTable) {
+        console.warn(
+            "TalentScope: #assessmentTable tidak ditemukan."
+        );
+        return;
+    }
+
+
+    /* =====================================================
+       AMBIL CHECKBOX ASSESSMENT
+    ===================================================== */
 
     function getAssessmentCheckboxes() {
+
         return Array.from(
-            assessmentTable.querySelectorAll('tr input[type="checkbox"]')
+            assessmentTable.querySelectorAll(
+                'input[type="checkbox"]'
+            )
         );
+
     }
 
-    function getSelectedAssessments() {
-        return getAssessmentCheckboxes()
-            .filter(function (checkbox) { return checkbox.checked; })
-            .map(function (checkbox) {
-                const row = checkbox.closest("tr");
-                if (!row) return null;
 
-                const cells = row.querySelectorAll("td");
-                const getText = function (index) {
-                    return cells[index] ? cells[index].textContent.trim() : "";
-                };
-                const numberFrom = function (text) {
-                    const match = String(text).match(/\d+/);
-                    return match ? Number(match[0]) : 0;
-                };
+    /* =====================================================
+       UPDATE JUMLAH ASSESSMENT TERPILIH
+    ===================================================== */
 
-                const code = getText(1);
-                return {
-                    id: (checkbox.value && checkbox.value !== "on") ? checkbox.value : code,
-                    code: code,
-                    name: getText(2),
-                    category: getText(3),
-                    duration: numberFrom(getText(4)),
-                    questions: numberFrom(getText(5)),
-                    status: getText(6),
-                    required: true,
-                    active: true
-                };
-            })
-            .filter(Boolean);
-    }
+    function updateSelectedCount() {
 
-    function updateSelectionUI() {
-        const checkboxes = getAssessmentCheckboxes();
-        const totalSelected = checkboxes.filter(function (checkbox) {
-            return checkbox.checked;
-        }).length;
+        const checkboxes =
+            getAssessmentCheckboxes();
+
+        const selected =
+            checkboxes.filter(
+                checkbox => checkbox.checked
+            );
+
 
         if (selectedCount) {
-            selectedCount.textContent = totalSelected +
-                (totalSelected === 1 ? " assessment selected" : " assessments selected");
+
+            selectedCount.textContent =
+                selected.length;
+
         }
+
+
+        /* Update Select All */
 
         if (checkAll) {
-            checkAll.checked = checkboxes.length > 0 && totalSelected === checkboxes.length;
-            checkAll.indeterminate = totalSelected > 0 && totalSelected < checkboxes.length;
+
+            if (checkboxes.length === 0) {
+
+                checkAll.checked = false;
+                checkAll.indeterminate = false;
+
+            }
+            else {
+
+                const checkedCount =
+                    selected.length;
+
+                checkAll.checked =
+                    checkedCount === checkboxes.length;
+
+                checkAll.indeterminate =
+                    checkedCount > 0 &&
+                    checkedCount < checkboxes.length;
+
+            }
+
         }
+
+
+        /* Aktif / nonaktif tombol */
 
         if (createProjectBtn) {
-            createProjectBtn.disabled = totalSelected === 0;
-            createProjectBtn.setAttribute("aria-disabled", totalSelected === 0 ? "true" : "false");
-            createProjectBtn.classList.toggle("is-disabled", totalSelected === 0);
+
+            createProjectBtn.disabled =
+                selected.length === 0;
+
+            createProjectBtn.style.opacity =
+                selected.length === 0
+                    ? "0.55"
+                    : "1";
+
+            createProjectBtn.style.cursor =
+                selected.length === 0
+                    ? "not-allowed"
+                    : "pointer";
+
         }
+
     }
+
+
+    /* =====================================================
+       AMBIL DATA ASSESSMENT DARI ROW
+    ===================================================== */
+
+    function getAssessmentFromRow(row, checkbox) {
+
+        const cells =
+            row.querySelectorAll("td");
+
+
+        /*
+         * Struktur tabel kakak:
+         *
+         * 0 = Checkbox
+         * 1 = Code
+         * 2 = Assessment Name
+         * 3 = Category
+         * 4 = Duration
+         * 5 = Questions
+         * 6 = Status
+         * 7 = Action
+         */
+
+
+        const code =
+            cells[1]
+                ? cells[1].textContent.trim()
+                : "";
+
+
+        const name =
+            cells[2]
+                ? cells[2].textContent.trim()
+                : "";
+
+
+        const category =
+            cells[3]
+                ? cells[3].textContent.trim()
+                : "";
+
+
+        const durationText =
+            cells[4]
+                ? cells[4].textContent.trim()
+                : "0";
+
+
+        const questionsText =
+            cells[5]
+                ? cells[5].textContent.trim()
+                : "0";
+
+
+        const status =
+            cells[6]
+                ? cells[6].textContent.trim()
+                : "";
+
+
+        /*
+         * Ambil angka dari:
+         * "20 Minutes"
+         */
+        const durationMatch =
+            durationText.match(/\d+/);
+
+
+        const duration =
+            durationMatch
+                ? Number(durationMatch[0])
+                : 0;
+
+
+        /*
+         * Ambil angka dari:
+         * "20 Items"
+         */
+        const questionsMatch =
+            questionsText.match(/\d+/);
+
+
+        const questions =
+            questionsMatch
+                ? Number(questionsMatch[0])
+                : 0;
+
+
+        /*
+         * value checkbox kalau ada
+         */
+        const checkboxValue =
+            checkbox.value &&
+            checkbox.value !== "on"
+                ? checkbox.value
+                : code;
+
+
+        return {
+
+            id:
+                checkboxValue ||
+                code ||
+                name,
+
+            code:
+                code,
+
+            name:
+                name,
+
+            category:
+                category,
+
+            duration:
+                duration,
+
+            questions:
+                questions,
+
+            status:
+                status,
+
+            required:
+                true,
+
+            active:
+                true
+
+        };
+
+    }
+
+
+    /* =====================================================
+       AMBIL SEMUA ASSESSMENT YANG DIPILIH
+    ===================================================== */
+
+    function getSelectedAssessments() {
+
+        const result = [];
+
+
+        getAssessmentCheckboxes()
+            .forEach(function (checkbox) {
+
+                if (!checkbox.checked) {
+                    return;
+                }
+
+
+                const row =
+                    checkbox.closest("tr");
+
+
+                if (!row) {
+                    return;
+                }
+
+
+                const assessment =
+                    getAssessmentFromRow(
+                        row,
+                        checkbox
+                    );
+
+
+                result.push(assessment);
+
+            });
+
+
+        return result;
+
+    }
+
+
+    /* =====================================================
+       SIMPAN ASSESSMENT TERPILIH
+    ===================================================== */
+
+    function saveSelectedAssessments() {
+
+        const assessments =
+            getSelectedAssessments();
+
+
+        if (assessments.length === 0) {
+
+            alert(
+                "Silakan pilih minimal satu assessment."
+            );
+
+            return false;
+
+        }
+
+
+        /*
+         * Simpan sementara.
+         *
+         * Nanti akan dibaca oleh
+         * assessment-project.html
+         */
+        sessionStorage.setItem(
+            "talentscope_selected_assessments",
+            JSON.stringify(assessments)
+        );
+
+
+        return true;
+
+    }
+
+
+    /* =====================================================
+       SELECT ALL
+    ===================================================== */
 
     if (checkAll) {
-        checkAll.addEventListener("change", function () {
-            getAssessmentCheckboxes().forEach(function (checkbox) {
-                checkbox.checked = checkAll.checked;
-            });
-            updateSelectionUI();
-        });
+
+        checkAll.addEventListener(
+            "change",
+            function () {
+
+                const checked =
+                    this.checked;
+
+
+                getAssessmentCheckboxes()
+                    .forEach(function (checkbox) {
+
+                        checkbox.checked =
+                            checked;
+
+                    });
+
+
+                updateSelectedCount();
+
+            }
+        );
+
     }
 
-    assessmentTable.addEventListener("change", function (event) {
-        if (event.target.matches('input[type="checkbox"]')) {
-            updateSelectionUI();
+
+    /* =====================================================
+       CHECKBOX INDIVIDUAL
+    ===================================================== */
+
+    assessmentTable.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target.matches(
+                    'input[type="checkbox"]'
+                )
+            ) {
+
+                updateSelectedCount();
+
+            }
+
         }
-    });
+    );
+
+
+    /* =====================================================
+       CREATE ASSESSMENT PROJECT
+    ===================================================== */
 
     if (createProjectBtn) {
-        createProjectBtn.addEventListener("click", function (event) {
-            event.preventDefault();
-            const selected = getSelectedAssessments();
-            if (selected.length === 0) {
-                alert("Silakan pilih minimal satu assessment.");
-                return;
+
+        createProjectBtn.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+
+                const success =
+                    saveSelectedAssessments();
+
+
+                if (!success) {
+                    return;
+                }
+
+
+                /*
+                 * Pindah ke halaman Assessment Project.
+                 */
+                window.location.href =
+                    "assessment-project.html";
+
             }
-            sessionStorage.setItem(
-                "talentscope_selected_assessments",
-                JSON.stringify(selected)
-            );
-            window.location.href = "assessment-project.html";
-        });
+        );
+
     }
 
-    // assessment-render.js may render rows after this script loads.
-    const observer = new MutationObserver(function () {
-        updateSelectionUI();
-    });
-    observer.observe(assessmentTable, { childList: true, subtree: true });
 
-    updateSelectionUI();
+    /* =====================================================
+       INITIAL STATE
+    ===================================================== */
+
+    updateSelectedCount();
+
+
+    /* =====================================================
+       JIKA TABEL DI-RENDER ULANG
+       OLEH JAVASCRIPT LAMA
+    ===================================================== */
+
+    const observer =
+        new MutationObserver(
+            function () {
+
+                updateSelectedCount();
+
+            }
+        );
+
+
+    observer.observe(
+        assessmentTable,
+        {
+            childList: true,
+            subtree: true
+        }
+    );
+
+
 })();
 </script>
 
@@ -1930,304 +2107,6 @@
   .user-dropdown a:first-child {
     display: none !important;
   }
-
-
-/* =========================================================
-   FINAL PAGINATION VISIBILITY FIX - SINGLE SOURCE OF TRUTH
-   Keep pagination as a normal-flow sibling directly below table
-========================================================= */
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
-    display: flex !important;
-    position: relative !important;
-    float: none !important;
-    clear: both !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 48px !important;
-    margin: 0 !important;
-    padding: 8px 0 12px !important;
-    box-sizing: border-box !important;
-    align-items: center !important;
-    justify-content: flex-end !important;
-    overflow: visible !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    z-index: 50 !important;
-}
-
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper > #assessmentPagination {
-    display: inline-flex !important;
-    position: relative !important;
-    flex: 0 0 auto !important;
-    width: max-content !important;
-    max-width: calc(100% - 16px) !important;
-    min-height: 40px !important;
-    height: 40px !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    margin: 0 !important;
-    padding: 3px !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    white-space: nowrap !important;
-    background: #fff !important;
-    border: 1px solid #dbe3ee !important;
-    border-radius: 10px !important;
-    box-shadow: 0 4px 12px rgba(15,23,42,.08) !important;
-}
-
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex: 0 0 auto !important;
-    min-width: 32px !important;
-    height: 32px !important;
-    padding: 0 9px !important;
-    margin: 0 !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 7px !important;
-    background: #fff !important;
-    color: #475569 !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    line-height: 1 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-num.active {
-    background: linear-gradient(135deg,#2563eb,#1d4ed8) !important;
-    border-color: #2563eb !important;
-    color: #fff !important;
-}
-
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-prev,
-.table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-next {
-    padding-left: 11px !important;
-    padding-right: 11px !important;
-}
-
-@media screen and (max-width:768px) {
-    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper {
-        display: flex !important;
-        justify-content: center !important;
-        min-height: 50px !important;
-        padding: 8px 0 14px !important;
-        overflow: visible !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper > #assessmentPagination {
-        display: inline-flex !important;
-        width: max-content !important;
-        max-width: calc(100vw - 24px) !important;
-        min-height: 38px !important;
-        height: 38px !important;
-        overflow: visible !important;
-    }
-    .table-wrapper + .pagination-wrapper.assessment-pagination-wrapper #assessmentPagination .pg-btn {
-        min-width: 30px !important;
-        height: 30px !important;
-        padding: 0 7px !important;
-        font-size: 11px !important;
-    }
-}
-/* =========================================
-   MOBILE SIDEBAR
-   Tombol di kanan, sidebar muncul dari kiri
-========================================= */
-
-.sidebar-overlay {
-    display: none;
-}
-
-@media (max-width: 768px) {
-
-    /* Sidebar tersembunyi di sebelah kiri */
-    .sidebar {
-        position: fixed !important;
-        top: 0 !important;
-        left: -280px !important;
-        right: auto !important;
-
-        width: 280px !important;
-        height: 100vh !important;
-
-        z-index: 9999 !important;
-
-        transition: left 0.3s ease !important;
-    }
-
-    /* Saat dibuka muncul dari kiri */
-    .sidebar.active {
-        left: 0 !important;
-        right: auto !important;
-    }
-
-    /* Overlay */
-    .sidebar-overlay {
-        display: block;
-        position: fixed;
-        inset: 0;
-
-        background: rgba(15, 23, 42, 0.45);
-
-        z-index: 9998;
-
-        opacity: 0;
-        visibility: hidden;
-
-        transition: all 0.3s ease;
-    }
-
-    .sidebar-overlay.active {
-        opacity: 1;
-        visibility: visible;
-    }
-
-    body.sidebar-open {
-        overflow: hidden;
-    }
-
-    /* Tombol hamburger tetap di kanan */
-    .mobile-menu-toggle {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        left: auto !important;
-
-        z-index: 10000;
-    }
-}
-/* =========================================
-   SYSTEM ADMINISTRATOR DROPDOWN
-========================================= */
-
-.user-profile {
-    position: relative;
-    z-index: 1001;
-}
-
-.user-trigger {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.user-dropdown {
-    position: absolute;
-    top: calc(100% + 12px);
-    right: 0;
-
-    width: 220px;
-
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-
-    padding: 8px;
-
-    box-shadow: 0 15px 40px rgba(15, 23, 42, 0.15);
-
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-8px);
-
-    transition: 
-        opacity 0.2s ease,
-        transform 0.2s ease,
-        visibility 0.2s ease;
-
-    z-index: 9999;
-}
-
-/* Dropdown aktif */
-.user-profile.dropdown-open .user-dropdown {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-/* Item */
-.user-dropdown .dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-
-    width: 100%;
-    padding: 12px 14px;
-
-    border-radius: 10px;
-
-    color: #334155;
-    text-decoration: none;
-
-    font-size: 14px;
-    font-weight: 500;
-
-    transition: all 0.2s ease;
-}
-
-.user-dropdown .dropdown-item:hover {
-    background: #f1f5f9;
-    color: #2563eb;
-}
-
-.dropdown-divider {
-    height: 1px;
-    background: #e2e8f0;
-    margin: 6px 4px;
-}
-
-/* Logout */
-.user-dropdown .logout-item {
-    color: #dc2626;
-}
-
-.user-dropdown .logout-item:hover {
-    background: #fef2f2;
-    color: #dc2626;
-}
-
-/* Rotate arrow */
-.user-profile.dropdown-open .user-chevron {
-    transform: rotate(180deg);
-}
-
-.user-chevron {
-    transition: transform 0.2s ease;
-}
-@media (max-width: 768px) {
-
-    .user-profile {
-        position: relative !important;
-    }
-
-    .user-dropdown {
-        position: fixed !important;
-
-        top: 75px !important;
-        right: 20px !important;
-
-        width: min(260px, calc(100vw - 40px));
-
-        z-index: 10002 !important;
-    }
-
-    .user-info {
-        display: none;
-    }
-
-    .user-trigger {
-        gap: 8px;
-    }
-}
 </style>
 
 <script>
@@ -2347,6 +2226,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     "use strict";
 
+
     function createMobileMenuButton() {
 
         if (
@@ -2354,6 +2234,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ) {
             return;
         }
+
 
         if (
             document.getElementById(
@@ -2363,28 +2244,35 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
 
+
         var button =
             document.createElement(
                 "button"
             );
 
+
         button.id =
             "mobileMenuButton";
 
+
         button.type =
             "button";
+
 
         button.setAttribute(
             "aria-label",
             "Open menu"
         );
 
+
         button.innerHTML =
             '<i class="fa-solid fa-bars"></i>';
+
 
         document.body.appendChild(
             button
         );
+
 
         button.addEventListener(
             "click",
@@ -2395,18 +2283,22 @@ document.addEventListener("DOMContentLoaded", function() {
                         ".sidebar"
                     );
 
+
                 var overlay =
                     document.querySelector(
                         ".sidebar-overlay"
                     );
 
+
                 if (!sidebar) {
                     return;
                 }
 
+
                 sidebar.classList.toggle(
                     "mobile-open"
                 );
+
 
                 if (overlay) {
 
@@ -2415,6 +2307,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     );
 
                 }
+
 
                 document.body.classList.toggle(
                     "sidebar-is-open"
@@ -2425,6 +2318,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     }
 
+
     function createOverlay() {
 
         var overlay =
@@ -2432,21 +2326,26 @@ document.addEventListener("DOMContentLoaded", function() {
                 ".sidebar-overlay"
             );
 
+
         if (overlay) {
             return;
         }
+
 
         overlay =
             document.createElement(
                 "div"
             );
 
+
         overlay.className =
             "sidebar-overlay";
+
 
         document.body.appendChild(
             overlay
         );
+
 
         overlay.addEventListener(
             "click",
@@ -2455,6 +2354,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     }
 
+
     function closeMobileSidebar() {
 
         var sidebar =
@@ -2462,10 +2362,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 ".sidebar"
             );
 
+
         var overlay =
             document.querySelector(
                 ".sidebar-overlay"
             );
+
 
         if (sidebar) {
 
@@ -2475,6 +2377,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         }
 
+
         if (overlay) {
 
             overlay.classList.remove(
@@ -2483,11 +2386,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         }
 
+
         document.body.classList.remove(
             "sidebar-is-open"
         );
 
     }
+
 
     function initializeMobileMenu() {
 
@@ -2501,17 +2406,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
         }
 
+
         createOverlay();
 
         createMobileMenuButton();
 
     }
 
+
     document.addEventListener(
         "DOMContentLoaded",
         function () {
 
             initializeMobileMenu();
+
 
             /*
                Sidebar dimuat
@@ -2527,6 +2435,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     }
                 );
 
+
             observer.observe(
                 document.body,
                 {
@@ -2538,99 +2447,157 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     );
 
+
     window.addEventListener(
         "resize",
         initializeMobileMenu
     );
 
+
 })();
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+(function () {
 
-    const pagination = document.getElementById("assessmentPagination");
+    "use strict";
 
-    if (!pagination) return;
 
-    const pageButtons = pagination.querySelectorAll("[data-page]");
+    function updateMobileSelectionPanel() {
 
-    pageButtons.forEach(function (button) {
+        var selectionPanel =
+            document.getElementById(
+                "selectionPanel"
+            );
 
-        button.addEventListener("click", function () {
 
-            pageButtons.forEach(function (btn) {
-                btn.classList.remove("active");
-            });
+        var selectedCount =
+            document.getElementById(
+                "selectedCount"
+            );
 
-            this.classList.add("active");
 
-        });
+        if (
+            !selectionPanel ||
+            !selectedCount
+        ) {
+            return;
+        }
 
-    });
 
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
+        /*
+         * Ambil semua checkbox assessment
+         * dengan beberapa kemungkinan selector
+         */
 
-    const sidebar = document.getElementById("sidebar");
-    const sidebarToggle = document.getElementById("sidebarToggle");
-    const sidebarOverlay = document.getElementById("sidebarOverlay");
+        var checkedBoxes =
+    document.querySelectorAll(
+        'input[type="checkbox"]:checked'
+    );
 
-    if (sidebarToggle && sidebar) {
 
-        sidebarToggle.addEventListener("click", function () {
+var totalSelected = 0;
 
-            sidebar.classList.toggle("active");
 
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.toggle("active");
-            }
+checkedBoxes.forEach(
+    function (checkbox) {
 
-            document.body.classList.toggle("sidebar-open");
-        });
+        if (
+            !checkbox.id.includes("selectAll") &&
+            !checkbox.classList.contains(
+                "select-all"
+            )
+        ) {
+
+            totalSelected++;
+
+        }
+
+    }
+);
+
+        /*
+         * Update tulisan jumlah assessment
+         */
+
+        selectedCount.textContent =
+            totalSelected +
+            (
+                totalSelected === 1
+                    ? " assessment selected"
+                    : " assessments selected"
+            );
+
+
+        /*
+         * Tampilkan panel jika ada pilihan
+         */
+
+        if (totalSelected > 0) {
+
+            selectionPanel.classList.add(
+                "has-selection"
+            );
+
+        } else {
+
+            selectionPanel.classList.remove(
+                "has-selection"
+            );
+
+        }
+
     }
 
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener("click", function () {
 
-            sidebar.classList.remove("active");
+    /*
+     * Dengarkan perubahan SEMUA checkbox
+     */
 
-            if (sidebarOverlay) {
-                sidebarOverlay.classList.remove("active");
+    document.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target.matches(
+                    'input[type="checkbox"]'
+                )
+            ) {
+
+                /*
+                 * Delay sedikit agar script
+                 * utama halaman selesai update
+                 */
+
+                setTimeout(
+                    updateMobileSelectionPanel,
+                    50
+                );
+
             }
 
-            document.body.classList.remove("sidebar-open");
-        });
-    }
+        }
+    );
 
-});
+
+    /*
+     * Jalankan saat halaman selesai dimuat
+     */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            updateMobileSelectionPanel();
+
+        }
+    );
+
+
+})();
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const userProfile = document.getElementById("userProfile");
-    const userToggle = document.getElementById("userDropdownToggle");
-
-    if (userProfile && userToggle) {
-
-        userToggle.addEventListener("click", function (e) {
-            e.stopPropagation();
-
-            userProfile.classList.toggle("dropdown-open");
-        });
-
-        // Klik di luar dropdown
-        document.addEventListener("click", function (e) {
-
-            if (!userProfile.contains(e.target)) {
-                userProfile.classList.remove("dropdown-open");
-            }
-
-        });
-    }
-
-});
-</script>
 </body>
 </html>
+
+
+
