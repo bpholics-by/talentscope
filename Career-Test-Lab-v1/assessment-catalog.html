@@ -1427,14 +1427,7 @@ BOTTOM PANEL
 
     </div>
 
-    <button
-    class="btn btn-primary"
-    id="createProject">
-
-    <i class="fa-solid fa-layer-group"></i>
-    Create Assessment Project
-
-</button>
+    
 
 </section>
 
@@ -2465,12 +2458,13 @@ document.addEventListener("DOMContentLoaded", function() {
     "use strict";
 
 
-    function updateSelectionPanel() {
+    function updateMobileSelectionPanel() {
 
         var selectionPanel =
             document.getElementById(
                 "selectionPanel"
             );
+
 
         var selectedCount =
             document.getElementById(
@@ -2487,52 +2481,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
         /*
-         * Ambil semua checkbox yang checked
+         * Ambil semua checkbox assessment
+         * dengan beberapa kemungkinan selector
          */
 
-        var allChecked =
-            document.querySelectorAll(
-                'input[type="checkbox"]:checked'
-            );
+        var checkedBoxes =
+    document.querySelectorAll(
+        'input[type="checkbox"]:checked'
+    );
 
 
-        var totalSelected = 0;
+var totalSelected = 0;
 
 
-        allChecked.forEach(
-            function (checkbox) {
+checkedBoxes.forEach(
+    function (checkbox) {
 
-                /*
-                 * Cari baris tempat checkbox berada
-                 */
+        if (
+            !checkbox.id.includes("selectAll") &&
+            !checkbox.classList.contains(
+                "select-all"
+            )
+        ) {
 
-                var row =
-                    checkbox.closest("tr");
+            totalSelected++;
 
+        }
 
-                /*
-                 * Hanya hitung checkbox
-                 * yang berada dalam TD.
-                 *
-                 * Checkbox Select All biasanya
-                 * berada di TH/header.
-                 */
-
-                if (
-                    row &&
-                    checkbox.closest("td")
-                ) {
-
-                    totalSelected++;
-
-                }
-
-            }
-        );
-
+    }
+);
 
         /*
-         * Update angka
+         * Update tulisan jumlah assessment
          */
 
         selectedCount.textContent =
@@ -2566,8 +2546,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     /*
-     * Event delegation:
-     * tetap bekerja walaupun tabel dirender ulang
+     * Dengarkan perubahan SEMUA checkbox
      */
 
     document.addEventListener(
@@ -2580,9 +2559,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 )
             ) {
 
+                /*
+                 * Delay sedikit agar script
+                 * utama halaman selesai update
+                 */
+
                 setTimeout(
-                    updateSelectionPanel,
-                    100
+                    updateMobileSelectionPanel,
+                    50
                 );
 
             }
@@ -2592,38 +2576,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
     /*
-     * Jalankan saat halaman siap
+     * Jalankan saat halaman selesai dimuat
      */
 
     document.addEventListener(
         "DOMContentLoaded",
         function () {
 
-            updateSelectionPanel();
+            updateMobileSelectionPanel();
 
-        }
-    );
-
-
-    /*
-     * Untuk kasus tabel berubah secara dinamis
-     */
-
-    var observer =
-        new MutationObserver(
-            function () {
-
-                updateSelectionPanel();
-
-            }
-        );
-
-
-    observer.observe(
-        document.body,
-        {
-            childList: true,
-            subtree: true
         }
     );
 
