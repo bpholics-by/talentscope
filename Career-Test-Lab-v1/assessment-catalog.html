@@ -2430,13 +2430,6 @@ document.addEventListener("DOMContentLoaded", function() {
     function createMobileMenuButton() {
 
         if (
-            window.innerWidth > 768
-        ) {
-            return;
-        }
-
-
-        if (
             document.getElementById(
                 "mobileMenuButton"
             )
@@ -2491,12 +2484,23 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
                 if (!sidebar) {
+
+                    console.warn(
+                        "Sidebar belum ditemukan"
+                    );
+
                     return;
+
                 }
 
 
                 sidebar.classList.toggle(
                     "mobile-open"
+                );
+
+
+                document.body.classList.toggle(
+                    "sidebar-is-open"
                 );
 
 
@@ -2508,48 +2512,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 }
 
-
-                document.body.classList.toggle(
-                    "sidebar-is-open"
-                );
-
             }
-        );
-
-    }
-
-
-    function createOverlay() {
-
-        var overlay =
-            document.querySelector(
-                ".sidebar-overlay"
-            );
-
-
-        if (overlay) {
-            return;
-        }
-
-
-        overlay =
-            document.createElement(
-                "div"
-            );
-
-
-        overlay.className =
-            "sidebar-overlay";
-
-
-        document.body.appendChild(
-            overlay
-        );
-
-
-        overlay.addEventListener(
-            "click",
-            closeMobileSidebar
         );
 
     }
@@ -2594,22 +2557,46 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
 
+    function setupOverlay() {
+
+        var overlay =
+            document.querySelector(
+                ".sidebar-overlay"
+            );
+
+
+        if (
+            !overlay ||
+            overlay.dataset.ready === "true"
+        ) {
+            return;
+        }
+
+
+        overlay.dataset.ready =
+            "true";
+
+
+        overlay.addEventListener(
+            "click",
+            closeMobileSidebar
+        );
+
+    }
+
+
     function initializeMobileMenu() {
 
         if (
             window.innerWidth > 768
         ) {
-
-            closeMobileSidebar();
-
             return;
-
         }
 
 
-        createOverlay();
-
         createMobileMenuButton();
+
+        setupOverlay();
 
     }
 
@@ -2622,8 +2609,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
             /*
-               Sidebar dimuat
-               oleh layout-loader.js
+               Karena sidebar/header
+               dimuat oleh layout-loader.js
             */
 
             var observer =
@@ -2650,9 +2637,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
     window.addEventListener(
         "resize",
-        initializeMobileMenu
-    );
+        function () {
 
+            if (
+                window.innerWidth > 768
+            ) {
+
+                closeMobileSidebar();
+
+            }
+
+        }
+    );
 
 })();
 </script>
