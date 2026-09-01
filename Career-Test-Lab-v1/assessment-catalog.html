@@ -100,7 +100,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/assessment-catalog.css">
 
-    <style>
+   <style>
 
 /* =========================================================
    MOBILE RESPONSIVE
@@ -119,57 +119,130 @@
 @media screen and (max-width: 768px) {
 
 
-    /* =========================================
-       APP LAYOUT
-    ========================================= */
+    /* =====================================================
+       ROOT & SCROLL FIX
+    ===================================================== */
 
-    html,
-    body {
-        width: 100%;
-        overflow-x: hidden;
+    html {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
+
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
     }
 
 
+    body {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100vh !important;
+
+        margin: 0 !important;
+
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+
+        position: relative !important;
+    }
+
+
+    /* =====================================================
+       APP LAYOUT
+    ===================================================== */
+
     .app {
-        display: block;
-        width: 100%;
+        display: block !important;
+
+        width: 100% !important;
+        min-height: 100vh !important;
+
+        height: auto !important;
+
+        overflow: visible !important;
+    }
+
+
+    .app-layout,
+    .main-layout {
+        width: 100% !important;
+
+        min-height: 100vh !important;
+        height: auto !important;
+
+        overflow: visible !important;
     }
 
 
     .main {
         width: 100% !important;
+
+        min-height: 100vh !important;
+        height: auto !important;
+
         margin-left: 0 !important;
+
+        overflow: visible !important;
+    }
+
+
+    .main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-height: 100vh !important;
+        height: auto !important;
+
+        overflow: visible !important;
+
+        box-sizing: border-box !important;
     }
 
 
     .content {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 20px 16px 30px;
+        width: 100% !important;
+        max-width: 100% !important;
+
+        height: auto !important;
+        min-height: auto !important;
+
+        overflow: visible !important;
+
+        box-sizing: border-box !important;
+
+        padding:
+            20px
+            16px
+            120px !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        SIDEBAR
-    ========================================= */
+    ===================================================== */
 
     .sidebar {
         position: fixed !important;
+
         top: 0 !important;
         right: -320px !important;
         left: auto !important;
 
         width: 300px !important;
         max-width: 85vw !important;
-        height: 100vh !important;
+
+        height: 100dvh !important;
 
         display: block !important;
 
         z-index: 9998 !important;
 
-        transition: right 0.3s ease;
+        transition: right 0.3s ease !important;
 
-        overflow-y: auto;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+
+        -webkit-overflow-scrolling: touch;
     }
 
 
@@ -178,56 +251,57 @@
     }
 
 
-    /* =========================================
+    /* =====================================================
        OVERLAY
-    ========================================= */
+    ===================================================== */
 
     .sidebar-overlay {
-        position: fixed;
-        inset: 0;
+        position: fixed !important;
+
+        inset: 0 !important;
 
         display: none;
 
         background: rgba(15, 23, 42, 0.45);
 
-        z-index: 9997;
+        z-index: 9997 !important;
     }
 
 
     .sidebar-overlay.active {
-        display: block;
+        display: block !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        MOBILE MENU BUTTON
-    ========================================= */
+    ===================================================== */
 
     #mobileMenuButton {
-        display: flex;
+        display: flex !important;
 
-        position: fixed;
+        position: fixed !important;
 
-        top: 18px;
-        right: 18px;
+        top: 18px !important;
+        right: 18px !important;
 
-        width: 52px;
-        height: 52px;
+        width: 48px !important;
+        height: 48px !important;
 
-        align-items: center;
-        justify-content: center;
+        align-items: center !important;
+        justify-content: center !important;
 
-        border: none;
-        border-radius: 16px;
+        border: none !important;
+        border-radius: 15px !important;
 
-        background: #0f172a;
-        color: #ffffff;
+        background: #0f172a !important;
+        color: #ffffff !important;
 
-        font-size: 20px;
+        font-size: 18px !important;
 
-        cursor: pointer;
+        cursor: pointer !important;
 
-        z-index: 10000;
+        z-index: 10000 !important;
 
         box-shadow:
             0 8px 20px
@@ -238,81 +312,173 @@
     #mobileMenuButton:active {
         transform: scale(0.96);
     }
-/* ==========================================================
-   FIX MOBILE SCROLL
-========================================================== */
-
-@media (max-width: 768px) {
-
-    html,
-    body {
-
-        height: auto;
-
-        min-height: 100%;
-
-        overflow-x: hidden;
-
-        overflow-y: auto;
-    }
 
 
-    .app-layout,
-    .main-layout,
-    .main-content,
-    .content {
+    /* =====================================================
+       HEADER
+       MODEL SEPERTI DASHBOARD
+    ===================================================== */
+
+    .header {
+        width: 100% !important;
+
+        min-height: auto !important;
 
         height: auto !important;
 
-        min-height: 100vh;
+        box-sizing: border-box !important;
+
+        padding:
+            26px
+            84px
+            20px
+            20px !important;
 
         overflow: visible !important;
     }
 
-}
 
-    /* =========================================
-       HEADER
-    ========================================= */
+    .page-header,
+    .dashboard-header,
+    .content-header {
 
-    .header {
-        width: 100%;
-        min-height: auto;
-        box-sizing: border-box;
+        width: 100% !important;
 
-        padding:
-            24px
-            84px
-            18px
-            20px;
+        display: flex !important;
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 14px !important;
+
+        margin-bottom: 24px !important;
+
+        box-sizing: border-box !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
+       HEADER LEFT
+    ===================================================== */
+
+    .header-left {
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin: 0 !important;
+    }
+
+
+    .header-left h1,
+    .page-title {
+
+        font-size: 42px !important;
+
+        line-height: 1.12 !important;
+
+        margin:
+            0
+            0
+            8px
+            0 !important;
+
+        word-break: normal !important;
+    }
+
+
+    .header-left p,
+    .page-subtitle {
+
+        margin: 0 !important;
+
+        font-size: 17px !important;
+
+        line-height: 1.55 !important;
+    }
+
+
+    /* =====================================================
+       HEADER RIGHT
+       SEARCH TURUN KE BAWAH
+    ===================================================== */
+
+    .header-right {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        display: flex !important;
+
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 14px !important;
+
+        margin: 0 !important;
+
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    .header-search,
+    .global-search {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    .header-search input,
+    .global-search input {
+
+        width: 100% !important;
+
+        min-width: 0 !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
        PAGE ACTION
-    ========================================= */
-
-    .page-header {
-        margin-bottom: 18px !important;
-    }
-
+    ===================================================== */
 
     .page-action {
+        width: 100% !important;
+
+        display: flex !important;
+
         flex-direction: column !important;
+
         align-items: stretch !important;
-        gap: 12px;
+
+        gap: 12px !important;
     }
 
 
     .page-action > button {
-        width: 100%;
+        width: 100% !important;
     }
 
 
     #selectionPanel {
         width: 100% !important;
 
-        box-sizing: border-box;
+        box-sizing: border-box !important;
 
         flex-direction: column !important;
 
@@ -325,152 +491,200 @@
 
 
     #selectionPanel button {
-        width: 100%;
+        width: 100% !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        STATISTICS
-    ========================================= */
+    ===================================================== */
 
     .catalog-stats {
         display: grid !important;
 
         grid-template-columns:
-            repeat(2, minmax(0, 1fr)) !important;
+            1fr !important;
 
-        gap: 12px;
+        gap: 14px !important;
+
+        width: 100% !important;
     }
 
 
     .stat-card {
-        min-width: 0;
-        padding: 14px;
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
+
+        padding: 18px !important;
     }
 
 
     .stat-content span,
     .stat-content small {
-        font-size: 11px;
+        font-size: 12px !important;
     }
 
 
     .stat-content h3 {
-        font-size: 22px;
+        font-size: 26px !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        TOOLBAR
-    ========================================= */
+    ===================================================== */
 
     .catalog-toolbar {
-        flex-direction: column;
+        width: 100% !important;
 
-        align-items: stretch;
+        display: flex !important;
 
-        gap: 12px;
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 12px !important;
+
+        box-sizing: border-box !important;
     }
 
 
     .toolbar-left,
     .toolbar-right {
-        width: 100%;
+        width: 100% !important;
+
+        min-width: 0 !important;
     }
 
 
     .search-box {
-        width: 100%;
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
     }
 
 
     .search-box input {
-        width: 100%;
-        min-width: 0;
+        width: 100% !important;
+
+        min-width: 0 !important;
+
+        box-sizing: border-box !important;
     }
 
 
     .toolbar-right button {
-        width: 100%;
+        width: 100% !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        FILTER PANEL
-    ========================================= */
+    ===================================================== */
+
+    #assessmentFilterPanel {
+        width: 100% !important;
+
+        box-sizing: border-box !important;
+    }
+
 
     #assessmentFilterPanel > div:nth-of-type(2) {
         grid-template-columns: 1fr !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        TABLE
-    ========================================= */
+    ===================================================== */
 
     .table-wrapper {
-        width: 100%;
-        overflow-x: auto;
+        width: 100% !important;
+
+        overflow-x: auto !important;
+        overflow-y: visible !important;
 
         -webkit-overflow-scrolling: touch;
     }
 
 
     .assessment-table {
-        min-width: 850px;
+        min-width: 850px !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        PAGINATION
-    ========================================= */
+    ===================================================== */
 
     .pagination-wrapper {
+        width: 100% !important;
+
         justify-content: flex-start !important;
-        overflow-x: auto;
+
+        overflow-x: auto !important;
+
+        overflow-y: visible !important;
+
+        -webkit-overflow-scrolling: touch;
     }
 
 
     .pagination-container {
-        min-width: max-content;
+        min-width: max-content !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        BOTTOM SELECTION PANEL
-    ========================================= */
+    ===================================================== */
 
     .selection-panel {
-        flex-direction: column;
+        width: 100% !important;
 
-        align-items: stretch;
+        display: flex !important;
 
-        gap: 12px;
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        gap: 12px !important;
+
+        box-sizing: border-box !important;
     }
 
 
     .selection-panel button {
-        width: 100%;
+        width: 100% !important;
     }
 
 
-    /* =========================================
+    /* =====================================================
        MODAL
-    ========================================= */
+    ===================================================== */
 
     .modal-overlay {
-        padding: 14px;
-        box-sizing: border-box;
+        padding: 14px !important;
+
+        box-sizing: border-box !important;
     }
 
 
     .modal-card {
-        width: 100%;
-        max-width: 100%;
+        width: 100% !important;
 
-        max-height: 90vh;
+        max-width: 100% !important;
 
-        overflow-y: auto;
+        max-height: 90dvh !important;
+
+        overflow-y: auto !important;
+
+        -webkit-overflow-scrolling: touch;
     }
 
 
@@ -480,13 +694,14 @@
 
 
     .modal-footer {
-        flex-direction: column-reverse;
+        flex-direction: column-reverse !important;
     }
 
 
     .modal-footer button {
-        width: 100%;
+        width: 100% !important;
     }
+
 
 }
 
@@ -497,103 +712,48 @@
 
 @media screen and (max-width: 480px) {
 
+
     .content {
-        padding-left: 12px;
-        padding-right: 12px;
+        padding:
+            18px
+            14px
+            120px !important;
     }
 
 
-    .catalog-stats {
-        grid-template-columns: 1fr !important;
+    .header {
+        padding:
+            22px
+            76px
+            18px
+            18px !important;
+    }
+
+
+    .header-left h1,
+    .page-title {
+        font-size: 38px !important;
+    }
+
+
+    .header-left p,
+    .page-subtitle {
+        font-size: 16px !important;
     }
 
 
     #mobileMenuButton {
-        width: 48px;
-        height: 48px;
+        width: 46px !important;
+        height: 46px !important;
 
-        font-size: 18px;
+        font-size: 17px !important;
 
-        top: 14px;
-        right: 14px;
+        top: 16px !important;
+        right: 16px !important;
 
-        border-radius: 14px;
+        border-radius: 14px !important;
     }
 
-}
-/* ==========================================================
-   MOBILE – ASSESSMENT CATALOG
-========================================================== */
-
-@media (max-width: 768px) {
-
-    .main-content,
-    .content {
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-
-    /* HEADER */
-
-    .page-header,
-    .dashboard-header,
-    .content-header {
-
-        display: flex;
-        flex-direction: column;
-
-        align-items: flex-start;
-
-        gap: 14px;
-
-        width: 100%;
-
-        padding-right: 24px;
-    }
-
-
-    /* TITLE */
-
-    .header-left {
-
-        width: 100%;
-    }
-
-
-    /* SEARCH */
-
-    .header-right {
-
-        width: 100%;
-
-        display: block;
-
-        margin-top: 0;
-    }
-
-
-    .header-search,
-    .global-search {
-
-        width: 100%;
-
-        max-width: 100%;
-
-        box-sizing: border-box;
-    }
-
-
-    .header-search input,
-    .global-search input {
-
-        width: 100%;
-
-        min-width: 0;
-
-        box-sizing: border-box;
-    }
 
 }
 
