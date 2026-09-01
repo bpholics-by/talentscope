@@ -11,58 +11,7 @@
 
 <title>Assessment Project | TalentScope</title>
 
- <!-- Tombol Menu Garis Tiga (Hanya muncul di HP) -->
-<button id="hamburger-btn" class="hamburger-toggle" aria-label="Menu">
-    ☰ Menu
-</button>
-<style>
-    /* Sembunyikan tombol hamburger secara default di Laptop/Desktop */
-.hamburger-toggle {
-    display: none;
-}
-
-/* Aturan Khusus Layar HP (Maksimal 768px) */
-@media screen and (max-width: 768px) {
-    /* Tampilkan tombol hamburger di HP */
-    .hamburger-toggle {
-        display: block;
-        background: #0f172a;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        font-size: 1rem;
-        border-radius: 6px;
-        margin: 10px;
-        cursor: pointer;
-        z-index: 1001;
-    }
-
-    /* Sidebar disembunyikan secara default saat di HP */
-    .sidebar {
-        display: none;
-        width: 100% !important;
-        height: auto;
-        background-color: #0b132b;
-        position: absolute;
-        top: 50px;
-        left: 0;
-        z-index: 1000;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-
-    /* Kelas aktif untuk memunculkan sidebar saat tombol diklik */
-    .sidebar.active {
-        display: block !important;
-    }
-
-    /* Konten utama melebar penuh */
-    .main-content, .content-area {
-        width: 100% !important;
-        margin-left: 0 !important;
-        padding: 15px !important;
-    }
-}
-</style>
+ 
 
 <style>
 
@@ -2246,6 +2195,386 @@ body {
     flex-shrink: 0 !important;
 }
 
+
+/* =========================================================
+   FINAL MOBILE HEADER & SIDEBAR
+   SAMAKAN DENGAN DASHBOARD / ASSESSMENT CATALOG
+   ========================================================= */
+
+@media screen and (max-width: 768px) {
+
+    /* =========================================
+       APP & MAIN
+    ========================================= */
+
+    .app {
+        display: block !important;
+        width: 100% !important;
+        min-height: 100vh !important;
+    }
+
+    .main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-height: 100vh !important;
+    }
+
+
+       
+    /* =========================================
+       OVERLAY
+    ========================================= */
+
+    .mobile-sidebar-overlay {
+        position: fixed !important;
+
+        top: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+
+        background: rgba(15,23,42,.45) !important;
+
+        z-index: 9997 !important;
+
+        opacity: 0 !important;
+        visibility: hidden !important;
+
+        transition:
+            opacity .25s ease,
+            visibility .25s ease !important;
+
+        pointer-events: none !important;
+    }
+
+
+    .mobile-sidebar-overlay.show {
+        opacity: 1 !important;
+        visibility: visible !important;
+
+        pointer-events: auto !important;
+    }
+
+
+    /* =========================================
+       HEADER
+    ========================================= */
+
+    .topbar {
+        position: relative !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        align-items: stretch !important;
+
+        width: 100% !important;
+        min-height: auto !important;
+        height: auto !important;
+
+        padding: 20px 16px 18px !important;
+
+        gap: 16px !important;
+
+        overflow: visible !important;
+    }
+
+
+    /* Header kiri */
+    .header-left {
+        width: 100% !important;
+
+        display: flex !important;
+        flex-direction: column !important;
+
+        align-items: flex-start !important;
+
+        padding-right: 58px !important;
+    }
+
+
+    /* Judul halaman */
+    #pageTitle,
+    .page-title,
+    .title {
+        font-size: 26px !important;
+
+        line-height: 1.2 !important;
+
+        margin: 0 !important;
+
+        white-space: normal !important;
+    }
+
+
+    /* =========================================
+       HAMBURGER
+       Tombol tetap KANAN
+    ========================================= */
+
+    #hamburger-btn,
+    .hamburger-toggle {
+        display: flex !important;
+
+        position: absolute !important;
+
+        top: 18px !important;
+        right: 16px !important;
+        left: auto !important;
+
+        width: 42px !important;
+        height: 42px !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+
+        background: #ffffff !important;
+
+        color: #10233f !important;
+
+        font-size: 0 !important;
+
+        box-shadow:
+            0 4px 12px rgba(15,23,42,.08) !important;
+
+        cursor: pointer !important;
+
+        z-index: 10000 !important;
+    }
+
+
+    /* Icon hamburger */
+    #hamburger-btn::before,
+    .hamburger-toggle::before {
+        content: "\f0c9" !important;
+
+        font-family: "Font Awesome 6 Free" !important;
+        font-weight: 900 !important;
+
+        font-size: 17px !important;
+    }
+
+
+    /* Hilangkan teks ☰ Menu asli */
+    #hamburger-btn {
+        color: transparent !important;
+    }
+
+
+    #hamburger-btn::before {
+        color: #10233f !important;
+    }
+
+
+    /* =========================================
+       HEADER RIGHT
+    ========================================= */
+
+    .header-right {
+        width: 100% !important;
+
+        display: flex !important;
+
+        align-items: center !important;
+        justify-content: space-between !important;
+
+        gap: 10px !important;
+
+        flex-wrap: nowrap !important;
+    }
+
+
+    /* Search full dan rapi */
+    .search {
+        flex: 1 1 auto !important;
+
+        width: auto !important;
+        max-width: none !important;
+
+        min-width: 0 !important;
+
+        height: 42px !important;
+    }
+
+
+    /* Notification */
+    .header-icon {
+        width: 42px !important;
+        height: 42px !important;
+
+        flex: 0 0 42px !important;
+    }
+
+
+    /* Profile */
+    .profile {
+        flex: 0 0 auto !important;
+
+        gap: 8px !important;
+    }
+
+
+    .profile-info,
+    .profile > i {
+        display: none !important;
+    }
+
+
+    .avatar {
+        width: 40px !important;
+        height: 40px !important;
+
+        font-size: 15px !important;
+    }
+
+
+    /* =========================================
+       CONTENT
+    ========================================= */
+
+    .content {
+        padding: 20px 16px 100px !important;
+    }
+
+}
+
+/* =====================================================
+   FINAL MOBILE SIDEBAR FIX
+   Default: HIDDEN
+   Button: RIGHT
+   Drawer: FROM LEFT
+===================================================== */
+
+@media (max-width: 768px) {
+
+    /* Pastikan halaman tidak overflow horizontal */
+    html,
+    body {
+        overflow-x: hidden !important;
+    }
+
+    /* Main content full width */
+    .main {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* =========================================
+       SIDEBAR - DEFAULT TERSEMBUNYI
+    ========================================= */
+
+    .sidebar {
+        display: flex !important;
+
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+        right: auto !important;
+
+        width: 280px !important;
+        max-width: 82vw !important;
+
+        height: 100vh !important;
+        height: 100dvh !important;
+
+        z-index: 9999 !important;
+
+        /* INI YANG MEMBUAT SIDEBAR HILANG */
+        transform: translateX(-110%) !important;
+
+        visibility: hidden !important;
+        pointer-events: none !important;
+
+        transition:
+            transform 0.35s ease,
+            visibility 0.35s ease !important;
+
+        box-shadow: none !important;
+    }
+
+
+    /* =========================================
+       SIDEBAR SAAT DIBUKA
+       Pakai BODY class agar tidak bentrok
+    ========================================= */
+
+    body.sidebar-open .sidebar {
+        transform: translateX(0) !important;
+
+        visibility: visible !important;
+        pointer-events: auto !important;
+
+        box-shadow: 10px 0 35px rgba(0,0,0,.22) !important;
+    }
+
+
+    /* =========================================
+       OVERLAY
+    ========================================= */
+
+    .mobile-sidebar-overlay {
+        display: block !important;
+
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+
+        z-index: 9998 !important;
+
+        background: rgba(15, 23, 42, 0.45) !important;
+
+        opacity: 0 !important;
+        visibility: hidden !important;
+
+        pointer-events: none !important;
+
+        transition:
+            opacity .3s ease,
+            visibility .3s ease !important;
+    }
+
+
+    body.sidebar-open .mobile-sidebar-overlay {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+
+    /* =========================================
+       HAMBURGER TETAP DI KANAN
+    ========================================= */
+
+    #hamburger-btn,
+    .hamburger-toggle {
+        display: flex !important;
+
+        position: absolute !important;
+
+        top: 18px !important;
+        right: 16px !important;
+        left: auto !important;
+
+        width: 46px !important;
+        height: 46px !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        z-index: 10000 !important;
+    }
+
+}
 </style>
 </head>
 
@@ -4451,6 +4780,63 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
+
+
+<div class="mobile-sidebar-overlay"></div>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const hamburger = document.getElementById("hamburger-btn");
+    const overlay = document.querySelector(".mobile-sidebar-overlay");
+
+    if (hamburger) {
+
+        hamburger.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            document.body.classList.toggle("sidebar-open");
+        });
+
+    }
+
+
+    /* Klik area gelap untuk menutup sidebar */
+    if (overlay) {
+
+        overlay.addEventListener("click", function () {
+            document.body.classList.remove("sidebar-open");
+        });
+
+    }
+
+
+    /* Tutup sidebar setelah klik menu */
+    document.querySelectorAll(".sidebar a").forEach(function (link) {
+
+        link.addEventListener("click", function () {
+
+            if (window.innerWidth <= 768) {
+                document.body.classList.remove("sidebar-open");
+            }
+
+        });
+
+    });
+
+
+    /* Jika layar berubah ke desktop */
+    window.addEventListener("resize", function () {
+
+        if (window.innerWidth > 768) {
+            document.body.classList.remove("sidebar-open");
+        }
+
+    });
+
+});
+</script>
+
 
 </body>
 </html>
