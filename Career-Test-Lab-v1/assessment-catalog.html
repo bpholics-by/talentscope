@@ -2458,55 +2458,130 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 })();
-
-function updateSelectionPanel() {
-
-    const checkboxes =
-        document.querySelectorAll(
-            '.assessment-checkbox:checked'
-        );
-
-    const selectionPanel =
-        document.getElementById(
-            'selectionPanel'
-        );
-
-    const selectedCount =
-        document.getElementById(
-            'selectedCount'
-        );
-
-    if (!selectionPanel || !selectedCount) {
-        return;
-    }
-
-
-    const totalSelected =
-        checkboxes.length;
-
-
-    selectedCount.textContent =
-        totalSelected +
-        ' assessment selected';
-
-
-    if (totalSelected > 0) {
-
-        selectionPanel.classList.add(
-            'has-selection'
-        );
-
-    } else {
-
-        selectionPanel.classList.remove(
-            'has-selection'
-        );
-
-    }
-
-}
 </script>
+<script>
+(function () {
 
+    "use strict";
+
+
+    function updateMobileSelectionPanel() {
+
+        var selectionPanel =
+            document.getElementById(
+                "selectionPanel"
+            );
+
+
+        var selectedCount =
+            document.getElementById(
+                "selectedCount"
+            );
+
+
+        if (
+            !selectionPanel ||
+            !selectedCount
+        ) {
+            return;
+        }
+
+
+        /*
+         * Ambil semua checkbox assessment
+         * dengan beberapa kemungkinan selector
+         */
+
+        var checkedBoxes =
+    document.querySelectorAll(
+        '.assessment-table tbody input[type="checkbox"]:checked'
+    );
+
+
+var totalSelected =
+    checkedBoxes.length;
+
+
+        /*
+         * Update tulisan jumlah assessment
+         */
+
+        selectedCount.textContent =
+            totalSelected +
+            (
+                totalSelected === 1
+                    ? " assessment selected"
+                    : " assessments selected"
+            );
+
+
+        /*
+         * Tampilkan panel jika ada pilihan
+         */
+
+        if (totalSelected > 0) {
+
+            selectionPanel.classList.add(
+                "has-selection"
+            );
+
+        } else {
+
+            selectionPanel.classList.remove(
+                "has-selection"
+            );
+
+        }
+
+    }
+
+
+    /*
+     * Dengarkan perubahan SEMUA checkbox
+     */
+
+    document.addEventListener(
+        "change",
+        function (event) {
+
+            if (
+                event.target.matches(
+                    'input[type="checkbox"]'
+                )
+            ) {
+
+                /*
+                 * Delay sedikit agar script
+                 * utama halaman selesai update
+                 */
+
+                setTimeout(
+                    updateMobileSelectionPanel,
+                    50
+                );
+
+            }
+
+        }
+    );
+
+
+    /*
+     * Jalankan saat halaman selesai dimuat
+     */
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            updateMobileSelectionPanel();
+
+        }
+    );
+
+
+})();
+</script>
 
 </body>
 </html>
