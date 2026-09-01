@@ -426,162 +426,98 @@ body {
 }
 
 
-/* RIGHT HEADER */
+/* =========================================
+   HEADER RIGHT - MOBILE
+   Search atas, Profile dibawah
+========================================= */
 
-.header-right{
-    display:flex;
-    align-items:center;
+.header-right {
+    width: 100% !important;
 
-    gap:18px;
+    display: flex !important;
+    flex-direction: column !important;
 
-    flex-shrink:0;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+
+    gap: 14px !important;
 }
 
 
-/* SEARCH */
+/* Search full width */
+.header-right .search {
+    width: 100% !important;
+    max-width: none !important;
 
-.search{
-    width:320px;
-    height:44px;
+    flex: none !important;
 
-    border:1px solid #dce4ee;
-
-    border-radius:13px;
-
-    background:#fff;
-
-    display:flex;
-    align-items:center;
-
-    padding:0 14px;
-
-    color:#8291a5;
-}
-
-.search i{
-    font-size:14px;
-
-    flex-shrink:0;
-}
-
-.search input{
-    width:100%;
-
-    margin-left:8px;
-
-    border:0;
-    outline:0;
-
-    background:transparent;
-
-    font-family:inherit;
-
-    font-size:13px;
-
-    color:#33485f;
-}
-
-.search input::placeholder{
-    color:#8291a5;
+    height: 48px !important;
 }
 
 
-/* NOTIFICATION */
+/* Profile dibawah search */
+.header-right .profile {
+    width: 100% !important;
 
-.header-icon{
-    width:42px;
-    height:42px;
+    display: flex !important;
 
-    border:0;
+    align-items: center !important;
+    justify-content: flex-start !important;
 
-    background:#f7f9fc;
+    flex: none !important;
 
-    border-radius:12px;
-
-    display:grid;
-    place-items:center;
-
-    color:#52657c;
-
-    cursor:pointer;
-
-    position:relative;
-
-    transition:
-        background .18s ease,
-        color .18s ease;
-}
-
-.header-icon:hover{
-    background:#eef5ff;
-    color:#0878e8;
+    gap: 12px !important;
 }
 
 
-/* PROFILE */
+/* Tampilkan kembali info profile */
+.header-right .profile-info {
+    display: flex !important;
 
-.profile{
-    display:flex;
-    align-items:center;
+    flex-direction: column !important;
 
-    gap:12px;
+    align-items: flex-start !important;
 
-    cursor:pointer;
+    min-width: 0 !important;
 }
 
-.avatar{
-    width:42px;
-    height:42px;
 
-    border-radius:50%;
+/* Nama user */
+.header-right .profile-info strong,
+.header-right .profile-name {
+    font-size: 15px !important;
 
-    background:#0878e8;
-
-    color:#fff;
-
-    display:grid;
-    place-items:center;
-
-    font-size:16px;
-    font-weight:700;
-
-    flex-shrink:0;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 
-.profile-info{
-    display:flex;
-    flex-direction:column;
+
+/* Role */
+.header-right .profile-info span,
+.header-right .profile-role {
+    font-size: 12px !important;
 }
 
-.profile strong{
-    display:block;
 
-    font-size:14px;
-    font-weight:700;
+/* Avatar */
+.header-right .avatar {
+    width: 42px !important;
+    height: 42px !important;
 
-    color:#10233f;
-
-    line-height:1.2;
+    flex: 0 0 42px !important;
 }
 
-.profile small{
-    display:block;
 
-    margin-top:4px;
+/* Dropdown arrow tetap terlihat */
+.header-right .profile > i,
+.header-right .profile .fa-chevron-down {
+    display: block !important;
 
-    font-size:12px;
+    margin-left: auto !important;
 
-    color:var(--muted);
+    font-size: 14px !important;
 }
-
-.profile > i{
-    margin-left:3px;
-
-    font-size:11px;
-
-    color:#10233f;
-}
-
 
 /* =========================================================
    CONTENT
@@ -2420,12 +2356,7 @@ body {
     }
 
 
-    .profile-info,
-    .profile > i {
-        display: none !important;
-    }
-
-
+    
     .avatar {
         width: 40px !important;
         height: 40px !important;
