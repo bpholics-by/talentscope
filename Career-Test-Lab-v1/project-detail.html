@@ -3083,6 +3083,166 @@ a{
     }
 
 }
+/* =========================================================
+   FINAL HAMBURGER FIX
+   Mobile: hamburger di kanan atas,
+   judul & subtitle tetap di kiri
+   ========================================================= */
+
+@media screen and (max-width: 768px) {
+
+    /* HEADER */
+    .topbar {
+        position: relative !important;
+
+        display: block !important;
+
+        height: auto !important;
+        min-height: 0 !important;
+
+        padding: 16px 20px 18px !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* AREA JUDUL */
+    .header-left {
+        width: calc(100% - 60px) !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        min-width: 0 !important;
+    }
+
+
+    /* JUDUL */
+    #pageTitle {
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-size: 23px !important;
+        line-height: 1.2 !important;
+
+        max-width: 100% !important;
+    }
+
+
+    /* SUBJUDUL */
+    #pageSubtitle {
+        margin: 5px 0 0 !important;
+        padding: 0 !important;
+
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+
+        max-width: 100% !important;
+    }
+
+
+    /* =====================================================
+       HAMBURGER
+       ===================================================== */
+
+    .mobile-menu-toggle {
+        position: absolute !important;
+
+        top: 14px !important;
+        right: 16px !important;
+
+        width: 44px !important;
+        height: 44px !important;
+
+        min-width: 44px !important;
+        min-height: 44px !important;
+
+        max-width: 44px !important;
+        max-height: 44px !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        display: flex !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        border-radius: 12px !important;
+
+        z-index: 100 !important;
+    }
+
+
+    .mobile-menu-toggle i {
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-size: 20px !important;
+        line-height: 1 !important;
+    }
+
+
+    /* SEARCH TURUN DI BAWAH JUDUL */
+    .header-search,
+    .search {
+        width: 100% !important;
+
+        height: 44px !important;
+
+        margin-top: 14px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+
+    /* PROFILE */
+    .header-user {
+        width: 100% !important;
+
+        margin-top: 14px !important;
+
+        padding: 0 !important;
+    }
+
+}
+
+
+/* =========================================================
+   HP SANGAT KECIL
+   ========================================================= */
+
+@media screen and (max-width: 480px) {
+
+    .topbar {
+        padding: 14px 16px 18px !important;
+    }
+
+
+    .header-left {
+        width: calc(100% - 54px) !important;
+    }
+
+
+    .mobile-menu-toggle {
+        top: 12px !important;
+        right: 16px !important;
+
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+
+    #pageTitle {
+        font-size: 23px !important;
+    }
+
+
+    #pageSubtitle {
+        font-size: 13px !important;
+    }
+
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
