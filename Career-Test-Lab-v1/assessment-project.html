@@ -1378,52 +1378,7 @@ select{
         overflow-x: hidden;
     }
 
-/* =========================================
-   MOBILE SIDEBAR FIX
-========================================= */
 
-.mobile-menu-toggle{
-    transition:
-        background .2s ease,
-        transform .2s ease;
-}
-
-
-body.sidebar-open .mobile-menu-toggle{
-    background: #ffffff;
-    color: #142033;
-}
-
-
-/* HEADER TIDAK BOLEH MELEBAR */
-
-.topbar{
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
-
-/* PROFILE TETAP DI HEADER */
-
-.header-right{
-    width: 100%;
-    max-width: 100%;
-}
-
-
-.header-user{
-    width: 100%;
-    max-width: 100%;
-}
-
-
-/* SIDEBAR FOOTER TETAP DI BAWAH */
-
-.sidebar-footer{
-    flex-shrink: 0;
-    width: 100%;
-}
     /* APP */
 
     .app{
@@ -4361,112 +4316,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
     );
+
 });
-</script>
 
-   <script>
-/* =====================================
-   USER DROPDOWN
-===================================== */
+    /* =====================================
+       USER DROPDOWN
+    ===================================== */
 
-const dropdownTrigger =
-    document.getElementById("dropdownTrigger");
+    const dropdownTrigger =
+        document.getElementById("dropdownTrigger");
 
-const dropdownMenu =
-    document.getElementById("dropdownMenu");
+    const dropdownMenu =
+        document.getElementById("dropdownMenu");
 
-const userDropdown =
-    document.getElementById("userDropdown");
+    const userDropdown =
+        document.getElementById("userDropdown");
 
 
-if (
-    dropdownTrigger &&
-    dropdownMenu &&
-    userDropdown
-) {
+    if (dropdownTrigger && dropdownMenu) {
 
-    /* ================================
-       OPEN / CLOSE DROPDOWN
-    ================================= */
-
-    dropdownTrigger.addEventListener(
-        "click",
-        function (event) {
-
-            event.preventDefault();
-
-            event.stopPropagation();
-
-
-            dropdownMenu.classList.toggle(
-                "show"
-            );
-
-
-            userDropdown.classList.toggle(
-                "open"
-            );
-
-        }
-    );
-
-
-    /* ================================
-       CLICK SETTINGS
-    ================================= */
-
-    const settingsItem =
-        dropdownMenu.querySelector(
-            'a[href="settings.html"]'
-        );
-
-    if (settingsItem) {
-
-        settingsItem.addEventListener(
-            "click",
-            function () {
-
-                window.location.href =
-                    "settings.html";
-
-            }
-        );
-
-    }
-
-
-    /* ================================
-       LOGOUT
-    ================================= */
-
-    const logoutBtn =
-        document.getElementById(
-            "logoutBtn"
-        );
-
-    if (logoutBtn) {
-
-        logoutBtn.addEventListener(
+        dropdownTrigger.addEventListener(
             "click",
             function (event) {
 
-                event.preventDefault();
+                event.stopPropagation();
 
-                /*
-                   Hapus session login
-                */
+                dropdownMenu.classList.toggle("show");
 
-                sessionStorage.clear();
-
-
-                /*
-                   Kembali ke login
-                   SESUAIKAN jika nama
-                   halaman login berbeda
-                */
-
-                window.location.href =
-                    "index.html";
+                if (userDropdown) {
+                    userDropdown.classList.toggle(
+                        "open"
+                    );
+                }
 
             }
         );
@@ -4474,34 +4355,29 @@ if (
     }
 
 
-    /* ================================
-       CLOSE CLICK OUTSIDE
-    ================================= */
+    /* =====================================
+       CLOSE DROPDOWN OUTSIDE
+    ===================================== */
 
     document.addEventListener(
         "click",
         function (event) {
 
             if (
-                !userDropdown.contains(
-                    event.target
-                )
+                userDropdown &&
+                !userDropdown.contains(event.target)
             ) {
 
-                dropdownMenu.classList.remove(
-                    "show"
-                );
+                dropdownMenu.classList.remove("show");
 
-                userDropdown.classList.remove(
-                    "open"
-                );
+                userDropdown.classList.remove("open");
 
             }
 
         }
     );
 
-}
+});
 </script>
 </body>
 </html>
