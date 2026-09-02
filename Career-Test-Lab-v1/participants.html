@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-
-    <head>
-
-        <head>
     <!-- SCRIPT PROTEKSI HALAMAN PARTICIPANTS (UNTUK ASESOR & CLIENT) -->
     <script>
     (function() {
@@ -43,7 +39,7 @@
     <title>Participants | TalentScope</title>
 
     <!-- CSS & Script Bawaan Lainnya... -->
-</head>
+
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
     (function() {
@@ -1527,13 +1523,270 @@
 }
 
 </style>
+
+<style id="project-detail-shell-css">
+/* =========================================================
+   PROJECT DETAIL SHELL FOR PARTICIPANTS
+   Layout only — participant functions and IDs remain intact.
+========================================================= */
+html,body{margin:0;padding:0;width:100%;min-height:100%;overflow-x:hidden}
+body{font-family:Inter,"Segoe UI",Arial,sans-serif;background:#f7f9fc;color:#10233f}
+.app{display:flex;width:100%;min-height:100vh}
+.sidebar{
+    position:fixed !important;top:0;left:0;width:280px;height:100vh;height:100dvh;
+    display:flex !important;flex-direction:column;background:#0f172a;color:#fff;
+    overflow:hidden;z-index:1000;
+}
+.sidebar .brand{height:130px;display:flex;align-items:center;gap:17px;padding:0 24px;border-bottom:1px solid rgba(255,255,255,.10);flex-shrink:0}
+.sidebar .brand-logo{width:58px;height:58px;flex:0 0 58px;display:flex;align-items:center;justify-content:center;border-radius:15px;background:#0878e8;color:#fff;font-size:21px;font-weight:800}
+.sidebar .brand-info{min-width:0;display:flex;flex-direction:column}
+.sidebar .brand-title{margin:0;color:#fff;font-size:27px;font-weight:700;line-height:1.1;white-space:nowrap}
+.sidebar .brand-version{margin-top:6px;color:#58a9ff;font-size:13px;white-space:nowrap}
+.sidebar .sidebar-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.sidebar .sidebar-body::-webkit-scrollbar{display:none}
+.sidebar .menu{width:100%}
+.sidebar .menu-title{display:block;padding:22px 28px 12px;color:#70849e;font-size:11px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase}
+.sidebar .menu ul{list-style:none;margin:0;padding:0 14px 30px}
+.sidebar .menu li{list-style:none;margin:2px 0;padding:0}
+.sidebar .menu li a{width:100%;height:53px;display:flex;align-items:center;gap:16px;padding:0 14px;border-radius:14px;color:#dce7f5;background:transparent;text-decoration:none;font-size:17px;font-weight:400;white-space:nowrap;transition:.2s ease}
+.sidebar .menu li a i{width:22px;min-width:22px;display:flex;align-items:center;justify-content:center;font-size:18px;color:inherit}
+.sidebar .menu li a span{color:inherit}
+.sidebar .menu li a:hover{background:rgba(255,255,255,.07);color:#fff}
+.sidebar .menu li a.active,.sidebar .menu li.active a{background:#0878e8;color:#fff;box-shadow:0 8px 20px rgba(8,120,232,.18)}
+.sidebar .sidebar-footer{min-height:65px;display:flex;align-items:center;padding:18px 24px;border-top:1px solid rgba(255,255,255,.10);flex-shrink:0}
+.sidebar .sidebar-status{display:flex;align-items:center;gap:10px;color:#fff;font-size:14px}
+.sidebar .status-dot{width:10px;height:10px;background:#19d37a;border-radius:50%}
+
+.main{width:calc(100% - 280px) !important;min-width:0;min-height:100vh;margin-left:280px !important;background:#f7f9fc}
+.topbar{min-height:104px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:18px 34px;background:#fff;border-bottom:1px solid #e5ebf2;position:relative;z-index:50}
+.header-left{min-width:220px;display:flex;align-items:center}
+#pageHeader{margin:0;padding:0}
+#pageTitle{margin:0;padding:0;color:#0f172a;font-size:40px;font-weight:700;line-height:1.15}
+#pageSubtitle{margin:10px 0 0;padding:0;color:#64748b;font-size:16px;font-weight:400;line-height:1.4}
+.header-right{display:flex;align-items:center;gap:18px}
+.header-search{width:320px;height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;background:#fff;border:1px solid #dce4ee;border-radius:13px;color:#8291a5}
+.header-search input{width:100%;border:0;outline:0;background:transparent;color:#10233f;font-size:13px}
+.header-search input::placeholder{color:#8291a5}
+.header-user{position:relative;display:flex;align-items:center;flex-shrink:0}
+.header-user-trigger{min-height:48px;display:flex;align-items:center;gap:10px;padding:5px 7px;border-radius:12px;cursor:pointer;user-select:none}
+.header-user-trigger:hover{background:#f5f8fc}
+.header-avatar{width:42px;height:42px;min-width:42px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#0878e8;color:#fff;font-size:15px;font-weight:700}
+.header-user-info{display:flex;flex-direction:column;justify-content:center;white-space:nowrap}
+.header-user-name{color:#0f172a;font-size:17px;font-weight:675;line-height:1}
+.header-user-role{margin-top:7px;color:#64748b;font-size:12px;line-height:1}
+.arrow-icon{margin-left:4px;color:#64748b;font-size:12px}
+.dropdown-menu{position:absolute;top:calc(100% + 10px);right:0;width:200px;display:none;padding:8px;background:#fff;border:1px solid #e5ebf2;border-radius:12px;box-shadow:0 14px 35px rgba(15,23,42,.12);z-index:500}
+.header-user.open .dropdown-menu{display:block}
+.dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:8px;color:#334155;text-decoration:none;font-size:13px}
+.dropdown-item:hover{background:#f4f7fa}
+.dropdown-divider{height:1px;margin:6px 0;background:#e8edf3}
+
+.mobile-menu-toggle,.mobile-sidebar-overlay{display:none}
+.content.participants-page{padding:30px 34px 40px !important}
+.participants-page{max-width:none !important}
+
+@media screen and (max-width:1100px){
+  .app{display:block}
+  .sidebar{transform:translateX(-100%);transition:transform .25s ease;box-shadow:16px 0 40px rgba(15,23,42,.18)}
+  body.sidebar-open .sidebar{transform:translateX(0)}
+  .main{width:100% !important;margin-left:0 !important}
+  .topbar{min-height:0;display:grid !important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title menu" "search search" "profile profile";align-items:center;gap:16px;padding:18px 20px}
+  .header-left{grid-area:title;min-width:0}
+  .header-right{display:contents}
+  .header-search{grid-area:search;width:100%}
+  .header-user{grid-area:profile;justify-self:start}
+  .mobile-menu-toggle{grid-area:menu;position:relative;display:flex !important;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:#0f172a;color:#fff;font-size:20px;cursor:pointer;z-index:1200}
+  .mobile-sidebar-overlay{position:fixed;inset:0;display:block;background:rgba(15,23,42,.45);opacity:0;visibility:hidden;pointer-events:none;transition:.25s ease;z-index:900}
+  body.sidebar-open .mobile-sidebar-overlay{opacity:1;visibility:visible;pointer-events:auto}
+  #pageTitle{font-size:30px}
+  #pageSubtitle{font-size:15px}
+  .content.participants-page{padding:24px 20px 35px !important}
+}
+@media screen and (max-width:650px){
+  .sidebar{width:min(280px,84vw)}
+  .topbar{gap:14px;padding:16px 16px 18px}
+  .mobile-menu-toggle{width:44px;height:44px;border-radius:12px}
+  #pageTitle{font-size:26px}
+  #pageSubtitle{font-size:14px;margin-top:7px}
+  .header-search{height:48px;border-radius:14px}
+  .content.participants-page{padding:18px 14px 35px !important}
+  .header-user-name{font-size:15px}
+}
+
+
+/* =========================================================
+   PARTICIPANTS MOBILE REFINEMENT v2
+   Fix: remove blank header space, menu button right side,
+   compact statistic cards without changing existing functions.
+========================================================= */
+.main{position:relative}
+
+@media screen and (max-width:1100px){
+  /* The menu button is outside .topbar in the existing HTML.
+     Make it absolute so it no longer creates an empty row above the header. */
+  .mobile-menu-toggle{
+    position:absolute !important;
+    top:14px !important;
+    right:20px !important;
+    left:auto !important;
+    grid-area:auto !important;
+    margin:0 !important;
+    z-index:1200 !important;
+  }
+
+  .topbar{
+    padding-top:18px !important;
+    padding-right:84px !important;
+  }
+
+  /* Keep the title area clear from the right-side hamburger. */
+  .header-left{min-height:52px;align-items:center}
+}
+
+@media screen and (max-width:650px){
+  .mobile-menu-toggle{
+    top:14px !important;
+    right:16px !important;
+    width:42px !important;
+    height:42px !important;
+    border-radius:12px !important;
+  }
+
+  .topbar{
+    padding:14px 72px 16px 16px !important;
+    gap:14px !important;
+  }
+
+  #pageTitle{
+    font-size:26px !important;
+    line-height:1.15 !important;
+  }
+
+  #pageSubtitle{
+    margin-top:5px !important;
+    line-height:1.35 !important;
+  }
+
+  /* Restore a compact 2-column card grid on mobile. */
+  .participant-stats{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:12px !important;
+    margin-bottom:18px !important;
+  }
+
+  /* These cards use inline styles in the original file,
+     therefore !important is required only for mobile sizing. */
+  .participant-stats > div{
+    min-height:118px !important;
+    padding:14px 12px !important;
+    gap:10px !important;
+    border-radius:12px !important;
+    align-items:center !important;
+  }
+
+  .participant-stats > div > div:first-child{
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    font-size:16px !important;
+    border-radius:9px !important;
+  }
+
+  .participant-stats span{
+    font-size:11px !important;
+    line-height:1.25 !important;
+  }
+
+  .participant-stats h3{
+    margin:3px 0 !important;
+    font-size:21px !important;
+    line-height:1.05 !important;
+  }
+
+  .participant-stats small{
+    font-size:9px !important;
+    line-height:1.25 !important;
+  }
+}
+
+</style>
+
 </head>
 
 <body>
 <div class="app">
-<aside class="sidebar"></aside>
-<div class="main">
-<header class="header"></header>
+
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-logo">TS</div>
+        <div class="brand-info">
+            <div class="brand-title">TalentScope</div>
+            <div class="brand-version">Enterprise v1.0</div>
+        </div>
+    </div>
+
+    <div class="sidebar-body">
+        <nav class="menu">
+            <div class="menu-title">MAIN MENU</div>
+            <ul>
+                <li><a href="dashboard.html"><i class="fa-solid fa-house"></i><span>Dashboard</span></a></li>
+                <li><a href="assessment-catalog.html"><i class="fa-solid fa-layer-group"></i><span>Assessment Catalog</span></a></li>
+                <li><a href="assessment-project.html"><i class="fa-solid fa-folder-open"></i><span>Assessment Project</span></a></li>
+                <li><a href="project-detail.html"><i class="fa-solid fa-list-check"></i><span>Assessment Detail</span></a></li>
+                <li><a href="participants.html" class="active"><i class="fa-solid fa-users"></i><span>Participants</span></a></li>
+                <li><a href="projects.html"><i class="fa-solid fa-key"></i><span>Project Access</span></a></li>
+                <li><a href="test-bank.html"><i class="fa-solid fa-file-circle-question"></i><span>Test Bank</span></a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="sidebar-status">
+            <span class="status-dot"></span><span>Online</span>
+        </div>
+    </div>
+</aside>
+
+
+<main class="main">
+
+<button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">
+    <i class="fa-solid fa-bars"></i>
+</button>
+
+<header class="topbar">
+    <div class="header-left">
+        <div id="pageHeader">
+            <h1 id="pageTitle">Participants</h1>
+            <p id="pageSubtitle">Manage participants, assessment progress &amp; activity</p>
+        </div>
+    </div>
+
+    <div class="header-right">
+        <div class="header-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearchInput" placeholder="Search participants..." autocomplete="off">
+        </div>
+
+        <div class="header-user" id="userDropdown">
+            <div class="header-user-trigger" id="dropdownTrigger">
+                <div class="header-avatar">A</div>
+                <div class="header-user-info">
+                    <div class="header-user-name">Administrator</div>
+                    <div class="header-user-role">System Admin</div>
+                </div>
+                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+            </div>
+
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="settings.html" class="dropdown-item"><i class="fa-solid fa-gear"></i>Settings</a>
+                <div class="dropdown-divider"></div>
+                <a href="#" class="dropdown-item logout-item" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i>Log Out</a>
+            </div>
+        </div>
+    </div>
+</header>
+
 <main class="content participants-page">
 
 <section class="page-actions">
@@ -2996,5 +3249,75 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
 });
 </script>
+
+<div class="mobile-sidebar-overlay"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const menuToggle = document.getElementById("mobileMenuToggle");
+    const overlay = document.querySelector(".mobile-sidebar-overlay");
+    const dropdown = document.getElementById("userDropdown");
+    const trigger = document.getElementById("dropdownTrigger");
+    const globalSearch = document.getElementById("globalSearchInput");
+    const participantSearch = document.getElementById("participantSearch");
+
+    function openSidebar(){
+        document.body.classList.add("sidebar-open");
+        if(menuToggle){
+            menuToggle.innerHTML='<i class="fa-solid fa-xmark"></i>';
+            menuToggle.setAttribute("aria-label","Close menu");
+        }
+    }
+    function closeSidebar(){
+        document.body.classList.remove("sidebar-open");
+        if(menuToggle){
+            menuToggle.innerHTML='<i class="fa-solid fa-bars"></i>';
+            menuToggle.setAttribute("aria-label","Open menu");
+        }
+    }
+    if(menuToggle){
+        menuToggle.addEventListener("click", function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            document.body.classList.contains("sidebar-open") ? closeSidebar() : openSidebar();
+        });
+    }
+    if(overlay) overlay.addEventListener("click", closeSidebar);
+
+    document.querySelectorAll(".sidebar a").forEach(function(link){
+        link.addEventListener("click", function(){
+            if(window.innerWidth <= 1100) closeSidebar();
+        });
+    });
+
+    window.addEventListener("resize", function(){
+        if(window.innerWidth > 1100) closeSidebar();
+    });
+
+    if(trigger && dropdown){
+        trigger.addEventListener("click", function(e){
+            e.stopPropagation();
+            dropdown.classList.toggle("open");
+            dropdown.parentElement.classList.toggle("open");
+        });
+        document.addEventListener("click", function(e){
+            if(!dropdown.parentElement.contains(e.target)){
+                dropdown.classList.remove("open");
+                dropdown.parentElement.classList.remove("open");
+            }
+        });
+    }
+
+    /* Header search only forwards input to the existing participant search.
+       Existing participant rendering/filter functions are not replaced. */
+    if(globalSearch && participantSearch){
+        globalSearch.addEventListener("input", function(){
+            participantSearch.value = globalSearch.value;
+            participantSearch.dispatchEvent(new Event("input",{bubbles:true}));
+        });
+    }
+});
+</script>
+
 </body>
 </html>
