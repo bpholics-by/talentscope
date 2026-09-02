@@ -4361,38 +4361,73 @@ document.addEventListener("DOMContentLoaded", function () {
 
         }
     );
+});
+</script>
+
+   <script>
+/* =====================================
+   USER DROPDOWN
+===================================== */
+
+const dropdownTrigger =
+    document.getElementById("dropdownTrigger");
+
+const dropdownMenu =
+    document.getElementById("dropdownMenu");
+
+const userDropdown =
+    document.getElementById("userDropdown");
 
 
+if (
+    dropdownTrigger &&
+    dropdownMenu &&
+    userDropdown
+) {
 
-    /* =====================================
-       USER DROPDOWN
-    ===================================== */
+    /* ================================
+       OPEN / CLOSE DROPDOWN
+    ================================= */
 
-    const dropdownTrigger =
-        document.getElementById("dropdownTrigger");
+    dropdownTrigger.addEventListener(
+        "click",
+        function (event) {
 
-    const dropdownMenu =
-        document.getElementById("dropdownMenu");
+            event.preventDefault();
 
-    const userDropdown =
-        document.getElementById("userDropdown");
+            event.stopPropagation();
 
 
-    if (dropdownTrigger && dropdownMenu) {
+            dropdownMenu.classList.toggle(
+                "show"
+            );
 
-        dropdownTrigger.addEventListener(
+
+            userDropdown.classList.toggle(
+                "open"
+            );
+
+        }
+    );
+
+
+    /* ================================
+       CLICK SETTINGS
+    ================================= */
+
+    const settingsItem =
+        dropdownMenu.querySelector(
+            'a[href="settings.html"]'
+        );
+
+    if (settingsItem) {
+
+        settingsItem.addEventListener(
             "click",
-            function (event) {
+            function () {
 
-                event.stopPropagation();
-
-                dropdownMenu.classList.toggle("show");
-
-                if (userDropdown) {
-                    userDropdown.classList.toggle(
-                        "open"
-                    );
-                }
+                window.location.href =
+                    "settings.html";
 
             }
         );
@@ -4400,29 +4435,73 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =====================================
-       CLOSE DROPDOWN OUTSIDE
-    ===================================== */
+    /* ================================
+       LOGOUT
+    ================================= */
+
+    const logoutBtn =
+        document.getElementById(
+            "logoutBtn"
+        );
+
+    if (logoutBtn) {
+
+        logoutBtn.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+
+                /*
+                   Hapus session login
+                */
+
+                sessionStorage.clear();
+
+
+                /*
+                   Kembali ke login
+                   SESUAIKAN jika nama
+                   halaman login berbeda
+                */
+
+                window.location.href =
+                    "index.html";
+
+            }
+        );
+
+    }
+
+
+    /* ================================
+       CLOSE CLICK OUTSIDE
+    ================================= */
 
     document.addEventListener(
         "click",
         function (event) {
 
             if (
-                userDropdown &&
-                !userDropdown.contains(event.target)
+                !userDropdown.contains(
+                    event.target
+                )
             ) {
 
-                dropdownMenu.classList.remove("show");
+                dropdownMenu.classList.remove(
+                    "show"
+                );
 
-                userDropdown.classList.remove("open");
+                userDropdown.classList.remove(
+                    "open"
+                );
 
             }
 
         }
     );
 
-});
+}
 </script>
 </body>
 </html>
