@@ -2421,6 +2421,155 @@ a{
         font-size:18px;
     }
 }
+/* =========================================================
+   FINAL MOBILE SIDEBAR FIX
+========================================================= */
+
+@media screen and (max-width: 1100px){
+
+    /* ==========================================
+       SIDEBAR HIDDEN BY DEFAULT
+    ========================================== */
+
+    .sidebar{
+        position:fixed !important;
+
+        top:0 !important;
+        left:0 !important;
+
+        width:280px !important;
+
+        height:100vh !important;
+        height:100dvh !important;
+
+        margin:0 !important;
+
+        transform:translateX(-100%) !important;
+
+        transition:
+            transform .28s ease !important;
+
+        z-index:1000 !important;
+
+        display:flex !important;
+    }
+
+
+    /* ==========================================
+       SIDEBAR OPEN
+    ========================================== */
+
+    body.sidebar-open .sidebar{
+        transform:translateX(0) !important;
+    }
+
+
+    /* ==========================================
+       MAIN FULL WIDTH
+    ========================================== */
+
+    .main{
+        width:100% !important;
+
+        margin-left:0 !important;
+
+        min-width:0 !important;
+    }
+
+
+    /* ==========================================
+       OVERLAY
+    ========================================== */
+
+    .mobile-sidebar-overlay{
+        position:fixed;
+
+        inset:0;
+
+        display:block !important;
+
+        background:
+            rgba(15,23,42,.48);
+
+        opacity:0;
+
+        visibility:hidden;
+
+        pointer-events:none;
+
+        transition:
+            opacity .28s ease,
+            visibility .28s ease;
+
+        z-index:900;
+    }
+
+
+    /* ==========================================
+       OVERLAY WHEN SIDEBAR OPEN
+    ========================================== */
+
+    body.sidebar-open
+    .mobile-sidebar-overlay{
+
+        opacity:1;
+
+        visibility:visible;
+
+        pointer-events:auto;
+    }
+
+
+    /* ==========================================
+       LOCK BODY SCROLL
+    ========================================== */
+
+    body.sidebar-open{
+        overflow:hidden !important;
+    }
+
+
+    /* ==========================================
+       MOBILE MENU BUTTON
+    ========================================== */
+
+    .mobile-menu-toggle{
+        display:flex !important;
+
+        align-items:center;
+        justify-content:center;
+
+        position:relative !important;
+
+        z-index:1100 !important;
+    }
+
+}
+
+
+/* =========================================================
+   DESKTOP RESET
+========================================================= */
+
+@media screen and (min-width: 1101px){
+
+    .sidebar{
+        transform:none !important;
+    }
+
+
+    .main{
+        width:calc(100% - 280px) !important;
+
+        margin-left:280px !important;
+    }
+
+
+    .mobile-sidebar-overlay{
+        display:none !important;
+    }
+
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
