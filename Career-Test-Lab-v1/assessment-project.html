@@ -1377,7 +1377,52 @@ select{
         min-height: 100%;
         overflow-x: hidden;
     }
+/* =========================================
+   MOBILE SIDEBAR FIX
+========================================= */
 
+.mobile-menu-toggle{
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+
+body.sidebar-open .mobile-menu-toggle{
+    background: #ffffff;
+    color: #142033;
+}
+
+
+/* HEADER TIDAK BOLEH MELEBAR */
+
+.topbar{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+
+/* PROFILE TETAP DI HEADER */
+
+.header-right{
+    width: 100%;
+    max-width: 100%;
+}
+
+
+.header-user{
+    width: 100%;
+    max-width: 100%;
+}
+
+
+/* SIDEBAR FOOTER TETAP DI BAWAH */
+
+.sidebar-footer{
+    flex-shrink: 0;
+    width: 100%;
+}
 
     /* APP */
 
@@ -4318,7 +4363,9 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 });
+</script>
 
+<script>
     /* =====================================
        USER DROPDOWN
     ===================================== */
@@ -4377,7 +4424,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     );
 
-});
+
 </script>
 </body>
 </html>
