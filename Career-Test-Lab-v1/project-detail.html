@@ -2028,18 +2028,110 @@ a{
 
 
 /* =========================================================
-   HEADER TABLET & MOBILE
+   TABLET & MOBILE
+   <= 1100px
 ========================================================= */
 
-@media screen and (max-width: 1100px){
+@media screen and (max-width:1100px){
+
+    /* =====================================================
+       MAIN LAYOUT
+    ===================================================== */
+
+    .main{
+        width:100%;
+        margin-left:0;
+    }
+
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar{
+
+        position:fixed;
+
+        top:0;
+        left:0;
+
+        width:280px;
+        height:100vh;
+
+        transform:
+            translateX(-100%);
+
+        transition:
+            transform .28s ease;
+
+        z-index:9998;
+
+        box-shadow:
+            10px 0 35px
+            rgba(0,0,0,.18);
+
+    }
+
+
+    body.sidebar-open .sidebar{
+
+        transform:
+            translateX(0);
+
+    }
+
+
+    /* =====================================================
+       OVERLAY
+    ===================================================== */
+
+    .mobile-sidebar-overlay{
+
+        position:fixed;
+
+        inset:0;
+
+        display:block;
+
+        visibility:hidden;
+
+        opacity:0;
+
+        background:
+            rgba(8,22,40,.42);
+
+        transition:
+            opacity .25s ease,
+            visibility .25s ease;
+
+        z-index:9997;
+
+    }
+
+
+    body.sidebar-open .mobile-sidebar-overlay{
+
+        visibility:visible;
+
+        opacity:1;
+
+    }
+
+
+    /* =====================================================
+       TOPBAR
+    ===================================================== */
 
     .topbar{
-        height:auto;
+
+        min-height:0 !important;
+
+        height:auto !important;
 
         display:grid !important;
 
         grid-template-columns:
-            minmax(0, 1fr)
+            minmax(0,1fr)
             auto;
 
         grid-template-areas:
@@ -2051,91 +2143,163 @@ a{
 
         gap:16px;
 
-        padding:18px 20px;
+        padding:18px 28px 20px;
+
     }
 
 
-    /* JUDUL */
+    /* =====================================================
+       HEADER LEFT
+    ===================================================== */
 
     .header-left{
+
         grid-area:title;
 
         min-width:0;
+
+        margin:0;
+
+        padding:0;
+
+        display:block;
+
     }
 
 
-    /* HAMBURGER */
+    /* =====================================================
+       HAMBURGER BUTTON
+    ===================================================== */
 
     .mobile-menu-toggle{
+
         grid-area:menu;
 
         position:static !important;
+
+        top:auto !important;
+        right:auto !important;
+        bottom:auto !important;
+        left:auto !important;
 
         justify-self:end;
 
         width:46px;
         height:46px;
 
+        margin:0;
+        padding:0;
+
         display:flex !important;
+
         align-items:center;
         justify-content:center;
 
+        flex-shrink:0;
+
         border:none;
+
         border-radius:12px;
 
         background:#142033;
+
         color:#ffffff;
 
         font-size:19px;
 
+        line-height:1;
+
+        cursor:pointer;
+
+        box-shadow:none;
+
+        transform:none !important;
+
         z-index:auto !important;
+
     }
 
 
-    /* SEARCH */
+    /* =====================================================
+       HEADER RIGHT
+    ===================================================== */
+
+    .header-right{
+
+        display:contents !important;
+
+    }
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
 
     .header-search{
+
         grid-area:search;
 
         width:100% !important;
+
+        margin:0;
+
     }
 
 
-    /* USER PROFILE */
+    /* =====================================================
+       USER PROFILE
+    ===================================================== */
 
     .header-user{
+
         grid-area:profile;
 
         width:100%;
+
+        margin:0;
+
+        padding:0;
+
     }
 
 
-    .header-right{
-        display:contents !important;
-    }
-
-}
-
-    /* DROPDOWN */
+    /* =====================================================
+       DROPDOWN
+    ===================================================== */
 
     .dropdown-menu{
-        top:calc(100% + 5px);
-        left:0;
-        right:auto;
+
+        top:calc(100% + 8px);
+
+        left:auto;
+
+        right:0;
+
     }
 
 
-    /* CONTENT */
+    /* =====================================================
+       CONTENT
+    ===================================================== */
 
     .content{
-        padding:26px 28px 45px;
+
+        padding:
+            26px
+            28px
+            45px;
+
     }
 
 
     .grid{
-        grid-template-columns:1fr;
+
+        grid-template-columns:
+            1fr;
+
     }
 
+}
 
 
 /* =========================================================
@@ -2145,186 +2309,426 @@ a{
 
 @media screen and (max-width:768px){
 
-    /* TOPBAR */
+    /* =====================================================
+       TOPBAR
+    ===================================================== */
 
     .topbar{
-        padding:16px 20px 18px;
+
+        min-height:0 !important;
+
+        height:auto !important;
 
         gap:14px;
+
+        padding:
+            16px
+            20px
+            18px;
+
     }
 
 
-    /* TITLE */
+    /* =====================================================
+       HEADER LEFT
+    ===================================================== */
+
+    .header-left{
+
+        align-self:center;
+
+        margin:0 !important;
+
+        padding:0 !important;
+
+    }
+
+
+    /* =====================================================
+       PAGE TITLE
+    ===================================================== */
 
     #pageTitle{
+
+        margin:0 !important;
+
+        padding:0 !important;
+
         font-size:26px;
+
         line-height:1.15;
+
     }
 
 
+    /* =====================================================
+       PAGE SUBTITLE
+    ===================================================== */
+
     #pageSubtitle{
-        margin-top:5px;
+
+        margin:
+            5px
+            0
+            0 !important;
+
+        padding:0 !important;
 
         font-size:14px;
 
         line-height:1.4;
+
     }
 
 
-    /* SEARCH */
+    /* =====================================================
+       HAMBURGER
+    ===================================================== */
+
+    .mobile-menu-toggle{
+
+        width:46px;
+
+        height:46px;
+
+        align-self:center;
+
+        margin:0 !important;
+
+    }
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
 
     .header-search,
     .search{
+
+        width:100%;
+
         height:46px;
 
+        margin:0 !important;
+
         border-radius:12px;
+
     }
 
 
-    /* PROFILE */
+    /* =====================================================
+       PROFILE
+    ===================================================== */
 
     .header-user{
-        padding-top:2px;
+
+        margin:0 !important;
+
+        padding:0 !important;
+
     }
 
 
-    .header-avatar{
-        width:42px;
-        height:42px;
-
-        min-width:42px;
-    }
-
-
-    .header-user-name{
-        font-size:15px;
-    }
-
-
-    .header-user-role{
-        margin-top:5px;
-
-        font-size:11px;
-    }
-
-
-    /* CONTENT */
+    /* =====================================================
+       CONTENT
+    ===================================================== */
 
     .content{
-        padding:22px 16px 40px;
+
+        padding:
+            22px
+            20px
+            40px;
+
     }
 
 
-    /* BREADCRUMB */
+    /* =====================================================
+       PROJECT
+    ===================================================== */
 
-    .breadcrumb{
-        margin-bottom:14px;
+    .project-meta{
 
-        font-size:12px;
+        align-items:flex-start;
 
-        line-height:1.6;
     }
 
 
-    /* PAGE HEAD */
+    .project-name{
 
-    .page-head{
-        flex-direction:column;
+        font-size:22px;
 
-        gap:16px;
     }
 
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    .stats{
+
+        grid-template-columns:
+            repeat(2,1fr);
+
+    }
+
+
+    /* =====================================================
+       ACTION BUTTON
+    ===================================================== */
 
     .actions{
-        width:100%;
+
+        flex-direction:column;
+
     }
 
 
     .actions .btn{
-        flex:1;
+
+        width:100%;
+
     }
 
 
-    /* HERO */
-
-    .hero{
-        flex-direction:column;
-
-        align-items:flex-start;
-
-        padding:20px;
-    }
-
-
-    /* INFO */
-
-    .info-grid{
-        grid-template-columns:1fr;
-    }
-
-
-    .info:nth-child(odd){
-        margin-right:0;
-    }
-
-
-    /* FORM */
-
-    .form-row{
-        grid-template-columns:1fr;
-    }
-
-
-    /* PROJECT FLOW */
-
-    .project-flow-card{
-        padding:18px;
-
-        align-items:flex-start;
-
-        flex-direction:column;
-
-        gap:12px;
-    }
-
-
-    .step-line{
-        width:1px;
-        height:25px;
-
-        min-width:1px;
-
-        margin:0 0 0 20px;
-    }
-
-
-    /* PREMIUM PROJECT */
+    /* =====================================================
+       PREMIUM PROJECT
+    ===================================================== */
 
     .premium-project-name{
-        margin:16px 0 20px;
+
+        margin:
+            16px
+            0
+            20px;
 
         padding:18px;
+
     }
 
 
     .premium-project-name-inner{
+
         gap:12px;
+
     }
 
 
     .premium-project-icon{
+
         width:42px;
+
         height:42px;
 
         flex-basis:42px;
 
         font-size:17px;
+
     }
 
 
     .premium-project-info h2{
+
         font-size:20px;
+
     }
+
+
+    /* =====================================================
+       SECTION
+    ===================================================== */
+
+    .section,
+    .tab-panel{
+
+        padding:18px;
+
+    }
+
+
+    .tabs{
+
+        padding:
+            0
+            12px;
+
+    }
+
+
+    /* =====================================================
+       MODAL
+    ===================================================== */
+
+    .modal{
+
+        padding:20px;
+
+    }
+
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+   <= 480px
+========================================================= */
+
+@media screen and (max-width:480px){
+
+    /* =====================================================
+       SIDEBAR
+    ===================================================== */
+
+    .sidebar{
+
+        width:
+            min(
+                280px,
+                84vw
+            );
+
+    }
+
+
+    /* =====================================================
+       TOPBAR
+    ===================================================== */
+
+    .topbar{
+
+        min-height:0 !important;
+
+        padding:
+            14px
+            16px
+            18px;
+
+        gap:13px;
+
+    }
+
+
+    /* =====================================================
+       TITLE
+    ===================================================== */
+
+    #pageTitle{
+
+        font-size:23px;
+
+        line-height:1.15;
+
+    }
+
+
+    #pageSubtitle{
+
+        font-size:13px;
+
+        line-height:1.4;
+
+    }
+
+
+    /* =====================================================
+       HAMBURGER
+    ===================================================== */
+
+    .mobile-menu-toggle{
+
+        width:44px;
+
+        height:44px;
+
+        border-radius:12px;
+
+    }
+
+
+    /* =====================================================
+       CONTENT
+    ===================================================== */
+
+    .content{
+
+        padding:
+            18px
+            14px
+            35px;
+
+    }
+
+
+    /* =====================================================
+       SEARCH
+    ===================================================== */
+
+    .header-search,
+    .search{
+
+        height:44px;
+
+    }
+
+
+    /* =====================================================
+       PROJECT
+    ===================================================== */
+
+    .project-meta{
+
+        align-items:flex-start;
+
+    }
+
+
+    .project-name{
+
+        font-size:20px;
+
+    }
+
+
+    /* =====================================================
+       STATS
+    ===================================================== */
+
+    .stats{
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    /* =====================================================
+       ACTIONS
+    ===================================================== */
+
+    .actions{
+
+        flex-direction:column;
+
+    }
+
+
+    .actions .btn{
+
+        width:100%;
+
+    }
+
+
+    /* =====================================================
+       PREMIUM PROJECT
+    ===================================================== */
+
+    .premium-project-info h2{
+
+        font-size:18px;
+
+    }
+
 
 
     /* SECTION */
@@ -2567,6 +2971,67 @@ a{
 
     .mobile-sidebar-overlay{
         display:none !important;
+    }
+
+}
+/* =========================================================
+   MOBILE HEADER SPACING FIX
+========================================================= */
+
+@media screen and (max-width: 1100px){
+
+    /* MAIN AREA */
+    .main{
+        padding-top:0 !important;
+    }
+
+
+    /* TOP HEADER */
+    .topbar{
+        min-height:auto !important;
+        height:auto !important;
+
+        padding:
+            20px 28px
+            18px !important;
+
+        margin:0 !important;
+
+        position:relative !important;
+    }
+
+
+    /* HEADER / PAGE TITLE AREA */
+    .page-header,
+    .header-content,
+    .content-header{
+        margin-top:0 !important;
+
+        padding-top:0 !important;
+    }
+
+
+    /* HAMBURGER */
+    .mobile-menu-toggle{
+
+        position:absolute !important;
+
+        top:18px !important;
+        right:18px !important;
+
+        margin:0 !important;
+
+        width:58px !important;
+        height:58px !important;
+
+        z-index:1100 !important;
+    }
+
+
+    /* CONTENT AREA */
+    .content,
+    .page-content{
+        padding-top:20px !important;
     }
 
 }
