@@ -93,6 +93,268 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+<!-- CSS KHUSUS MOBILE & TABLET (TIDAK MENGUANGGU DESKTOP) -->
+<style>
+    /* Sembunyikan elemen khusus mobile di layar desktop */
+    .mobile-hamburger-btn,
+    .mobile-header-card,
+    .sidebar-overlay {
+        display: none !important;
+    }
+
+    @media (max-width: 1024px) {
+        .app {
+            display: block !important;
+            position: relative;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .main {
+            width: 100% !important;
+            margin-left: 0 !important;
+            padding: 4px 8px 30px 8px !important;
+        }
+
+        header.header {
+            display: none !important;
+        }
+
+        /* Sidebar & Z-Index Tertinggi */
+        aside.sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            left: -320px !important;
+            width: 290px !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            transition: left 0.3s ease-in-out !important;
+            background: #0b1329 !important;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.4);
+            overflow-y: auto;
+        }
+
+        aside.sidebar.sidebar-open {
+            left: 0 !important;
+        }
+
+        /* Overlay Gelap */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999998;
+        }
+
+        .sidebar-overlay.active {
+            display: block !important;
+        }
+
+        /* Kartu Header Mobile dengan Posisi Relative untuk Tombol Hamburger */
+        .mobile-header-card {
+            display: flex !important;
+            flex-direction: column;
+            gap: 6px;
+            background: #ffffff;
+            padding: 8px 10px !important;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-top: 0 !important;
+            margin-bottom: 8px !important;
+            position: relative !important;
+            z-index: 50;
+        }
+
+        /* Tombol Hamburger Dinaikkan ke Pojok Atas Kanan Card */
+        .mobile-hamburger-btn {
+            display: flex !important;
+            position: absolute !important;
+            top: 8px !important;
+            right: 10px !important;
+            background: #0f172a !important;
+            color: #ffffff !important;
+            border: none !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 2147483647 !important;
+            pointer-events: auto !important;
+        }
+
+        .page-title-group {
+            padding-right: 40px !important; /* Agar judul tidak menabrak tombol hamburger di kanan */
+        }
+
+        .mobile-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center !important;
+            width: 100%;
+        }
+
+        .mobile-search-wrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        .mobile-search-wrapper input {
+            width: 100%;
+            padding: 6px 10px 6px 32px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        /* Dropdown User Profile */
+        .mobile-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            z-index: 60;
+        }
+
+        .mobile-user-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            z-index: 100000;
+            overflow: hidden;
+        }
+
+        .mobile-user-dropdown-menu.show {
+            display: block !important;
+        }
+
+        .mobile-dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #334155;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+
+        .mobile-dropdown-item:hover {
+            background: #f1f5f9;
+        }
+
+        .mobile-dropdown-item i {
+            color: #475569;
+        }
+
+        /* 4 Card Statistik 2x2 */
+        section.project-stats {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 6px !important;
+            margin-bottom: 8px !important;
+        }
+
+        section.project-stats .stat-card {
+            padding: 8px !important;
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        section.project-stats .stat-icon {
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px !important;
+            font-size: 13px !important;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        section.project-stats .stat-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        section.project-stats .stat-label {
+            font-size: 10px !important;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        section.project-stats h3 {
+            font-size: 14px !important;
+            margin: 0 !important;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        section.project-stats small {
+            font-size: 9px !important;
+            color: #94a3b8;
+            white-space: nowrap;
+        }
+
+        /* Tabel & Pagination */
+        section.project-table {
+            width: 100% !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        section.project-table table {
+            min-width: 650px !important;
+            font-size: 12px !important;
+        }
+
+        .pagination, 
+        .dataTables_paginate, 
+        .project-pagination {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 4px !important;
+            padding: 10px 4px !important;
+            width: 100% !important;
+            overflow-x: auto !important;
+        }
+    }
+</style>
+
 </head>
 
 <body>
@@ -101,18 +363,56 @@
 
     <!-- Sidebar -->
     <aside class="sidebar"></aside>
+    
 
     <div class="main">
 
-        <!-- Header -->
+        <!-- Header Desktop (Akan aktif secara normal di layar besar) -->
         <header class="header"></header>
 
         <!-- Content -->
         <main class="content">
 
-            <section class="page-header">
-                <div class="page-title-group"></div>
-            </section>
+            <!-- HEADER KHUSUS MOBILE & TABLET (Judul, Subjudul, Search, User Profil, Tombol Hamburger Kanan) -->
+           <!-- Elemen Overlay Sidebar Gelap (Pastikan ini ada di luar atau di dalam .app) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<section class="mobile-header-card">
+    <!-- Tombol Hamburger diposisikan absolute di pojok kanan atas card -->
+    <button class="mobile-hamburger-btn" id="mobileMenuToggle" type="button">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <div class="page-title-group">
+        <h1 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Projects</h1>
+        <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Manage assessment projects, progress & activity</p>
+    </div>
+
+    <div class="mobile-search-wrapper" style="margin-top: 6px;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;"></i>
+        <input type="text" id="globalSearchInput" placeholder="Search projects...">
+    </div>
+
+    <!-- User Profile Dropdown Toggle -->
+    <div class="mobile-user-profile" id="mobileUserProfileCard" style="margin-top: 6px;">
+        <div class="mobile-user-avatar" id="mobileUserAvatar" style="width: 30px; height: 30px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">U</div>
+        <div style="flex-grow: 1;">
+            <strong id="mobileUserName" style="font-size: 12px; color: #1e293b; display: block;">Loading...</strong>
+            <span id="mobileUserRole" style="font-size: 10px; color: #64748b;">Role</span>
+        </div>
+        <i class="fa-solid fa-chevron-down" id="mobileProfileChevron" style="color: #94a3b8; font-size: 11px; transition: transform 0.2s;"></i>
+
+        <!-- Menu Dropdown -->
+        <div class="mobile-user-dropdown-menu" id="mobileUserDropdown">
+            <a href="settings.html" class="mobile-dropdown-item">
+                <i class="fa-solid fa-gear"></i> Setting
+            </a>
+            <a href="#" class="mobile-dropdown-item" id="mobileLogoutBtn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </div>
+</section>
 
             <!-- ======================================================= -->
             <!-- STATISTIC CONTAINER (ISOLASI DUAL-ROLE)                 -->
@@ -329,6 +629,40 @@
 <script src="js/project-access-filter.js"></script>
 <script src="js/auth-guard.js"></script>
 
+<!-- SCRIPT PENGISIAN PROFIL PENGGUNA & HAMBURGER MENU MOBILE -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const hamburgerBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector("aside.sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleMenu() {
+        sidebar.classList.toggle("sidebar-open");
+        overlay.classList.toggle("active");
+    }
+
+    if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener("click", toggleMenu);
+        overlay.addEventListener("click", toggleMenu);
+    }
+
+    try {
+        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        if (userRaw) {
+            var activeUser = JSON.parse(userRaw);
+            var name = activeUser.name || activeUser.username || "System Administrator";
+            var role = activeUser.role || "System Administrator";
+
+            document.getElementById("mobileUserName").innerText = name;
+            document.getElementById("mobileUserRole").innerText = role;
+            document.getElementById("mobileUserAvatar").innerText = name.charAt(0).toUpperCase();
+        }
+    } catch(e) {
+        console.error("Gagal memuat profil pengguna:", e);
+    }
+});
+</script>
+
 <!-- SCRIPT FILTER & STATISTIK TERUNIFIKASI -->
 <script>
 (function() {
@@ -389,7 +723,6 @@
                     if (clientName && clientName !== "-") clients.add(clientName);
 
                     var st = cols[6].innerText.trim().toLowerCase();
-                    // Menghitung status Running, Active, Scheduled, Ongoing, DAN Draft sebagai proyek aktif/berjalan
                     if (st.includes("running") || st.includes("active") || st.includes("scheduled") || st.includes("ongoing") || st.includes("draft") || st.includes("waiting")) {
                         running++;
                     } else if (st.includes("completed") || st.includes("complete") || st.includes("finish")) {
@@ -485,24 +818,10 @@
 </script>
 
 <script>
-// Skrip otomatis untuk menyisipkan id="globalSearchInput" jika header dimuat secara dinamis
 document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(function() {
-        var searchInput = document.querySelector('.main header input[type="text"], .header input[type="text"], .main input[placeholder*="Cari"]');
-        if (searchInput && !searchInput.id) {
-            searchInput.id = "globalSearchInput";
-        }
-    }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Tangkap tombol Remove Selected Project
     const removeBtn = document.getElementById("removeSelectedProjects");
     const selectAllCb = document.getElementById("selectAllProjects");
 
-    // Fungsi centang semua (Select All)
     if (selectAllCb) {
         selectAllCb.addEventListener("change", function() {
             const checkboxes = document.querySelectorAll("#projectTable input[type='checkbox']");
@@ -510,7 +829,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Fungsi ketika tombol Remove Selected Project diklik
     if (removeBtn) {
         removeBtn.addEventListener("click", function() {
             const checkedBoxes = document.querySelectorAll("#projectTable input[type='checkbox']:checked");
@@ -521,16 +839,13 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             if (confirm(`Apakah Anda yakin ingin menghapus ${checkedBoxes.length} project yang dipilih?`)) {
-                // Hapus baris dari tabel tampilan
                 checkedBoxes.forEach(cb => {
                     const row = cb.closest("tr");
                     if (row) row.remove();
                 });
 
-                // Reset checkbox "Select All"
                 if (selectAllCb) selectAllCb.checked = false;
 
-                // Perbarui statistik setelah penghapusan
                 if (typeof updateUnifiedStats === "function") {
                     updateUnifiedStats();
                 }
@@ -538,6 +853,85 @@ document.addEventListener("DOMContentLoaded", function() {
                 alert("Project yang dipilih berhasil dihapus!");
             }
         });
+    }
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Kontrol Sidebar Hamburger (Diperkuat agar selalu merespons klik)
+    const hamburgerBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector("aside.sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleSidebar(e) {
+        if (e) e.stopPropagation();
+        if (sidebar) sidebar.classList.toggle("sidebar-open");
+        if (overlay) overlay.classList.toggle("active");
+    }
+
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener("click", toggleSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener("click", toggleSidebar);
+    }
+
+    // 2. Kontrol Dropdown User Profile
+    const profileCard = document.getElementById("mobileUserProfileCard");
+    const userDropdown = document.getElementById("mobileUserDropdown");
+    const chevron = document.getElementById("mobileProfileChevron");
+
+    if (profileCard && userDropdown) {
+        profileCard.addEventListener("click", function(e) {
+            e.stopPropagation();
+            const isOpen = userDropdown.classList.toggle("show");
+            if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "rotate(0deg)";
+        });
+
+        document.addEventListener("click", function(e) {
+            if (!profileCard.contains(e.target)) {
+                userDropdown.classList.remove("show");
+                if (chevron) chevron.style.transform = "rotate(0deg)";
+            }
+        });
+    }
+
+    // 3. Action Logout Mobile
+    const logoutBtn = document.getElementById("mobileLogoutBtn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            localStorage.removeItem("talentscope_current_user");
+            sessionStorage.removeItem("ts_admin_session");
+            window.location.href = "login.html";
+        });
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const hamburgerBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector("aside.sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleSidebar(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (sidebar) sidebar.classList.toggle("sidebar-open");
+        if (overlay) overlay.classList.toggle("active");
+    }
+
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener("click", toggleSidebar);
+        hamburgerBtn.addEventListener("touchend", toggleSidebar);
+    }
+    
+    if (overlay) {
+        overlay.addEventListener("click", toggleSidebar);
     }
 });
 </script>

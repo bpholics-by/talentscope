@@ -64,64 +64,64 @@ document.addEventListener("DOMContentLoaded", function () {
     let schedules = [];
     try {
         const projects = JSON.parse(localStorage.getItem('talentscope_projects') || localStorage.getItem('projects') || '[]');
-        const today = new Date('2026-08-24T00:00:00');
+        
+        // PERBAIKAN DI SINI: Menggunakan tanggal hari ini secara otomatis dari sistem
+        const today = new Date(); 
         
         projects.forEach(proj => {
-    const rawSchedule = proj.scheduleDate || proj.date || proj.createdAt;
-    
-    if (rawSchedule) {
-        // Ambil tanggal pertama jika berupa rentang
-        const rawDateStr = rawSchedule.includes(' - ') ? rawSchedule.split(' - ')[0].trim() : rawSchedule.trim();
-        
-        // Ubah string tanggal menjadi objek Date secara aman
-        const projDate = new Date(rawDateStr);
-        
-        // Jika gagal terbaca, coba parsing manual jika formatnya "DD MMM YYYY"
-        if (isNaN(projDate.getTime())) {
-            console.warn("Format tanggal tidak dikenali:", rawDateStr);
-            return;
-        }
-
-        const todayCopy = new Date(today); 
-        
-        const diffTime = projDate.setHours(0,0,0,0) - todayCopy.setHours(0,0,0,0);
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        
-        console.log("Proyek:", proj.name, "| Tanggal:", rawDateStr, "| Selisih Hari (diffDays):", diffDays);
-
-        if (diffDays >= -2 && diffDays <= 2) {
-            let badgeText = '';
-            let hexColor = '#3b82f6';
+            const rawSchedule = proj.scheduleDate || proj.date || proj.createdAt;
             
-            if (diffDays === 0) {
-                badgeText = 'Hari Ini';
-                hexColor = '#10b981';
-            } else if (diffDays === -1) {
-                badgeText = 'Kemarin';
-                hexColor = '#f59e0b';
-            } else if (diffDays === -2) {
-                badgeText = '2 Hari Lalu';
-                hexColor = '#64748b';
-            } else if (diffDays === 1) {
-                badgeText = 'Besok';
-                hexColor = '#8b5cf6'; // Ungu untuk besok
-            } else if (diffDays === 2) {
-                badgeText = '2 Hari Lagi';
-                hexColor = '#06b6d4';
+            if (rawSchedule) {
+                // Ambil tanggal pertama jika berupa rentang
+                const rawDateStr = rawSchedule.includes(' - ') ? rawSchedule.split(' - ')[0].trim() : rawSchedule.trim();
+                
+                // Ubah string tanggal menjadi objek Date secara aman
+                const projDate = new Date(rawDateStr);
+                
+                // Jika gagal terbaca, coba parsing manual jika formatnya "DD MMM YYYY"
+                if (isNaN(projDate.getTime())) {
+                    console.warn("Format tanggal tidak dikenali:", rawDateStr);
+                    return;
+                }
+
+                const todayCopy = new Date(today); 
+                
+                const diffTime = projDate.setHours(0,0,0,0) - todayCopy.setHours(0,0,0,0);
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                
+                console.log("Proyek:", proj.name, "| Tanggal:", rawDateStr, "| Selisih Hari (diffDays):", diffDays);
+
+                if (diffDays >= -2 && diffDays <= 2) {
+                    let badgeText = '';
+                    let hexColor = '#3b82f6';
+                    
+                    if (diffDays === 0) {
+                        badgeText = 'Hari Ini';
+                        hexColor = '#10b981';
+                    } else if (diffDays === -1) {
+                        badgeText = 'Kemarin';
+                        hexColor = '#f59e0b';
+                    } else if (diffDays === -2) {
+                        badgeText = '2 Hari Lalu';
+                        hexColor = '#64748b';
+                    } else if (diffDays === 1) {
+                        badgeText = 'Besok';
+                        hexColor = '#8b5cf6'; // Ungu untuk besok
+                    } else if (diffDays === 2) {
+                        badgeText = '2 Hari Lagi';
+                        hexColor = '#06b6d4';
+                    }
+
+                    schedules.push({
+                        title: proj.name || proj.projectName || 'Proyek Asesmen',
+                        desc: `Klien/Perusahaan: ${proj.company || proj.perusahaan || 'Umum'}`,
+                        badge: badgeText,
+                        color: hexColor,
+                        dateObj: new Date(projDate)
+                    });
+                }
             }
-
-            schedules.push({
-                title: proj.name || proj.projectName || 'Proyek Asesmen',
-                desc: `Klien/Perusahaan: ${proj.company || proj.perusahaan || 'Umum'}`,
-                badge: badgeText,
-                color: hexColor,
-                dateObj: new Date(projDate)
-            });
-        }
-    }
-});
-
-
+        });
 
     } catch (e) {
         console.error("Gagal memuat jadwal:", e);

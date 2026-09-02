@@ -118,7 +118,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 "participants.html": { title: "Participants", subtitle: "Manage participant data and assessment progress" },
                 "hasil.html": { title: "Results", subtitle: "Assessment results and reports" },
                 "projects.html": { title: "Project Access", subtitle: "Manage assessment projects and client assignments" },
-                "test-builder.html": { title: "Test Builder", subtitle: "Create and manage assessment test questions" },
                 "identitas.html": { title: "Participant Profile", subtitle: "Complete participant identity before assessment" },
                 "petunjuk.html": { title: "Instructions", subtitle: "Assessment guidelines" },
                 "assessment.html": { title: "Assessment", subtitle: "Psychological Assessment" }
