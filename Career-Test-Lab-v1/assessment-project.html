@@ -1377,52 +1377,7 @@ select{
         min-height: 100%;
         overflow-x: hidden;
     }
-/* =========================================
-   MOBILE SIDEBAR FIX
-========================================= */
 
-.mobile-menu-toggle{
-    transition:
-        background .2s ease,
-        transform .2s ease;
-}
-
-
-body.sidebar-open .mobile-menu-toggle{
-    background: #ffffff;
-    color: #142033;
-}
-
-
-/* HEADER TIDAK BOLEH MELEBAR */
-
-.topbar{
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
-
-/* PROFILE TETAP DI HEADER */
-
-.header-right{
-    width: 100%;
-    max-width: 100%;
-}
-
-
-.header-user{
-    width: 100%;
-    max-width: 100%;
-}
-
-
-/* SIDEBAR FOOTER TETAP DI BAWAH */
-
-.sidebar-footer{
-    flex-shrink: 0;
-    width: 100%;
-}
 
     /* APP */
 
@@ -3932,54 +3887,6 @@ modal.addEventListener(
 );
 
 
-document.addEventListener("DOMContentLoaded", function () {
-
-    const userDropdown = document.getElementById("userDropdown");
-    const dropdownTrigger = document.getElementById("dropdownTrigger");
-    const dropdownMenu = document.getElementById("dropdownMenu");
-
-    if (!userDropdown || !dropdownTrigger || !dropdownMenu) {
-        return;
-    }
-
-
-    /* Klik user */
-
-    dropdownTrigger.addEventListener("click", function (event) {
-
-        event.stopPropagation();
-
-        dropdownMenu.classList.toggle("show");
-
-        userDropdown.classList.toggle(
-            "open",
-            dropdownMenu.classList.contains("show")
-        );
-
-    });
-
-
-    /* Klik isi dropdown jangan menutup sebelum link bekerja */
-
-    dropdownMenu.addEventListener("click", function (event) {
-
-        event.stopPropagation();
-
-    });
-
-
-    /* Klik di luar dropdown */
-
-    document.addEventListener("click", function () {
-
-        dropdownMenu.classList.remove("show");
-
-        userDropdown.classList.remove("open");
-
-    });
-
-});
-
 function updateRemoveButton(){
 
     const checked =
@@ -4202,6 +4109,10 @@ render();
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
+    /* =====================================================
+       ELEMENTS
+    ===================================================== */
+
     const menuToggle =
         document.getElementById(
             "mobileMenuToggle"
@@ -4218,15 +4129,32 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
 
-    /* =====================================
-       OPEN / CLOSE SIDEBAR
-    ===================================== */
+    const dropdownTrigger =
+        document.getElementById(
+            "dropdownTrigger"
+        );
+
+    const dropdownMenu =
+        document.getElementById(
+            "dropdownMenu"
+        );
+
+    const userDropdown =
+        document.getElementById(
+            "userDropdown"
+        );
+
+
+    /* =====================================================
+       MOBILE SIDEBAR
+    ===================================================== */
 
     function openSidebar() {
 
         document.body.classList.add(
             "sidebar-open"
         );
+
 
         if (menuToggle) {
 
@@ -4249,6 +4177,7 @@ document.addEventListener("DOMContentLoaded", function () {
             "sidebar-open"
         );
 
+
         if (menuToggle) {
 
             menuToggle.innerHTML =
@@ -4264,9 +4193,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =====================================
+    /* =====================================================
        HAMBURGER CLICK
-    ===================================== */
+    ===================================================== */
 
     if (menuToggle) {
 
@@ -4275,7 +4204,9 @@ document.addEventListener("DOMContentLoaded", function () {
             function (event) {
 
                 event.preventDefault();
+
                 event.stopPropagation();
+
 
                 if (
                     document.body.classList.contains(
@@ -4297,9 +4228,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =====================================
+    /* =====================================================
        OVERLAY CLICK
-    ===================================== */
+    ===================================================== */
 
     if (overlay) {
 
@@ -4315,37 +4246,39 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =====================================
-       CLOSE WHEN MENU CLICKED
-    ===================================== */
+    /* =====================================================
+       CLOSE SIDEBAR AFTER MENU CLICK
+    ===================================================== */
 
-    document
-        .querySelectorAll(
-            ".sidebar a"
-        )
-        .forEach(function (link) {
+    if (sidebar) {
 
-            link.addEventListener(
-                "click",
-                function () {
+        sidebar
+            .querySelectorAll("a")
+            .forEach(function (link) {
 
-                    if (
-                        window.innerWidth <= 768
-                    ) {
+                link.addEventListener(
+                    "click",
+                    function () {
 
-                        closeSidebar();
+                        if (
+                            window.innerWidth <= 768
+                        ) {
+
+                            closeSidebar();
+
+                        }
 
                     }
+                );
 
-                }
-            );
+            });
 
-        });
+    }
 
 
-    /* =====================================
-       RESET DESKTOP
-    ===================================== */
+    /* =====================================================
+       RESET SIDEBAR ON DESKTOP
+    ===================================================== */
 
     window.addEventListener(
         "resize",
@@ -4362,39 +4295,78 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     );
 
-});
-</script>
 
-<script>
-    /* =====================================
+    /* =====================================================
        USER DROPDOWN
-    ===================================== */
+    ===================================================== */
 
-    const dropdownTrigger =
-        document.getElementById("dropdownTrigger");
+    function closeDropdown() {
 
-    const dropdownMenu =
-        document.getElementById("dropdownMenu");
+        if (dropdownMenu) {
 
-    const userDropdown =
-        document.getElementById("userDropdown");
+            dropdownMenu.classList.remove(
+                "show"
+            );
+
+        }
 
 
-    if (dropdownTrigger && dropdownMenu) {
+        if (userDropdown) {
+
+            userDropdown.classList.remove(
+                "open"
+            );
+
+        }
+
+    }
+
+
+    function toggleDropdown() {
+
+        if (
+            !dropdownMenu ||
+            !userDropdown
+        ) {
+            return;
+        }
+
+
+        const willOpen =
+            !dropdownMenu.classList.contains(
+                "show"
+            );
+
+
+        dropdownMenu.classList.toggle(
+            "show",
+            willOpen
+        );
+
+
+        userDropdown.classList.toggle(
+            "open",
+            willOpen
+        );
+
+    }
+
+
+    /* =====================================================
+       PROFILE CLICK
+    ===================================================== */
+
+    if (dropdownTrigger) {
 
         dropdownTrigger.addEventListener(
             "click",
             function (event) {
 
+                event.preventDefault();
+
                 event.stopPropagation();
 
-                dropdownMenu.classList.toggle("show");
-
-                if (userDropdown) {
-                    userDropdown.classList.toggle(
-                        "open"
-                    );
-                }
+                toggleDropdown();
 
             }
         );
@@ -4402,9 +4374,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* =====================================
-       CLOSE DROPDOWN OUTSIDE
-    ===================================== */
+    /* =====================================================
+       PREVENT DROPDOWN CLICK FROM CLOSING
+    ===================================================== */
+
+    if (dropdownMenu) {
+
+        dropdownMenu.addEventListener(
+            "click",
+            function (event) {
+
+                event.stopPropagation();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================================
+       CLICK OUTSIDE
+    ===================================================== */
 
     document.addEventListener(
         "click",
@@ -4412,12 +4402,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (
                 userDropdown &&
-                !userDropdown.contains(event.target)
+                !userDropdown.contains(
+                    event.target
+                )
             ) {
 
-                dropdownMenu.classList.remove("show");
-
-                userDropdown.classList.remove("open");
+                closeDropdown();
 
             }
 
@@ -4425,6 +4415,28 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
+    /* =====================================================
+       ESC KEY
+    ===================================================== */
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                event.key === "Escape"
+            ) {
+
+                closeSidebar();
+
+                closeDropdown();
+
+            }
+
+        }
+    );
+
+});
 </script>
 </body>
 </html>
