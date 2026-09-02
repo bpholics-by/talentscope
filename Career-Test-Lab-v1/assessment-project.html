@@ -1378,7 +1378,52 @@ select{
         overflow-x: hidden;
     }
 
+/* =========================================
+   MOBILE SIDEBAR FIX
+========================================= */
 
+.mobile-menu-toggle{
+    transition:
+        background .2s ease,
+        transform .2s ease;
+}
+
+
+body.sidebar-open .mobile-menu-toggle{
+    background: #ffffff;
+    color: #142033;
+}
+
+
+/* HEADER TIDAK BOLEH MELEBAR */
+
+.topbar{
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+
+/* PROFILE TETAP DI HEADER */
+
+.header-right{
+    width: 100%;
+    max-width: 100%;
+}
+
+
+.header-user{
+    width: 100%;
+    max-width: 100%;
+}
+
+
+/* SIDEBAR FOOTER TETAP DI BAWAH */
+
+.sidebar-footer{
+    flex-shrink: 0;
+    width: 100%;
+}
     /* APP */
 
     .app{
@@ -2098,20 +2143,7 @@ select{
 
     </div>
 
-<div class="user-profile" id="userProfile">
 
-    <div class="user-avatar">
-        A
-    </div>
-
-    <div class="user-info">
-        <span class="user-name">System Administrator</span>
-        <span class="user-role">System Administrator</span>
-    </div>
-
-    <i class="fas fa-chevron-down dropdown-arrow"></i>
-
-</div>
 
     <!-- FOOTER -->
     <div class="sidebar-footer">
@@ -4167,96 +4199,169 @@ render();
 
 <div class="mobile-sidebar-overlay"></div>
 
-<div class="mobile-sidebar-overlay"></div>
-
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* =====================================
-       ELEMENT
-    ===================================== */
-
     const menuToggle =
-        document.getElementById("mobileMenuToggle");
+        document.getElementById(
+            "mobileMenuToggle"
+        );
 
     const overlay =
-        document.querySelector(".mobile-sidebar-overlay");
+        document.querySelector(
+            ".mobile-sidebar-overlay"
+        );
 
     const sidebar =
-        document.querySelector(".sidebar");
+        document.querySelector(
+            ".sidebar"
+        );
 
 
     /* =====================================
-       MOBILE SIDEBAR OPEN
+       OPEN / CLOSE SIDEBAR
     ===================================== */
 
-    if (menuToggle) {
+    function openSidebar() {
 
-        menuToggle.addEventListener("click", function (event) {
+        document.body.classList.add(
+            "sidebar-open"
+        );
 
-            event.preventDefault();
-            event.stopPropagation();
+        if (menuToggle) {
 
-            document.body.classList.toggle("sidebar-open");
+            menuToggle.innerHTML =
+                '<i class="fa-solid fa-xmark"></i>';
 
-        });
-
-    }
-
-
-    /* =====================================
-       CLOSE OVERLAY
-    ===================================== */
-
-    if (overlay) {
-
-        overlay.addEventListener("click", function () {
-
-            document.body.classList.remove("sidebar-open");
-
-        });
-
-    }
-
-
-    /* =====================================
-       CLOSE AFTER MENU CLICK
-    ===================================== */
-
-    document
-        .querySelectorAll(".sidebar a")
-        .forEach(function (link) {
-
-            link.addEventListener("click", function () {
-
-                if (window.innerWidth <= 768) {
-
-                    document.body.classList.remove(
-                        "sidebar-open"
-                    );
-
-                }
-
-            });
-
-        });
-
-
-    /* =====================================
-       RESET ON DESKTOP
-    ===================================== */
-
-    window.addEventListener("resize", function () {
-
-        if (window.innerWidth > 768) {
-
-            document.body.classList.remove(
-                "sidebar-open"
+            menuToggle.setAttribute(
+                "aria-label",
+                "Close menu"
             );
 
         }
 
-    });
+    }
+
+
+    function closeSidebar() {
+
+        document.body.classList.remove(
+            "sidebar-open"
+        );
+
+        if (menuToggle) {
+
+            menuToggle.innerHTML =
+                '<i class="fa-solid fa-bars"></i>';
+
+            menuToggle.setAttribute(
+                "aria-label",
+                "Open menu"
+            );
+
+        }
+
+    }
+
+
+    /* =====================================
+       HAMBURGER CLICK
+    ===================================== */
+
+    if (menuToggle) {
+
+        menuToggle.addEventListener(
+            "click",
+            function (event) {
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (
+                    document.body.classList.contains(
+                        "sidebar-open"
+                    )
+                ) {
+
+                    closeSidebar();
+
+                } else {
+
+                    openSidebar();
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       OVERLAY CLICK
+    ===================================== */
+
+    if (overlay) {
+
+        overlay.addEventListener(
+            "click",
+            function () {
+
+                closeSidebar();
+
+            }
+        );
+
+    }
+
+
+    /* =====================================
+       CLOSE WHEN MENU CLICKED
+    ===================================== */
+
+    document
+        .querySelectorAll(
+            ".sidebar a"
+        )
+        .forEach(function (link) {
+
+            link.addEventListener(
+                "click",
+                function () {
+
+                    if (
+                        window.innerWidth <= 768
+                    ) {
+
+                        closeSidebar();
+
+                    }
+
+                }
+            );
+
+        });
+
+
+    /* =====================================
+       RESET DESKTOP
+    ===================================== */
+
+    window.addEventListener(
+        "resize",
+        function () {
+
+            if (
+                window.innerWidth > 768
+            ) {
+
+                closeSidebar();
+
+            }
+
+        }
+    );
+
 
 
     /* =====================================
