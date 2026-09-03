@@ -292,6 +292,58 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
       return;
     }
 
+/* =====================================================
+   TEMPORARY MOBILE PARTICIPANT DEMO
+   HANYA UNTUK TESTING
+===================================================== */
+
+if (
+    userIn === "peserta" &&
+    passIn === "peserta123"
+) {
+
+    const demoParticipantSession = {
+
+        participantId: "DEMO-PARTICIPANT-001",
+
+        projectId: "DEMO-PROJECT-001",
+
+        username: "peserta",
+
+        name: "Peserta",
+
+        email: "peserta@talentscope.com",
+
+        role: "participant",
+
+        permission: "Participant",
+
+        projectName: "Demo Assessment Project",
+
+        assessments: [],
+
+        loginAt: new Date().toISOString()
+
+    };
+
+
+    sessionStorage.clear();
+
+
+    sessionStorage.setItem(
+        "ts_participant_session",
+        JSON.stringify(demoParticipantSession)
+    );
+
+
+    window.location.replace(
+        "participant-dashboard.html"
+    );
+
+    return;
+
+}
+
     alert("Username atau Password tidak sesuai dengan data sistem!");
   });
 })();

@@ -2177,20 +2177,30 @@ select{
 
     <div class="header-user-trigger" id="dropdownTrigger">
 
-        <div class="header-avatar">
-            A
-        </div>
+        <div
+    class="header-avatar"
+    id="headerAvatar"
+>
+    A
+</div>
 
-        <div class="header-user-info">
-            <div class="header-user-name">
-                Administrator
-            </div>
+<div class="header-user-info">
 
-            <div class="header-user-role">
-                System Admin
-            </div>
-        </div>
+    <div
+        class="header-user-name"
+        id="headerUserName"
+    >
+        System Admin
+    </div>
 
+    <div
+        class="header-user-role"
+        id="headerUserRole"
+    >
+        System Administrator
+    </div>
+
+</div>
         <i class="fa-solid fa-chevron-down arrow-icon"></i>
 
     </div>
@@ -4425,5 +4435,123 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 </script>
+
+<script>
+(function () {
+
+    /* ==========================================
+       LOAD ACTIVE ADMIN SESSION
+    ========================================== */
+
+    var rawSession =
+        sessionStorage.getItem(
+            "ts_admin_session"
+        );
+
+    if (!rawSession) {
+        return;
+    }
+
+
+    var activeUser;
+
+    try {
+
+        activeUser =
+            JSON.parse(rawSession);
+
+    } catch (error) {
+
+        console.warn(
+            "Admin session tidak valid"
+        );
+
+        return;
+    }
+
+
+    /* ==========================================
+       USER DATA
+    ========================================== */
+
+    var userName =
+        activeUser.name ||
+        activeUser.username ||
+        "User";
+
+
+    var userRole =
+        activeUser.role ||
+        "System Administrator";
+
+
+    /* ==========================================
+       NORMALISASI ROLE
+    ========================================== */
+
+    if (
+        userRole === "System Admin"
+    ) {
+
+        userRole =
+            "System Administrator";
+
+    }
+
+
+    /* ==========================================
+       HEADER ELEMENTS
+    ========================================== */
+
+    var avatar =
+        document.getElementById(
+            "headerAvatar"
+        );
+
+
+    var nameElement =
+        document.getElementById(
+            "headerUserName"
+        );
+
+
+    var roleElement =
+        document.getElementById(
+            "headerUserRole"
+        );
+
+
+    /* ==========================================
+       UPDATE HEADER
+    ========================================== */
+
+    if (avatar) {
+
+        avatar.textContent =
+            String(userName)
+                .charAt(0)
+                .toUpperCase();
+
+    }
+
+
+    if (nameElement) {
+
+        nameElement.textContent =
+            userName;
+
+    }
+
+
+    if (roleElement) {
+
+        roleElement.textContent =
+            userRole;
+
+    }
+
+})();
+</script>
+
 </body>
 </html>
