@@ -292,27 +292,27 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
       return;
     }
 
-/* =====================================================
-   TEMPORARY MOBILE PARTICIPANT DEMO
-   HANYA UNTUK TESTING
-===================================================== */
+// ==========================================
+// DEMO PARTICIPANT FALLBACK
+// HANYA UNTUK DEMO / TESTING
+// ==========================================
 
 if (
-    userIn === "peserta" &&
-    passIn === "peserta123"
+    userIn === "afan@company.com" &&
+    passIn === "TS-AA03-4KD20O"
 ) {
 
     const demoParticipantSession = {
 
-        participantId: "DEMO-PARTICIPANT-001",
+        participantId: "DEMO-AFAN-001",
 
-        projectId: "DEMO-PROJECT-001",
+        projectId: "DEMO-PROJECT",
 
-        username: "peserta",
+        username: "afan@company.com",
 
-        name: "Peserta",
+        name: "Afan",
 
-        email: "peserta@talentscope.com",
+        email: "afan@company.com",
 
         role: "participant",
 
@@ -320,9 +320,15 @@ if (
 
         projectName: "Demo Assessment Project",
 
-        assessments: [],
+        loginAt: new Date().toISOString(),
 
-        loginAt: new Date().toISOString()
+        assessments: [
+            {
+                id: "DEMO-ASSESSMENT-001",
+                name: "DISC Personality",
+                status: "assigned"
+            }
+        ]
 
     };
 
@@ -343,7 +349,7 @@ if (
     return;
 
 }
-
+    
     alert("Username atau Password tidak sesuai dengan data sistem!");
   });
 })();
