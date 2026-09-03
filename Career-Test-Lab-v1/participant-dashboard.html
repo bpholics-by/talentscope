@@ -739,568 +739,1142 @@ a{text-decoration:none;color:inherit}
 </div>
 
 <script>
-(function(){
-  function tick(){
-    var d=new Date();
-    var dateEl=document.getElementById("todayDate");
-    var timeEl=document.getElementById("currentTime");
-    if(dateEl){
-      dateEl.textContent=new Intl.DateTimeFormat("en-US",{day:"numeric",month:"long",year:"numeric"}).format(d);
-    }
-    if(timeEl){
-      timeEl.textContent=new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",hour12:true}).format(d);
-    }
-  }
-  tick(); setInterval(tick,30000);
-})();
-</script>
-<script>
+/* =========================================================
+   TALENTSCOPE PARTICIPANT DASHBOARD
+   FULL FIX – SESSION COMPATIBLE VERSION
+========================================================= */
 (function () {
+    "use strict";
 
     /* =====================================================
-       PARTICIPANT SESSION
+       DATE & TIME
     ===================================================== */
+    function updateClock() {
+        var d = new Date();
 
-    var raw = sessionStorage.getItem(
-        "ts_participant_session"
-    );
+        var dateEl = document.getElementById("todayDate");
+        var timeEl = document.getElementById("currentTime");
 
-    if (!raw) {
-        location.href = "login.html";
+        if (dateEl) {
+            dateEl.textContent = new Intl.DateTimeFormat(
+                "en-US",
+                {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                }
+            ).format(d);
+        }
+
+        if (timeEl) {
+            timeEl.textContent = new Intl.DateTimeFormat(
+                "en-US",
+                {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true
+                }
+            ).format(d);
+        }
+    }
+
+    updateClock();
+    setInterval(updateClock, 30000);
+
+
+    /* =====================================================
+       GLOBAL NAVIGATION FLAG
+    ===================================================== */
+    window.__tsParticipantInternalNavigation = false;
+
+
+    /* =====================================================
+       STORAGE HELPERS
+    ===================================================== */
+    function readJSON(key, fallback) {
+        try {
+            var raw = localStorage.getItem(key);
+
+            if (!raw) {
+                return fallback;
+            }
+
+            var parsed = JSON.parse(raw);
+
+            return parsed;
+        } catch (error) {
+            console.warn(
+                "TalentScope readJSON error:",
+                key,
+                error
+            );
+
+            return fallback;
+        }
+    }
+
+
+    function writeJSON(key, data) {
+        try {
+            localStorage.setItem(
+                key,
+                JSON.stringify(data)
+            );
+
+            return true;
+
+        } catch (error) {
+
+            console.error(
+                "TalentScope writeJSON error:",
+                key,
+                error
+            );
+
+            return false;
+        }
+    }
+
+
+    /* =====================================================
+       NORMALIZE ID
+    ===================================================== */
+    function normalize(value) {
+        return String(
+            value == null ? "" : value
+        ).trim();
+    }
+
+
+    function normalizeEmail(value) {
+        return String(
+            value == null ? "" : value
+        )
+        .trim()
+        .toLowerCase();
+    }
+
+
+    /* =====================================================
+       LOAD PARTICIPANT SESSION
+    ===================================================== */
+    var rawSession =
+        sessionStorage.getItem(
+            "ts_participant_session"
+        );
+
+    if (!rawSession) {
+        window.location.href = "login.html";
         return;
     }
+
 
     var s;
 
     try {
-        s = JSON.parse(raw);
+        s = JSON.parse(rawSession);
+
     } catch (error) {
+
         sessionStorage.removeItem(
             "ts_participant_session"
         );
-        location.href = "login.html";
+
+        window.location.href = "login.html";
+
+        return;
+    }
+
+
+    if (!s || typeof s !== "object") {
+
+        sessionStorage.removeItem(
+            "ts_participant_session"
+        );
+
+        window.location.href = "login.html";
+
         return;
     }
 
 
     /* =====================================================
-       LOAD PROJECT DATA
+       SESSION ID
     ===================================================== */
+    var activeSessionId =
+        normalize(s.activeSessionId);
 
-    var projects = [];
+    if (!activeSessionId) {
 
-    try {
-        projects = JSON.parse(
-            localStorage.getItem(
-                "talentscope_projects"
-            ) || "[]"
+        activeSessionId =
+            "TS-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .slice(2, 10);
+
+        s.activeSessionId =
+            activeSessionId;
+
+        try {
+
+            sessionStorage.setItem(
+                "ts_participant_session",
+                JSON.stringify(s)
+            );
+
+        } catch (error) {}
+    }
+
+
+    /* =====================================================
+       SESSION IDENTITY
+    ===================================================== */
+    var sessionProjectId =
+        normalize(
+            s.projectId ||
+            s.project_id
         );
 
-        if (!Array.isArray(projects)) {
-            projects = [];
+    var sessionParticipantId =
+        normalize(
+            s.participantId ||
+            s.participant_id ||
+            s.employeeId ||
+            s.employee_id ||
+            s.id
+        );
+
+    var sessionEmail =
+        normalizeEmail(
+            s.email ||
+            s.emailAddress ||
+            s.email_address
+        );
+
+
+    /* =====================================================
+       VALIDATE SESSION
+    ===================================================== */
+    if (!sessionProjectId) {
+
+        console.error(
+            "TalentScope: Project ID missing in session.",
+            s
+        );
+
+        alert(
+            "Session project tidak ditemukan. Silakan login kembali."
+        );
+
+        sessionStorage.removeItem(
+            "ts_participant_session"
+        );
+
+        window.location.href =
+            "login.html";
+
+        return;
+    }
+
+
+    if (
+        !sessionParticipantId &&
+        !sessionEmail
+    ) {
+
+        console.error(
+            "TalentScope: Participant identity missing.",
+            s
+        );
+
+        alert(
+            "Identitas peserta tidak ditemukan. Silakan login kembali."
+        );
+
+        sessionStorage.removeItem(
+            "ts_participant_session"
+        );
+
+        window.location.href =
+            "login.html";
+
+        return;
+    }
+
+
+    /* =====================================================
+       ASSESSMENT HELPERS
+    ===================================================== */
+    function assessmentCodeOf(item) {
+
+        if (typeof item === "string") {
+            return item
+                .trim()
+                .toUpperCase();
         }
 
-    } catch (error) {
+        if (!item || typeof item !== "object") {
+            return "";
+        }
+
+        return normalize(
+            item.code ||
+            item.assessmentCode ||
+            item.assessment_code ||
+            item.id ||
+            item.name
+        ).toUpperCase();
+    }
+
+
+    function assessmentNameOf(item) {
+
+        if (typeof item === "string") {
+            return item.trim();
+        }
+
+        if (!item || typeof item !== "object") {
+            return "Assessment";
+        }
+
+        return normalize(
+            item.name ||
+            item.title ||
+            item.assessmentName ||
+            item.assessment_name ||
+            item.testName ||
+            item.label ||
+            item.code ||
+            "Assessment"
+        );
+    }
+
+
+    /* =====================================================
+       LOAD PROJECTS
+    ===================================================== */
+    var projects =
+        readJSON(
+            "talentscope_projects",
+            []
+        );
+
+    if (!Array.isArray(projects)) {
         projects = [];
     }
 
 
     /* =====================================================
-   FIND CURRENT PROJECT ONLY
-===================================================== */
+       SESSION ASSESSMENTS
 
-var entries = [];
+       PRIORITY:
+       1. s.assessments
+       2. s.assessmentPackage
+       3. s.assignedAssessments
+       4. empty
+    ===================================================== */
+    var sessionAssessments = [];
 
-var sessionProjectId =
-    String(
-        s.projectId ||
-        s.project_id ||
-        ""
-    ).trim();
+    if (Array.isArray(s.assessments)) {
 
-var sessionParticipantId =
-    String(
-        s.participantId ||
-        s.employeeId ||
-        s.id ||
-        ""
-    ).trim();
+        sessionAssessments =
+            s.assessments;
 
-var sessionEmail =
-    String(
-        s.email ||
-        s.emailAddress ||
-        ""
-    ).trim()
-    .toLowerCase();
-
-
-/*
-   CARI PROJECT AKTIF (DIBERIKAN FALLBACK OTOMATIS)
-*/
-
-var currentProject = null;
-
-// 1. Cari berdasarkan sessionProjectId jika ada
-if (sessionProjectId) {
-    currentProject = projects.find(function(project){
-        var projectId = String(project.id || project.projectId || project.project_id || "").trim();
-        return projectId === sessionProjectId;
-    });
-}
-
-// 2. Jangan pernah mengambil project lain secara otomatis.
-// Project harus berasal dari session peserta.
-if (!currentProject && sessionProjectId) {
-    console.warn("Project peserta tidak ditemukan:", sessionProjectId);
-}
-
-
-/*
-   Kalau project tidak ditemukan,
-   jangan tampilkan assessment project lain.
-*/
-
-if(currentProject){
-
-    var participantList =
+    } else if (
         Array.isArray(
+            s.assessmentPackage
+        )
+    ) {
+
+        sessionAssessments =
+            s.assessmentPackage;
+
+    } else if (
+        Array.isArray(
+            s.assignedAssessments
+        )
+    ) {
+
+        sessionAssessments =
+            s.assignedAssessments;
+    }
+
+
+    console.log(
+        "TalentScope Session:",
+        s
+    );
+
+    console.log(
+        "TalentScope Session Assessments:",
+        sessionAssessments
+    );
+
+
+    /* =====================================================
+       FIND OR CREATE CURRENT PROJECT
+
+       IMPORTANT:
+       Project selalu berdasarkan projectId dari session.
+       Tidak pernah fallback ke project pertama.
+    ===================================================== */
+    var currentProject =
+        projects.find(function (project) {
+
+            return (
+                normalize(
+                    project.id ||
+                    project.projectId ||
+                    project.project_id
+                ) === sessionProjectId
+            );
+
+        }) || null;
+
+
+    /* =====================================================
+       CREATE PROJECT IF MISSING
+    ===================================================== */
+    if (!currentProject) {
+
+        currentProject = {
+
+            id:
+                sessionProjectId,
+
+            projectId:
+                sessionProjectId,
+
+            name:
+                s.projectName ||
+                s.project_name ||
+                "Assessment Package",
+
+            projectName:
+                s.projectName ||
+                s.project_name ||
+                "Assessment Package",
+
+            assessments:
+                sessionAssessments,
+
+            assessmentPackage:
+                sessionAssessments,
+
+            participants: []
+        };
+
+        projects.push(
+            currentProject
+        );
+    }
+
+
+    /* =====================================================
+       FIND PARTICIPANT
+    ===================================================== */
+    if (
+        !Array.isArray(
             currentProject.participants
         )
-            ? currentProject.participants
-            : [];
+    ) {
+        currentProject.participants = [];
+    }
 
 
-    var participant =
-        participantList.find(
-            function(item){
+    var currentParticipant =
+        currentProject.participants.find(
+            function (participant) {
 
-                var itemId =
-                    String(
-                        item.id ||
-                        item.participantId ||
-                        item.employeeId ||
-                        item.employee_id ||
-                        ""
-                    ).trim();
+                var participantId =
+                    normalize(
+                        participant.id ||
+                        participant.participantId ||
+                        participant.participant_id ||
+                        participant.employeeId ||
+                        participant.employee_id
+                    );
 
-
-                var itemEmail =
-                    String(
-                        item.email ||
-                        item.emailAddress ||
-                        ""
-                    ).trim()
-                    .toLowerCase();
+                var participantEmail =
+                    normalizeEmail(
+                        participant.email ||
+                        participant.emailAddress ||
+                        participant.email_address
+                    );
 
 
-                /*
-                   PRIORITAS 1
-                   Participant ID
-                */
-
-                if(
+                if (
                     sessionParticipantId &&
-                    itemId &&
-                    itemId === sessionParticipantId
-                ){
-
+                    participantId ===
+                        sessionParticipantId
+                ) {
                     return true;
-
                 }
 
 
-                /*
-                   PRIORITAS 2
-                   Email
-                */
-
-                if(
+                if (
                     sessionEmail &&
-                    itemEmail &&
-                    itemEmail === sessionEmail
-                ){
-
+                    participantEmail ===
+                        sessionEmail
+                ) {
                     return true;
-
                 }
 
 
                 return false;
+            }
+        ) || null;
 
+
+    /* =====================================================
+       CREATE PARTICIPANT IF MISSING
+    ===================================================== */
+    if (!currentParticipant) {
+
+        currentParticipant = {
+
+            id:
+                sessionParticipantId,
+
+            participantId:
+                sessionParticipantId,
+
+            employeeId:
+                sessionParticipantId,
+
+            participantCode:
+                s.participantCode || "",
+
+            name:
+                s.name ||
+                s.fullName ||
+                "Participant",
+
+            fullName:
+                s.name ||
+                s.fullName ||
+                "Participant",
+
+            email:
+                sessionEmail,
+
+            username:
+                s.username || "",
+
+            assessments:
+                sessionAssessments,
+
+            isLoggedIn:
+                false,
+
+            status:
+                "Offline",
+
+            onlineStatus:
+                "Offline",
+
+            activityHistory: []
+        };
+
+        currentProject.participants.push(
+            currentParticipant
+        );
+    }
+
+
+    /* =====================================================
+       IMPORTANT FIX:
+       SYNC SESSION DATA TO PARTICIPANT
+    ===================================================== */
+    if (
+        sessionAssessments.length > 0
+    ) {
+
+        currentParticipant.assessments =
+            sessionAssessments;
+
+        /*
+           Project assessments juga sync
+           agar dashboard selalu bisa render.
+        */
+        currentProject.assessments =
+            sessionAssessments;
+
+        currentProject.assessmentPackage =
+            sessionAssessments;
+    }
+
+
+    /* =====================================================
+       SAVE NORMALIZED PROJECT DATA
+    ===================================================== */
+    writeJSON(
+        "talentscope_projects",
+        projects
+    );
+
+
+    /* =====================================================
+       GET CURRENT ASSESSMENTS
+
+       PRIORITY:
+       Participant assessments
+       Session assessments
+       Project assessments
+    ===================================================== */
+    function getCurrentAssessments() {
+
+        if (
+            currentParticipant &&
+            Array.isArray(
+                currentParticipant.assessments
+            ) &&
+            currentParticipant.assessments.length
+        ) {
+            return currentParticipant.assessments;
+        }
+
+
+        if (
+            Array.isArray(
+                sessionAssessments
+            ) &&
+            sessionAssessments.length
+        ) {
+            return sessionAssessments;
+        }
+
+
+        if (
+            currentProject &&
+            Array.isArray(
+                currentProject.assessments
+            )
+        ) {
+            return currentProject.assessments;
+        }
+
+
+        return [];
+    }
+
+
+    var activeAssessments =
+        getCurrentAssessments();
+
+
+    /* =====================================================
+       ASSESSMENT STATUS
+    ===================================================== */
+    function assessmentStatusOf(
+        project,
+        participant,
+        assessment,
+        index
+    ) {
+
+        var projectId =
+            normalize(
+                project.id ||
+                project.projectId ||
+                project.project_id
+            );
+
+        var participantId =
+            normalize(
+                participant.id ||
+                participant.participantId ||
+                participant.participant_id ||
+                participant.employeeId ||
+                participant.employee_id ||
+                sessionParticipantId
+            );
+
+        var code =
+            assessmentCodeOf(
+                assessment
+            );
+
+
+        /* ================================================
+           FORMAT 1
+        ================================================ */
+        var standardKey =
+            "assessment_result_" +
+            projectId +
+            "_" +
+            participantId +
+            "_" +
+            index;
+
+        try {
+
+            var standardRaw =
+                localStorage.getItem(
+                    standardKey
+                );
+
+            if (standardRaw) {
+
+                var standardResult =
+                    JSON.parse(
+                        standardRaw
+                    );
+
+                if (
+                    normalize(
+                        standardResult.projectId
+                    ) === projectId &&
+                    normalize(
+                        standardResult.participantId
+                    ) === participantId &&
+                    String(
+                        standardResult.assessmentIndex
+                    ) === String(index)
+                ) {
+
+                    return "Completed";
+                }
+            }
+
+        } catch (error) {}
+
+
+        /* ================================================
+           FORMAT 2 V3
+        ================================================ */
+        var v3Key =
+            "assessment_result_v3_" +
+            projectId +
+            "_" +
+            participantId +
+            "_" +
+            index;
+
+        try {
+
+            var v3Raw =
+                localStorage.getItem(
+                    v3Key
+                );
+
+            if (v3Raw) {
+
+                var v3Result =
+                    JSON.parse(
+                        v3Raw
+                    );
+
+                if (
+                    normalize(
+                        v3Result.projectId
+                    ) === projectId &&
+                    normalize(
+                        v3Result.participantId
+                    ) === participantId &&
+                    String(
+                        v3Result.assessmentIndex
+                    ) === String(index)
+                ) {
+
+                    return "Completed";
+                }
+            }
+
+        } catch (error) {}
+
+
+        /* ================================================
+           MASTER RESULTS
+        ================================================ */
+        try {
+
+            var allResults =
+                readJSON(
+                    "talent_scope_results",
+                    []
+                );
+
+            if (
+                Array.isArray(
+                    allResults
+                )
+            ) {
+
+                var found =
+                    allResults.find(
+                        function (result) {
+
+                            if (!result) {
+                                return false;
+                            }
+
+                            return (
+                                normalize(
+                                    result.projectId
+                                ) === projectId &&
+
+                                normalize(
+                                    result.participantId
+                                ) === participantId &&
+
+                                String(
+                                    result.assessmentIndex
+                                ) === String(index)
+                            );
+                        }
+                    );
+
+
+                if (found) {
+
+                    var status =
+                        normalize(
+                            found.status ||
+                            "Completed"
+                        ).toLowerCase();
+
+
+                    if (
+                        !status ||
+                        status === "completed" ||
+                        status === "complete"
+                    ) {
+
+                        return "Completed";
+                    }
+                }
+            }
+
+        } catch (error) {}
+
+
+        /* ================================================
+           PAPI SUBMISSION
+        ================================================ */
+        if (
+            code === "PAPI" ||
+            code.indexOf("PAPI") !== -1
+        ) {
+
+            var submitKey =
+                "ts_papi_" +
+                encodeURIComponent(
+                    projectId
+                ) +
+                "_" +
+                encodeURIComponent(
+                    participantId
+                ) +
+                "_" +
+                encodeURIComponent(
+                    index
+                ) +
+                "_submitted";
+
+
+            if (
+                localStorage.getItem(
+                    submitKey
+                ) === "true"
+            ) {
+
+                return "Completed";
+            }
+        }
+
+
+        return "Not Started";
+    }
+
+
+    /* =====================================================
+       BUILD ENTRIES
+    ===================================================== */
+    var entries =
+        activeAssessments.map(
+            function (
+                assessment,
+                index
+            ) {
+
+                return {
+
+                    project:
+                        currentProject,
+
+                    participant:
+                        currentParticipant,
+
+                    assessment:
+                        assessment,
+
+                    assessmentIndex:
+                        index,
+
+                    assessmentCode:
+                        assessmentCodeOf(
+                            assessment
+                        ),
+
+                    assessmentName:
+                        assessmentNameOf(
+                            assessment
+                        ),
+
+                    status:
+                        assessmentStatusOf(
+                            currentProject,
+                            currentParticipant,
+                            assessment,
+                            index
+                        )
+                };
             }
         );
 
 
-    if(participant){
+    console.log(
+        "TalentScope Dashboard Entries:",
+        entries
+    );
 
-        entries = expandAssessmentEntries(
-            currentProject,
-            participant
-        );
 
+    /* =====================================================
+       DISPLAY USER
+    ===================================================== */
+    function setText(
+        id,
+        value
+    ) {
+
+        var element =
+            document.getElementById(
+                id
+            );
+
+        if (element) {
+            element.textContent =
+                value || "";
+        }
     }
 
-}
 
-    /* =====================================================
-       CURRENT PARTICIPANT
-    ===================================================== */
+    var displayName =
+        s.name ||
+        s.fullName ||
+        currentParticipant.name ||
+        currentParticipant.fullName ||
+        "Participant";
 
-    var person =
-    (entries[0] &&
-     entries[0].participant) ||
-    {};
 
-/* ==========================================================
-   GUNAKAN DATA AKUN YANG SEDANG LOGIN
-========================================================== */
+    var displayEmail =
+        sessionEmail ||
+        currentParticipant.email ||
+        "";
 
-var displayName =
-    s.name ||
-    person.name ||
-    "Participant";
 
-var displayEmail =
-    s.email ||
-    person.email ||
-    "";
+    setText(
+        "userName",
+        displayName
+    );
 
-document.getElementById("userName").textContent =
-    displayName;
+    setText(
+        "userEmail",
+        displayEmail
+    );
 
-document.getElementById("userEmail").textContent =
-    displayEmail;
+    setText(
+        "heroName",
+        displayName
+    );
 
-document.getElementById("avatar").textContent =
-    displayName.charAt(0).toUpperCase();
+    setText(
+        "heroUserName",
+        displayName
+    );
 
-    /* =====================================================
-       UPDATE HEADER / GREETING
-    ===================================================== */
+    setText(
+        "heroParticipantId",
+        sessionParticipantId || "-"
+    );
 
-    var userName =
-        document.getElementById("userName");
-
-    var userEmail =
-        document.getElementById("userEmail");
 
     var avatar =
-        document.getElementById("avatar");
-
-    var heroName =
-        document.getElementById("heroName");
-
-    var heroUserName =
-        document.getElementById("heroUserName");
-
-    var heroParticipantId =
-        document.getElementById("heroParticipantId");
-
-    if (userName) {
-        userName.textContent = displayName;
-    }
-
-    if (userEmail) {
-        userEmail.textContent = displayEmail;
-    }
+        document.getElementById(
+            "avatar"
+        );
 
     if (avatar) {
+
         avatar.textContent =
             String(displayName)
                 .charAt(0)
                 .toUpperCase();
     }
 
-    if (heroName) {
-        heroName.textContent = displayName;
-    }
-
-    if (heroUserName) {
-        heroUserName.textContent = displayName;
-    }
-
-    if (heroParticipantId) {
-        heroParticipantId.textContent =
-            sessionParticipantId ||
-            person.id ||
-            person.participantId ||
-            person.employeeId ||
-            "-";
-    }
-
 
     /* =====================================================
-       TIME HELPER
+       RECORD LOGIN
     ===================================================== */
+    function updateParticipantStatus(
+        callback
+    ) {
 
-    function getCurrentDateTime() {
-        return new Date().toISOString();
-    }
-
-
-   function recordParticipantLogin() {
-    // =====================================================
-    // PAKSA AMBIL ATAU BUAT PROYEK DEFAULT JIKA KOSONG
-    // =====================================================
-    try {
-        projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
-    } catch (e) {
-        projects = [];
-    }
-
-    // Jika projects kosong sama sekali di localStorage, buatkan dummy project agar dashboard tidak 0
-    if (!projects || projects.length === 0) {
-        projects = [{
-            id: "proj_default_1",
-            name: "Default Project",
-            participants: []
-        }];
-        localStorage.setItem("talentscope_projects", JSON.stringify(projects));
-    }
-
-    // Ambil ID proyek pertama secara paksa jika sessionProjectId tidak ada
-    if (!sessionProjectId) {
-        sessionProjectId = String(projects[0].id || projects[0].projectId || "proj_default_1").trim();
-    }
-
-    // Hapus validasi return yang membuat error, ganti dengan inisialisasi aman
-    var changed = false;
-
-    // Mengambil waktu lokal yang rapi saat ini
-const now = new Date();
-const formattedNow = now.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-});
-
-var sessionLoginAt = s && s.loginAt ? s.loginAt : formattedNow;
-
-    /*
-     * Setiap login memiliki ID session unik.
-     * Ini mencegah tab/session lama menghidupkan kembali
-     * participant setelah logout.
-     */
-    var sessionId =
-        String(
-            s && s.activeSessionId || ""
-        ).trim();
-
-    if (!sessionId) {
-        sessionId =
-            "TS-" +
-            Date.now() +
-            "-" +
-            Math.random().toString(36).slice(2, 10);
-
-        s.activeSessionId = sessionId;
-
-        try {
-            sessionStorage.setItem(
-                "ts_participant_session",
-                JSON.stringify(s)
+        var latestProjects =
+            readJSON(
+                "talentscope_projects",
+                []
             );
-        } catch (e) {}
-    }
-
-
-    /* =====================================================
-       AMBIL IDENTITAS SESSION
-    ===================================================== */
-
-    var sessionProjectId =
-        String(
-            s && (
-                s.projectId ||
-                s.project_id ||
-                ""
-            )
-        ).trim();
-
-
-    var sessionParticipantId =
-        String(
-            s && (
-                s.participantId ||
-                s.employeeId ||
-                s.id ||
-                ""
-            )
-        ).trim();
-
-
-    var sessionEmail =
-        String(
-            s && (
-                s.email ||
-                s.emailAddress ||
-                ""
-            )
-        )
-        .trim()
-        .toLowerCase();
-
-
-    /* =====================================================
-       PROJECT ID WAJIB ADA (DIBERIKAN FALLBACK)
-    ===================================================== */
-
-    if (!sessionProjectId) {
-        if (projects.length > 0) {
-            sessionProjectId = String(projects[0].id || projects[0].projectId || projects[0].project_id || "").trim();
-        }
-    }
-
-    if (!sessionProjectId) {
-        console.warn("Project ID login tidak ditemukan.");
-        return;
-    }
-
-
-    /* =====================================================
-       CARI PROJECT YANG SEDANG DIGUNAKAN
-    ===================================================== */
-
-    projects.forEach(function (project) {
-
-        var currentProjectId =
-            String(
-                project.id ||
-                project.projectId ||
-                project.project_id ||
-                ""
-            ).trim();
-
 
         if (
-            currentProjectId !==
-            sessionProjectId
+            !Array.isArray(
+                latestProjects
+            )
         ) {
-
-            return;
-
+            return false;
         }
 
 
-        var participantList =
-            Array.isArray(
-                project.participants
-            )
-                ? project.participants
-                : [];
+        var changed = false;
 
 
-        /* =================================================
-           CARI PARTICIPANT YANG SEDANG LOGIN
-        ================================================= */
+        latestProjects.forEach(
+            function (project) {
 
-        participantList.forEach(
-            function (participant) {
-
-                var itemId =
-                    String(
-                        participant.id ||
-                        participant.participantId ||
-                        participant.employeeId ||
-                        participant.employee_id ||
-                        ""
-                    ).trim();
-
-
-                var itemEmail =
-                    String(
-                        participant.email ||
-                        participant.emailAddress ||
-                        ""
-                    )
-                    .trim()
-                    .toLowerCase();
-
-
-                var matched = false;
-
-
-                /* -----------------------------------------
-                   MATCH BERDASARKAN PARTICIPANT ID
-                ----------------------------------------- */
+                var projectId =
+                    normalize(
+                        project.id ||
+                        project.projectId ||
+                        project.project_id
+                    );
 
                 if (
-                    sessionParticipantId &&
-                    itemId &&
-                    sessionParticipantId === itemId
+                    projectId !==
+                    sessionProjectId
                 ) {
-
-                    matched = true;
-
-                }
-
-
-                /* -----------------------------------------
-                   FALLBACK MATCH BERDASARKAN EMAIL
-                ----------------------------------------- */
-
-                if (
-                    !matched &&
-                    sessionEmail &&
-                    itemEmail &&
-                    sessionEmail === itemEmail
-                ) {
-
-                    matched = true;
-
-                }
-
-
-                if (!matched) {
-
                     return;
-
                 }
 
 
-                /* =================================================
-                   WAKTU SEKARANG
-                ================================================= */
+                if (
+                    !Array.isArray(
+                        project.participants
+                    )
+                ) {
+                    project.participants = [];
+                }
 
-                var nowISO =
-                    new Date().toISOString();
+
+                project.participants.forEach(
+                    function (
+                        participant
+                    ) {
+
+                        var participantId =
+                            normalize(
+                                participant.id ||
+                                participant.participantId ||
+                                participant.participant_id ||
+                                participant.employeeId ||
+                                participant.employee_id
+                            );
+
+                        var participantEmail =
+                            normalizeEmail(
+                                participant.email ||
+                                participant.emailAddress ||
+                                participant.email_address
+                            );
 
 
-                /* =================================================
-                   STATUS ONLINE
-                ================================================= */
+                        var matched =
+                            (
+                                sessionParticipantId &&
+                                participantId ===
+                                sessionParticipantId
+                            ) ||
+
+                            (
+                                sessionEmail &&
+                                participantEmail ===
+                                sessionEmail
+                            );
+
+
+                        if (!matched) {
+                            return;
+                        }
+
+
+                        callback(
+                            participant
+                        );
+
+                        changed = true;
+                    }
+                );
+            }
+        );
+
+
+        if (changed) {
+
+            writeJSON(
+                "talentscope_projects",
+                latestProjects
+            );
+
+            projects =
+                latestProjects;
+        }
+
+
+        return changed;
+    }
+
+
+    function recordParticipantLogin() {
+
+        var now =
+            new Date().toISOString();
+
+        var loginTime =
+            s.loginAt ||
+            s.loggedInAt ||
+            now;
+
+
+        updateParticipantStatus(
+            function (
+                participant
+            ) {
 
                 participant.isLoggedIn =
                     true;
 
                 participant.activeSessionId =
-                    sessionId;
+                    activeSessionId;
 
+                participant.status =
+                    "Online";
 
-                /* =================================================
-                   LOGIN TIME
-                ================================================= */
+                participant.onlineStatus =
+                    "Online";
 
                 participant.loginTime =
-                    sessionLoginAt;
-
-                participant.loggedInAt =
-                    sessionLoginAt;
+                    loginTime;
 
                 participant.loginAt =
-                    sessionLoginAt;
+                    loginTime;
+
+                participant.loggedInAt =
+                    loginTime;
 
                 participant.lastLoginAt =
-                    sessionLoginAt;
-
-
-                /* =================================================
-                   CURRENT ACTIVITY
-                ================================================= */
+                    loginTime;
 
                 participant.activity =
                     "Online";
@@ -1311,60 +1885,44 @@ var sessionLoginAt = s && s.loginAt ? s.loginAt : formattedNow;
                 participant.lastActivity =
                     "Online";
 
-                participant.status =
-                    "Online";
-
-                participant.onlineStatus =
-                    "Online";
-
                 participant.lastSeen =
-                    nowISO;
+                    now;
 
                 participant.lastSeenAt =
-                    nowISO;
+                    now;
 
                 participant.activityUpdatedAt =
-                    nowISO;
+                    now;
 
-
-                /* =================================================
-                   ACTIVITY HISTORY
-                ================================================= */
 
                 if (
                     !Array.isArray(
                         participant.activityHistory
                     )
                 ) {
-
-                    participant.activityHistory = [];
-
+                    participant.activityHistory =
+                        [];
                 }
 
 
-                /* =================================================
-                   CEGAH DUPLIKASI LOGIN
-                ================================================= */
-
-                var alreadyLoggedIn =
+                var exists =
                     participant.activityHistory.some(
-                        function (item) {
+                        function (
+                            item
+                        ) {
 
                             return (
                                 item &&
-                                item.type === "login" &&
-                                item.timestamp === sessionLoginAt
+                                item.type ===
+                                    "login" &&
+                                item.sessionId ===
+                                    activeSessionId
                             );
-
                         }
                     );
 
 
-                /* =================================================
-                   TAMBAHKAN RIWAYAT LOGIN
-                ================================================= */
-
-                if (!alreadyLoggedIn) {
+                if (!exists) {
 
                     participant.activityHistory.push({
 
@@ -1378,1757 +1936,1393 @@ var sessionLoginAt = s && s.loginAt ? s.loginAt : formattedNow;
                             "Login ke Participant Portal",
 
                         timestamp:
-                            sessionLoginAt,
+                            loginTime,
 
                         time:
-                            sessionLoginAt
+                            loginTime,
 
+                        sessionId:
+                            activeSessionId
                     });
-
                 }
-
-
-                /* =================================================
-                   RESET DATA LOGOUT
-                ================================================= */
-
-                participant.logoutTime =
-                    "";
-
-                participant.loggedOutAt =
-                    "";
-
-                participant.logoutAt =
-                    "";
-
-                participant.lastLogoutAt =
-                    "";
-
-
-                changed = true;
-
             }
         );
-
-    });
-
-
-    /* =====================================================
-       SIMPAN PERUBAHAN KE LOCALSTORAGE
-    ===================================================== */
-
-    if (changed) {
-
-        localStorage.setItem(
-            "talentscope_projects",
-            JSON.stringify(
-                projects
-            )
-        );
-
     }
 
-}
-
-/* =====================================================
-   PARTICIPANT HEARTBEAT
-   Menjaga status participant tetap ONLINE
-   selama dashboard masih terbuka.
-===================================================== */
-
-function updateParticipantHeartbeat() {
-    var nowISO = new Date().toISOString();
-
-    /*
-     * Selalu baca data terbaru dari localStorage.
-     * Jangan memakai object "projects" lama karena tab lain
-     * bisa saja baru saja melakukan logout.
-     */
-    var latestProjects = [];
-
-    try {
-        latestProjects = JSON.parse(
-            localStorage.getItem("talentscope_projects") || "[]"
-        );
-
-        if (!Array.isArray(latestProjects)) {
-            latestProjects = [];
-        }
-    } catch (error) {
-        return;
-    }
-
-    var activeSessionId = String(
-        s && s.activeSessionId || ""
-    ).trim();
-
-    var sessionProjectId = String(
-        s && (
-            s.projectId ||
-            s.project_id ||
-            ""
-        )
-    ).trim();
-
-    var sessionParticipantId = String(
-        s && (
-            s.participantId ||
-            s.employeeId ||
-            s.id ||
-            ""
-        )
-    ).trim();
-
-    var sessionEmail = String(
-        s && (
-            s.email ||
-            s.emailAddress ||
-            ""
-        )
-    ).trim().toLowerCase();
-
-    if (!sessionParticipantId && !sessionEmail) {
-        return;
-    }
-
-    var changed = false;
-
-    latestProjects.forEach(function (project) {
-        var projectId = String(
-            project.id ||
-            project.projectId ||
-            project.project_id ||
-            ""
-        ).trim();
-
-        if (
-            sessionProjectId &&
-            projectId &&
-            projectId !== sessionProjectId
-        ) {
-            return;
-        }
-
-        var participantList =
-            Array.isArray(project.participants)
-                ? project.participants
-                : [];
-
-        participantList.forEach(function (participant) {
-            var itemId = String(
-                participant.id ||
-                participant.participantId ||
-                participant.employeeId ||
-                participant.employee_id ||
-                ""
-            ).trim();
-
-            var itemEmail = String(
-                participant.email ||
-                participant.emailAddress ||
-                ""
-            ).trim().toLowerCase();
-
-            var matched =
-                (
-                    sessionParticipantId &&
-                    itemId &&
-                    sessionParticipantId === itemId
-                ) ||
-                (
-                    sessionEmail &&
-                    itemEmail &&
-                    sessionEmail === itemEmail
-                );
-
-            if (!matched) return;
-
-            /*
-             * Session lain yang lebih baru mengambil alih akun ini.
-             * Tab/session lama tidak boleh menghidupkan kembali status.
-             */
-            if (
-                activeSessionId &&
-                participant.activeSessionId &&
-                participant.activeSessionId !== activeSessionId
-            ) {
-                return;
-            }
-
-            if (
-                participant.isLoggedIn === false &&
-                (
-                    !participant.activeSessionId ||
-                    participant.activeSessionId === activeSessionId
-                )
-            ) {
-                return;
-            }
-
-            participant.activeSessionId =
-                activeSessionId ||
-                participant.activeSessionId ||
-                "";
-
-            participant.isLoggedIn = true;
-            participant.status = "Online";
-            participant.onlineStatus = "Online";
-            participant.lastSeen = nowISO;
-            participant.lastSeenAt = nowISO;
-
-            var existingActivity = String(
-                participant.currentActivity ||
-                participant.activity ||
-                ""
-            ).trim();
-
-            var testIsActive =
-                /^Sedang mengerjakan tes\s*\(/i.test(existingActivity);
-
-            if (!testIsActive) {
-                participant.activity = "Online";
-                participant.currentActivity = "Online";
-                participant.lastActivity = "Online";
-            } else {
-                participant.lastActivity = existingActivity;
-            }
-
-            participant.activityUpdatedAt = nowISO;
-
-            changed = true;
-        });
-    });
-
-    if (changed) {
-        localStorage.setItem(
-            "talentscope_projects",
-            JSON.stringify(latestProjects)
-        );
-
-        projects = latestProjects;
-    }
-}
-
-/* =====================================================
-   START PARTICIPANT HEARTBEAT
-===================================================== */
-
-updateParticipantHeartbeat();
-
-var participantHeartbeatTimer =
-    setInterval(
-        updateParticipantHeartbeat,
-        5000
-    );
-
-    /* =====================================================
-       RECORD LOGIN
-    ===================================================== */
 
     recordParticipantLogin();
 
 
     /* =====================================================
-       ASSESSMENT-SCOPED STATUS
-       Satu participant dapat memiliki banyak assessment.
-       Status harus dihitung per assessment, bukan dari
-       participant.assessmentStatus.
+       HEARTBEAT
     ===================================================== */
+    function updateParticipantHeartbeat() {
 
-    function assessmentCodeOf(item) {
-        if (typeof item === "string") return item.trim().toUpperCase();
-        if (!item || typeof item !== "object") return "";
-        return String(
-            item.code || item.assessmentCode || item.assessment_code ||
-            item.id || item.name || ""
-        ).trim().toUpperCase();
-    }
-
-    function assessmentNameOf(item) {
-        if (typeof item === "string") return item;
-        return (item && (item.name || item.title || item.assessmentName || item.code)) || "Assessment";
-    }
-
-    function assessmentStatusOf(project, participant, assessment, index) {
-
-    var pid = String(
-        participant.id ||
-        participant.participantId ||
-        participant.employeeId ||
-        ""
-    ).trim();
+        var now =
+            new Date().toISOString();
 
 
-    var projectId = String(
-        project.id ||
-        project.projectId ||
-        ""
-    ).trim();
-
-
-    var code = assessmentCodeOf(assessment);
-
-
-    /* =====================================================
-       1. CEK FORMAT RESULT STANDARD
-       assessment_result_PROJECT_PARTICIPANT_INDEX
-    ===================================================== */
-
-    var standardKey =
-        "assessment_result_" +
-        projectId +
-        "_" +
-        pid +
-        "_" +
-        index;
-
-    try {
-
-        var standardRaw =
-            localStorage.getItem(standardKey);
-
-        if (standardRaw) {
-
-            var standardResult =
-                JSON.parse(standardRaw);
-
-            if (
-                String(
-                    standardResult.projectId || ""
-                ).trim() === projectId &&
-
-                String(
-                    standardResult.participantId || ""
-                ).trim() === pid &&
-
-                String(
-                    standardResult.assessmentIndex ?? ""
-                ) === String(index)
+        updateParticipantStatus(
+            function (
+                participant
             ) {
-
-                return "Completed";
-
-            }
-
-        }
-
-    } catch (e) {
-
-        console.warn(
-            "Gagal membaca standard assessment result:",
-            e
-        );
-
-    }
-
-
-    /* =====================================================
-       2. CEK FORMAT DISC V3
-       assessment_result_v3_PROJECT_PARTICIPANT_INDEX
-    ===================================================== */
-
-    var v3Key =
-        "assessment_result_v3_" +
-        projectId +
-        "_" +
-        pid +
-        "_" +
-        index;
-
-    try {
-
-        var v3Raw =
-            localStorage.getItem(v3Key);
-
-        if (v3Raw) {
-
-            var v3Result =
-                JSON.parse(v3Raw);
-
-            if (
-                String(
-                    v3Result.projectId || ""
-                ).trim() === projectId &&
-
-                String(
-                    v3Result.participantId || ""
-                ).trim() === pid &&
-
-                String(
-                    v3Result.assessmentIndex ?? ""
-                ) === String(index)
-            ) {
-
-                return "Completed";
-
-            }
-
-        }
-
-    } catch (e) {
-
-        console.warn(
-            "Gagal membaca assessment result V3:",
-            e
-        );
-
-    }
-
-
-    /* =====================================================
-       3. CEK MASTER RESULT
-       talent_scope_results
-
-       Ini penting karena DISC dan PAPI juga menyimpan
-       hasil ke array result global.
-    ===================================================== */
-
-    try {
-
-        var allResults =
-            JSON.parse(
-                localStorage.getItem(
-                    "talent_scope_results"
-                ) || "[]"
-            );
-
-
-        if (Array.isArray(allResults)) {
-
-            var matchingResult =
-                allResults.find(function(result) {
-
-                    var resultProjectId =
-                        String(
-                            result?.projectId || ""
-                        ).trim();
-
-                    var resultParticipantId =
-                        String(
-                            result?.participantId || ""
-                        ).trim();
-
-                    var resultIndex =
-                        String(
-                            result?.assessmentIndex ?? ""
-                        );
-
-                    return (
-                        resultProjectId === projectId &&
-                        resultParticipantId === pid &&
-                        resultIndex === String(index)
-                    );
-
-                });
-
-
-            if (matchingResult) {
-
-                var resultStatus =
-                    String(
-                        matchingResult.status ||
-                        "Completed"
-                    ).trim().toLowerCase();
-
-
-                if (
-                    resultStatus === "completed" ||
-                    resultStatus === "complete" ||
-                    resultStatus === ""
-                ) {
-
-                    return "Completed";
-
-                }
-
-            }
-
-        }
-
-    } catch (e) {
-
-        console.warn(
-            "Gagal membaca talent_scope_results:",
-            e
-        );
-
-    }
-
-
-    /* =====================================================
-       4. FALLBACK PAPI SUBMITTED
-    ===================================================== */
-
-    if (
-        code === "PAPI" ||
-        code.includes("PAPI")
-    ) {
-
-        var submitKey =
-            "ts_papi_" +
-            encodeURIComponent(projectId) +
-            "_" +
-            encodeURIComponent(pid) +
-            "_" +
-            encodeURIComponent(index) +
-            "_submitted";
-
-
-        if (
-            localStorage.getItem(submitKey) === "true"
-        ) {
-
-            return "Completed";
-
-        }
-
-    }
-
-
-    /* =====================================================
-       BELUM ADA HASIL
-    ===================================================== */
-
-    return "Not Started";
-
-}
-
-    function expandAssessmentEntries(project, participant) {
-        var assigned = Array.isArray(project.assessments) ? project.assessments : [];
-        return assigned.map(function (assessment, index) {
-            return {
-                project: project,
-                participant: participant,
-                assessment: assessment,
-                assessmentIndex: index,
-                assessmentCode: assessmentCodeOf(assessment),
-                assessmentName: assessmentNameOf(assessment),
-                status: assessmentStatusOf(project, participant, assessment, index)
-            };
-        });
-    }
-
-    /* =====================================================
-       SUMMARY
-    ===================================================== */
-
-    var totalElement =
-        document.getElementById("total");
-
-    var pendingElement =
-        document.getElementById("pending");
-
-    var completedElement =
-        document.getElementById("completed");
-
-    if (totalElement) {
-        totalElement.textContent =
-            entries.length;
-    }
-
-    var completed =
-        entries.filter(function (entry) {
-            return /^(completed|complete)$/i.test(
-                String(entry.status || "")
-            );
-        }).length;
-
-    if (completedElement) {
-        completedElement.textContent =
-            completed;
-    }
-
-    if (pendingElement) {
-        pendingElement.textContent =
-            entries.length -
-            completed;
-    }
-
-
-    /* =====================================================
-       RENDER ASSESSMENTS
-    ===================================================== */
-
-    var content =
-        document.getElementById("content");
-
-    if (!content) {
-        return;
-    }
-
-    if (!entries.length) {
-
-        content.innerHTML =
-            '<div class="empty">' +
-                '<div class="empty-icon">TS</div>' +
-                '<div style="font-weight:850;color:#243d5b;font-size:15px">Belum ada assessment</div>' +
-                '<div style="margin-top:6px;font-size:12px">Belum ada assessment yang ditugaskan ke akun Anda.</div>' +
-            '</div>';
-
-        return;
-    }
-
-    /* =====================================================
-   RENDER ASSESSMENT PACKAGE
-   Satu project/package = satu card.
-   Semua tes di dalam package ditampilkan sebagai daftar.
-===================================================== */
-
-var project = entries[0].project;
-var participant = entries[0].participant;
-
-var assessments = Array.isArray(project.assessments)
-    ? project.assessments
-    : [];
-
-/*
- * Nama project/package.
- * Jika project punya nama khusus, gunakan nama tersebut.
- */
-var packageName =
-    project.name ||
-    project.title ||
-    project.projectName ||
-    project.projectTitle ||
-    "Assessment Package";
-
-/*
- * Nama seluruh tes yang berada dalam Assessment Package.
- */
-var testNames = assessments.map(function (assessment) {
-    return assessmentNameOf(assessment);
-});
-
-/*
- * Status package:
- * - Completed jika semua tes selesai
- * - In Progress jika minimal satu tes sudah selesai
- * - Not Started jika belum ada yang selesai
- */
-var completedCount = entries.filter(function (entry) {
-    return /^(completed|complete)$/i.test(
-        String(entry.status || "").trim()
-    );
-}).length;
-
-var totalTests = entries.length;
-
-var packageStatus = "Not Started";
-
-if (totalTests > 0 && completedCount === totalTests) {
-    packageStatus = "Completed";
-} else if (completedCount > 0) {
-    packageStatus = "In Progress";
-}
-
-var packageStatusClass =
-    packageStatus === "Completed"
-        ? "done"
-        : (
-            packageStatus === "In Progress"
-                ? "progress"
-                : ""
-        );
-
-var packageStatusText =
-    packageStatus === "Completed"
-        ? "✓ Completed"
-        : packageStatus;
-
-
-/*
- * Menentukan assessment berikutnya yang belum selesai.
- *
- * Jika DISC sudah Completed, maka tombol Start Assessment
- * akan otomatis melanjutkan ke assessment berikutnya.
- */
-var nextEntry = entries.find(function(entry) {
-
-    var entryStatus = String(
-        entry.status || ""
-    ).trim().toLowerCase();
-
-    return (
-        entryStatus !== "completed" &&
-        entryStatus !== "complete"
-    );
-
-});
-
-
-/*
- * Jika semua assessment sudah selesai,
- * gunakan entry terakhir hanya untuk fallback.
- */
-if (!nextEntry && entries.length > 0) {
-    nextEntry = entries[entries.length - 1];
-}
-
-
-var projectId =
-    project.id ||
-    project.projectId ||
-    project.project_id ||
-    "";
-
-
-var participantId =
-    participant.id ||
-    participant.participantId ||
-    participant.employeeId ||
-    sessionParticipantId ||
-    "";
-
-
-/*
- * Index assessment yang seharusnya dibuka.
- * Bukan lagi selalu index pertama / DISC.
- */
-var nextAssessmentIndex =
-    nextEntry
-        ? nextEntry.assessmentIndex
-        : 0;
-
-
-/*
- * Code assessment yang seharusnya dibuka.
- */
-var nextAssessmentCode =
-    nextEntry
-        ? nextEntry.assessmentCode
-        : "";
-
-/*
- * Daftar nama tes di dalam package.
- */
-var testListHtml = "";
-
-if (testNames.length) {
-
-    testListHtml =
-        '<div class="package-tests">' +
-            '<div class="package-tests-label">Assessments Included</div>' +
-            '<div class="package-test-list">' +
-
-                testNames.map(function (name, index) {
-
-                    var testEntry = entries[index];
-
-                    var testCompleted =
-                        testEntry &&
-                        /^(completed|complete)$/i.test(
-                            String(testEntry.status || "").trim()
-                        );
-
-                    return (
-                        '<div class="package-test-item">' +
-
-                            '<span class="package-test-number">' +
-                                (index + 1) +
-                            '</span>' +
-
-                            '<span class="package-test-name">' +
-                                esc(name) +
-                            '</span>' +
-
-                            (
-                                testCompleted
-                                    ? '<span class="package-test-check">✓</span>'
-                                    : ''
-                            ) +
-
-                        '</div>'
-                    );
-
-                }).join("") +
-
-            '</div>' +
-        '</div>';
-
-} else {
-
-    testListHtml =
-        '<div class="package-tests">' +
-            '<div class="package-tests-label">Assessments Included</div>' +
-            '<div class="package-test-empty">' +
-                'Belum ada tes dalam assessment package.' +
-            '</div>' +
-        '</div>';
-}
-
-
-/*
- * Render SATU CARD saja.
- */
-content.innerHTML =
-
-    '<div class="grid assessment-package-grid">' +
-
-        '<article class="card assessment-package-card">' +
-
-            '<div class="card-top">' +
-
-               
-
-                '<div class="package-heading">' +
-
-                    '<h3>Assessment Package</h3>' +
-
-                    '<div class="code">' +
-                        esc(packageName) +
-                    '</div>' +
-
-                '</div>' +
-
-            '</div>' +
-
-
-            testListHtml +
-
-
-            '<div class="card-info">' +
-
-                '<div>' +
-                    '<div class="info-label">Status</div>' +
-                    '<div class="info-value">' +
-                        '<span class="status-pill ' +
-                            packageStatusClass +
-                        '">' +
-                            esc(packageStatusText) +
-                        '</span>' +
-                    '</div>' +
-                '</div>' +
-
-                '<div>' +
-                    '<div class="info-label">Total Assessments</div>' +
-                    '<div class="info-value">' +
-                        totalTests +
-                    '</div>' +
-                '</div>' +
-
-            '</div>' +
-
-
-            '<button ' +
-                'class="action" ' +
-                'data-project="' +
-                    esc(String(projectId)) +
-                '" ' +
-                'data-assessment-index="' +
-    esc(String(nextAssessmentIndex)) +
-'" ' +
-'data-assessment-code="' +
-    esc(String(nextAssessmentCode)) +
-'" ' +
-                'type="button">' +
-
-                (
-                    packageStatus === "Completed"
-                        ? "View Result"
-                        : "Start Assessment"
-                ) +
-
-            '</button>' +
-
-        '</article>' +
-
-    '</div>';
-
-    /* =====================================================
-   START / VIEW ASSESSMENT
-   - Assessment pertama (index 0) = PETUNJUK UMUM
-   - Assessment berikutnya = langsung ke tes masing-masing
-===================================================== */
-
-
-    /* =====================================================
-       ASSESSMENT ACTIVITY TRACKING
-       Simpan assessment spesifik yang dipilih peserta.
-    ===================================================== */
-
-    function getAssessmentActivityName(projectId, assessmentIndex, fallbackCode) {
-        try {
-            var allProjects = JSON.parse(
-                localStorage.getItem("talentscope_projects") || "[]"
-            );
-
-            if (!Array.isArray(allProjects)) {
-                return fallbackCode || "Assessment";
-            }
-
-            var project = allProjects.find(function (p) {
-                return String(
-                    p.id ||
-                    p.projectId ||
-                    p.project_id ||
-                    ""
-                ).trim() === String(projectId).trim();
-            });
-
-            if (!project) return fallbackCode || "Assessment";
-
-            var list = Array.isArray(project.assessments)
-                ? project.assessments
-                : (
-                    Array.isArray(project.assessmentPackage)
-                        ? project.assessmentPackage
-                        : []
-                );
-
-            var item = list[Number(assessmentIndex)];
-
-            if (typeof item === "string") {
-                return item.trim() || fallbackCode || "Assessment";
-            }
-
-            return String(
-                item?.name ||
-                item?.title ||
-                item?.assessmentName ||
-                item?.testName ||
-                item?.label ||
-                item?.code ||
-                fallbackCode ||
-                "Assessment"
-            ).trim();
-        } catch (e) {
-            return fallbackCode || "Assessment";
-        }
-    }
-
-    function recordAssessmentStartActivity(
-        projectId,
-        participantId,
-        assessmentIndex,
-        assessmentCode
-    ) {
-        try {
-            var projectsData = JSON.parse(
-                localStorage.getItem("talentscope_projects") || "[]"
-            );
-
-            if (!Array.isArray(projectsData)) return "";
-
-            var now = new Date().toISOString();
-            var assessmentName = getAssessmentActivityName(
-                projectId,
-                assessmentIndex,
-                assessmentCode
-            );
-
-            var activityText =
-                "Sedang mengerjakan tes (" +
-                assessmentName +
-                ")";
-
-            projectsData.forEach(function (project) {
-                var pId = String(
-                    project.id ||
-                    project.projectId ||
-                    project.project_id ||
-                    ""
-                ).trim();
-
-                if (pId !== String(projectId).trim()) return;
-
-                var participants = Array.isArray(project.participants)
-                    ? project.participants
-                    : [];
-
-                participants.forEach(function (participant) {
-                    var itemId = String(
-                        participant.id ||
-                        participant.participantId ||
-                        participant.employeeId ||
-                        participant.employee_id ||
-                        ""
-                    ).trim();
-
-                    if (itemId !== String(participantId).trim()) return;
-
-                    participant.currentTest = assessmentName;
-                    participant.testActivity = activityText;
-                    participant.currentAssessmentIndex = Number(assessmentIndex);
-                    participant.currentAssessmentCode = assessmentCode || "";
-                    participant.currentActivity = activityText;
-                    participant.activity = activityText;
-                    participant.lastActivity = activityText;
-                    participant.activityUpdatedAt = now;
-
-                    if (!Array.isArray(participant.activityHistory)) {
-                        participant.activityHistory = [];
-                    }
-
-                    participant.activityHistory.push({
-                        type: "test-start",
-                        activity: activityText,
-                        title: activityText,
-                        action: "Start Assessment",
-                        test: assessmentName,
-                        testName: assessmentName,
-                        assessmentName: assessmentName,
-                        assessmentCode: assessmentCode || "",
-                        assessmentIndex: Number(assessmentIndex),
-                        projectId: String(projectId),
-                        participantId: String(participantId),
-                        description:
-                            "Peserta mulai mengerjakan " +
-                            assessmentName +
-                            ".",
-                        timestamp: now,
-                        time: now,
-                        sessionId:
-                            (typeof s !== "undefined" && s.activeSessionId)
-                                ? s.activeSessionId
-                                : ""
-                    });
-                });
-            });
-
-            localStorage.setItem(
-                "talentscope_projects",
-                JSON.stringify(projectsData)
-            );
-
-            return assessmentName;
-        } catch (e) {
-            console.warn("Gagal mencatat activity assessment:", e);
-            return assessmentCode || "Assessment";
-        }
-    }
-
-document.querySelectorAll(".action").forEach(function (button) {
-
-    button.addEventListener("click", function () {
-
-        var projectId =
-            button.getAttribute("data-project") || "";
-
-        var currentParticipantId = String(
-            (typeof sessionParticipantId !== "undefined" && sessionParticipantId) ||
-            (typeof person !== "undefined" && (
-                person.id ||
-                person.participantId ||
-                person.employeeId
-            )) ||
-            (typeof s !== "undefined" && (
-                s.participantId ||
-                s.employeeId ||
-                s.id
-            )) ||
-            ""
-        ).trim();
-
-
-        /* ==========================================
-           VALIDASI IDENTITAS
-        ========================================== */
-
-        if (!projectId || !currentParticipantId) {
-
-            console.error(
-                "ASSESSMENT DIBATALKAN: identitas peserta/project kosong."
-            );
-
-            alert(
-                "Identitas peserta tidak ditemukan. Silakan login ulang."
-            );
-
-            window.location.href = "login.html";
-
-            return;
-        }
-
-
-        /* ==========================================
-           AMBIL INDEX ASSESSMENT
-        ========================================== */
-
-        var assessmentIndex =
-            button.getAttribute(
-                "data-assessment-index"
-            );
-
-
-        var assessmentCode =
-            button.getAttribute(
-                "data-assessment-code"
-            ) || "";
-
-
-        if (
-            assessmentIndex === null ||
-            assessmentIndex === ""
-        ) {
-
-            alert(
-                "Assessment tidak valid. Silakan refresh dashboard."
-            );
-
-            return;
-        }
-
-
-        /* ==========================================
-           UPDATE ACTIVITY — ASSESSMENT SPESIFIK
-        ========================================== */
-
-        var selectedAssessmentName =
-            recordAssessmentStartActivity(
-                projectId,
-                currentParticipantId,
-                Number(assessmentIndex),
-                assessmentCode
-            );
-
-
-        /* ==========================================
-   CEGAH LOGOUT SAAT NAVIGASI INTERNAL
-========================================== */
-
-window.__tsParticipantInternalNavigation = true;
-
-
-/* ==========================================
-   ROUTING ASSESSMENT DINAMIS
-   Index hanya sebagai urutan assessment.
-   Halaman ditentukan berdasarkan code/nama tes.
-========================================== */
-
-var targetTestUrl = "";
-var activeAssessmentName = selectedAssessmentName || "";
-var activeAssessmentCode = assessmentCode || "";
-
-
-/* ==========================================
-   AMBIL DATA ASSESSMENT AKTIF
-========================================== */
-
-try {
-
-    var projects = JSON.parse(
-        localStorage.getItem(
-            "talentscope_projects"
-        ) || "[]"
-    );
-
-
-    var currentProject = Array.isArray(projects)
-        ? projects.find(function(p) {
-
-            return String(
-                p.id ||
-                p.projectId ||
-                p.project_id ||
-                ""
-            ).trim() === String(
-                projectId
-            ).trim();
-
-        })
-        : null;
-
-
-    var assessments = [];
-
-
-    if (currentProject) {
-
-        if (
-            Array.isArray(
-                currentProject.assessmentPackage
-            )
-        ) {
-
-            assessments =
-                currentProject.assessmentPackage;
-
-        } else if (
-            Array.isArray(
-                currentProject.assessments
-            )
-        ) {
-
-            assessments =
-                currentProject.assessments;
-
-        } else if (
-            Array.isArray(
-                currentProject.packages
-            )
-        ) {
-
-            assessments =
-                currentProject.packages;
-
-        }
-
-    }
-
-
-    /* Ambil assessment sesuai index berikutnya */
-
-    var activeAssessment =
-        assessments[
-            Number(assessmentIndex)
-        ] || null;
-
-
-    if (activeAssessment) {
-
-        if (
-            typeof activeAssessment === "string"
-        ) {
-
-            activeAssessmentName =
-                activeAssessment;
-
-        } else {
-
-            activeAssessmentName =
-                activeAssessment.name ||
-                activeAssessment.title ||
-                activeAssessment.assessmentName ||
-                activeAssessment.testName ||
-                activeAssessment.label ||
-                activeAssessmentName ||
-                "";
-
-            activeAssessmentCode =
-                activeAssessment.code ||
-                activeAssessment.assessmentCode ||
-                activeAssessmentCode ||
-                "";
-
-        }
-
-    }
-
-} catch (e) {
-
-    console.warn(
-        "Gagal membaca data assessment:",
-        e
-    );
-
-}
-
-
-/* ==========================================
-   NORMALISASI DATA UNTUK ROUTING
-========================================== */
-
-var normalizedAssessmentName =
-    String(
-        activeAssessmentName || ""
-    )
-    .trim()
-    .toLowerCase();
-
-
-var normalizedAssessmentCode =
-    String(
-        activeAssessmentCode || ""
-    )
-    .trim()
-    .toLowerCase();
-
-
-/* ==========================================
-   MAPPING HALAMAN TES
-========================================== */
-
-
-/* ---------- DISC ---------- */
-
-if (
-
-    normalizedAssessmentCode.includes("disc") ||
-
-    normalizedAssessmentName.includes("disc")
-
-) {
-
-    targetTestUrl =
-        "disc_test.html";
-
-}
-
-
-/* ---------- PAPI KOSTICK ---------- */
-
-else if (
-
-    normalizedAssessmentCode.includes("papi") ||
-
-    normalizedAssessmentName.includes("papi") ||
-
-    normalizedAssessmentName.includes("kostick")
-
-) {
-
-    targetTestUrl =
-        "papi_kostick_test.html";
-
-}
-
-
-/* ---------- VAP ---------- */
-
-else if (
-
-    normalizedAssessmentCode.includes("vap") ||
-
-    normalizedAssessmentName.includes("vap") ||
-
-    normalizedAssessmentName.includes(
-        "visual attention"
-    ) ||
-
-    normalizedAssessmentName.includes(
-        "work performance"
-    ) ||
-
-    normalizedAssessmentName.includes(
-        "sustained attention"
-    ) ||
-
-    normalizedAssessmentName.includes(
-        "speed test"
-    )
-
-) {
-
-    targetTestUrl =
-        "speedtest.html";
-
-}
-
-
-/* ==========================================
-   ROUTING BELUM TERDAFTAR
-========================================== */
-
-else {
-
-    console.error(
-        "Assessment belum memiliki routing:",
-        {
-            assessmentIndex: assessmentIndex,
-            assessmentCode: activeAssessmentCode,
-            assessmentName: activeAssessmentName
-        }
-    );
-
-    alert(
-        "Halaman assessment belum tersedia:\n\n" +
-        (
-            activeAssessmentName ||
-            activeAssessmentCode ||
-            "Unknown Assessment"
-        )
-    );
-
-    window.__tsParticipantInternalNavigation =
-        false;
-
-    return;
-
-}
-
-
-/* ==========================================
-   DEBUG ROUTING
-========================================== */
-
-console.log(
-    "TalentScope Assessment Routing:",
-    {
-        assessmentIndex: assessmentIndex,
-        assessmentCode: activeAssessmentCode,
-        assessmentName: activeAssessmentName,
-        target: targetTestUrl
-    }
-);
-
-
-/* ==========================================
-   BUKA TES
-========================================== */
-
-window.location.href =
-    targetTestUrl +
-    "?projectId=" +
-    encodeURIComponent(
-        projectId
-    ) +
-    "&participantId=" +
-    encodeURIComponent(
-        currentParticipantId
-    ) +
-    "&assessmentIndex=" +
-    encodeURIComponent(
-        assessmentIndex
-    ) +
-    "&assessmentCode=" +
-    encodeURIComponent(
-        activeAssessmentCode
-    ) +
-    "&assessmentName=" +
-    encodeURIComponent(
-        activeAssessmentName
-    );
-
-    });
-
-});
-    /* =====================================================
-       PARTICIPANT LOGOUT
-       - Tombol Logout = logout eksplisit
-       - Tutup tab/window = logout via pagehide
-       - Tidak mengganggu navigasi internal Participant Portal
-    ===================================================== */
-
-    var logoutRecorded = false;
-window.__tsParticipantInternalNavigation = false;
-
-function recordParticipantLogout() {
-    if (logoutRecorded) return;
-
-    /*
-     * Jangan logout jika halaman hanya berpindah ke halaman internal
-     * Participant Portal.
-     */
-    if (window.__tsParticipantInternalNavigation) {
-        return;
-    }
-
-    logoutRecorded = true;
-
-    try {
-        if (typeof participantHeartbeatTimer !== "undefined") {
-            clearInterval(participantHeartbeatTimer);
-        }
-    } catch (e) {}
-
-    var sessionLogoutAt = new Date().toISOString();
-
-    var activeSession = s || {};
-
-    try {
-        var rawSession =
-            sessionStorage.getItem("ts_participant_session");
-
-        if (rawSession) {
-            var parsedSession =
-                JSON.parse(rawSession);
-
-            if (parsedSession) {
-                activeSession = parsedSession;
-            }
-        }
-    } catch (e) {}
-
-    var sessionProjectId = String(
-        activeSession.projectId ||
-        activeSession.project_id ||
-        ""
-    ).trim();
-
-    var sessionParticipantId = String(
-        activeSession.participantId ||
-        activeSession.employeeId ||
-        activeSession.id ||
-        ""
-    ).trim();
-
-    var sessionEmail = String(
-        activeSession.email ||
-        activeSession.emailAddress ||
-        ""
-    ).trim().toLowerCase();
-
-    var activeSessionId = String(
-        activeSession.activeSessionId ||
-        ""
-    ).trim();
-
-    try {
-        var rawProjects =
-            localStorage.getItem(
-                "talentscope_projects"
-            );
-
-        var projectsData =
-            rawProjects
-                ? JSON.parse(rawProjects)
-                : [];
-
-        if (!Array.isArray(projectsData)) {
-            projectsData = [];
-        }
-
-        var changed = false;
-
-        projectsData.forEach(function(project) {
-            var projectId = String(
-                project.id ||
-                project.projectId ||
-                project.project_id ||
-                ""
-            ).trim();
-
-            if (
-                sessionProjectId &&
-                projectId &&
-                projectId !== sessionProjectId
-            ) {
-                return;
-            }
-
-            var participantList =
-                Array.isArray(project.participants)
-                    ? project.participants
-                    : [];
-
-            participantList.forEach(function(participant) {
-                var participantId = String(
-                    participant.id ||
-                    participant.participantId ||
-                    participant.employeeId ||
-                    participant.employee_id ||
-                    ""
-                ).trim();
-
-                var participantEmail = String(
-                    participant.email ||
-                    participant.emailAddress ||
-                    ""
-                ).trim().toLowerCase();
-
-                var matched =
-                    (
-                        sessionParticipantId &&
-                        participantId &&
-                        sessionParticipantId === participantId
-                    ) ||
-                    (
-                        sessionEmail &&
-                        participantEmail &&
-                        sessionEmail === participantEmail
-                    );
-
-                if (!matched) return;
 
                 /*
-                 * Kalau ada session yang lebih baru, session lama
-                 * tidak boleh memutus login yang lebih baru.
-                 */
+                   Session protection
+                */
                 if (
-                    activeSessionId &&
                     participant.activeSessionId &&
-                    participant.activeSessionId !== activeSessionId
+                    participant.activeSessionId !==
+                    activeSessionId
                 ) {
                     return;
                 }
 
-                participant.isLoggedIn = false;
-                participant.status = "Offline";
-                participant.onlineStatus = "Offline";
 
-                participant.logoutTime = sessionLogoutAt;
-                participant.loggedOutAt = sessionLogoutAt;
-                participant.logoutAt = sessionLogoutAt;
-                participant.lastLogoutAt = sessionLogoutAt;
-                participant.waktuLogout = sessionLogoutAt;
+                participant.activeSessionId =
+                    activeSessionId;
 
-                participant.activity = "Offline";
-                participant.currentActivity = "Offline";
-                participant.lastActivity = "Offline";
-                participant.currentTest = "";
-                participant.testActivity = "";
-                participant.currentAssessmentIndex = "";
-                participant.currentAssessmentCode = "";
-                participant.activityUpdatedAt = sessionLogoutAt;
+                participant.isLoggedIn =
+                    true;
 
-                participant.lastSeen = sessionLogoutAt;
-                participant.lastSeenAt = sessionLogoutAt;
+                participant.status =
+                    "Online";
 
-                participant.activeSessionId = "";
+                participant.onlineStatus =
+                    "Online";
 
-                if (!Array.isArray(participant.activityHistory)) {
-                    participant.activityHistory = [];
+                participant.lastSeen =
+                    now;
+
+                participant.lastSeenAt =
+                    now;
+
+
+                /*
+                   Jangan timpa status test
+                */
+                var activity =
+                    normalize(
+                        participant.currentActivity ||
+                        participant.activity
+                    );
+
+
+                var isDoingTest =
+                    /^Sedang mengerjakan tes\s*\(/i
+                    .test(activity);
+
+
+                if (!isDoingTest) {
+
+                    participant.activity =
+                        "Online";
+
+                    participant.currentActivity =
+                        "Online";
+
+                    participant.lastActivity =
+                        "Online";
+
+                } else {
+
+                    participant.lastActivity =
+                        activity;
                 }
 
-                var duplicateLogout =
-                    participant.activityHistory.some(function(item) {
-                        return (
-                            item &&
-                            item.type === "logout" &&
-                            (
-                                (
-                                    activeSessionId &&
-                                    item.sessionId === activeSessionId
-                                ) ||
-                                item.timestamp === sessionLogoutAt
-                            )
-                        );
-                    });
 
-                if (!duplicateLogout) {
-                    participant.activityHistory.push({
-                        type: "logout",
-                        activity: "Logout dari Portal Peserta",
-                        description:
-                            "Peserta keluar dari Participant Portal.",
-                        timestamp: sessionLogoutAt,
-                        time: sessionLogoutAt,
-                        sessionId: activeSessionId || ""
-                    });
-                }
-
-                changed = true;
-            });
-        });
-
-        if (changed) {
-            localStorage.setItem(
-                "talentscope_projects",
-                JSON.stringify(projectsData)
-            );
-
-            projects = projectsData;
-        }
-    } catch (error) {
-        console.error(
-            "TalentScope: gagal menyimpan logout peserta.",
-            error
+                participant.activityUpdatedAt =
+                    now;
+            }
         );
     }
-}
 
-var logoutButton =
-    document.getElementById("logout");
 
-if (logoutButton) {
-    logoutButton.addEventListener(
-        "click",
-        function() {
-            window.__tsParticipantInternalNavigation = false;
+    updateParticipantHeartbeat();
 
-            recordParticipantLogout();
 
-            try {
-                sessionStorage.removeItem(
-                    "ts_participant_session"
+    var participantHeartbeatTimer =
+        setInterval(
+            updateParticipantHeartbeat,
+            5000
+        );
+
+
+    /* =====================================================
+       SUMMARY
+    ===================================================== */
+    var completedCount =
+        entries.filter(
+            function (
+                entry
+            ) {
+
+                return (
+                    String(
+                        entry.status
+                    )
+                    .toLowerCase() ===
+                    "completed"
                 );
-            } catch (e) {}
+            }
+        ).length;
 
-            window.location.href =
-                "login.html";
-        }
+
+    setText(
+        "total",
+        entries.length
     );
-}
 
-/*
- * pagehide digunakan untuk tab/window yang ditutup.
- */
-window.addEventListener(
-    "pagehide",
-    function() {
-        recordParticipantLogout();
-    }
-);
+    setText(
+        "completed",
+        completedCount
+    );
 
-/*
- * Fallback browser.
- * recordParticipantLogout() tetap idempotent sehingga
- * tidak menghasilkan dua histori logout.
- */
-window.addEventListener(
-    "beforeunload",
-    function() {
-        recordParticipantLogout();
-    }
-);
+    setText(
+        "pending",
+        entries.length -
+        completedCount
+    );
 
-/* =====================================================
+
+    /* =====================================================
        ESCAPE HTML
     ===================================================== */
-
     function esc(value) {
 
         return String(
-            value == null
-                ? ""
-                : value
+            value == null ?
+            "" :
+            value
         ).replace(
             /[&<>"']/g,
             function (character) {
 
                 return {
-                    "&": "&amp;",
-                    "<": "&lt;",
-                    ">": "&gt;",
-                    '"': "&quot;",
-                    "'": "&#039;"
-                }[character];
 
+                    "&":
+                        "&amp;",
+
+                    "<":
+                        "&lt;",
+
+                    ">":
+                        "&gt;",
+
+                    '"':
+                        "&quot;",
+
+                    "'":
+                        "&#039;"
+
+                }[character];
             }
         );
     }
 
-})();
-</script>
 
-<script>
+    /* =====================================================
+       RENDER CONTENT
+    ===================================================== */
+    var content =
+        document.getElementById(
+            "content"
+        );
 
-    // Memastikan halaman admin otomatis memperbarui tampilan saat ada perubahan localStorage dari tab peserta
-    window.addEventListener('storage', function(event) {
-        if (event.key === 'talentscope_projects') {
-            // Cara paling aman dan instan agar data, status, dan riwayat langsung ter-render ulang
-            location.reload(); 
+
+    if (!content) {
+        return;
+    }
+
+
+    if (!entries.length) {
+
+        content.innerHTML =
+            '<div class="empty">' +
+
+                '<div class="empty-icon">TS</div>' +
+
+                '<div style="font-weight:850;color:#243d5b;font-size:15px">' +
+                    'Belum ada assessment' +
+                '</div>' +
+
+                '<div style="margin-top:6px;font-size:12px">' +
+                    'Belum ada assessment yang ditugaskan ke akun Anda.' +
+                '</div>' +
+
+            '</div>';
+
+        return;
+    }
+
+
+    /* =====================================================
+       PACKAGE STATUS
+    ===================================================== */
+    var packageName =
+        currentProject.name ||
+        currentProject.projectName ||
+        currentProject.title ||
+        "Assessment Package";
+
+
+    var packageStatus =
+        "Not Started";
+
+
+    if (
+        completedCount ===
+        entries.length
+    ) {
+
+        packageStatus =
+            "Completed";
+
+    } else if (
+        completedCount > 0
+    ) {
+
+        packageStatus =
+            "In Progress";
+    }
+
+
+    var packageStatusClass =
+        packageStatus === "Completed"
+            ? "done"
+            : (
+                packageStatus ===
+                "In Progress"
+                    ? "progress"
+                    : ""
+            );
+
+
+    var packageStatusText =
+        packageStatus === "Completed"
+            ? "✓ Completed"
+            : packageStatus;
+
+
+    /* =====================================================
+       NEXT ASSESSMENT
+    ===================================================== */
+    var nextEntry =
+        entries.find(
+            function (
+                entry
+            ) {
+
+                return (
+                    String(
+                        entry.status
+                    )
+                    .toLowerCase() !==
+                    "completed"
+                );
+            }
+        );
+
+
+    if (!nextEntry) {
+
+        nextEntry =
+            entries[
+                entries.length - 1
+            ];
+    }
+
+
+    /* =====================================================
+       TEST LIST
+    ===================================================== */
+    var testListHtml =
+        '<div class="package-tests">' +
+
+            '<div class="package-tests-label">' +
+                'Assessments Included' +
+            '</div>' +
+
+            '<div class="package-test-list">';
+
+
+    entries.forEach(
+        function (
+            entry,
+            index
+        ) {
+
+            var completed =
+                String(
+                    entry.status
+                )
+                .toLowerCase() ===
+                "completed";
+
+
+            testListHtml +=
+
+                '<div class="package-test-item">' +
+
+                    '<span class="package-test-number">' +
+                        (index + 1) +
+                    '</span>' +
+
+                    '<span class="package-test-name">' +
+                        esc(
+                            entry.assessmentName
+                        ) +
+                    '</span>' +
+
+                    (
+                        completed
+                            ? '<span class="package-test-check">✓</span>'
+                            : ''
+                    ) +
+
+                '</div>';
         }
-    });
+    );
 
-</script>
-<script>
-/* =====================================================
-   PREMIUM HAMBURGER MENU INTERACTION
-===================================================== */
-(function() {
-    var menuBtn = document.getElementById("menuBtn");
-    var sidebar = document.getElementById("sidebarDrawer");
-    var overlay = document.getElementById("sidebarOverlay");
 
-    function toggleMenu() {
-        if (!sidebar || !overlay) return;
-        sidebar.classList.toggle("open");
-        overlay.classList.toggle("active");
+    testListHtml +=
+            '</div>' +
+        '</div>';
+
+
+    /* =====================================================
+       RENDER PACKAGE
+    ===================================================== */
+    content.innerHTML =
+
+        '<div class="grid assessment-package-grid">' +
+
+            '<article class="card assessment-package-card">' +
+
+                '<div class="card-top">' +
+
+                    '<div class="package-heading">' +
+
+                        '<h3>Assessment Package</h3>' +
+
+                        '<div class="code">' +
+                            esc(packageName) +
+                        '</div>' +
+
+                    '</div>' +
+
+                '</div>' +
+
+
+                testListHtml +
+
+
+                '<div class="card-info">' +
+
+                    '<div>' +
+
+                        '<div class="info-label">' +
+                            'Status' +
+                        '</div>' +
+
+                        '<div class="info-value">' +
+
+                            '<span class="status-pill ' +
+                                packageStatusClass +
+                            '">' +
+
+                                esc(
+                                    packageStatusText
+                                ) +
+
+                            '</span>' +
+
+                        '</div>' +
+
+                    '</div>' +
+
+
+                    '<div>' +
+
+                        '<div class="info-label">' +
+                            'Total Assessments' +
+                        '</div>' +
+
+                        '<div class="info-value">' +
+                            entries.length +
+                        '</div>' +
+
+                    '</div>' +
+
+                '</div>' +
+
+
+                '<button ' +
+
+                    'class="action" ' +
+
+                    'data-project="' +
+                        esc(
+                            sessionProjectId
+                        ) +
+                    '" ' +
+
+                    'data-participant="' +
+                        esc(
+                            sessionParticipantId
+                        ) +
+                    '" ' +
+
+                    'data-assessment-index="' +
+                        esc(
+                            nextEntry.assessmentIndex
+                        ) +
+                    '" ' +
+
+                    'data-assessment-code="' +
+                        esc(
+                            nextEntry.assessmentCode
+                        ) +
+                    '" ' +
+
+                    'data-assessment-name="' +
+                        esc(
+                            nextEntry.assessmentName
+                        ) +
+                    '" ' +
+
+                    'type="button">' +
+
+                    (
+                        packageStatus ===
+                        "Completed"
+
+                            ? "View Result"
+
+                            : "Start Assessment"
+                    ) +
+
+                '</button>' +
+
+            '</article>' +
+
+        '</div>';
+
+
+    /* =====================================================
+       RECORD TEST START
+    ===================================================== */
+    function recordAssessmentStartActivity(
+        projectId,
+        participantId,
+        assessmentIndex,
+        assessmentCode,
+        assessmentName
+    ) {
+
+        var now =
+            new Date().toISOString();
+
+
+        var activityText =
+            "Sedang mengerjakan tes (" +
+            assessmentName +
+            ")";
+
+
+        updateParticipantStatus(
+            function (
+                participant
+            ) {
+
+                participant.isLoggedIn =
+                    true;
+
+                participant.status =
+                    "Online";
+
+                participant.onlineStatus =
+                    "Online";
+
+                participant.activeSessionId =
+                    activeSessionId;
+
+
+                participant.currentTest =
+                    assessmentName;
+
+                participant.testActivity =
+                    activityText;
+
+                participant.currentAssessmentIndex =
+                    Number(
+                        assessmentIndex
+                    );
+
+                participant.currentAssessmentCode =
+                    assessmentCode;
+
+                participant.currentActivity =
+                    activityText;
+
+                participant.activity =
+                    activityText;
+
+                participant.lastActivity =
+                    activityText;
+
+                participant.activityUpdatedAt =
+                    now;
+
+                participant.lastSeen =
+                    now;
+
+                participant.lastSeenAt =
+                    now;
+
+
+                if (
+                    !Array.isArray(
+                        participant.activityHistory
+                    )
+                ) {
+                    participant.activityHistory =
+                        [];
+                }
+
+
+                participant.activityHistory.push({
+
+                    type:
+                        "test-start",
+
+                    activity:
+                        activityText,
+
+                    title:
+                        activityText,
+
+                    action:
+                        "Start Assessment",
+
+                    test:
+                        assessmentName,
+
+                    testName:
+                        assessmentName,
+
+                    assessmentName:
+                        assessmentName,
+
+                    assessmentCode:
+                        assessmentCode,
+
+                    assessmentIndex:
+                        Number(
+                            assessmentIndex
+                        ),
+
+                    projectId:
+                        projectId,
+
+                    participantId:
+                        participantId,
+
+                    description:
+                        "Peserta mulai mengerjakan " +
+                        assessmentName +
+                        ".",
+
+                    timestamp:
+                        now,
+
+                    time:
+                        now,
+
+                    sessionId:
+                        activeSessionId
+                });
+            }
+        );
     }
 
-    function closeMenu() {
-        if (!sidebar || !overlay) return;
-        sidebar.classList.remove("open");
-        overlay.classList.remove("active");
+
+    /* =====================================================
+       ASSESSMENT ROUTING
+    ===================================================== */
+    function getAssessmentRoute(
+        code,
+        name
+    ) {
+
+        var normalizedCode =
+            normalize(code)
+            .toLowerCase();
+
+        var normalizedName =
+            normalize(name)
+            .toLowerCase();
+
+
+        /* DISC */
+        if (
+            normalizedCode.includes("disc") ||
+            normalizedName.includes("disc")
+        ) {
+
+            return "disc_test.html";
+        }
+
+
+        /* PAPI */
+        if (
+            normalizedCode.includes("papi") ||
+            normalizedName.includes("papi") ||
+            normalizedName.includes("kostick")
+        ) {
+
+            return "papi_kostick_test.html";
+        }
+
+
+        /* VAP */
+        if (
+            normalizedCode.includes("vap") ||
+
+            normalizedName.includes("vap") ||
+
+            normalizedName.includes(
+                "visual attention"
+            ) ||
+
+            normalizedName.includes(
+                "work performance"
+            ) ||
+
+            normalizedName.includes(
+                "sustained attention"
+            ) ||
+
+            normalizedName.includes(
+                "speed test"
+            )
+        ) {
+
+            return "speedtest.html";
+        }
+
+
+        return "";
     }
 
-    if (menuBtn) {
-        menuBtn.addEventListener("click", function(e) {
-            e.stopPropagation();
-            toggleMenu();
-        });
+
+    /* =====================================================
+       START BUTTON
+    ===================================================== */
+    var actionButton =
+        document.querySelector(
+            ".action"
+        );
+
+
+    if (actionButton) {
+
+        actionButton.addEventListener(
+            "click",
+            function () {
+
+                /*
+                   Jika semua assessment selesai
+                */
+                if (
+                    packageStatus ===
+                    "Completed"
+                ) {
+
+                    alert(
+                        "Semua assessment telah selesai."
+                    );
+
+                    return;
+                }
+
+
+                var projectId =
+                    normalize(
+                        actionButton.getAttribute(
+                            "data-project"
+                        )
+                    );
+
+                var participantId =
+                    normalize(
+                        actionButton.getAttribute(
+                            "data-participant"
+                        )
+                    );
+
+                var assessmentIndex =
+                    actionButton.getAttribute(
+                        "data-assessment-index"
+                    );
+
+                var assessmentCode =
+                    actionButton.getAttribute(
+                        "data-assessment-code"
+                    ) || "";
+
+                var assessmentName =
+                    actionButton.getAttribute(
+                        "data-assessment-name"
+                    ) || "";
+
+
+                if (
+                    !projectId ||
+                    !participantId
+                ) {
+
+                    alert(
+                        "Identitas peserta tidak valid. Silakan login kembali."
+                    );
+
+                    window.location.href =
+                        "login.html";
+
+                    return;
+                }
+
+
+                /*
+                   Record test activity
+                */
+                recordAssessmentStartActivity(
+
+                    projectId,
+
+                    participantId,
+
+                    Number(
+                        assessmentIndex
+                    ),
+
+                    assessmentCode,
+
+                    assessmentName
+                );
+
+
+                /*
+                   Prevent logout on internal navigation
+                */
+                window.__tsParticipantInternalNavigation =
+                    true;
+
+
+                /*
+                   Determine route
+                */
+                var targetTestUrl =
+                    getAssessmentRoute(
+                        assessmentCode,
+                        assessmentName
+                    );
+
+
+                /*
+   Masuk ke Petunjuk Umum terlebih dahulu
+*/
+var targetTestUrl =
+    "assessment.html";
+
+
+                /*
+                   Navigate
+                */
+                window.location.href =
+
+                    targetTestUrl +
+
+                    "?projectId=" +
+                    encodeURIComponent(
+                        projectId
+                    ) +
+
+                    "&participantId=" +
+                    encodeURIComponent(
+                        participantId
+                    ) +
+
+                    "&assessmentIndex=" +
+                    encodeURIComponent(
+                        assessmentIndex
+                    ) +
+
+                    "&assessmentCode=" +
+                    encodeURIComponent(
+                        assessmentCode
+                    ) +
+
+                    "&assessmentName=" +
+                    encodeURIComponent(
+                        assessmentName
+                    );
+            }
+        );
     }
 
-    if (overlay) {
-        overlay.addEventListener("click", closeMenu);
+
+    /* =====================================================
+       LOGOUT SYSTEM
+    ===================================================== */
+    var logoutRecorded =
+        false;
+
+
+    function recordParticipantLogout() {
+
+        if (logoutRecorded) {
+            return;
+        }
+
+
+        /*
+           Internal navigation bukan logout
+        */
+        if (
+            window.__tsParticipantInternalNavigation
+        ) {
+            return;
+        }
+
+
+        logoutRecorded =
+            true;
+
+
+        try {
+
+            clearInterval(
+                participantHeartbeatTimer
+            );
+
+        } catch (error) {}
+
+
+        var logoutTime =
+            new Date().toISOString();
+
+
+        var latestSession = s;
+
+
+        try {
+
+            var latestRaw =
+                sessionStorage.getItem(
+                    "ts_participant_session"
+                );
+
+            if (latestRaw) {
+
+                latestSession =
+                    JSON.parse(
+                        latestRaw
+                    );
+            }
+
+        } catch (error) {}
+
+
+        var logoutProjectId =
+            normalize(
+                latestSession.projectId ||
+                latestSession.project_id
+            );
+
+        var logoutParticipantId =
+            normalize(
+                latestSession.participantId ||
+                latestSession.participant_id ||
+                latestSession.employeeId ||
+                latestSession.id
+            );
+
+        var logoutEmail =
+            normalizeEmail(
+                latestSession.email ||
+                latestSession.emailAddress
+            );
+
+        var logoutSessionId =
+            normalize(
+                latestSession.activeSessionId ||
+                activeSessionId
+            );
+
+
+        var latestProjects =
+            readJSON(
+                "talentscope_projects",
+                []
+            );
+
+
+        if (
+            !Array.isArray(
+                latestProjects
+            )
+        ) {
+            return;
+        }
+
+
+        var changed =
+            false;
+
+
+        latestProjects.forEach(
+            function (
+                project
+            ) {
+
+                var projectId =
+                    normalize(
+                        project.id ||
+                        project.projectId ||
+                        project.project_id
+                    );
+
+                if (
+                    projectId !==
+                    logoutProjectId
+                ) {
+                    return;
+                }
+
+
+                if (
+                    !Array.isArray(
+                        project.participants
+                    )
+                ) {
+                    return;
+                }
+
+
+                project.participants.forEach(
+                    function (
+                        participant
+                    ) {
+
+                        var participantId =
+                            normalize(
+                                participant.id ||
+                                participant.participantId ||
+                                participant.employeeId ||
+                                participant.employee_id
+                            );
+
+                        var participantEmail =
+                            normalizeEmail(
+                                participant.email ||
+                                participant.emailAddress
+                            );
+
+
+                        var matched =
+
+                            (
+                                logoutParticipantId &&
+                                participantId ===
+                                logoutParticipantId
+                            )
+
+                            ||
+
+                            (
+                                logoutEmail &&
+                                participantEmail ===
+                                logoutEmail
+                            );
+
+
+                        if (!matched) {
+                            return;
+                        }
+
+
+                        /*
+                           Protect newer session
+                        */
+                        if (
+                            participant.activeSessionId &&
+                            participant.activeSessionId !==
+                            logoutSessionId
+                        ) {
+                            return;
+                        }
+
+
+                        participant.isLoggedIn =
+                            false;
+
+                        participant.status =
+                            "Offline";
+
+                        participant.onlineStatus =
+                            "Offline";
+
+                        participant.logoutTime =
+                            logoutTime;
+
+                        participant.loggedOutAt =
+                            logoutTime;
+
+                        participant.logoutAt =
+                            logoutTime;
+
+                        participant.lastLogoutAt =
+                            logoutTime;
+
+                        participant.activity =
+                            "Offline";
+
+                        participant.currentActivity =
+                            "Offline";
+
+                        participant.lastActivity =
+                            "Offline";
+
+                        participant.currentTest =
+                            "";
+
+                        participant.testActivity =
+                            "";
+
+                        participant.currentAssessmentIndex =
+                            "";
+
+                        participant.currentAssessmentCode =
+                            "";
+
+                        participant.activityUpdatedAt =
+                            logoutTime;
+
+                        participant.lastSeen =
+                            logoutTime;
+
+                        participant.lastSeenAt =
+                            logoutTime;
+
+                        participant.activeSessionId =
+                            "";
+
+
+                        if (
+                            !Array.isArray(
+                                participant.activityHistory
+                            )
+                        ) {
+
+                            participant.activityHistory =
+                                [];
+                        }
+
+
+                        var duplicate =
+                            participant.activityHistory.some(
+                                function (
+                                    item
+                                ) {
+
+                                    return (
+                                        item &&
+                                        item.type ===
+                                            "logout" &&
+                                        item.sessionId ===
+                                            logoutSessionId
+                                    );
+                                }
+                            );
+
+
+                        if (!duplicate) {
+
+                            participant.activityHistory.push({
+
+                                type:
+                                    "logout",
+
+                                activity:
+                                    "Logout dari Portal Peserta",
+
+                                description:
+                                    "Peserta keluar dari Participant Portal.",
+
+                                timestamp:
+                                    logoutTime,
+
+                                time:
+                                    logoutTime,
+
+                                sessionId:
+                                    logoutSessionId
+                            });
+                        }
+
+
+                        changed =
+                            true;
+                    }
+                );
+            }
+        );
+
+
+        if (changed) {
+
+            writeJSON(
+                "talentscope_projects",
+                latestProjects
+            );
+
+            projects =
+                latestProjects;
+        }
     }
 
-    // Tutup sidebar otomatis ketika salah satu link menu di dalam sidebar diklik
-    var sideLinks = document.querySelectorAll(".side-link, .support-btn");
-    sideLinks.forEach(function(link) {
-        link.addEventListener("click", closeMenu);
-    });
+
+    /* =====================================================
+       LOGOUT BUTTON
+    ===================================================== */
+    var logoutButton =
+        document.getElementById(
+            "logout"
+        );
+
+
+    if (logoutButton) {
+
+        logoutButton.addEventListener(
+            "click",
+            function () {
+
+                window.__tsParticipantInternalNavigation =
+                    false;
+
+
+                recordParticipantLogout();
+
+
+                try {
+
+                    sessionStorage.removeItem(
+                        "ts_participant_session"
+                    );
+
+                } catch (error) {}
+
+
+                window.location.href =
+                    "login.html";
+            }
+        );
+    }
+
+
+    /* =====================================================
+       PAGEHIDE
+
+       IMPORTANT:
+       Internal navigation tidak logout.
+    ===================================================== */
+    window.addEventListener(
+        "pagehide",
+        function () {
+
+            if (
+                !window.__tsParticipantInternalNavigation
+            ) {
+
+                recordParticipantLogout();
+            }
+        }
+    );
+
+
+    /* =====================================================
+       HAMBURGER MENU
+    ===================================================== */
+    (function () {
+
+        var menuBtn =
+            document.getElementById(
+                "menuBtn"
+            );
+
+        var sidebar =
+            document.getElementById(
+                "sidebarDrawer"
+            );
+
+        var overlay =
+            document.getElementById(
+                "sidebarOverlay"
+            );
+
+
+        function toggleMenu() {
+
+            if (
+                !sidebar ||
+                !overlay
+            ) {
+                return;
+            }
+
+
+            sidebar.classList.toggle(
+                "open"
+            );
+
+            overlay.classList.toggle(
+                "active"
+            );
+        }
+
+
+        function closeMenu() {
+
+            if (
+                !sidebar ||
+                !overlay
+            ) {
+                return;
+            }
+
+
+            sidebar.classList.remove(
+                "open"
+            );
+
+            overlay.classList.remove(
+                "active"
+            );
+        }
+
+
+        if (menuBtn) {
+
+            menuBtn.addEventListener(
+                "click",
+                function (
+                    event
+                ) {
+
+                    event.stopPropagation();
+
+                    toggleMenu();
+                }
+            );
+        }
+
+
+        if (overlay) {
+
+            overlay.addEventListener(
+                "click",
+                closeMenu
+            );
+        }
+
+
+        document
+            .querySelectorAll(
+                ".side-link, .support-btn"
+            )
+            .forEach(
+                function (
+                    element
+                ) {
+
+                    element.addEventListener(
+                        "click",
+                        closeMenu
+                    );
+                }
+            );
+
+    })();
+
+
+    /* =====================================================
+       STORAGE SYNC
+    ===================================================== */
+    window.addEventListener(
+        "storage",
+        function (
+            event
+        ) {
+
+            if (
+                event.key ===
+                "talentscope_projects"
+            ) {
+
+                console.log(
+                    "TalentScope project data updated from another tab."
+                );
+            }
+        }
+    );
+
+
+    /* =====================================================
+       DEBUG INFO
+    ===================================================== */
+    console.log(
+        "===================================="
+    );
+
+    console.log(
+        "TALENTSCOPE PARTICIPANT DASHBOARD READY"
+    );
+
+    console.log(
+        "Project ID:",
+        sessionProjectId
+    );
+
+    console.log(
+        "Participant ID:",
+        sessionParticipantId
+    );
+
+    console.log(
+        "Email:",
+        sessionEmail
+    );
+
+    console.log(
+        "Assessments:",
+        activeAssessments
+    );
+
+    console.log(
+        "Entries:",
+        entries
+    );
+
+    console.log(
+        "Session ID:",
+        activeSessionId
+    );
+
+    console.log(
+        "===================================="
+    );
+
 })();
 </script>
 </body>

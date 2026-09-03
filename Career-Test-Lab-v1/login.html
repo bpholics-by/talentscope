@@ -84,276 +84,2675 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
   <div class="footer">TalentScope</div>
 </main>
 
+<!-- =====================================================
+     SUPABASE LIBRARY
+===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<!-- =====================================================
+     SUPABASE INITIALIZATION
+===================================================== -->
+
 <script>
-(function(){
-  "use strict";
 
-  // 1. TOGGLE SHOW / HIDE PASSWORD
-  const toggleBtn = document.getElementById("togglePassword");
-  const passInput = document.getElementById("password");
+(function () {
 
-  if (toggleBtn && passInput) {
-    toggleBtn.addEventListener("click", function () {
-      const isPassword = passInput.type === "password";
-      passInput.type = isPassword ? "text" : "password";
-      toggleBtn.textContent = isPassword ? "Hide" : "Show";
-    });
-  }
+    "use strict";
 
-  document.getElementById("loginForm").addEventListener("submit", function(e){
-    e.preventDefault();
-    
-    const userIn = document.getElementById("username").value.trim().toLowerCase();
-    const passIn = document.getElementById("password").value.trim();
+/* =====================================================
+   GET SUPABASE CLIENT
+===================================================== */
 
-    if (!userIn || !passIn) {
-      alert("Masukkan Username dan Password!");
-      return;
+function getSupabaseClient() {
+
+    const client = window.supabaseClient;
+
+    if (
+        client &&
+        typeof client.from === "function"
+    ) {
+        return client;
     }
 
-    // ==========================================
-    // JALUR PAKSA PESERTA (JIKA ADA KARAKTER '@')
-    // ==========================================
-    if (userIn.includes("@")) {
-      let matchedParticipant = null;
-      let matchedProject = null;
+    console.error(
+        "❌ SUPABASE CLIENT TIDAK TERSEDIA:",
+        client
+    );
 
-      // Cari data peserta dan project-nya secara akurat di localStorage
-      try {
-        const rawProjects = localStorage.getItem("talentscope_projects") || "[]";
-        let projects = JSON.parse(rawProjects);
-        if (Array.isArray(projects)) {
-          for (const project of projects) {
-            const participants = Array.isArray(project?.participants) ? project.participants : [];
-            const found = participants.find(p => String(p?.email || p?.username || "").trim().toLowerCase() === userIn);
-            if (found) {
-              matchedParticipant = found;
-              matchedProject = project;
+    return null;
+}
 
-              // === TAMBAHKAN INI AGAR STATUS BERUBAH JADI ONLINE & TERCATAT ===
-              const loginNow = new Date().toISOString();
-              const newSessionId =
-                "TS-" +
-                Date.now() +
-                "-" +
-                Math.random().toString(36).slice(2, 10);
+    console.log("========================================");
+    console.log("🔄 MEMULAI INISIALISASI SUPABASE");
+    console.log("========================================");
 
-              found.isLoggedIn = true;
-              found.status = "Online";
-              found.onlineStatus = "Online";
-              found.activeSessionId = newSessionId;
-              found.lastSeen = loginNow;
-              found.lastSeenAt = loginNow;
-              found.loginTime = loginNow;
-              found.loggedInAt = loginNow;
-              found.loginAt = loginNow;
-              found.currentActivity = "Online";
-              found.activity = "Online";
-              found.lastActivity = "Online";
-              
-              if (!found.activityHistory) found.activityHistory = [];
-              found.activityHistory.push({
-                type: "login",
-                activity: "Login ke Portal Peserta",
-                timestamp: loginNow,
-                time: loginNow,
-                description: "Peserta berhasil masuk ke sistem assessment.",
-                sessionId: newSessionId
-              });
-              // =============================================================
 
-              break;
-            }
-          }
-          // Simpan kembali perubahan status online ke projects di localStorage
-          localStorage.setItem("talentscope_projects", JSON.stringify(projects));
-        }
-      } catch (err) {}
+    /* ============================================
+       CEK LIBRARY
+    ============================================ */
 
-      // Peserta wajib ditemukan dari data project. Jangan pernah membuat
-      // session fallback P001 karena itu dapat mencampur hasil antar peserta.
-      if (!matchedParticipant || !matchedProject) {
-        alert("Akun peserta tidak ditemukan atau belum ditugaskan ke project.");
+    if (
+        typeof window.supabase === "undefined"
+    ) {
+
+        console.error(
+            "❌ SUPABASE LIBRARY GAGAL DIMUAT"
+        );
+
+        window.supabaseClient = null;
+
         return;
-      }
 
-      // Ambil daftar asesmen jika ada di dalam project atau data peserta
-      let assignedAssessments =
-        matchedParticipant.assessments ||
-        matchedProject.assessments ||
-        matchedProject.tests ||
-        [];
-
-      const participantSession = {
-        participantId: matchedParticipant.id || matchedParticipant.participantId,
-        projectId: matchedProject?.id || matchedProject?.projectId || matchedProject?.project_id || "",
-        activeSessionId: matchedParticipant?.activeSessionId || "",
-        username: userIn,
-        name: matchedParticipant?.name || matchedParticipant?.fullName || matchedParticipant?.nama || userIn.split("@")[0],
-        email: userIn,
-        role: "participant",
-        permission: "Participant",
-        projectName: matchedProject?.name || matchedProject?.projectName || "Assessment Project",
-        assessments: assignedAssessments,
-        loginAt: new Date().toISOString()
-      };
-
-      sessionStorage.clear();
-      sessionStorage.setItem("ts_participant_session", JSON.stringify(participantSession));
-      // Participant session is intentionally tab-scoped.
-      // Identity stays in sessionStorage only; project data remains in localStorage.
-
-      window.location.replace("participant-dashboard.html");
-      return;
     }
 
-    // ==========================================
-    // JALUR ADMIN / CLIENT / ASESOR
-    // ==========================================
-    let allSavedUsers = [];
+
+    /* ============================================
+       KONFIGURASI SUPABASE
+
+       PENTING:
+       Gunakan URL dan ANON KEY project Anda
+    ============================================ */
+
+    const SUPABASE_URL =
+        "https://nixmychfhsnsvymkuxtm.supabase.co";
+
+    const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peG15Y2hmaHNuc3Z5bWt1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NzU0MzMsImV4cCI6MjEwMzA1MTQzM30.Ak9SMJkhwtTlo8zIcHha8uecF4ayz172zIwGbdliNm4";
+
+
+    /* ============================================
+       VALIDASI CONFIG
+    ============================================ */
+
+    if (
+        !SUPABASE_URL ||
+        !SUPABASE_ANON_KEY ||
+        SUPABASE_URL === "ISI_SUPABASE_URL_ANDA" ||
+        SUPABASE_ANON_KEY === "ISI_SUPABASE_ANON_KEY_ANDA"
+    ) {
+
+        console.error(
+            "❌ SUPABASE CONFIG BELUM DIISI"
+        );
+
+        window.supabaseClient = null;
+
+        return;
+
+    }
+
+
+    /* ============================================
+       CREATE CLIENT
+    ============================================ */
+
     try {
-      for (let i = 0; i < localStorage.length; i++) {
-        let key = localStorage.key(i);
-        let val = localStorage.getItem(key);
-        if (val && (val.startsWith("[") || val.startsWith("{"))) {
-          let parsed = JSON.parse(val);
-          if (Array.isArray(parsed)) {
-            allSavedUsers = allSavedUsers.concat(parsed);
-          } else if (typeof parsed === "object") {
-            allSavedUsers.push(parsed);
-          }
-        }
-      }
-    } catch(err) {}
 
-    let matchedAdmin = allSavedUsers.find(u => {
-      if (!u) return false;
-      let uName = String(u.username || u.user || u.email || "").toLowerCase();
-      let uPass = String(u.password || u.pass || u.accessCode || "");
-      return uName === userIn && uPass === passIn;
-    });
+        window.supabaseClient =
+            window.supabase.createClient(
 
-    if (matchedAdmin) {
-      let sessionData = {
-        username: matchedAdmin.username || userIn,
-        role: matchedAdmin.role || "Client Administrator",
-        name: matchedAdmin.name || matchedAdmin.username || userIn,
-        email: matchedAdmin.email || "",
-        projectId: matchedAdmin.projectId || "ALL"
-      };
-      sessionStorage.setItem("ts_admin_session", JSON.stringify(sessionData));
-      window.location.replace("dashboard.html");
-      return;
+                SUPABASE_URL,
+
+                SUPABASE_ANON_KEY,
+
+                {
+
+                    auth: {
+
+                        persistSession: true,
+
+                        autoRefreshToken: true,
+
+                        detectSessionInUrl: false
+
+                    }
+
+                }
+
+            );
+
+
+        console.log(
+            "✅ SUPABASE CLIENT BERHASIL DIBUAT"
+        );
+
+        console.log(
+            "SUPABASE URL:",
+            SUPABASE_URL
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ GAGAL MEMBUAT SUPABASE CLIENT:",
+            error
+        );
+
+        window.supabaseClient = null;
+
     }
 
-    // Akun Generate (Titik)
-    if (userIn.includes(".")) {
-      let parts = userIn.split(".");
-      let projectCode = parts[0];
-      let roleRaw = parts[1];
 
-      let detectedRole = "Client Administrator";
-      if (roleRaw.includes("clientuser") || roleRaw.includes("user") || roleRaw.includes("asesor") || roleRaw.includes("assessor")) {
-        detectedRole = "Asesor";
-      } else if (roleRaw.includes("clientadmin") || roleRaw.includes("admin")) {
-        detectedRole = "Client Administrator";
-      } else if (roleRaw.includes("peserta")) {
-        detectedRole = "Peserta";
-      }
+})();
 
-      let sessionData = {
-        username: userIn,
-        role: detectedRole,
-        permission: (detectedRole === "Asesor") ? "Assessor" : "Client",
-        name: userIn,
-        email: "",
-        projectId: projectCode
-      };
-      sessionStorage.setItem("ts_admin_session", JSON.stringify(sessionData));
+</script>
 
-      if (detectedRole === "Peserta") {
-        window.location.replace("participant-dashboard.html");
-      } else {
-        window.location.replace("dashboard.html");
-      }
-      return;
-    }
+<script>
 
-    // Akun Default Admin
-    if (userIn === "admin" && passIn === "admin123") {
-      let sessionData = {
-        username: "admin",
-        role: "System Administrator",
-        name: "System Admin",
-        projectId: "ALL"
-      };
-      sessionStorage.setItem("ts_admin_session", JSON.stringify(sessionData));
-      window.location.replace("dashboard.html");
-      return;
-    }
+(async function () {
 
-// ==========================================
-// DEMO PARTICIPANT FALLBACK
-// HANYA UNTUK DEMO / TESTING
-// ==========================================
-
-if (
-    userIn === "afan@company.com" &&
-    passIn === "TS-AA03-4KD20O"
-) {
-
-    const demoParticipantSession = {
-
-        participantId: "DEMO-AFAN-001",
-
-        projectId: "DEMO-PROJECT",
-
-        username: "afan@company.com",
-
-        name: "Afan",
-
-        email: "afan@company.com",
-
-        role: "participant",
-
-        permission: "Participant",
-
-        projectName: "Demo Assessment Project",
-
-        loginAt: new Date().toISOString(),
-
-        assessments: [
-            {
-                id: "DEMO-ASSESSMENT-001",
-                name: "DISC Personality",
-                status: "assigned"
-            }
-        ]
-
-    };
+    "use strict";
 
 
-    sessionStorage.clear();
+    console.log(
+        "========================================"
+    );
 
+    console.log(
+        "🔍 TEST KONEKSI SUPABASE"
+    );
 
-    sessionStorage.setItem(
-        "ts_participant_session",
-        JSON.stringify(demoParticipantSession)
+    console.log(
+        "========================================"
     );
 
 
-    window.location.replace(
-        "participant-dashboard.html"
+    if (!window.supabaseClient) {
+
+        console.error(
+            "❌ CLIENT SUPABASE TIDAK TERSEDIA"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const {
+
+            data,
+
+            error
+
+        } = await window.supabaseClient
+            .from("participants")
+            .select("*")
+            .limit(10);
+
+
+        if (error) {
+
+            console.error(
+                "❌ GAGAL MEMBACA PARTICIPANTS:",
+                error
+            );
+
+        } else {
+
+            console.log(
+                "✅ KONEKSI SUPABASE BERHASIL"
+            );
+
+            console.log(
+                "DATA PARTICIPANTS:",
+                data
+            );
+
+            console.table(
+                data
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ SUPABASE CONNECTION EXCEPTION:",
+            error
+        );
+
+    }
+
+
+})();
+
+</script>
+
+
+<script>
+;(function () {
+    "use strict";
+
+    /* =====================================================
+       FIX SUPABASE CLIENT ACCESS
+       ===================================================== */
+
+    const getSupabaseClient = function () {
+        try {
+            /* Jika window.supabase adalah client langsung */
+            if (
+                window.supabase &&
+                typeof window.supabase.from === "function"
+            ) {
+                return window.supabase;
+            }
+
+            /* Jika client disimpan dengan nama lain */
+            if (
+                window.supabaseClient &&
+                typeof window.supabaseClient.from === "function"
+            ) {
+                return window.supabaseClient;
+            }
+
+            if (
+                window.sb &&
+                typeof window.sb.from === "function"
+            ) {
+                return window.sb;
+            }
+
+            if (
+                window.SUPABASE_CLIENT &&
+                typeof window.SUPABASE_CLIENT.from === "function"
+            ) {
+                return window.SUPABASE_CLIENT;
+            }
+
+            return null;
+
+        } catch (error) {
+            console.error("❌ ERROR GET SUPABASE CLIENT:", error);
+            return null;
+        }
+    };
+
+    /* =====================================================
+       TALENTSCOPE LOGIN - FULL FIX
+       ===================================================== */
+
+    /* =====================================================
+       ELEMENT
+    ===================================================== */
+
+    const toggleBtn = document.getElementById("togglePassword");
+    const passInput = document.getElementById("password");
+    const loginForm = document.getElementById("loginForm");
+
+
+    /* =====================================================
+       PASSWORD SHOW / HIDE
+    ===================================================== */
+
+    if (toggleBtn && passInput) {
+        toggleBtn.addEventListener("click", function () {
+            const isPassword = passInput.type === "password";
+
+            passInput.type = isPassword ? "text" : "password";
+
+            toggleBtn.textContent = isPassword ? "Hide" : "Show";
+        });
+    }
+
+
+    if (!loginForm) {
+        console.error("❌ Login form tidak ditemukan.");
+        return;
+    }
+
+
+    /* =====================================================
+       HELPER NORMALIZE
+    ===================================================== */
+
+    function normalize(value) {
+        return String(value || "")
+            .trim()
+            .toLowerCase();
+    }
+
+
+    /* =====================================================
+       SAFE JSON PARSE
+    ===================================================== */
+
+    function safeJsonParse(value, fallback) {
+        try {
+            if (!value) return fallback;
+            return JSON.parse(value);
+        } catch (error) {
+            return fallback;
+        }
+    }
+
+
+    /* =====================================================
+       UNIQUE ARRAY
+    ===================================================== */
+
+    function uniqueArray(array) {
+        return [
+            ...new Set(
+                (array || [])
+                    .filter(function (item) {
+                        return item !== null &&
+                            item !== undefined &&
+                            String(item).trim() !== "";
+                    })
+                    .map(function (item) {
+                        return String(item).trim();
+                    })
+            )
+        ];
+    }
+
+
+    /* =====================================================
+       CREATE SESSION ID
+    ===================================================== */
+
+    function createSessionId() {
+        return "TS-" +
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(36)
+                .slice(2, 12);
+    }
+
+
+    /* =====================================================
+       CLEAR LOGIN SESSION ONLY
+    ===================================================== */
+
+    function clearLoginSessions() {
+        try {
+            sessionStorage.removeItem("ts_admin_session");
+            sessionStorage.removeItem("ts_participant_session");
+            sessionStorage.removeItem("participant_session");
+            sessionStorage.removeItem("current_participant");
+            sessionStorage.removeItem("currentParticipant");
+        } catch (error) {
+            console.warn(
+                "⚠️ Gagal membersihkan login session:",
+                error
+            );
+        }
+    }
+
+
+    /* =====================================================
+       GET ASSESSMENT ID
+    ===================================================== */
+
+    function getAssessmentId(item) {
+
+        if (!item) return "";
+
+        return String(
+            item.assessment_id ||
+            item.assessmentId ||
+            item.package_id ||
+            item.packageId ||
+            item.assessment_package_id ||
+            item.assessment_package ||
+            item.id ||
+            ""
+        ).trim();
+    }
+
+
+    /* =====================================================
+       GET ASSESSMENT NAME
+    ===================================================== */
+
+    function getAssessmentName(item, index) {
+
+        if (!item) {
+            return "Assessment " + (index + 1);
+        }
+
+        return (
+            item.assessment_name ||
+            item.assessmentName ||
+            item.package_name ||
+            item.packageName ||
+            item.name ||
+            item.title ||
+            item.assessment_title ||
+            item.assessment_code ||
+            item.code ||
+            "Assessment " + (index + 1)
+        );
+    }
+
+
+    /* =====================================================
+       NORMALIZE ASSESSMENT
+    ===================================================== */
+
+    function normalizeAssessment(item, index, source) {
+
+        if (!item) return null;
+
+        const assessmentId = getAssessmentId(item);
+
+        const assessmentCode =
+            item.assessment_code ||
+            item.assessmentCode ||
+            item.package_code ||
+            item.packageCode ||
+            item.code ||
+            item.type ||
+            item.assessment_type ||
+            "";
+
+        const assessmentName =
+            getAssessmentName(item, index);
+
+        const status =
+            item.status ||
+            item.assignment_status ||
+            item.progress_status ||
+            "assigned";
+
+        return {
+            id: assessmentId || ("assessment_" + index),
+
+            assessment_id:
+                item.assessment_id ||
+                assessmentId,
+
+            assessmentId:
+                item.assessment_id ||
+                assessmentId,
+
+            package_id:
+                item.package_id ||
+                "",
+
+            packageId:
+                item.package_id ||
+                "",
+
+            code: assessmentCode,
+
+            assessment_code: assessmentCode,
+
+            assessmentCode: assessmentCode,
+
+            name: assessmentName,
+
+            title: assessmentName,
+
+            assessment_name: assessmentName,
+
+            assessmentName: assessmentName,
+
+            status: status,
+
+            assignment_status: status,
+
+            source:
+                source ||
+                "participant_assessments",
+
+            project_id:
+                item.project_id ||
+                item.projectId ||
+                "",
+
+            participant_id:
+                item.participant_id ||
+                item.participantId ||
+                "",
+
+            raw: item
+        };
+    }
+
+
+    /* =====================================================
+       REMOVE DUPLICATE ASSESSMENTS
+    ===================================================== */
+
+    function removeDuplicateAssessments(assessments) {
+
+        const result = [];
+        const used = new Set();
+
+        (assessments || []).forEach(function (item, index) {
+
+            if (!item) return;
+
+            const key = String(
+                item.assessment_id ||
+                item.assessmentId ||
+                item.package_id ||
+                item.packageId ||
+                item.id ||
+                item.code ||
+                item.name ||
+                index
+            ).trim();
+
+            if (key && !used.has(key)) {
+                used.add(key);
+                result.push(item);
+            }
+        });
+
+        return result;
+    }
+
+
+    /* =====================================================
+       EXTRACT ASSESSMENTS FROM PROJECT
+    ===================================================== */
+
+    function extractAssessmentsFromProject(project) {
+
+        if (!project) return [];
+
+        const possibleFields = [
+            project.assessments,
+            project.assessmentPackage,
+            project.assessment_package,
+            project.assessment_packages,
+            project.packages,
+            project.assessment_list,
+            project.assessmentList
+        ];
+
+        for (let i = 0; i < possibleFields.length; i++) {
+
+            const field = possibleFields[i];
+
+            if (
+                Array.isArray(field) &&
+                field.length > 0
+            ) {
+                return field;
+            }
+
+            if (
+                typeof field === "string" &&
+                field.trim() !== ""
+            ) {
+                try {
+                    const parsed = JSON.parse(field);
+
+                    if (
+                        Array.isArray(parsed) &&
+                        parsed.length > 0
+                    ) {
+                        return parsed;
+                    }
+                } catch (error) {
+                    /* ignore */
+                }
+            }
+        }
+
+        return [];
+    }
+
+
+    /* =====================================================
+       FETCH ASSESSMENT DETAILS
+       FIXED VERSION
+    ===================================================== */
+
+    async function fetchAssessmentDetails(assessmentIds) {
+
+        const supabaseClient = getSupabaseClient();
+
+if (!supabaseClient) {
+    console.warn("⚠️ Supabase client tidak tersedia.");
+    return [];
+}
+
+        const ids = uniqueArray(assessmentIds);
+
+        if (ids.length === 0) {
+            return [];
+        }
+
+        console.log(
+            "🔍 FETCH ASSESSMENT DETAILS:",
+            ids
+        );
+
+        const tableCandidates = [
+            "assessments",
+            "assessment_packages",
+            "assessment_package",
+            "packages"
+        ];
+
+        const idColumns = [
+            "id",
+            "assessment_id",
+            "package_id"
+        ];
+
+
+        for (let t = 0; t < tableCandidates.length; t++) {
+
+            const tableName =
+                tableCandidates[t];
+
+            for (let c = 0; c < idColumns.length; c++) {
+
+                const columnName =
+                    idColumns[c];
+
+                try {
+
+                    const {
+                        data,
+                        error
+                    } = await supabaseClient
+    .from(tableName)
+                        .select("*")
+                        .in(
+                            columnName,
+                            ids
+                        );
+
+
+                    if (error) {
+                        console.log(
+                            "ℹ️ Table/column tidak cocok:",
+                            tableName,
+                            columnName,
+                            error.message
+                        );
+
+                        continue;
+                    }
+
+
+                    if (
+                        Array.isArray(data) &&
+                        data.length > 0
+                    ) {
+
+                        console.log(
+                            "✅ Detail assessment ditemukan:",
+                            tableName,
+                            data
+                        );
+
+                        return data;
+                    }
+
+                } catch (error) {
+
+                    console.log(
+                        "ℹ️ Skip:",
+                        tableName,
+                        columnName
+                    );
+
+                }
+            }
+        }
+
+        console.warn(
+            "⚠️ Detail assessment tidak ditemukan."
+        );
+
+        return [];
+    }
+
+
+    /* =====================================================
+   LOAD PARTICIPANT ASSESSMENTS
+   UNIVERSAL SUPABASE VERSION
+===================================================== */
+
+async function loadParticipantAssessments(
+    participant,
+    project,
+    projectId
+) {
+
+    const supabaseClient = getSupabaseClient();
+
+    if (!supabaseClient) {
+
+        console.error(
+            "❌ SUPABASE CLIENT TIDAK TERSEDIA SAAT LOAD ASSESSMENT"
+        );
+
+        return [];
+    }
+
+
+    console.log("========================================");
+    console.log("🔍 MEMULAI PENCARIAN ASSESSMENT");
+    console.log("Participant ID:", participant.id);
+    console.log("Project ID:", projectId);
+    console.log("Project:", project);
+    console.log("========================================");
+
+
+    let finalAssessments = [];
+
+
+    /* =====================================================
+       HELPER QUERY TABLE
+    ===================================================== */
+
+    async function tryQuery(
+        tableName,
+        filters
+    ) {
+
+        try {
+
+            let query =
+                supabaseClient
+                    .from(tableName)
+                    .select("*");
+
+
+            if (
+                Array.isArray(filters)
+            ) {
+
+                filters.forEach(function (filter) {
+
+                    if (
+                        filter &&
+                        filter.column &&
+                        filter.value
+                    ) {
+
+                        query =
+                            query.eq(
+                                filter.column,
+                                filter.value
+                            );
+                    }
+
+                });
+
+            }
+
+
+            const {
+                data,
+                error
+            } = await query;
+
+
+            if (error) {
+
+                console.log(
+                    "ℹ️ TABLE SKIP:",
+                    tableName,
+                    error.message
+                );
+
+                return [];
+
+            }
+
+
+            console.log(
+                "✅ TABLE FOUND:",
+                tableName,
+                "ROWS:",
+                Array.isArray(data)
+                    ? data.length
+                    : 0
+            );
+
+
+            if (
+                Array.isArray(data) &&
+                data.length > 0
+            ) {
+
+                console.table(data);
+
+            }
+
+
+            return Array.isArray(data)
+                ? data
+                : [];
+
+        } catch (error) {
+
+            console.log(
+                "ℹ️ TABLE ERROR:",
+                tableName,
+                error.message
+            );
+
+            return [];
+
+        }
+
+    }
+
+
+    /* =====================================================
+       STEP 1
+       PARTICIPANT_ASSESSMENTS
+    ===================================================== */
+
+    console.log(
+        "1️⃣ CEK participant_assessments"
+    );
+
+
+    let assignmentData =
+        await tryQuery(
+            "participant_assessments",
+            [
+                {
+                    column: "participant_id",
+                    value: participant.id
+                }
+            ]
+        );
+
+
+    if (
+        assignmentData.length > 0 &&
+        projectId
+    ) {
+
+        const projectFiltered =
+            assignmentData.filter(
+                function (item) {
+
+                    const itemProjectId =
+                        item.project_id ||
+                        item.projectId ||
+                        "";
+
+                    if (!itemProjectId) {
+                        return true;
+                    }
+
+                    return String(
+                        itemProjectId
+                    ).trim() ===
+                    String(
+                        projectId
+                    ).trim();
+
+                }
+            );
+
+
+        if (
+            projectFiltered.length > 0
+        ) {
+
+            assignmentData =
+                projectFiltered;
+
+        }
+
+    }
+
+
+    if (
+        assignmentData.length > 0
+    ) {
+
+        console.log(
+            "✅ ASSESSMENT DITEMUKAN DARI participant_assessments"
+        );
+
+
+        finalAssessments =
+            assignmentData
+                .map(
+                    function (
+                        item,
+                        index
+                    ) {
+
+                        return normalizeAssessment(
+                            item,
+                            index,
+                            "participant_assessments"
+                        );
+
+                    }
+                )
+                .filter(Boolean);
+
+    }
+
+
+    /* =====================================================
+       STEP 2
+       PROJECT FIELDS
+    ===================================================== */
+
+    if (
+        finalAssessments.length === 0 &&
+        project
+    ) {
+
+        console.log(
+            "2️⃣ CEK ASSESSMENT DI PROJECT"
+        );
+
+
+        const projectAssessments =
+            extractAssessmentsFromProject(
+                project
+            );
+
+
+        if (
+            projectAssessments.length > 0
+        ) {
+
+            console.log(
+                "✅ ASSESSMENT DITEMUKAN DI PROJECT:",
+                projectAssessments
+            );
+
+
+            finalAssessments =
+                projectAssessments
+                    .map(
+                        function (
+                            item,
+                            index
+                        ) {
+
+                            return normalizeAssessment(
+                                item,
+                                index,
+                                "project"
+                            );
+
+                        }
+                    )
+                    .filter(Boolean);
+
+        }
+
+    }
+
+
+    /* =====================================================
+       STEP 3
+       PROJECT_ASSESSMENTS
+    ===================================================== */
+
+    if (
+        finalAssessments.length === 0 &&
+        projectId
+    ) {
+
+        console.log(
+            "3️⃣ CEK project_assessments"
+        );
+
+
+        const projectAssignments =
+            await tryQuery(
+                "project_assessments",
+                [
+                    {
+                        column: "project_id",
+                        value: projectId
+                    }
+                ]
+            );
+
+
+        if (
+            projectAssignments.length > 0
+        ) {
+
+            console.log(
+                "✅ DATA DITEMUKAN DI project_assessments"
+            );
+
+
+            finalAssessments =
+                projectAssignments
+                    .map(
+                        function (
+                            item,
+                            index
+                        ) {
+
+                            return normalizeAssessment(
+                                item,
+                                index,
+                                "project_assessments"
+                            );
+
+                        }
+                    )
+                    .filter(Boolean);
+
+        }
+
+    }
+
+
+    /* =====================================================
+       STEP 4
+       PROJECT_PACKAGES
+    ===================================================== */
+
+    if (
+        finalAssessments.length === 0 &&
+        projectId
+    ) {
+
+        console.log(
+            "4️⃣ CEK project_packages"
+        );
+
+
+        const projectPackages =
+            await tryQuery(
+                "project_packages",
+                [
+                    {
+                        column: "project_id",
+                        value: projectId
+                    }
+                ]
+            );
+
+
+        if (
+            projectPackages.length > 0
+        ) {
+
+            console.log(
+                "✅ DATA DITEMUKAN DI project_packages"
+            );
+
+
+            finalAssessments =
+                projectPackages
+                    .map(
+                        function (
+                            item,
+                            index
+                        ) {
+
+                            return normalizeAssessment(
+                                item,
+                                index,
+                                "project_packages"
+                            );
+
+                        }
+                    )
+                    .filter(Boolean);
+
+        }
+
+    }
+
+
+    /* =====================================================
+       STEP 5
+       ASSESSMENT_PACKAGES BY PROJECT
+    ===================================================== */
+
+    if (
+        finalAssessments.length === 0 &&
+        projectId
+    ) {
+
+        console.log(
+            "5️⃣ CEK assessment_packages"
+        );
+
+
+        let packageData =
+            await tryQuery(
+                "assessment_packages",
+                [
+                    {
+                        column: "project_id",
+                        value: projectId
+                    }
+                ]
+            );
+
+
+        if (
+            packageData.length === 0
+        ) {
+
+            packageData =
+                await tryQuery(
+                    "assessment_packages",
+                    []
+                );
+
+        }
+
+
+        if (
+            packageData.length > 0
+        ) {
+
+            console.log(
+                "📦 ASSESSMENT PACKAGE DITEMUKAN:",
+                packageData
+            );
+
+
+            finalAssessments =
+                packageData
+                    .map(
+                        function (
+                            item,
+                            index
+                        ) {
+
+                            return normalizeAssessment(
+                                item,
+                                index,
+                                "assessment_packages"
+                            );
+
+                        }
+                    )
+                    .filter(Boolean);
+
+        }
+
+    }
+
+
+    /* =====================================================
+       STEP 6
+       GET ASSESSMENT DETAILS FROM ASSIGNMENTS
+    ===================================================== */
+
+    if (
+        finalAssessments.length === 0 &&
+        assignmentData.length > 0
+    ) {
+
+        console.log(
+            "6️⃣ MENGAMBIL DETAIL ASSESSMENT"
+        );
+
+
+        const assessmentIds =
+            uniqueArray(
+                assignmentData.map(
+                    function (item) {
+
+                        return (
+                            item.assessment_id ||
+                            item.assessmentId ||
+                            item.package_id ||
+                            item.packageId ||
+                            item.id ||
+                            ""
+                        );
+
+                    }
+                )
+            );
+
+
+        if (
+            assessmentIds.length > 0
+        ) {
+
+            const details =
+                await fetchAssessmentDetails(
+                    assessmentIds
+                );
+
+
+            if (
+                details.length > 0
+            ) {
+
+                finalAssessments =
+                    details
+                        .map(
+                            function (
+                                item,
+                                index
+                            ) {
+
+                                return normalizeAssessment(
+                                    item,
+                                    index,
+                                    "assessment_details"
+                                );
+
+                            }
+                        )
+                        .filter(Boolean);
+
+            }
+
+        }
+
+    }
+
+
+    /* =====================================================
+       REMOVE DUPLICATE
+    ===================================================== */
+
+    finalAssessments =
+        removeDuplicateAssessments(
+            finalAssessments
+        );
+
+
+    /* =====================================================
+       FINAL LOG
+    ===================================================== */
+
+    console.log("========================================");
+    console.log(
+        "🎯 FINAL ASSESSMENTS:",
+        finalAssessments
+    );
+    console.log(
+        "📊 TOTAL ASSESSMENTS:",
+        finalAssessments.length
+    );
+
+
+    if (
+        finalAssessments.length > 0
+    ) {
+
+        console.table(
+            finalAssessments.map(
+                function (item) {
+
+                    return {
+
+                        id:
+                            item.id,
+
+                        assessment_id:
+                            item.assessment_id,
+
+                        name:
+                            item.name,
+
+                        code:
+                            item.code,
+
+                        status:
+                            item.status,
+
+                        source:
+                            item.source
+
+                    };
+
+                }
+            )
+        );
+
+    } else {
+
+        console.warn(
+            "⚠️ TIDAK ADA ASSESSMENT DITEMUKAN DARI SEMUA SUMBER"
+        );
+
+    }
+
+
+    console.log("========================================");
+
+
+    return finalAssessments;
+
+}
+
+    /* =====================================================
+       SYNC PARTICIPANT DASHBOARD
+    ===================================================== */
+
+    function syncParticipantDashboard(
+        participant,
+        project,
+        assessments,
+        projectId,
+        sessionId
+    ) {
+
+        try {
+
+            let localProjects =
+                safeJsonParse(
+                    localStorage.getItem(
+                        "talentscope_projects"
+                    ),
+                    []
+                );
+
+
+            if (!Array.isArray(localProjects)) {
+                localProjects = [];
+            }
+
+
+            const dashboardAssessments =
+                (assessments || []).map(
+                    function (item, index) {
+
+                        return {
+
+                            id:
+                                item.id ||
+                                item.assessment_id ||
+                                item.assessmentId ||
+                                ("assessment_" + index),
+
+                            assessmentId:
+                                item.assessmentId ||
+                                item.assessment_id ||
+                                item.id ||
+                                "",
+
+                            assessment_id:
+                                item.assessment_id ||
+                                item.assessmentId ||
+                                item.id ||
+                                "",
+
+                            code:
+                                item.code ||
+                                item.assessment_code ||
+                                "",
+
+                            assessmentCode:
+                                item.assessmentCode ||
+                                item.assessment_code ||
+                                item.code ||
+                                "",
+
+                            name:
+                                item.name ||
+                                item.assessment_name ||
+                                item.title ||
+                                ("Assessment " + (index + 1)),
+
+                            title:
+                                item.title ||
+                                item.name ||
+                                item.assessment_name ||
+                                ("Assessment " + (index + 1)),
+
+                            assessment_name:
+                                item.assessment_name ||
+                                item.name ||
+                                item.title ||
+                                "",
+
+                            status:
+                                item.status ||
+                                "assigned",
+
+                            assignment_status:
+                                item.assignment_status ||
+                                item.status ||
+                                "assigned"
+                        };
+
+                    }
+                );
+
+
+            const dashboardParticipant = {
+
+                id: participant.id,
+
+                participantId:
+                    participant.id,
+
+                participant_id:
+                    participant.id,
+
+                employeeId:
+                    participant.employee_id ||
+                    participant.participant_code ||
+                    participant.id,
+
+                employee_id:
+                    participant.employee_id ||
+                    "",
+
+                participantCode:
+                    participant.participant_code ||
+                    "",
+
+                participant_code:
+                    participant.participant_code ||
+                    "",
+
+                name:
+                    participant.name ||
+                    participant.full_name ||
+                    participant.participant_name ||
+                    "Peserta",
+
+                full_name:
+                    participant.full_name ||
+                    participant.name ||
+                    "",
+
+                email:
+                    participant.email ||
+                    "",
+
+                username:
+                    participant.username ||
+                    participant.email ||
+                    "",
+
+                isLoggedIn: true,
+
+                is_logged_in: true,
+
+                status: "Online",
+
+                onlineStatus: "Online",
+
+                activity: "Online",
+
+                currentActivity: "Online",
+
+                activeSessionId:
+                    sessionId
+            };
+
+
+            const dashboardProject = {
+
+                id:
+                    (project && project.id) ||
+                    projectId,
+
+                projectId:
+                    (project && project.id) ||
+                    projectId,
+
+                project_id:
+                    (project && project.id) ||
+                    projectId,
+
+                name:
+                    (
+                        project &&
+                        (
+                            project.name ||
+                            project.project_name ||
+                            project.title
+                        )
+                    ) ||
+                    "Assessment Project",
+
+                project_name:
+                    (
+                        project &&
+                        (
+                            project.project_name ||
+                            project.name ||
+                            project.title
+                        )
+                    ) ||
+                    "Assessment Project",
+
+                title:
+                    (
+                        project &&
+                        (
+                            project.title ||
+                            project.name ||
+                            project.project_name
+                        )
+                    ) ||
+                    "Assessment Project",
+
+                assessments:
+                    dashboardAssessments,
+
+                assessmentPackage:
+                    dashboardAssessments,
+
+                assessment_package:
+                    dashboardAssessments,
+
+                assessment_packages:
+                    dashboardAssessments,
+
+                packages:
+                    dashboardAssessments,
+
+                assessmentList:
+                    dashboardAssessments,
+
+                assessment_list:
+                    dashboardAssessments,
+
+                participants:
+                    [dashboardParticipant]
+            };
+
+
+            const projectIndex =
+                localProjects.findIndex(
+                    function (item) {
+
+                        return String(
+                            item.id ||
+                            item.projectId ||
+                            item.project_id ||
+                            ""
+                        ).trim() ===
+                        String(projectId).trim();
+
+                    }
+                );
+
+
+            if (projectIndex >= 0) {
+
+                const oldProject =
+                    localProjects[projectIndex];
+
+
+                let oldParticipants =
+                    Array.isArray(
+                        oldProject.participants
+                    )
+                        ? oldProject.participants
+                        : [];
+
+
+                const participantIndex =
+                    oldParticipants.findIndex(
+                        function (item) {
+
+                            return String(
+                                item.id ||
+                                item.participantId ||
+                                item.participant_id ||
+                                ""
+                            ).trim() ===
+                            String(
+                                participant.id
+                            ).trim();
+
+                        }
+                    );
+
+
+                if (participantIndex >= 0) {
+
+                    oldParticipants[
+                        participantIndex
+                    ] = {
+
+                        ...oldParticipants[
+                            participantIndex
+                        ],
+
+                        ...dashboardParticipant
+                    };
+
+                } else {
+
+                    oldParticipants.push(
+                        dashboardParticipant
+                    );
+
+                }
+
+
+                localProjects[
+                    projectIndex
+                ] = {
+
+                    ...oldProject,
+
+                    ...dashboardProject,
+
+                    participants:
+                        oldParticipants,
+
+                    assessments:
+                        dashboardAssessments,
+
+                    assessmentPackage:
+                        dashboardAssessments,
+
+                    assessment_package:
+                        dashboardAssessments,
+
+                    assessment_packages:
+                        dashboardAssessments,
+
+                    packages:
+                        dashboardAssessments
+                };
+
+            } else {
+
+                localProjects.push(
+                    dashboardProject
+                );
+
+            }
+
+
+            localStorage.setItem(
+                "talentscope_projects",
+                JSON.stringify(localProjects)
+            );
+
+
+            localStorage.setItem(
+                "ts_current_participant",
+                JSON.stringify(
+                    dashboardParticipant
+                )
+            );
+
+
+            localStorage.setItem(
+                "currentParticipant",
+                JSON.stringify(
+                    dashboardParticipant
+                )
+            );
+
+
+            localStorage.setItem(
+                "participant_assessments",
+                JSON.stringify(
+                    dashboardAssessments
+                )
+            );
+
+
+            console.log(
+                "✅ SYNC DASHBOARD BERHASIL"
+            );
+
+
+            return true;
+
+        } catch (error) {
+
+            console.error(
+                "❌ SYNC DASHBOARD ERROR:",
+                error
+            );
+
+            return false;
+        }
+    }
+
+
+    /* =====================================================
+       SAVE PARTICIPANT SESSION
+    ===================================================== */
+
+    function saveParticipantSession(sessionData) {
+
+        clearLoginSessions();
+
+
+        sessionStorage.setItem(
+            "ts_participant_session",
+            JSON.stringify(sessionData)
+        );
+
+
+        sessionStorage.setItem(
+            "participant_session",
+            JSON.stringify(sessionData)
+        );
+
+
+        console.log("====================================");
+        console.log("🎉 LOGIN PESERTA BERHASIL");
+        console.log(
+            "Participant ID:",
+            sessionData.participantId
+        );
+        console.log(
+            "Project ID:",
+            sessionData.projectId
+        );
+        console.log(
+            "Nama:",
+            sessionData.name
+        );
+        console.log(
+            "Assessment:",
+            sessionData.assessments.length
+        );
+        console.log("====================================");
+    }
+
+
+    /* =====================================================
+       FIND PARTICIPANT
+       MULTI IDENTIFIER
+    ===================================================== */
+
+    function findParticipant(
+        participantList,
+        userIn
+    ) {
+
+        return participantList.find(
+            function (participant) {
+
+                const identifiers = [
+
+                    participant.email,
+
+                    participant.username,
+
+                    participant.participant_code,
+
+                    participant.employee_id,
+
+                    participant.id,
+
+                    participant.name,
+
+                    participant.full_name
+
+                ];
+
+
+                return identifiers.some(
+                    function (value) {
+
+                        if (
+                            value === null ||
+                            value === undefined
+                        ) {
+                            return false;
+                        }
+
+                        return (
+                            normalize(value) === userIn
+                        );
+                    }
+                );
+
+            }
+        );
+    }
+
+
+    /* =====================================================
+       VALIDATE PARTICIPANT PASSWORD
+    ===================================================== */
+
+    function validateParticipantPassword(
+        participant,
+        passIn
+    ) {
+
+        const possiblePasswords = [
+
+            participant.password,
+
+            participant.access_code,
+
+            participant.password_text,
+
+            participant.login_password,
+
+            participant.participant_password,
+
+            participant.pass,
+
+            participant.accessCode
+
+        ];
+
+
+        console.log(
+            "🔐 PASSWORD FIELDS CHECK:",
+            possiblePasswords.map(
+                function (password) {
+
+                    if (
+                        password === null ||
+                        password === undefined ||
+                        password === ""
+                    ) {
+                        return "[EMPTY]";
+                    }
+
+                    return "[SET]";
+                }
+            )
+        );
+
+
+        return possiblePasswords.some(
+            function (password) {
+
+                if (
+                    password === null ||
+                    password === undefined
+                ) {
+                    return false;
+                }
+
+                return (
+                    String(password).trim() ===
+                    String(passIn).trim()
+                );
+
+            }
+        );
+    }
+
+
+    /* =====================================================
+       LOGIN SUBMIT
+    ===================================================== */
+
+    loginForm.addEventListener(
+        "submit",
+        async function (e) {
+
+            e.preventDefault();
+
+
+            const usernameInput =
+                document.getElementById(
+                    "username"
+                );
+
+            const passwordInput =
+                document.getElementById(
+                    "password"
+                );
+
+
+            const userIn =
+                normalize(
+                    usernameInput
+                        ? usernameInput.value
+                        : ""
+                );
+
+
+            const passIn =
+                String(
+                    passwordInput
+                        ? passwordInput.value
+                        : ""
+                ).trim();
+
+
+            if (!userIn || !passIn) {
+
+                alert(
+                    "Masukkan Username dan Password!"
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "===================================="
+            );
+
+            console.log(
+                "🔐 LOGIN ATTEMPT:",
+                userIn
+            );
+
+console.log("====================================");
+console.log("🔎 CEK SUPABASE SAAT LOGIN");
+console.log("window.supabase:", window.supabase);
+console.log("window.supabaseClient:", window.supabaseClient);
+console.log("window.sb:", window.sb);
+console.log("window.SUPABASE_CLIENT:", window.SUPABASE_CLIENT);
+console.log("====================================");
+
+            /* =============================================
+               PARTICIPANT LOGIN
+            ============================================= */
+
+            let participantFound = false;
+
+
+            try {
+
+                const supabaseClient = getSupabaseClient();
+
+if (supabaseClient) {
+
+
+                    console.log(
+                        "🔍 Mengambil data participant..."
+                    );
+
+
+                    const supabaseClient = getSupabaseClient();
+
+if (!supabaseClient) {
+
+    console.error(
+        "❌ SUPABASE CLIENT BELUM SIAP SAAT LOGIN"
+    );
+
+    alert(
+        "Koneksi database belum siap. Silakan refresh halaman."
     );
 
     return;
-
 }
-    
-    alert("Username atau Password tidak sesuai dengan data sistem!");
-  });
+
+const {
+    data: participants,
+    error: participantError
+} = await supabaseClient
+    .from("participants")
+    .select("*");
+
+
+                    if (participantError) {
+
+                        console.error(
+                            "❌ PARTICIPANT QUERY ERROR:",
+                            participantError
+                        );
+
+                    } else {
+
+
+                        const participantList =
+                            Array.isArray(participants)
+                                ? participants
+                                : [];
+
+
+                        console.log(
+                            "===================================="
+                        );
+
+                        console.log(
+                            "📊 TOTAL PARTICIPANT:",
+                            participantList.length
+                        );
+
+                        console.log(
+                            "🔎 MENCARI USER:",
+                            userIn
+                        );
+
+
+                        console.table(
+                            participantList.map(
+                                function (p) {
+
+                                    return {
+
+                                        id: p.id,
+
+                                        email: p.email,
+
+                                        username: p.username,
+
+                                        participant_code:
+                                            p.participant_code,
+
+                                        employee_id:
+                                            p.employee_id,
+
+                                        password_field:
+                                            p.password
+                                                ? "[SET]"
+                                                : "[EMPTY]"
+                                    };
+                                }
+                            )
+                        );
+
+
+                        const matchedParticipant =
+                            findParticipant(
+                                participantList,
+                                userIn
+                            );
+
+
+                        console.log(
+                            "===================================="
+                        );
+
+
+                        if (matchedParticipant) {
+
+                            participantFound = true;
+
+
+                            console.log(
+                                "✅ PARTICIPANT DITEMUKAN:",
+                                {
+                                    id:
+                                        matchedParticipant.id,
+
+                                    email:
+                                        matchedParticipant.email,
+
+                                    username:
+                                        matchedParticipant.username,
+
+                                    participant_code:
+                                        matchedParticipant.participant_code,
+
+                                    project_id:
+                                        matchedParticipant.project_id
+                                }
+                            );
+
+
+                            /* =================================
+                               PASSWORD VALIDATION
+                            ================================= */
+
+                            const passwordValid =
+                                validateParticipantPassword(
+                                    matchedParticipant,
+                                    passIn
+                                );
+
+
+                            if (!passwordValid) {
+
+                                console.warn(
+                                    "❌ PASSWORD PESERTA TIDAK SESUAI"
+                                );
+
+                                alert(
+                                    "Password peserta tidak sesuai."
+                                );
+
+                                return;
+                            }
+
+
+                            console.log(
+                                "✅ PASSWORD VALID"
+                            );
+
+
+                            /* =================================
+                               PROJECT ID
+                            ================================= */
+
+                            const projectId =
+                                String(
+                                    matchedParticipant.project_id ||
+                                    matchedParticipant.projectId ||
+                                    ""
+                                ).trim();
+
+
+                            if (!projectId) {
+
+                                console.error(
+                                    "❌ PROJECT ID KOSONG:",
+                                    matchedParticipant
+                                );
+
+                                alert(
+                                    "Project peserta belum ditemukan."
+                                );
+
+                                return;
+                            }
+
+
+                            /* =================================
+                               GET PROJECT
+                            ================================= */
+
+                            let matchedProject =
+                                null;
+
+
+                            try {
+
+                                const {
+                                    data: projectData,
+                                    error: projectError
+                                } = await supabaseClient
+                                    .from("projects")
+                                    .select("*")
+                                    .eq(
+                                        "id",
+                                        projectId
+                                    )
+                                    .maybeSingle();
+
+
+                                if (projectError) {
+
+                                    console.warn(
+                                        "⚠️ PROJECT QUERY ERROR:",
+                                        projectError
+                                    );
+
+                                } else if (projectData) {
+
+                                    matchedProject =
+                                        projectData;
+
+                                    console.log(
+                                        "✅ PROJECT DITEMUKAN:",
+                                        matchedProject
+                                    );
+                                }
+
+                            } catch (error) {
+
+                                console.warn(
+                                    "⚠️ PROJECT QUERY EXCEPTION:",
+                                    error
+                                );
+
+                            }
+
+
+                            /* =================================
+                               LOAD ASSESSMENTS
+                            ================================= */
+
+                            const assignedAssessments =
+                                await loadParticipantAssessments(
+                                    matchedParticipant,
+                                    matchedProject,
+                                    projectId
+                                );
+
+
+                            /* =================================
+                               SESSION
+                            ================================= */
+
+                            const loginNow =
+                                new Date().toISOString();
+
+
+                            const newSessionId =
+                                createSessionId();
+
+
+                            /* =================================
+                               UPDATE STATUS
+                               Safe update - jika kolom tidak ada
+                               login tetap berjalan
+                            ================================= */
+
+                            try {
+
+                                const {
+                                    error: updateError
+                                } = await supabaseClient
+    .from("participants")
+    .update({
+        is_logged_in: true
+    })
+                                    .eq(
+                                        "id",
+                                        matchedParticipant.id
+                                    );
+
+
+                                if (updateError) {
+
+                                    console.warn(
+                                        "⚠️ UPDATE LOGIN STATUS:",
+                                        updateError.message
+                                    );
+                                }
+
+                            } catch (error) {
+
+                                console.warn(
+                                    "⚠️ UPDATE STATUS GAGAL:",
+                                    error
+                                );
+
+                            }
+
+
+                            /* =================================
+                               CREATE SESSION
+                            ================================= */
+
+                            const participantSession = {
+
+                                participantId:
+                                    matchedParticipant.id,
+
+                                participant_id:
+                                    matchedParticipant.id,
+
+                                participantCode:
+                                    matchedParticipant.participant_code ||
+                                    matchedParticipant.employee_id ||
+                                    "",
+
+                                participant_code:
+                                    matchedParticipant.participant_code ||
+                                    "",
+
+                                employeeId:
+                                    matchedParticipant.employee_id ||
+                                    "",
+
+                                projectId:
+                                    projectId,
+
+                                project_id:
+                                    projectId,
+
+                                activeSessionId:
+                                    newSessionId,
+
+                                username:
+                                    matchedParticipant.username ||
+                                    matchedParticipant.email ||
+                                    matchedParticipant.participant_code ||
+                                    "",
+
+                                name:
+                                    matchedParticipant.name ||
+                                    matchedParticipant.full_name ||
+                                    matchedParticipant.participant_name ||
+                                    "Peserta",
+
+                                email:
+                                    matchedParticipant.email ||
+                                    "",
+
+                                role:
+                                    "participant",
+
+                                permission:
+                                    "Participant",
+
+                                projectName:
+                                    (
+                                        matchedProject &&
+                                        (
+                                            matchedProject.name ||
+                                            matchedProject.project_name ||
+                                            matchedProject.title
+                                        )
+                                    ) ||
+                                    "Assessment Project",
+
+                                assessments:
+                                    assignedAssessments,
+
+                                assessmentPackage:
+                                    assignedAssessments,
+
+                                assessment_package:
+                                    assignedAssessments,
+
+                                loginAt:
+                                    loginNow
+                            };
+
+
+                            /* =================================
+                               SYNC DASHBOARD
+                            ================================= */
+
+                            syncParticipantDashboard(
+                                matchedParticipant,
+                                matchedProject,
+                                assignedAssessments,
+                                projectId,
+                                newSessionId
+                            );
+
+
+                            /* =================================
+                               SAVE SESSION
+                            ================================= */
+
+                            saveParticipantSession(
+                                participantSession
+                            );
+
+
+                            /* =================================
+                               FINAL LOG
+                            ================================= */
+
+                            console.log(
+                                "===================================="
+                            );
+
+                            console.log(
+                                "🚀 LOGIN SUCCESS - REDIRECT"
+                            );
+
+                            console.log(
+                                "Participant:",
+                                participantSession.name
+                            );
+
+                            console.log(
+                                "Project:",
+                                participantSession.projectName
+                            );
+
+                            console.log(
+                                "Assessment Count:",
+                                assignedAssessments.length
+                            );
+
+                            console.log(
+                                "===================================="
+                            );
+
+
+                            window.location.replace(
+                                "participant-dashboard.html"
+                            );
+
+                            return;
+                        }
+
+
+                        console.log(
+                            "ℹ️ USER TIDAK DITEMUKAN DI PARTICIPANTS"
+                        );
+                    }
+
+                } else {
+
+                    console.warn(
+                        "⚠️ SUPABASE TIDAK TERSEDIA"
+                    );
+                }
+
+            } catch (participantLoginError) {
+
+                console.error(
+                    "❌ PARTICIPANT LOGIN ERROR:",
+                    participantLoginError
+                );
+
+            }
+
+
+            /* =============================================
+               STOP JIKA PARTICIPANT SUDAH DITEMUKAN
+            ============================================= */
+
+            if (participantFound) {
+                return;
+            }
+
+
+            /* =============================================
+               ADMIN / CLIENT / ASESOR LOCAL STORAGE
+            ============================================= */
+
+            let allSavedUsers = [];
+
+
+            try {
+
+                for (
+                    let i = 0;
+                    i < localStorage.length;
+                    i++
+                ) {
+
+                    const key =
+                        localStorage.key(i);
+
+                    const value =
+                        localStorage.getItem(key);
+
+
+                    if (
+                        !value ||
+                        !(
+                            value.startsWith("[") ||
+                            value.startsWith("{")
+                        )
+                    ) {
+                        continue;
+                    }
+
+
+                    try {
+
+                        const parsed =
+                            JSON.parse(value);
+
+
+                        if (
+                            Array.isArray(parsed)
+                        ) {
+
+                            allSavedUsers =
+                                allSavedUsers.concat(
+                                    parsed
+                                );
+
+                        } else if (
+                            parsed &&
+                            typeof parsed === "object"
+                        ) {
+
+                            allSavedUsers.push(
+                                parsed
+                            );
+                        }
+
+                    } catch (error) {
+                        /* ignore invalid json */
+                    }
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "⚠️ LocalStorage read error:",
+                    error
+                );
+            }
+
+
+            /* =============================================
+               FIND ADMIN
+            ============================================= */
+
+            const matchedAdmin =
+                allSavedUsers.find(
+                    function (user) {
+
+                        if (!user) {
+                            return false;
+                        }
+
+
+                        const adminUsername =
+                            normalize(
+                                user.username ||
+                                user.user ||
+                                user.email ||
+                                user.login ||
+                                ""
+                            );
+
+
+                        const adminPassword =
+                            String(
+                                user.password ||
+                                user.pass ||
+                                user.accessCode ||
+                                user.access_code ||
+                                ""
+                            ).trim();
+
+
+                        return (
+                            adminUsername === userIn &&
+                            adminPassword === passIn
+                        );
+                    }
+                );
+
+
+            if (matchedAdmin) {
+
+                clearLoginSessions();
+
+
+                const adminSession = {
+
+                    username:
+                        matchedAdmin.username ||
+                        userIn,
+
+                    role:
+                        matchedAdmin.role ||
+                        "Client Administrator",
+
+                    name:
+                        matchedAdmin.name ||
+                        matchedAdmin.full_name ||
+                        matchedAdmin.username ||
+                        userIn,
+
+                    email:
+                        matchedAdmin.email ||
+                        "",
+
+                    projectId:
+                        matchedAdmin.projectId ||
+                        matchedAdmin.project_id ||
+                        "ALL"
+                };
+
+
+                sessionStorage.setItem(
+                    "ts_admin_session",
+                    JSON.stringify(adminSession)
+                );
+
+
+                window.location.replace(
+                    "dashboard.html"
+                );
+
+                return;
+            }
+
+
+            /* =============================================
+               DEFAULT ADMIN
+            ============================================= */
+
+            if (
+                userIn === "admin" &&
+                passIn === "admin123"
+            ) {
+
+                clearLoginSessions();
+
+
+                sessionStorage.setItem(
+                    "ts_admin_session",
+                    JSON.stringify({
+
+                        username:
+                            "admin",
+
+                        role:
+                            "System Administrator",
+
+                        permission:
+                            "System Admin",
+
+                        name:
+                            "System Admin",
+
+                        projectId:
+                            "ALL"
+                    })
+                );
+
+
+                window.location.replace(
+                    "dashboard.html"
+                );
+
+                return;
+            }
+
+
+            /* =============================================
+               LOGIN FAILED
+            ============================================= */
+
+            console.warn(
+                "❌ LOGIN GAGAL:",
+                userIn
+            );
+
+
+            alert(
+                "Username atau Password tidak sesuai dengan data sistem!"
+            );
+        }
+    );
+
 })();
 </script>
+
+
+
 
 </body>
 </html>

@@ -121,9 +121,9 @@
         </div>
 
         <div class="meta-info">
-            <span id="info-project">Project ID: -</span>
-            <span id="info-participant">Participant ID: -</span>
-        </div>
+    <span id="info-project">Project: -</span>
+    <span id="info-participant">Peserta: -</span>
+</div>
 
         <div class="instructions">
             <h3>Ketentuan Umum:</h3>
@@ -169,47 +169,237 @@
             });
         }
 
-        document.getElementById('info-project').innerText = "Project ID: " + projectId;
-        document.getElementById('info-participant').innerText = "Participant ID: " + participantId;
+           let currentProjectPackages = [];
 
-        let currentProjectPackages = [];
+try {
 
-        try {
-            const projectsData = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
-            const currentProj = projectsData.find(p => String(p.id || p.projectId) === String(projectId));
-            
-            if (currentProj) {
-                if (currentProj.projectName) {
-                    document.getElementById('assessment-title').innerText = "Asesmen: " + currentProj.projectName;
+    const projectsData =
+        JSON.parse(
+            localStorage.getItem(
+                "talentscope_projects"
+            ) || "[]"
+        );
+
+
+    const currentProj =
+        projectsData.find(
+            function (p) {
+
+                return (
+                    String(
+                        p.id ||
+                        p.projectId ||
+                        p.project_id ||
+                        ""
+                    ) === String(projectId)
+                );
+            }
+        );
+
+
+    if (currentProj) {
+
+        /* =========================================
+           PROJECT NAME
+        ========================================= */
+        const projectName =
+            currentProj.name ||
+            currentProj.projectName ||
+            currentProj.project_name ||
+            currentProj.title ||
+            "Assessment Package";
+
+
+        
+        document.getElementById(
+            "info-project"
+        ).innerText =
+            "Project: " +
+            projectName;
+
+
+        /* =========================================
+           FIND CURRENT PARTICIPANT
+        ========================================= */
+        const participants =
+            Array.isArray(
+                currentProj.participants
+            )
+                ? currentProj.participants
+                : [];
+
+
+        const currentParticipant =
+            participants.find(
+                function (participant) {
+
+                    const pid =
+                        String(
+                            participant.id ||
+                            participant.participantId ||
+                            participant.participant_id ||
+                            participant.employeeId ||
+                            participant.employee_id ||
+                            ""
+                        ).trim();
+
+
+                    return (
+                        pid ===
+                        String(participantId).trim()
+                    );
                 }
-                currentProjectPackages = currentProj.assessmentPackage || currentProj.assessments || currentProj.packages || [];
-            }
-        } catch(e) {
-            console.error("Gagal memuat detail proyek:", e);
+            );
+
+
+        /* =========================================
+           PARTICIPANT NAME
+        ========================================= */
+        if (currentParticipant) {
+
+            const participantName =
+                currentParticipant.name ||
+                currentParticipant.fullName ||
+                currentParticipant.participantName ||
+                currentParticipant.username ||
+                "Participant";
+
+
+            document.getElementById(
+                "info-participant"
+            ).innerText =
+                "Peserta: " +
+                participantName;
+
+        } else {
+
+            document.getElementById(
+                "info-participant"
+            ).innerText =
+                "Peserta: -";
         }
 
 
-        function getSelectedAssessmentName() {
-            const item =
-                currentProjectPackages.length > 0
-                    ? currentProjectPackages[currentStep]
-                    : null;
+        /* =========================================
+           LOAD ASSESSMENT PACKAGE
+        ========================================= */
+        if (
+            currentParticipant &&
+            Array.isArray(
+                currentParticipant.assessments
+            ) &&
+            currentParticipant.assessments.length > 0
+        ) {
 
-            if (typeof item === "string") {
-                return item.trim() || "Assessment";
-            }
+            currentProjectPackages =
+                currentParticipant.assessments;
 
-            return String(
-                item?.name ||
-                item?.title ||
-                item?.assessmentName ||
-                item?.testName ||
-                item?.label ||
-                item?.code ||
-                "Assessment"
-            ).trim();
+        } else if (
+            Array.isArray(
+                currentProj.assessmentPackage
+            ) &&
+            currentProj.assessmentPackage.length > 0
+        ) {
+
+            currentProjectPackages =
+                currentProj.assessmentPackage;
+
+        } else if (
+            Array.isArray(
+                currentProj.assessments
+            ) &&
+            currentProj.assessments.length > 0
+        ) {
+
+            currentProjectPackages =
+                currentProj.assessments;
+
+        } else if (
+            Array.isArray(
+                currentProj.packages
+            ) &&
+            currentProj.packages.length > 0
+        ) {
+
+            currentProjectPackages =
+                currentProj.packages;
         }
 
+
+    } else {
+
+        console.warn(
+            "Project tidak ditemukan:",
+            projectId
+        );
+
+        document.getElementById(
+            "info-project"
+        ).innerText =
+            "Project: Tidak ditemukan";
+
+        document.getElementById(
+            "info-participant"
+        ).innerText =
+            "Peserta: -";
+    }
+
+
+} catch (e) {
+
+    console.error(
+        "Gagal memuat detail proyek:",
+        e
+    );
+}
+
+
+/* =========================================
+   GET SELECTED ASSESSMENT NAME
+========================================= */
+function getSelectedAssessmentName() {
+
+    const item =
+        currentProjectPackages.length > 0
+            ? currentProjectPackages[currentStep]
+            : null;
+
+
+    if (typeof item === "string") {
+
+        return (
+            item.trim() ||
+            "Assessment"
+        );
+    }
+
+
+    if (!item) {
+
+        return "Assessment";
+    }
+
+
+    return String(
+
+        item.name ||
+
+        item.title ||
+
+        item.assessmentName ||
+
+        item.assessment_name ||
+
+        item.testName ||
+
+        item.label ||
+
+        item.code ||
+
+        "Assessment"
+
+    ).trim();
+}
 
                 // Aksi ketika tombol "Mulai Tes Sekarang" diklik
         document.getElementById('btnMulaiUjian').addEventListener('click', function() {
