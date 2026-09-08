@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/ts-supabase-sync.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
@@ -2693,6 +2694,25 @@ select{
 
             </div>
 
+<!-- SELECTED ASSESSMENTS -->
+
+<div class="selected-assessments-review">
+
+    <h3>
+        Selected Assessments
+    </h3>
+
+    <div
+        id="selectedAssessmentsList"
+        class="selected-assessments-list"
+    >
+
+        <!-- Render by JavaScript -->
+
+    </div>
+
+</div>
+
 
             <div class="notice">
 
@@ -2977,9 +2997,22 @@ function lifecycle(p){
 
 function fmt(x){
 
-    return new Date(
-        x + "T00:00:00"
-    ).toLocaleDateString(
+    if (!x) {
+        return "-";
+    }
+
+    const dateStr =
+        String(x).includes("T")
+            ? x
+            : x + "T00:00:00";
+
+    const d = new Date(dateStr);
+
+    if (isNaN(d.getTime())) {
+        return "-";
+    }
+
+    return d.toLocaleDateString(
         "en-GB",
         {
             day:"2-digit",
@@ -3015,161 +3048,414 @@ function esc(x){
 
 /* =========================================================
    RENDER PROJECT TABLE
-   ========================================================= */
+   SOURCE: SUPABASE
+========================================================= */
 
-function render(){
+async function render() {
 
-    const storageExists =
-        localStorage.getItem(
-            "talentscope_projects"
-        ) !== null;
+    console.log(
+        "[ASSESSMENT PROJECT] Loading projects from Supabase..."
+    );
 
-    let data =
-        get().map(
-            p => ({
-                ...p,
-                status:lifecycle(p)
-            })
+
+    const rows =
+        document.getElementById(
+            "rows"
         );
 
-    // Only persist calculated lifecycle status when the real
-    // project storage already exists. Never create/overwrite it
-    // from fallback data during page initialization.
-    if(storageExists){
-        set(data);
+
+    if (!rows) {
+
+        console.error(
+            "[ASSESSMENT PROJECT] rows element not found"
+        );
+
+        return;
+
     }
 
 
-    let q =
-        document
-        .getElementById("search")
-        .value
-        .toLowerCase();
+    try {
 
 
-    let f =
-        document
-        .getElementById("statusFilter")
-        .value;
+        /* =============================================
+           LOADING STATE
+        ============================================= */
 
-
-    let list =
-        data.filter(
-            p =>
-                (
-                    !q ||
-                    [
-                        p.name,
-                        p.company,
-                        p.type
-                    ]
-                    .join(" ")
-                    .toLowerCase()
-                    .includes(q)
-                )
-                &&
-                (
-                    f === "All Status" ||
-                    p.status === f
-                )
-        );
-
-
-    document.getElementById(
-        "rows"
-    ).innerHTML = list.length
-
-        ? list.map(
-            p => `
-
+        rows.innerHTML = `
             <tr>
 
-    <td style="text-align:center;">
-        <input
-            type="checkbox"
-            class="project-checkbox"
-            value="${esc(p.id)}"
-        >
-    </td>
+                <td
+                    colspan="8"
+                    class="empty"
+                >
 
-    <td>
-
-        <div class="project-name">
-            ${esc(p.name)}
-        </div>
-
-        <div class="company">
-            ID: ${esc(p.id)}
-        </div>
-
-    </td>
-
-
-                <td>
-                    ${esc(p.company)}
-                </td>
-
-
-                <td>
-                    ${esc(p.type)}
-                </td>
-
-
-                <td>
-                    ${fmt(p.start)}
-                    -
-                    ${fmt(p.end)}
-                </td>
-
-
-                <td>
-                    ${(p.participants || []).length}
-                </td>
-
-
-                <td>
-
-                    <span class="status ${p.status.toLowerCase()}">
-                        ${esc(p.status)}
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    <button
-                        class="action"
-                        title="Open Project Detail"
-                        onclick="openProject('${esc(p.id)}')"
-                    >
-                        →
-                    </button>
+                    Loading projects...
 
                 </td>
 
             </tr>
-
-            `
-        ).join("")
-
-        :
-
-        `
-        <tr>
-
-            <td
-                colspan="8"
-                class="empty"
-            >
-                No assessment projects found.
-            </td>
-
-        </tr>
         `;
 
-}
 
+        /* =============================================
+           GET PROJECTS FROM SUPABASE
+        ============================================= */
+
+        const projects =
+            await DataService.getProjects();
+
+
+        console.log(
+            "[ASSESSMENT PROJECT] Projects loaded:",
+            projects
+        );
+
+
+        /* =============================================
+           GET SEARCH VALUE
+        ============================================= */
+
+        const searchElement =
+            document.getElementById(
+                "search"
+            );
+
+
+        const q =
+            searchElement
+                ? searchElement.value
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+
+        /* =============================================
+           GET STATUS FILTER
+        ============================================= */
+
+        const statusFilter =
+            document.getElementById(
+                "statusFilter"
+            );
+
+
+        const f =
+            statusFilter
+                ? statusFilter.value
+                : "All Status";
+
+
+        /* =============================================
+           GET PARTICIPANT COUNT PER PROJECT
+        ============================================= */
+
+        let participantCounts = {};
+
+        try {
+
+            participantCounts =
+                await DataService.getProjectParticipantCounts();
+
+        } catch (countError) {
+
+            console.error(
+                "[ASSESSMENT PROJECT] Failed to load participant counts:",
+                countError
+            );
+
+        }
+
+
+        /* =============================================
+           NORMALIZE SUPABASE DATA
+        ============================================= */
+
+        const data =
+            projects.map(
+                project => ({
+
+                    id:
+                        project.id || "",
+
+
+                    project_code:
+                        project.project_code || "",
+
+
+                    name:
+                        project.name ||
+                        project.project_name ||
+                        "-",
+
+
+                    company:
+                        project.company ||
+                        project.client ||
+                        "-",
+
+
+                    type:
+                        project.project_type ||
+                        "-",
+
+
+                    start:
+                        project.start_date ||
+                        project.startDate ||
+                        project.start ||
+                        null,
+
+
+                    end:
+                        project.end_date ||
+                        project.endDate ||
+                        project.end ||
+                        null,
+
+
+                    status:
+                        project.status ||
+                        "Draft",
+
+
+                    participant_count:
+                        participantCounts[project.id] || 0
+
+                })
+            );
+
+
+        /* =============================================
+           FILTER DATA
+        ============================================= */
+
+        const list =
+            data.filter(
+                p => {
+
+
+                    const searchText =
+                        [
+                            p.name,
+                            p.company,
+                            p.type,
+                            p.project_code
+                        ]
+                        .join(" ")
+                        .toLowerCase();
+
+
+                    const matchSearch =
+                        !q ||
+                        searchText.includes(q);
+
+
+                    const matchStatus =
+                        f === "All Status" ||
+                        p.status === f;
+
+
+                    return (
+                        matchSearch &&
+                        matchStatus
+                    );
+
+                }
+            );
+
+
+        /* =============================================
+           EMPTY STATE
+        ============================================= */
+
+        if (list.length === 0) {
+
+
+            rows.innerHTML = `
+                <tr>
+
+                    <td
+                        colspan="8"
+                        class="empty"
+                    >
+
+                        No assessment projects found.
+
+                    </td>
+
+                </tr>
+            `;
+
+
+            return;
+
+        }
+
+
+        /* =============================================
+           RENDER PROJECTS
+        ============================================= */
+
+        rows.innerHTML =
+            list.map(
+                p => `
+
+                <tr>
+
+
+                    <!-- CHECKBOX -->
+
+                    <td style="text-align:center;">
+
+                        <input
+                            type="checkbox"
+                            class="project-checkbox"
+                            value="${esc(p.id)}"
+                        >
+
+                    </td>
+
+
+                    <!-- PROJECT NAME -->
+
+                    <td>
+
+                        <div class="project-name">
+
+                            ${esc(p.name)}
+
+                        </div>
+
+
+                        <div class="company">
+
+                            ID: ${esc(p.project_code)}
+
+                        </div>
+
+                    </td>
+
+
+                    <!-- COMPANY -->
+
+                    <td>
+
+                        ${esc(p.company)}
+
+                    </td>
+
+
+                    <!-- PROJECT TYPE -->
+
+                    <td>
+
+                        ${esc(p.type)}
+
+                    </td>
+
+
+                    <!-- SCHEDULE -->
+
+                    <td>
+
+                        ${fmt(p.start)}
+
+                        -
+
+                        ${fmt(p.end)}
+
+                    </td>
+
+
+                    <!-- PARTICIPANTS -->
+
+                    <td>
+
+                        ${p.participant_count}
+
+                    </td>
+
+
+                    <!-- STATUS -->
+
+                    <td>
+
+                        <span
+                            class="
+                                status
+                                ${String(p.status)
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "-")}
+                            "
+                        >
+
+                            ${esc(p.status)}
+
+                        </span>
+
+                    </td>
+
+
+                    <!-- ACTION -->
+
+                    <td>
+
+                        <button
+                            class="action"
+                            title="Open Project Detail"
+                            onclick="openProject('${esc(p.id)}')"
+                        >
+
+                            →
+
+                        </button>
+
+                    </td>
+
+
+                </tr>
+
+                `
+            )
+            .join("");
+
+
+        console.log(
+            "[ASSESSMENT PROJECT] Render completed:",
+            list.length,
+            "projects"
+        );
+
+
+    } catch (error) {
+
+
+        console.error(
+            "[ASSESSMENT PROJECT] Failed to load projects:",
+            error
+        );
+
+
+        rows.innerHTML = `
+            <tr>
+
+                <td
+                    colspan="8"
+                    class="empty"
+                >
+
+                    Failed to load projects.
+
+                </td>
+
+            </tr>
+        `;
+
+
+    }
+
+}
 /* =========================================================
    SELECT ALL PROJECTS
    ========================================================= */
@@ -3254,7 +3540,16 @@ document
         ).checked = false;
 
 
-        render();
+        render().catch(
+    error => {
+
+        console.error(
+            "[ASSESSMENT PROJECT] Initial render failed:",
+            error
+        );
+
+    }
+);
 
     });
 
@@ -3976,11 +4271,48 @@ document.addEventListener(
 
 /* =========================================================
    INITIAL RENDER
-   ========================================================= */
+========================================================= */
 
-render();
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        console.log(
+            "[ASSESSMENT PROJECT] DOM ready"
+        );
+
+    }
+);
 
 </script>
+<!-- SUPABASE LIBRARY -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<!-- SUPABASE CLIENT -->
+
+<script src="js/supabase-client.js"></script>
+
+
+<!-- DATA SERVICE -->
+
+<script src="js/data-service.js"></script>
+
+
+<!-- PROJECT CREATE -->
+
+<script src="js/project-create.js?v=UUID-FIX-001"></script>
+
+
+<!-- ASSESSMENT PROJECT SUPABASE RENDER -->
+
+<script src="js/assessment-project-render.js"></script>
+
+
+<!-- GLOBAL SEARCH -->
+
+<script src="js/global-search.js"></script>
 
 <!-- GLOBAL SEARCH -->
 <script src="js/global-search.js"></script>
@@ -3988,114 +4320,107 @@ render();
 
 <script>
 /* ==========================================================
-   TALENTSCOPE PROJECT DATA SAFETY + SAFE LOGOUT
+   TALENTSCOPE SAFE LOGOUT
    ----------------------------------------------------------
-   Session logout must never delete project application data.
+   Project data is now stored in Supabase.
+   Logout only removes authentication/session data.
 ========================================================== */
+
 (function () {
+
     "use strict";
 
-    const PROJECT_KEY = "talentscope_projects";
-    const PROJECT_BACKUP_KEY = "talentscope_projects_backup";
 
-    function backupProjects() {
-        try {
-            const raw = localStorage.getItem(PROJECT_KEY);
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
 
-            if (raw === null) return;
 
-            const parsed = JSON.parse(raw);
-
-            if (Array.isArray(parsed)) {
-                localStorage.setItem(
-                    PROJECT_BACKUP_KEY,
-                    JSON.stringify(parsed)
+            const logoutBtn =
+                document.getElementById(
+                    "logoutBtn"
                 );
+
+
+            if (!logoutBtn) {
+
+                return;
+
             }
-        } catch (error) {
-            console.warn(
-                "TalentScope: project backup gagal dibuat.",
-                error
+
+
+            logoutBtn.addEventListener(
+                "click",
+                function (event) {
+
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    const yakin =
+                        confirm(
+                            "Apakah Anda yakin ingin Log Out?"
+                        );
+
+
+                    if (!yakin) {
+
+                        return;
+
+                    }
+
+
+                    /* =====================================
+                       REMOVE SESSION ONLY
+                    ===================================== */
+
+                    sessionStorage.removeItem(
+                        "ts_admin_session"
+                    );
+
+
+                    sessionStorage.removeItem(
+                        "ts_participant_session"
+                    );
+
+
+                    sessionStorage.removeItem(
+                        "talentscope_current_user"
+                    );
+
+
+                    sessionStorage.removeItem(
+                        "talentscope_session"
+                    );
+
+
+                    sessionStorage.removeItem(
+                        "talentscope_user"
+                    );
+
+
+                    console.log(
+                        "[AUTH] Session cleared safely"
+                    );
+
+
+                    /* =====================================
+                       PROJECT DATA REMAINS IN SUPABASE
+                    ===================================== */
+
+                    window.location.href =
+                        "login.html";
+
+
+                }
             );
+
+
         }
-    }
+    );
 
-    function restoreProjectsIfAccidentallyMissing() {
-        try {
-            const current = localStorage.getItem(PROJECT_KEY);
-
-            // Do not overwrite valid current data.
-            if (current !== null) return;
-
-            const backup = localStorage.getItem(
-                PROJECT_BACKUP_KEY
-            );
-
-            if (!backup) return;
-
-            const parsed = JSON.parse(backup);
-
-            if (Array.isArray(parsed)) {
-                localStorage.setItem(
-                    PROJECT_KEY,
-                    JSON.stringify(parsed)
-                );
-
-                console.warn(
-                    "TalentScope: talentscope_projects dipulihkan dari backup."
-                );
-            }
-        } catch (error) {
-            console.warn(
-                "TalentScope: gagal memulihkan project.",
-                error
-            );
-        }
-    }
-
-    // Capture the current real project data.
-    backupProjects();
-
-    // Safe logout: session only. Never clear application data.
-    document.addEventListener("DOMContentLoaded", function () {
-
-        const logoutBtn =
-            document.getElementById("logoutBtn");
-
-        if (!logoutBtn) return;
-
-        logoutBtn.addEventListener("click", function (event) {
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            const yakin = confirm(
-                "Apakah Anda yakin ingin Log Out?"
-            );
-
-            if (!yakin) return;
-
-            // Ensure project data is backed up before session is removed.
-            backupProjects();
-
-            // ONLY session/auth keys are removed.
-            sessionStorage.removeItem("ts_admin_session");
-            sessionStorage.removeItem("ts_participant_session");
-            sessionStorage.removeItem("talentscope_current_user");
-            sessionStorage.removeItem("talentscope_session");
-            sessionStorage.removeItem("talentscope_user");
-
-            // Explicitly preserve project data.
-            restoreProjectsIfAccidentallyMissing();
-
-            window.location.href = "login.html";
-        });
-    });
-
-    // Safety check when this page becomes active again.
-    window.addEventListener("pageshow", function () {
-        restoreProjectsIfAccidentallyMissing();
-    });
 
 })();
 </script>

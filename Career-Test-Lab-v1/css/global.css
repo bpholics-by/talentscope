@@ -178,7 +178,15 @@ select{
     margin-bottom: 25px !important;
 }
 
-/* Pengaturan Responsif untuk Layar HP / Mobile (Maksimal Lebar 768px) */
+/* Pengaturan Responsif untuk Layar HP / Mobile (Maksimal Lebar 768px)
+   PENTING: semua selector di bawah ini SENGAJA di-scope di bawah
+   `.app-container` (bukan cuma `.sidebar`/`.main-content` polos).
+   Halaman modern (participant-result.html, projects.html,
+   view-monitoring.html, dst.) memakai wrapper `.app` + `.sidebar`
+   dengan pola hamburger-drawer sendiri; tanpa scope ini, `!important`
+   di sini akan menimpa `.sidebar` di halaman-halaman itu juga dan
+   bikin `.main` ke-squeeze sampai lebar 0 (layar jadi kelihatan
+   kosong total di HP). */
 @media screen and (max-width: 768px) {
     
     /* Ubah kontainer utama menjadi blok ke bawah */
@@ -187,7 +195,7 @@ select{
     }
 
     /* Sidebar otomatis menyesuaikan atau disembunyikan secara default */
-    .sidebar {
+    .app-container .sidebar {
         width: 100%;
         height: auto;
         position: relative;
@@ -196,7 +204,7 @@ select{
     }
 
     /* Konten utama memenuhi lebar layar penuh */
-    .main-content {
+    .app-container .main-content {
         width: 100%;
         padding: 15px;
     }
@@ -208,7 +216,9 @@ select{
     }
 }
 
-/* Aturan khusus untuk tampilan HP / Layar Kecil */
+/* Aturan khusus untuk tampilan HP / Layar Kecil
+   (lihat catatan scope di blok atas -- alasan yang sama berlaku
+   di sini). */
 @media screen and (max-width: 768px) {
     /* Buat kontainer utama menjadi vertikal ke bawah */
     .app-container, .dashboard-layout {
@@ -219,14 +229,18 @@ select{
     }
 
     /* Sidebar mengambil lebar penuh layar atas */
-    .sidebar {
+    .app-container .sidebar,
+    .dashboard-layout .sidebar {
         width: 100% !important;
         height: auto !important;
         position: relative !important;
     }
 
     /* Konten utama bergeser ke bawah sidebar dan lebar 100% */
-    .main-content, .content-area {
+    .app-container .main-content,
+    .app-container .content-area,
+    .dashboard-layout .main-content,
+    .dashboard-layout .content-area {
         width: 100% !important;
         margin-left: 0 !important;
         padding: 15px !important;

@@ -788,3 +788,136 @@
 
     box-shadow: 0 0 8px rgba(25,211,122,.45) !important;
 }
+/* =========================================================
+   SELECTED ASSESSMENTS REVIEW
+========================================================= */
+
+.selected-assessments-review {
+
+    margin-top: 24px;
+
+    padding-top: 20px;
+
+    border-top:
+        1px solid #e2e8f0;
+
+}
+
+
+.selected-assessments-review h3 {
+
+    margin-bottom: 14px;
+
+    font-size: 15px;
+
+}
+
+
+.selected-assessments-list {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+}
+
+
+.selected-assessment-item {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 14px;
+
+    background: #f8fafc;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius: 8px;
+
+}
+
+
+.selected-assessment-number {
+
+    width: 30px;
+
+    height: 30px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+.selected-assessment-info {
+
+    flex: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+}
+
+
+.selected-assessment-info strong {
+
+    font-size: 14px;
+
+}
+
+
+.selected-assessment-info span {
+
+    font-size: 12px;
+
+    color: #64748b;
+
+}
+
+
+.selected-assessment-duration {
+
+    font-size: 13px;
+
+    color: #475569;
+
+}
+
+
+.empty-assessment-selection {
+
+    padding: 16px;
+
+    text-align: center;
+
+    color: #64748b;
+
+    border:
+        1px dashed #cbd5e1;
+
+    border-radius: 8px;
+
+}

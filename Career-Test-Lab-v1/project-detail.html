@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-  <head>
-    
-<head>
-    <!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
+<!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
     <script>
     (function() {
         "use strict";
@@ -133,6 +129,7 @@
     })();
     </script>
 
+<script src="js/ts-supabase-sync.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link
@@ -946,6 +943,34 @@ a{
 
 .btn-primary:hover{
     background:#0669cb;
+}
+
+/* Visual feedback while an invitation request is being processed. */
+.btn-primary.ts-invite-sending,
+.btn-primary.ts-invite-sending:hover,
+.btn-primary.ts-invite-sending:active{
+    background:#075fb5;
+    border-color:#075fb5;
+    color:#ffffff;
+    cursor:wait;
+    opacity:.88;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
+}
+
+.btn-primary.ts-invite-sending .ts-invite-spinner{
+    width:14px;
+    height:14px;
+    margin-right:8px;
+    display:inline-block;
+    vertical-align:-2px;
+    border:2px solid rgba(255,255,255,.42);
+    border-top-color:#ffffff;
+    border-radius:50%;
+    animation:tsInviteSpin .75s linear infinite;
+}
+
+@keyframes tsInviteSpin{
+    to{transform:rotate(360deg);}
 }
 
 
@@ -3243,6 +3268,33 @@ a{
     }
 
 }
+
+
+/* =========================================================
+   PREMIUM ASSESSMENT PACKAGE — scoped, non-invasive upgrade
+========================================================= */
+#tab-assessment #assessmentList{margin-top:18px}
+.assessment-package-grid{display:grid;gap:14px}
+.assessment-premium-card{position:relative;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;border:1px solid #e5eaf0;border-radius:16px;background:linear-gradient(135deg,#fff 0%,#fbfcfe 100%);box-shadow:0 4px 14px rgba(16,24,40,.04);transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.assessment-premium-card:hover{transform:translateY(-2px);border-color:#cfd9e6;box-shadow:0 12px 28px rgba(16,24,40,.09)}
+.assessment-card-main{display:flex;align-items:flex-start;gap:15px;min-width:0;flex:1}
+.assessment-number{width:42px;height:42px;flex:0 0 42px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(135deg,#eef3ff,#e7eefc);color:#3659a8;font-weight:800;font-size:13px;letter-spacing:.5px}
+.assessment-card-content{min-width:0;flex:1}
+.assessment-title-row{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.assessment-title-row h3{margin:0;color:#172033;font-size:15px;font-weight:750;line-height:1.35}
+.assessment-category{display:flex;align-items:center;gap:7px;margin:6px 0 10px;color:#718096;font-size:12px}
+.assessment-category i{color:#8190a5}
+.assessment-meta-row{display:flex;flex-wrap:wrap;gap:8px}
+.assessment-meta-row span{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:#f5f7fa;color:#65748a;font-size:11.5px;font-weight:600}
+.assessment-meta-row i{font-size:11px}
+.assessment-status{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:700}
+.assessment-status.is-active{background:#ecfdf3;color:#18794e}.assessment-status.is-neutral{background:#f2f4f7;color:#667085}.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.assessment-card-actions{flex:0 0 auto}.assessment-edit-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #d7deea;background:#fff;color:#344054;border-radius:10px;padding:9px 13px;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s ease}.assessment-edit-btn:hover:not(:disabled){border-color:#9eb4d9;background:#f6f9ff;color:#244a8f;box-shadow:0 4px 12px rgba(36,74,143,.1)}.assessment-edit-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* Assessment Package editor - scoped, does not affect other modules */
+.assessment-package-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.assessment-package-header h2{margin:0;font-size:18px}.assessment-package-header .desc{margin:5px 0 0}.assessment-package-edit-btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:10px 15px;border-radius:10px}.assessment-package-modal{width:min(760px,calc(100vw - 32px));max-height:min(78vh,760px);display:flex;flex-direction:column}.assessment-package-modal .modal-head{flex:0 0 auto}.assessment-package-editor-body{overflow:auto;padding:4px 2px 4px}.assessment-package-editor-note{font-size:13px;color:#667085;margin:0 0 14px;line-height:1.5}.assessment-picker-list{display:grid;gap:10px}.assessment-picker-item{display:flex;align-items:center;gap:13px;border:1px solid #e2e8f0;border-radius:12px;padding:13px 14px;cursor:pointer;transition:.18s ease;background:#fff}.assessment-picker-item:hover{border-color:#b8c7df;box-shadow:0 4px 14px rgba(16,24,40,.06)}.assessment-picker-item.is-selected{border-color:#4d7fc3;background:#f6f9ff}.assessment-picker-check{width:19px;height:19px;accent-color:#2b72c5;flex:0 0 auto}.assessment-picker-main{min-width:0;flex:1}.assessment-picker-name{font-size:14px;font-weight:700;color:#24364b;line-height:1.35}.assessment-picker-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;color:#728096;font-size:12px}.assessment-picker-count{display:inline-flex;align-items:center;gap:7px;margin-bottom:13px;padding:7px 10px;border-radius:999px;background:#edf4ff;color:#2d62a4;font-size:12px;font-weight:700}.assessment-picker-empty{padding:28px;text-align:center;color:#7a8798;border:1px dashed #d7dee8;border-radius:12px}.assessment-package-modal .modal-actions{flex:0 0 auto;margin-top:18px}@media(max-width:640px){.assessment-package-header{align-items:stretch;flex-direction:column}.assessment-package-edit-btn{justify-content:center;width:100%}}
+.assessment-empty-state{display:flex;align-items:center;gap:14px;padding:22px;border:1px dashed #d6dee8;border-radius:14px;background:#fafbfd;color:#667085}.assessment-empty-state strong{display:block;color:#344054;margin-bottom:3px}.assessment-empty-state span{font-size:12px}.assessment-empty-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#f1f4f8;color:#7b8798}
+@media(max-width:640px){.assessment-premium-card{align-items:stretch;flex-direction:column;padding:16px}.assessment-title-row{align-items:flex-start;flex-direction:column;gap:7px}.assessment-card-actions{width:100%}.assessment-edit-btn{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -3562,9 +3614,32 @@ a{
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div><h2 style="margin:0;font-size:18px">Project Participants</h2><p class="desc" style="margin-top:5px">Participants assigned to this assessment project.</p></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
-          <button class="btn" id="downloadTemplateBtn">↓ Excel Template</button>
-          <button class="btn" id="importExcelBtn">↑ Import Excel</button>
-          <button class="btn btn-primary" id="addParticipantBtn">+ Add Participant</button>
+          <button
+    type="button"
+    class="btn"
+    id="downloadTemplateBtn"
+    onclick="window.tsV22 && window.tsV22.template(); return false;"
+>
+    ↓ Excel Template
+</button>
+
+<button
+    type="button"
+    class="btn"
+    id="importExcelBtn"
+    onclick="window.tsV22 && window.tsV22.importExcel(); return false;"
+>
+    ↑ Import Excel
+</button>
+
+<button
+    type="button"
+    class="btn btn-primary"
+    id="addParticipantBtn"
+    onclick="window.tsV22 && window.tsV22.addParticipant(); return false;"
+>
+    + Add Participant
+</button>
         </div>
       </div>
       <div class="participant-table-wrap">
@@ -3589,8 +3664,16 @@ a{
     </div>
 
     <div class="tab-panel hidden" id="tab-assessment">
-      <h2 style="margin:0;font-size:18px">Assessment Package</h2>
-      <p class="desc" style="margin-top:5px">Assessment instruments assigned to this project.</p>
+      <div class="assessment-package-header">
+        <div>
+          <h2>Assessment Package</h2>
+          <p class="desc">Assessment instruments assigned to this project.</p>
+        </div>
+        <button type="button" class="btn btn-primary assessment-package-edit-btn" onclick="openAssessmentPackageEditor()">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span>Edit Assessment Package</span>
+        </button>
+      </div>
       <div id="assessmentList">
         <p style="color:var(--muted)">1. Verbal Reasoning Test (30 Min)</p>
         <p style="color:var(--muted)">2. Personality & Behavioral Profile (45 Min)</p>
@@ -3622,49 +3705,214 @@ a{
 <div class="toast" id="toast"></div>
 
 <!-- MODAL EDIT PROJECT -->
+
 <div class="modal-backdrop" id="editModal">
   <div class="modal">
     <div class="modal-head">
       <h3>Edit Project</h3>
       <button class="close" onclick="closeEditModal()">&times;</button>
     </div>
-    <div class="field" style="margin-top:15px;">
-      <label>Project Name</label>
-      <input type="text" id="editName">
+
+
+<div class="field" style="margin-top:15px;">
+  <label>Project Name</label>
+  <input type="text" id="editName">
+</div>
+
+<div class="field">
+  <label>Company Name</label>
+  <input type="text" id="editCompany">
+</div>
+
+<div class="form-row">
+  <div class="field">
+    <label>Project Type</label>
+    <select id="editType">
+      <option value="Recruitment">Recruitment</option>
+      <option value="Assessment">Assessment</option>
+      <option value="Development">Development</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>PIC / Admin</label>
+    <input type="text" id="editPIC">
+  </div>
+</div>
+
+<div class="form-row">
+  <div class="field">
+    <label>Start Date</label>
+    <input type="date" id="editStart">
+  </div>
+
+  <div class="field">
+    <label>End Date</label>
+    <input type="date" id="editEnd">
+  </div>
+</div>
+
+<!-- TAMBAHAN WAKTU ASSESSMENT -->
+<div class="field">
+  <label>Assessment Start Time</label>
+  <input type="time" id="editAssessmentTime">
+</div>
+
+<div class="modal-actions">
+  <button class="btn" onclick="closeEditModal()">Batal</button>
+  <button class="btn btn-primary" onclick="saveEditProject()">Simpan Perubahan</button>
+</div>
+
+
+  </div>
+</div>
+
+
+<!-- MODAL EDIT ASSESSMENT PACKAGE -->
+<div class="modal-backdrop" id="editAssessmentPackageModal">
+  <div class="modal assessment-package-modal">
+    <div class="modal-head">
+      <div>
+        <h3 style="margin:0">Edit Assessment Package</h3>
+        <p class="desc" style="margin:5px 0 0">Select assessments to include in this project package.</p>
+      </div>
+      <button type="button" class="close" onclick="closeAssessmentPackageEditor()">&times;</button>
     </div>
-    <div class="field">
-      <label>Company Name</label>
-      <input type="text" id="editCompany">
-    </div>
-    <div class="form-row">
-      <div class="field">
-        <label>Project Type</label>
-        <select id="editType">
-          <option value="Recruitment">Recruitment</option>
-          <option value="Assessment">Assessment</option>
-          <option value="Development">Development</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>PIC / Admin</label>
-        <input type="text" id="editPIC">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="field">
-        <label>Start Date</label>
-        <input type="date" id="editStart">
-      </div>
-      <div class="field">
-        <label>End Date</label>
-        <input type="date" id="editEnd">
-      </div>
+    <div class="assessment-package-editor-body">
+      <div id="assessmentPackageSelectionCount" class="assessment-picker-count"><i class="fa-solid fa-check"></i> 0 selected</div>
+      <p class="assessment-package-editor-note">You can add new assessments, remove selected ones, or change the composition of the package. Existing project functions are not affected.</p>
+      <div id="assessmentPackagePicker" class="assessment-picker-list"></div>
     </div>
     <div class="modal-actions">
-      <button class="btn" onclick="closeEditModal()">Batal</button>
-      <button class="btn btn-primary" onclick="saveEditProject()">Simpan Perubahan</button>
+      <button type="button" class="btn" onclick="closeAssessmentPackageEditor()">Cancel</button>
+      <button type="button" class="btn btn-primary" id="saveAssessmentPackageBtn" onclick="saveAssessmentPackageEditor()">Save Assessment Package</button>
     </div>
   </div>
+</div>
+
+<!-- MODAL EDIT ASSESSMENT -->
+
+<div
+    class="modal-backdrop"
+    id="editAssessmentModal"
+>
+
+    <div class="modal">
+
+        <div class="modal-head">
+
+            <h3>
+                Edit Assessment
+            </h3>
+
+            <button
+                type="button"
+                class="close"
+                onclick="closeEditAssessmentModal()"
+            >
+                &times;
+            </button>
+
+        </div>
+
+
+        <div
+            class="field"
+            style="margin-top:15px;"
+        >
+
+            <label>
+                Assessment Name
+            </label>
+
+            <input
+                type="text"
+                id="editAssessmentName"
+            >
+
+        </div>
+
+
+        <div class="form-row">
+
+            <div class="field">
+
+                <label>
+                    Schedule Date
+                </label>
+
+                <input
+                    type="datetime-local"
+                    id="editAssessmentSchedule"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    Duration (Minutes)
+                </label>
+
+                <input
+                    type="number"
+                    id="editAssessmentDuration"
+                    min="1"
+                >
+
+            </div>
+
+        </div>
+
+
+        <div class="field">
+
+            <label>
+                Status
+            </label>
+
+            <select
+                id="editAssessmentStatus"
+            >
+
+                <option value="Active">
+                    Active
+                </option>
+
+                <option value="Inactive">
+                    Inactive
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div
+            class="modal-actions"
+        >
+
+            <button
+                type="button"
+                class="btn"
+                onclick="closeEditAssessmentModal()"
+            >
+                Batal
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="saveEditAssessment()"
+            >
+                Simpan Perubahan
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
 
 <!-- MODAL PUBLISH PROJECT -->
@@ -3679,349 +3927,6 @@ a{
     </div>
   </div>
 </div>
-
-<script>
-(function(){
-  "use strict";
-
-  const fallbackProjects=[
-    {id:"by",name:"Project Recruitment Batch 1",company:"PT Utama Jaya",type:"Recruitment",pic:"Budi Admin",start:"2026-08-08",end:"2026-08-15",status:"Draft",
-      participants:[{id:"EMP001",name:"Budi Santoso",email:"budi@company.com",position:"Manager",status:"Not Started",access:"Invited"},{id:"EMP002",name:"Siti Rahma",email:"siti@company.com",position:"Staff",status:"Not Started",access:"Not Invited"}],
-      assessments:["Verbal Reasoning","Personality Assessment"]}
-  ];
-
-  const $=id=>document.getElementById(id);
-  const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-  
-  function load(){
-    try{
-      const raw=localStorage.getItem("talentscope_projects");
-      const data=raw?JSON.parse(raw):null;
-      return Array.isArray(data)&&data.length?data:fallbackProjects.slice();
-    }catch(e){return fallbackProjects.slice();}
-  }
-  
-  function save(){localStorage.setItem("talentscope_projects",JSON.stringify(projects));window.project=project;window.projects=projects;}
-  window.save=save;
-  
-  function fmt(s){
-    if(!s)return "-";
-    const d=new Date(s+"T00:00:00");
-    return isNaN(d)?s:d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});
-  }
-
-  function statusOf(p){
-    if(p.status === "Cancelled" || p.status === "Draft") return p.status;
-    return p.status || "Draft";
-  }
-
-  let projects = load();
-
-const urlId =
-  new URLSearchParams(location.search).get("id");
-
-let project = null;
-
-if (urlId) {
-  project = projects.find(function(x) {
-    return String(x.id).trim() ===
-           String(urlId).trim();
-  });
-}
-
-if(!project){
-  project = {
-    id: "",
-    name: "",
-    company: "",
-    type: "",
-    pic: "",       // <-- Ditambahkan agar aman
-    start: "",
-    end: "",
-    status: "Draft",
-    participants: [],
-    assessments: []
-  };
-}
-
-if (project && project.id) {
-  localStorage.removeItem(
-    "ts_project_detail_state_" + String(project.id)
-  );
-}
-
-window.project = project;
-
-  function toast(msg){
-    const t=$("toast"); if(!t)return;
-    t.textContent=msg;t.style.display="block";
-    clearTimeout(window.__tsToast);window.__tsToast=setTimeout(()=>t.style.display="none",2500);
-  }
-
-  function renderActionButtons() {
-    const container = $("actionButtons");
-    if (!container) return;
-
-    let html = '';
-    const currentStatus = statusOf(project);
-
-    if (currentStatus === "Draft") {
-      html += `<button class="btn" onclick="openEditModal()">Edit Project</button>`;
-      html += `<button class="btn btn-primary" onclick="openPublishModal()">Publish Project</button>`;
-      html += `<button class="btn btn-danger" onclick="cancelProject()">Cancel Project</button>`;
-    } else if (currentStatus === "Scheduled" || currentStatus === "Ongoing") {
-      html += `<button class="btn" onclick="openEditModal()">Edit Project</button>`;
-      html += `<button class="btn btn-danger" onclick="cancelProject()">Cancel Project</button>`;
-    } else {
-      html += `<button class="btn" onclick="openEditModal()">Edit Project</button>`;
-    }
-
-    container.innerHTML = html;
-  }
-
-  // --- FUNGSI TAMPILKAN / TUTUP MODAL EDIT ---
-  window.openEditModal = function() {
-    $("editName").value = project.name || "";
-    $("editCompany").value = project.company || "";
-    $("editType").value = project.type || "Recruitment";
-    $("editPic").value = project.pic || ""; // <-- Mengisi nilai PIC ke modal
-    $("editStart").value = project.start || "";
-    $("editEnd").value = project.end || "";
-    $("editModal").classList.add("show");
-  };
-
-  window.closeEditModal = function() {
-    $("editModal").classList.remove("show");
-  };
-
-  window.saveEditProject = function() {
-    project.name = $("editName").value;
-    project.company = $("editCompany").value;
-    project.type = $("editType").value;
-    project.pic = $("editPic").value; // <-- Menyimpan input PIC
-    project.start = $("editStart").value;
-    project.end = $("editEnd").value;
-    save();
-    closeEditModal();
-    initPage();
-    toast("Project berhasil diperbarui!");
-  };
-
-  // --- FUNGSI PUBLISH & CANCEL PROJECT ---
-  window.openPublishModal = function() {
-    $("publishModal").classList.add("show");
-  };
-
-  window.closePublishModal = function() {
-    $("publishModal").classList.remove("show");
-  };
-
-  window.confirmPublishProject = function() {
-
-    project.status = "Scheduled";
-
-    save();
-
-    
-
-    closePublishModal();
-
-    initPage();
-
-    toast("Project berhasil dipublikasikan!");
-};
-
-  window.cancelProject = function() {
-    if (confirm("Apakah Anda yakin ingin membatalkan project ini?")) {
-      project.status = "Cancelled";
-      save();
-      initPage();
-      toast("Project telah dibatalkan.");
-    }
-  };
-
-  // --- FUNGSI BULK INVITE ---
-  window.tsBulkInvite = function(e) {
-    if (e) e.preventDefault();
-    const selectedCheckboxes = document.querySelectorAll('.participant-select:checked');
-    if (selectedCheckboxes.length === 0) {
-      alert("Silakan pilih minimal satu peserta terlebih dahulu.");
-      return false;
-    }
-    openInvitationModal(selectedCheckboxes.length);
-    return false;
-  };
-
-  function openInvitationModal(count) {
-    let modal = document.getElementById('invitationModal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'invitationModal';
-      modal.className = 'invitation-modal-backdrop show';
-      modal.innerHTML = `
-        <div class="invitation-modal">
-          <div class="invitation-modal-header">
-            <div>
-              <h3>Kirim Undangan Asesmen</h3>
-              <p>Kirimkan email undangan ke peserta yang dipilih.</p>
-            </div>
-            <button class="invitation-modal-close" onclick="closeInvitationModal()">&times;</button>
-          </div>
-          <div class="invitation-modal-body">
-            <div class="invitation-summary">
-              <div><small>Jumlah Peserta Dipilih</small><strong id="modalParticipantCount">${count} Peserta</strong></div>
-              <div><small>Nama Project</small><strong>${esc(project.name)}</strong></div>
-            </div>
-            <div class="invitation-field">
-              <label>Subjek Email</label>
-              <input type="text" id="inviteSubject" value="Undangan Asesmen - ${esc(project.name)}">
-            </div>
-            <div class="invitation-field">
-              <label>Pesan Undangan</label>
-              <textarea id="inviteMessage">Halo,\n\nAnda diundang untuk mengikuti tes asesmen online untuk project "${esc(project.name)}". Silakan klik tautan di bawah ini untuk memulai.\n\nTerima kasih.</textarea>
-            </div>
-          </div>
-          <div class="invitation-modal-footer">
-            <button onclick="closeInvitationModal()">Batal</button>
-            <button class="primary" onclick="confirmSendInvitations()">Kirim Sekarang</button>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modal);
-    } else {
-      document.getElementById('modalParticipantCount').textContent = `${count} Peserta`;
-      modal.classList.add('show');
-    }
-  }
-
-  window.closeInvitationModal = function() {
-    const modal = document.getElementById('invitationModal');
-    if (modal) modal.classList.remove('show');
-  };
-
-  window.confirmSendInvitations = function() {
-    toast("Undangan berhasil dikirim ke peserta terdaftar!");
-    closeInvitationModal();
-  };
-
-  function renderParticipants() {
-    const tbody = $("participantTable");
-    if (!tbody) return;
-
-    if (!project.participants || project.participants.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--muted)">Belum ada peserta terdaftar.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = project.participants.map(p => `
-      <tr>
-        <td style="text-align:center"><input type="checkbox" class="participant-select" value="${esc(p.id)}"></td>
-        <td><strong>${esc(p.id)}</strong></td>
-        <td>${esc(p.name)}</td>
-        <td>${esc(p.email || '-')}</td>
-        <td>${esc(p.position || '-')}</td>
-        <td><span class="pill gray">${esc(p.status || 'Not Started')}</span></td>
-        <td><span class="status-pill">${esc(p.access || 'Not Invited')}</span></td>
-        <td class="participant-action-cell">
-          
-        </td>
-      </tr>
-    `).join('');
-
-    const selectAll = $("selectAllParticipants");
-    if (selectAll) {
-      selectAll.onclick = function() {
-        const checkboxes = document.querySelectorAll('.participant-select');
-        checkboxes.forEach(cb => cb.checked = this.checked);
-        updateSelectedCount();
-      };
-    }
-
-    document.querySelectorAll('.participant-select').forEach(cb => {
-      cb.onchange = updateSelectedCount;
-    });
-  }
-
-  function updateSelectedCount() {
-    const count = document.querySelectorAll('.participant-select:checked').length;
-    const label = $("selectedParticipantCount");
-    if (label) label.textContent = `${count} selected`;
-  }
-
-  // --- LOGIKA PERPINDAHAN TAB ---
-  function setupTabs() {
-    const tabs = document.querySelectorAll('.tab');
-    tabs.forEach(tab => {
-      tab.onclick = function() {
-        tabs.forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-
-        this.classList.add('active');
-        const targetId = 'tab-' + this.getAttribute('data-tab');
-        const targetPanel = $(targetId);
-        if (targetPanel) targetPanel.classList.remove('hidden');
-      };
-    });
-  }
-
-  function initPage() {
-
-    /* =====================================================
-       CHECK PROJECT DETAIL UI STATE
-       HANYA MENGATUR TAMPILAN — DATA PROJECT TIDAK DIHAPUS
-    ===================================================== */
-
-    var projectDetailState =
-        localStorage.getItem(
-            "ts_project_detail_state_" + String(project.id)
-        );
-
-    if (projectDetailState === "empty") {
-
-        resetProjectDetailDisplay();
-
-        return;
-    }
-
-    if ($("projectName")) $("projectName").textContent = project.name || "Project Detail";
-    if ($("projectNameHeader")) {
-        $("projectNameHeader").textContent =
-            project.name || "Project Detail";
-    }
-
-if ($("projectIdHeader")) {
-    $("projectIdHeader").textContent =
-        project.id || "-";
-}
-    if ($("companyName")) $("companyName").textContent = project.company || "-";
-    if ($("projectId")) $("projectId").textContent = project.id || "-";
-    if ($("projectType")) $("projectType").textContent = project.type || "-";
-    if ($("participantCount")) $("participantCount").textContent = `${project.participants ? project.participants.length : 0} Orang`;
-    if ($("schedule")) $("schedule").textContent = `${fmt(project.start)} - ${fmt(project.end)}`;
-    if ($("startDate")) $("startDate").textContent = fmt(project.start);
-    if ($("endDate")) $("endDate").textContent = fmt(project.end);
-
-    const badge = $("statusBadge");
-    if (badge) {
-      const st = statusOf(project);
-      badge.className = `status ${st.toLowerCase()}`;
-      badge.textContent = st;
-    }
-
-    renderActionButtons();
-    renderParticipants();
-    setupTabs();
-  }
-
-  window.initPage=initPage;
-  document.addEventListener("DOMContentLoaded", initPage);
-  initPage();
-
-})();
-</script>
-
-
-
 
 <script id="tsV22Controls">
 (function(){
@@ -4118,14 +4023,12 @@ function addParticipant(){
     }
 
     p.participants.push({
-    id: x.id,
-    name: x.name,
-    email: x.email,
-    position: x.position,
-
-    phone: x.phone || "",
-    education: x.education || "",
-
+    id: id,
+    name: name,
+    email: email,
+    position: pos,
+    phone: phone || "",
+    education: education || "",
     status: "Not Started",
     access: "Not Invited"
 });
@@ -4517,359 +4420,733 @@ function importExcel(){
 
 
   /* =====================================================
-     SIMPAN KE STORAGE
-     DATA LAMA TETAP AMAN
-  ===================================================== */
+   SIMPAN IMPORT PARTICIPANT
+===================================================== */
 
-  byId("v22_isave").onclick=function(){
+document.getElementById("v22_isave").onclick =
+async function () {
 
-    var p=getProject();
+    console.log("[IMPORT] Save import participant started");
 
-    if(!p){
-      return;
+    /* =====================================================
+       GET CURRENT PROJECT
+    ===================================================== */
+
+    var p = getProject();
+
+    if (!p) {
+        alert("Project tidak ditemukan.");
+        return;
     }
 
+    var projectId =
+        p.id ||
+        p.projectId ||
+        "";
 
-    p.participants=
-      Array.isArray(p.participants)
-        ? p.participants
-        : [];
+    if (!projectId) {
+        alert("Project ID tidak ditemukan.");
+        return;
+    }
 
+    /* =====================================================
+       VALIDATE IMPORT DATA
+    ===================================================== */
 
-    /*
-     * Index participant lama berdasarkan ID
-     */
+    var importRows =
+        window.__v22Rows || [];
 
-    var existing={};
+    if (
+        !Array.isArray(importRows) ||
+        importRows.length === 0
+    ) {
+        alert("Tidak ada participant yang dapat diimport.");
+        return;
+    }
 
-    p.participants.forEach(function(x){
+    p.participants =
+        Array.isArray(p.participants)
+            ? p.participants
+            : [];
 
-      var key=
-        String(
-          x.id ||
-          x.participantId ||
-          ""
+    /* =====================================================
+       INDEX LOCAL PARTICIPANTS
+    ===================================================== */
+
+    var existing = {};
+
+    p.participants.forEach(function (participant) {
+
+        if (!participant) return;
+
+        var codeKey = String(
+            participant.participant_code ||
+            participant.id ||
+            participant.participantId ||
+            ""
         )
         .trim()
         .toLowerCase();
 
-      if(key){
-        existing[key]=x;
-      }
+        var emailKey = String(
+            participant.email || ""
+        )
+        .trim()
+        .toLowerCase();
+
+        if (codeKey) {
+            existing[codeKey] = participant;
+        }
+
+        if (emailKey) {
+            existing[emailKey] = participant;
+        }
 
     });
 
 
-    var added=0;
-    var updated=0;
+    var added = 0;
+    var updated = 0;
 
 
-    /*
-     * MASUKKAN DATA EXCEL
-     */
+    /* =====================================================
+       PROCESS EXCEL DATA TO LOCAL PROJECT
+    ===================================================== */
 
-    (window.__v22Rows||[]).forEach(function(x){
+    importRows.forEach(function (x) {
 
-      var key=
-        String(x.id)
-          .trim()
-          .toLowerCase();
+        if (!x) return;
 
+        var participantKey = String(
+            x.id ||
+            x.email ||
+            ""
+        )
+        .trim()
+        .toLowerCase();
 
-      /*
-       * PARTICIPANT SUDAH ADA
-       */
+        var emailKey = String(
+            x.email || ""
+        )
+        .trim()
+        .toLowerCase();
 
-      if(existing[key]){
+        if (!participantKey) {
+            console.warn(
+                "[IMPORT] Participant dilewati:",
+                x
+            );
+            return;
+        }
 
-        var old=existing[key];
+        var oldParticipant =
+            existing[participantKey] ||
+            (emailKey ? existing[emailKey] : null);
 
+        if (oldParticipant) {
 
-        /*
-         * Update data dasar
-         */
+            oldParticipant.name =
+                x.name ||
+                oldParticipant.name ||
+                "";
 
-        old.name=
-          x.name ||
-          old.name ||
-          "";
+            oldParticipant.email =
+                x.email ||
+                oldParticipant.email ||
+                "";
 
+            oldParticipant.position =
+                x.position ||
+                oldParticipant.position ||
+                "";
 
-        old.email=
-          x.email ||
-          old.email ||
-          "";
+            if (x.phone) {
+                oldParticipant.phone = x.phone;
+            }
 
+            if (x.education) {
+                oldParticipant.education = x.education;
+            }
 
-        old.position=
-          x.position ||
-          old.position ||
-          "";
+            oldParticipant.participant_code =
+                x.id ||
+                oldParticipant.participant_code ||
+                oldParticipant.id;
 
-
-        /*
-         * Tambahkan HP
-         * tanpa menghapus data lama
-         */
-
-        if(x.phone){
-
-          old.phone=
-            x.phone;
-
+            updated++;
+            return;
         }
 
 
-        /*
-         * Tambahkan pendidikan
-         */
+        var newParticipant = {
 
-        if(x.education){
+            /*
+               id tetap memakai Participant ID dari Excel
+               agar tabel menampilkan kode peserta, bukan UUID.
+            */
+            id:
+                x.id ||
+                x.email,
 
-          old.education=
-            x.education;
+            participant_code:
+                x.id ||
+                null,
 
+            name:
+                x.name ||
+                "",
+
+            email:
+                x.email ||
+                "",
+
+            position:
+                x.position ||
+                "",
+
+            phone:
+                x.phone ||
+                "",
+
+            education:
+                x.education ||
+                "",
+
+            status:
+                "Not Started",
+
+            access:
+                "Not Invited"
+
+        };
+
+
+        p.participants.push(newParticipant);
+
+        existing[participantKey] =
+            newParticipant;
+
+        if (emailKey) {
+            existing[emailKey] =
+                newParticipant;
         }
 
+        added++;
 
-        /*
-         * FIELD SYSTEM TIDAK DISENTUH:
-         *
-         * accessCode
-         * password
-         * invitationStatus
-         * invitationBody
-         * invitedAt
-         * loginTime
-         * loggedInAt
-         * logoutTime
-         * loggedOutAt
-         * assessmentStatus
-         * status
-         * access
-         */
+    });
 
 
-        updated++;
+    /* =====================================================
+       SAVE LOCAL STORAGE
+       Selalu upsert project agar data import tidak hilang.
+    ===================================================== */
+
+    try {
+
+        var storedProjects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        if (!Array.isArray(storedProjects)) {
+            storedProjects = [];
+        }
+
+        var storedIndex =
+            storedProjects.findIndex(
+                function (storedProject) {
+
+                    return String(
+                        storedProject.id ||
+                        storedProject.projectId ||
+                        ""
+                    ) === String(projectId);
+
+                }
+            );
+
+        if (storedIndex >= 0) {
+            storedProjects[storedIndex] = p;
+        } else {
+            storedProjects.push(p);
+        }
+
+        localStorage.setItem(
+            "talentscope_projects",
+            JSON.stringify(storedProjects)
+        );
+
+        window.project = p;
+
+        console.log(
+            "[IMPORT] Local participants saved:",
+            p.participants.length
+        );
+
+    } catch (storageError) {
+
+        console.error(
+            "[IMPORT] Failed saving localStorage:",
+            storageError
+        );
+
+        alert(
+            "Import gagal menyimpan data lokal.\n\n" +
+            (
+                storageError.message ||
+                String(storageError)
+            )
+        );
 
         return;
 
-      }
-
-
-      /*
-       * PARTICIPANT BARU
-       */
-
-      var newParticipant={
-
-        id:x.id,
-
-        name:x.name,
-
-        email:x.email,
-
-        position:x.position,
-
-        phone:x.phone || "",
-
-        education:x.education || "",
-
-        status:"Not Started",
-
-        access:"Not Invited"
-
-      };
-
-
-      p.participants.push(
-        newParticipant
-      );
-
-
-      existing[key]=
-        newParticipant;
-
-
-      added++;
-
-    });
+    }
 
 
     /* =====================================================
-       SIMPAN KE TALENTSCOPE_PROJECTS
+       SYNC TO SUPABASE
     ===================================================== */
 
-    /* =====================================================
-   SIMPAN PROJECT KE STORAGE
-===================================================== */
+    if (typeof DataService === "undefined") {
 
-var storedProjects = [];
-
-try {
-
-  storedProjects = JSON.parse(
-    localStorage.getItem(
-      "talentscope_projects"
-    ) || "[]"
-  );
-
-} catch(e) {
-
-  storedProjects = [];
-
-}
-
-
-var projectId =
-  p.id ||
-  p.projectId ||
-  "";
-
-
-var saved = false;
-
-
-storedProjects.forEach(function(sp){
-
-  var spId =
-    sp.id ||
-    sp.projectId ||
-    "";
-
-
-  if(
-    projectId &&
-    String(spId) ===
-    String(projectId)
-  ){
-
-    sp.participants =
-      p.participants;
-
-    saved = true;
-
-  }
-
-});
-
-
-if(saved){
-
-  localStorage.setItem(
-    "talentscope_projects",
-    JSON.stringify(
-      storedProjects
-    )
-  );
-
-}
-
-    /*
-     * Pastikan project aktif juga tersimpan.
-     */
-
-    var storedProjects=[];
-
-    try{
-
-      storedProjects=
-        JSON.parse(
-          localStorage.getItem(
-            "talentscope_projects"
-          ) || "[]"
+        alert(
+            "DataService tidak tersedia. Sinkronisasi database dibatalkan."
         );
 
-    }catch(e){
-
-      storedProjects=[];
+        return;
 
     }
 
 
-    /*
-     * Cari project berdasarkan ID
-     */
+    try {
 
-    var projectId=
-      p.id ||
-      p.projectId ||
-      "";
+        console.log(
+            "[IMPORT] Starting Supabase sync..."
+        );
 
 
-    var saved=false;
+        /* =================================================
+           GET EXISTING PROJECT PARTICIPANTS
+        ================================================= */
+
+        var projectParticipants =
+            await DataService.getProjectParticipants(
+                projectId
+            );
+
+        projectParticipants =
+            Array.isArray(projectParticipants)
+                ? projectParticipants
+                : [];
 
 
-    storedProjects.forEach(function(sp){
+        /* =================================================
+           PROCESS IMPORTED PARTICIPANTS
+        ================================================= */
 
-      var spId=
-        sp.id ||
-        sp.projectId ||
-        "";
+        for (const participant of importRows) {
+
+            if (!participant) continue;
+
+            var importCode = String(
+                participant.id || ""
+            )
+            .trim();
+
+            var importEmail = String(
+                participant.email || ""
+            )
+            .trim()
+            .toLowerCase();
+
+            if (!importCode && !importEmail) {
+                continue;
+            }
 
 
-      if(
-        projectId &&
-        String(spId)===
-        String(projectId)
-      ){
+            /* =============================================
+               CHECK IF ALREADY LINKED TO THIS PROJECT
+            ============================================= */
+
+            var linkedRow =
+                projectParticipants.find(
+                    function (row) {
+
+                        var dbParticipant =
+                            row.participant || {};
+
+                        var dbCode = String(
+                            dbParticipant.participant_code || ""
+                        )
+                        .trim()
+                        .toLowerCase();
+
+                        var dbEmail = String(
+                            dbParticipant.email || ""
+                        )
+                        .trim()
+                        .toLowerCase();
+
+                        return (
+                            (
+                                importCode &&
+                                dbCode ===
+                                importCode.toLowerCase()
+                            ) ||
+                            (
+                                importEmail &&
+                                dbEmail === importEmail
+                            )
+                        );
+
+                    }
+                );
+
+
+            var participantData = {
+
+                participant_code:
+                    importCode || null,
+
+                project_id:
+                    projectId,
+
+                name:
+                    participant.name || "",
+
+                full_name:
+                    participant.name || "",
+
+                email:
+                    participant.email || null,
+
+                employee_id:
+                    importCode || null,
+
+                position:
+                    participant.position || null,
+
+                department:
+                    participant.department || null,
+
+                company:
+                    p.company || null,
+
+                status:
+                    "Active",
+
+                assessment_status:
+                    "Not Started",
+
+                progress:
+                    0,
+
+                raw_data: {
+
+                    phone:
+                        participant.phone || "",
+
+                    education:
+                        participant.education || "",
+
+                    source:
+                        "excel_import"
+
+                }
+
+            };
+
+
+            var databaseParticipant = null;
+
+
+            /* =============================================
+               ALREADY LINKED
+            ============================================= */
+
+            if (linkedRow && linkedRow.participant) {
+
+                databaseParticipant =
+                    linkedRow.participant;
+
+                console.log(
+                    "[IMPORT] Already linked to project:",
+                    databaseParticipant
+                );
+
+            } else {
+
+                /* =========================================
+                   CHECK GLOBAL PARTICIPANT
+                ========================================= */
+
+                var existingParticipant =
+                    await DataService.getParticipantByCodeOrEmail(
+                        importCode || null,
+                        participant.email || null
+                    );
+
+
+                if (existingParticipant) {
+
+                    databaseParticipant =
+                        existingParticipant;
+
+                    console.log(
+                        "[IMPORT] Existing global participant found:",
+                        databaseParticipant
+                    );
+
+                } else {
+
+                    console.log(
+                        "[IMPORT] Creating new participant:",
+                        participantData
+                    );
+
+                    databaseParticipant =
+                        await DataService.createParticipant(
+                            participantData
+                        );
+
+                }
+
+
+                if (!databaseParticipant) {
+
+                    throw new Error(
+                        "Gagal membuat atau menemukan participant: " +
+                        (
+                            importCode ||
+                            importEmail ||
+                            "unknown"
+                        )
+                    );
+
+                }
+
+
+                /* =========================================
+                   LINK PARTICIPANT TO PROJECT
+                ========================================= */
+
+                await DataService.addParticipantToProject(
+                    projectId,
+                    databaseParticipant.id,
+                    "registered"
+                );
+
+                projectParticipants.push({
+
+                    participant:
+                        databaseParticipant
+
+                });
+
+                console.log(
+                    "[IMPORT] Participant linked:",
+                    databaseParticipant
+                );
+
+            }
+
+
+            /* =============================================
+               UPDATE LOCAL OBJECT WITH DATABASE REFERENCE
+               id tetap kode Excel agar tabel mudah dibaca.
+            ============================================= */
+
+            var localCodeKey =
+                String(
+                    importCode || ""
+                )
+                .trim()
+                .toLowerCase();
+
+            var localEmailKey =
+                importEmail;
+
+            var localParticipant =
+                existing[localCodeKey] ||
+                existing[localEmailKey] ||
+                null;
+
+            if (localParticipant) {
+
+                localParticipant.db_id =
+                    databaseParticipant.id;
+
+                localParticipant.participant_code =
+                    databaseParticipant.participant_code ||
+                    importCode ||
+                    localParticipant.participant_code;
+
+                localParticipant.name =
+                    participant.name ||
+                    databaseParticipant.full_name ||
+                    databaseParticipant.name ||
+                    localParticipant.name ||
+                    "";
+
+                localParticipant.email =
+                    participant.email ||
+                    databaseParticipant.email ||
+                    localParticipant.email ||
+                    "";
+
+                localParticipant.position =
+                    participant.position ||
+                    databaseParticipant.position ||
+                    localParticipant.position ||
+                    "";
+
+            }
+
+        }
+
+
+        /* =================================================
+           SAVE LOCAL DATA AGAIN AFTER DATABASE SYNC
+        ================================================= */
+
+        try {
+
+            var projectsAfterSync =
+                JSON.parse(
+                    localStorage.getItem(
+                        "talentscope_projects"
+                    ) || "[]"
+                );
+
+            if (!Array.isArray(projectsAfterSync)) {
+                projectsAfterSync = [];
+            }
+
+            var projectAfterSyncIndex =
+                projectsAfterSync.findIndex(
+                    function (item) {
+
+                        return String(
+                            item.id ||
+                            item.projectId ||
+                            ""
+                        ) === String(projectId);
+
+                    }
+                );
+
+            if (projectAfterSyncIndex >= 0) {
+                projectsAfterSync[projectAfterSyncIndex] = p;
+            } else {
+                projectsAfterSync.push(p);
+            }
+
+            localStorage.setItem(
+                "talentscope_projects",
+                JSON.stringify(projectsAfterSync)
+            );
+
+            window.project = p;
+
+        } catch (finalSaveError) {
+
+            console.warn(
+                "[IMPORT] Final local save warning:",
+                finalSaveError
+            );
+
+        }
+
+
+        console.log(
+            "[IMPORT] Supabase sync completed"
+        );
+
+
+    } catch (syncError) {
+
+        console.error(
+            "[IMPORT] Supabase sync failed:",
+            syncError
+        );
+
+        alert(
+
+            "Import lokal berhasil, tetapi sinkronisasi ke database gagal.\n\n" +
+
+            (
+                syncError.message ||
+                String(syncError)
+            )
+
+        );
 
         /*
-         * Pertahankan object project
-         * dan hanya update participants.
-         */
-
-        sp.participants=
-          p.participants;
-
-        saved=true;
-
-      }
-
-    });
-
-
-    /*
-     * Kalau project tidak ditemukan
-     * di storage, jangan membuat data
-     * project baru secara sembarangan.
-     */
-
-    if(saved){
-
-      localStorage.setItem(
-        "talentscope_projects",
-        JSON.stringify(
-          storedProjects
-        )
-      );
+           Stop proses di sini agar popup sukses
+           TIDAK muncul setelah popup error.
+        */
+        return;
 
     }
 
 
-    m.remove();
+    /* =====================================================
+       CLOSE MODAL
+    ===================================================== */
+
+    if (
+        typeof m !== "undefined" &&
+        m
+    ) {
+        m.remove();
+    }
 
 
-    if(typeof refresh==="function"){
+    /* =====================================================
+       REFRESH UI
+       Hanya sekali untuk mencegah double refresh/race.
+    ===================================================== */
 
-      refresh();
+    if (typeof refresh === "function") {
+
+        refresh();
+
+    } else if (
+        typeof window.initPage === "function"
+    ) {
+
+        window.initPage();
 
     }
 
+
+    /* =====================================================
+       SUCCESS MESSAGE
+    ===================================================== */
 
     alert(
-      "Import berhasil.\n\n"+
-      "Participant baru: "+added+"\n"+
-      "Participant diperbarui: "+updated+
-      "\n\n"+
-      "Data lama seperti invitation, access code, login, logout, dan status assessment tetap dipertahankan."
+
+        "Import berhasil.\n\n" +
+
+        "Participant baru: " +
+        added +
+
+        "\n" +
+
+        "Participant diperbarui: " +
+        updated +
+
+        "\n\n" +
+
+        "Data peserta telah disimpan dan disinkronkan ke database."
+
     );
 
-  };
+};
 
 }
-
-
 /* =====================================================
    DOWNLOAD TEMPLATE EXCEL
 ===================================================== */
@@ -4989,17 +5266,109 @@ function template(){
   },1000);
 
 }
-/* Capture phase: this runs before legacy click handlers on the same buttons. */
-document.addEventListener("click",function(e){
-  var el=e.target.closest && e.target.closest("#addParticipantBtn,#importExcelBtn,#downloadTemplateBtn");
-  if(!el)return;
-  e.preventDefault();e.stopImmediatePropagation();
-  if(el.id==="addParticipantBtn")addParticipant();
-  else if(el.id==="importExcelBtn")importExcel();
-  else template();
-},true);
 
-window.tsV22={addParticipant:addParticipant,importExcel:importExcel,template:template};
+/* =====================================================
+   BUTTON CLICK HANDLER
+===================================================== */
+
+document.addEventListener(
+    "click",
+    function (e) {
+
+        var button =
+            e.target.closest(
+                "#addParticipantBtn," +
+                "#importExcelBtn," +
+                "#downloadTemplateBtn"
+            );
+
+
+        if (!button) {
+
+            return;
+
+        }
+
+
+        e.preventDefault();
+
+        e.stopImmediatePropagation();
+
+
+        console.log(
+            "[TS V22] Button clicked:",
+            button.id
+        );
+
+
+        if (
+            button.id ===
+            "addParticipantBtn"
+        ) {
+
+            addParticipant();
+
+            return;
+
+        }
+
+
+        if (
+            button.id ===
+            "importExcelBtn"
+        ) {
+
+            importExcel();
+
+            return;
+
+        }
+
+
+        if (
+            button.id ===
+            "downloadTemplateBtn"
+        ) {
+
+            template();
+
+            return;
+
+        }
+
+    },
+
+    true
+);
+
+
+/* =====================================================
+   EXPOSE FUNCTIONS TO WINDOW
+===================================================== */
+
+window.tsV22 = {
+
+    addParticipant:
+        addParticipant,
+
+    importExcel:
+        importExcel,
+
+    template:
+        template
+
+};
+
+
+console.log(
+    "[TS V22] Controls initialized successfully"
+);
+
+
+/* =====================================================
+   CLOSE IIFE
+===================================================== */
+
 })();
 </script>
 
@@ -5038,19 +5407,32 @@ window.tsV22={addParticipant:addParticipant,importExcel:importExcel,template:tem
   }
 
   function invitationTemplate(projectName){
+
     return "Halo {{Participant Name}},\n\n"+
-      "Anda diundang untuk mengikuti assessment dalam project \""+projectName+"\".\n\n"+
-      "Silakan mengakses assessment melalui tautan berikut:\n"+
-      "{{Access Link}}\n\n"+
-      "Kode Akses: {{Access Code}}\n"+
-      "Periode Akses: {{Access Until}}\n\n"+
-      "Mohon menyelesaikan assessment sesuai jadwal yang telah ditentukan.\n\n"+
+
+      "Anda diundang untuk mengikuti assessment online \""+
+      projectName+
+      "\", pada :\n\n"+
+
+      "Hari/Tanggal : {{Assessment Schedule}}\n"+
+
+      "Waktu        : {{Assessment Time}}\n\n\n"+
+
+      "Username : {{Username}}\n"+
+
+      "Password : {{Password}}\n\n"+
+
+      "Jika ada pertanyaan bisa ditanyakan di grup WhatsApp.\n\n"+
+
       "Terima kasih,\n"+
+
       "TalentScope";
-  }
+
+}
 
   function openModal(participants){
     closeModal();
+    window.__tsV26Sending=false;
     var p=getProject();
     if(!p || !participants.length){
       alert("Pilih minimal satu participant terlebih dahulu.");
@@ -5094,8 +5476,30 @@ window.tsV22={addParticipant:addParticipant,importExcel:importExcel,template:tem
 
     document.getElementById("tsV26Close").onclick=closeModal;
     document.getElementById("tsV26Cancel").onclick=closeModal;
-    document.getElementById("tsV26Send").onclick=function(){
-      sendInvitations(participants);
+
+    // Lock the send action immediately on the first click so a slow email
+    // request cannot be triggered multiple times by repeated clicks.
+    var sendBtn=document.getElementById("tsV26Send");
+    sendBtn.onclick=function(){
+      if(window.__tsV26Sending) return;
+
+      window.__tsV26Sending=true;
+      sendBtn.disabled=true;
+      sendBtn.classList.add("ts-invite-sending");
+      sendBtn.setAttribute("aria-busy","true");
+      sendBtn.innerHTML='<span class="ts-invite-spinner" aria-hidden="true"></span>Sending Invitations...';
+
+      Promise.resolve(sendInvitations(participants)).finally(function(){
+        // On success the modal is closed. On failure, restore the button so
+        // the user can retry after the error message is shown.
+        window.__tsV26Sending=false;
+        if(document.getElementById("tsV26Send")===sendBtn){
+          sendBtn.disabled=false;
+          sendBtn.classList.remove("ts-invite-sending");
+          sendBtn.removeAttribute("aria-busy");
+          sendBtn.textContent="Send Invitations";
+        }
+      });
     };
     m.addEventListener("click",function(e){if(e.target===m)closeModal();});
   }
@@ -5118,85 +5522,453 @@ window.tsV22={addParticipant:addParticipant,importExcel:importExcel,template:tem
       "&code="+encodeURIComponent(p.accessCode);
   }
 
-  function sendInvitations(participants){
-    var p=getProject();
-    if(!p)return;
+  async function sendInvitations(participants){
 
-    var subject=document.getElementById("tsV26Subject").value.trim();
-    var body=document.getElementById("tsV26Body").value;
-    var sent=0;
+    var p = getProject();
 
-    participants.forEach(function(person){
-      makeAccess(person,p);
-      var until=person.accessEnd || "-";
-      person.invitationSubject=subject;
-      person.invitationTemplate=body;
-      person.invitationBody=body
-        .replace(/\{\{Participant Name\}\}/g,person.name||"Participant")
-        .replace(/\{\{Access Link\}\}/g,person.accessLink||"-")
-        .replace(/\{\{Access Code\}\}/g,person.accessCode||"-")
-        .replace(/\{\{Access Until\}\}/g,until);
-      sent++;
+    if (!p) return;
+
+
+    var subject =
+        document.getElementById(
+            "tsV26Subject"
+        ).value.trim();
+
+
+    var body =
+        document.getElementById(
+            "tsV26Body"
+        ).value;
+
+
+    var sent = 0;
+
+    var participantsData = [];
+
+
+   participants.forEach(function(person){
+
+    makeAccess(person,p);
+
+    var until =
+        person.accessEnd || "-";
+
+
+    person.invitationSubject =
+        subject;
+
+
+    person.invitationTemplate =
+        body;
+
+
+    /* =========================================
+GET SCHEDULE DATA
+========================================= */
+
+var scheduleDate =
+
+p.scheduleDate ||
+
+p.start ||
+
+p.startDate ||
+
+p.start_date ||
+
+"-";
+
+
+var scheduleTime =
+
+p.assessment_start_time ||
+
+p.assessmentStartTime ||
+
+p.scheduleTime ||
+
+p.schedule_time ||
+
+p.time ||
+
+p.startTime ||
+
+p.start_time ||
+
+"-";
+
+
+if (
+    scheduleTime &&
+    scheduleTime !== "-"
+) {
+    scheduleTime =
+        String(scheduleTime).substring(0, 5);
+}
+
+    /* =========================================
+       FORMAT DATE
+    ========================================= */
+
+    var formattedDate = "-";
+
+    try {
+
+        if (scheduleDate && scheduleDate !== "-") {
+
+            var dateObject =
+                new Date(scheduleDate);
+
+            formattedDate =
+                dateObject.toLocaleDateString(
+                    "id-ID",
+                    {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                    }
+                );
+
+        }
+
+    } catch (error) {
+
+        console.warn(
+            "[INVITATION] Failed to format schedule date",
+            error
+        );
+
+        formattedDate =
+            scheduleDate;
+
+    }
+
+
+    /* =========================================
+       GET USERNAME
+    ========================================= */
+
+    var username =
+        person.email ||
+        person.username ||
+        "-";
+
+
+    /* =========================================
+       GET PASSWORD / ACCESS CODE
+    ========================================= */
+
+    var password =
+        person.password ||
+        person.accessCode ||
+        "-";
+
+
+    /* =========================================
+       GENERATE INVITATION MESSAGE
+    ========================================= */
+
+    person.invitationBody =
+        body
+
+        .replace(
+            /\{\{Participant Name\}\}/g,
+            person.name || "Participant"
+        )
+
+        .replace(
+            /\{\{Project Name\}\}/g,
+            p.name || "TalentScope Project"
+        )
+
+        .replace(
+            /\{\{Assessment Schedule\}\}/g,
+            formattedDate
+        )
+
+        .replace(
+            /\{\{Assessment Time\}\}/g,
+            scheduleTime
+        )
+
+        .replace(
+            /\{\{Username\}\}/g,
+            username
+        )
+
+        .replace(
+            /\{\{Password\}\}/g,
+            password
+        );
+
+    participantsData.push({
+
+        id: person.id,
+
+        name: person.name,
+
+        email: person.email,
+
+        subject: subject,
+
+        invitationBody:
+            person.invitationBody,
+
+        accessLink:
+            person.accessLink || "-",
+
+        accessCode:
+            person.accessCode || "-",
+
+        accessUntil:
+            until
+
     });
 
-    if(typeof window.save==="function") window.save();
-    else localStorage.setItem("talentscope_projects",JSON.stringify(
-      JSON.parse(localStorage.getItem("talentscope_projects")||"[]").map(function(x){
-        return String(x.id)===String(p.id)?p:x;
-      })
-    ));
+
+    sent++;
+
+});
+
+
+    /* ==========================================
+       CALL SUPABASE EDGE FUNCTION
+    ========================================== */
+
+    try {
+
+        console.log(
+            "[INVITATION] Calling Supabase Edge Function..."
+        );
+
+
+        console.log(
+            "[INVITATION] Participants:",
+            participantsData
+        );
+
+
+        if (
+            typeof supabaseClient === "undefined"
+        ) {
+
+            throw new Error(
+                "Supabase client belum tersedia"
+            );
+
+        }
+
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .functions
+                .invoke(
+                    "send-invitation",
+                    {
+                        body: {
+                            participants:
+                                participantsData,
+
+                            projectTitle:
+                                p.name ||
+                                "TalentScope Project"
+                        }
+                    }
+                );
+
+
+        console.log(
+            "[INVITATION] Edge Function response:",
+            {
+                data,
+                error
+            }
+        );
+
+
+        if (error) {
+
+            throw error;
+
+        }
+
+
+        if (
+            data &&
+            data.success === false
+        ) {
+
+            throw new Error(
+                data.error ||
+                "Server gagal mengirim email"
+            );
+
+        }
+
+
+        console.log(
+            "[INVITATION] Email process successful"
+        );
+
+
+    } catch (err) {
+
+        console.error(
+            "[INVITATION] Failed:",
+            err
+        );
+
+
+        alert(
+            "Gagal mengirim email ke server: " +
+            (
+                err.message ||
+                "Unknown error"
+            )
+        );
+
+
+        return;
+
+    }
+
+
+    /* ==========================================
+       SAVE PROJECT DATA
+    ========================================== */
+
+    if (
+        typeof window.save === "function"
+    ) {
+
+        window.save();
+
+    } else {
+
+        localStorage.setItem(
+
+            "talentscope_projects",
+
+            JSON.stringify(
+                JSON.parse(
+                    localStorage.getItem(
+                        "talentscope_projects"
+                    ) || "[]"
+                ).map(function(x){
+
+                    return String(x.id) === String(p.id)
+                        ? p
+                        : x;
+
+                })
+            )
+        );
+
+    }
+
+
+    /* ==========================================
+       CLOSE MODAL
+    ========================================== */
 
     closeModal();
 
-    if(typeof window.initPage==="function"){
-      window.initPage();
+
+    if (
+        typeof window.initPage === "function"
+    ) {
+
+        window.initPage();
+
     }
 
-    
-/* =====================================================
-   RESET SELECTION AFTER SEND INVITATION
-===================================================== */
 
-var selectAll =
-  document.getElementById("selectAllParticipants");
+    /* ==========================================
+       RESET SELECTION
+    ========================================== */
 
-if(selectAll){
+    var selectAll =
+        document.getElementById(
+            "selectAllParticipants"
+        );
 
-  selectAll.checked = false;
-  selectAll.indeterminate = false;
 
-}
+    if (selectAll) {
 
-document
-  .querySelectorAll(
-    "#participantTable .participant-select"
-  )
-  .forEach(function(cb){
+        selectAll.checked = false;
 
-    cb.checked = false;
+        selectAll.indeterminate = false;
 
-  });
-
-var selectedCount =
-  document.getElementById(
-    "selectedParticipantCount"
-  );
-
-if(selectedCount){
-
-  selectedCount.textContent =
-    "0 selected";
-
-}
-
-    var toast=document.getElementById("toast");
-    if(toast){
-      toast.textContent="Invitation berhasil diproses untuk "+sent+" participant.";
-      toast.style.display="block";
-      clearTimeout(window.__tsV26Toast);
-      window.__tsV26Toast=setTimeout(function(){toast.style.display="none";},3000);
     }
-  }
+
+
+    document
+        .querySelectorAll(
+            "#participantTable .participant-select"
+        )
+        .forEach(function(cb){
+
+            cb.checked = false;
+
+        });
+
+
+    var selectedCount =
+        document.getElementById(
+            "selectedParticipantCount"
+        );
+
+
+    if (selectedCount) {
+
+        selectedCount.textContent =
+            "0 selected";
+
+    }
+
+
+    /* ==========================================
+       SUCCESS TOAST
+    ========================================== */
+
+    var toast =
+        document.getElementById(
+            "toast"
+        );
+
+
+    if (toast) {
+
+        toast.textContent =
+            "Invitation berhasil diproses dan dikirim ke " +
+            sent +
+            " participant.";
+
+
+        toast.style.display =
+            "block";
+
+
+        clearTimeout(
+            window.__tsV26Toast
+        );
+
+
+        window.__tsV26Toast =
+            setTimeout(function(){
+
+                toast.style.display =
+                    "none";
+
+            }, 3000);
+
+    }
+
+}
 
   // This is the handler used by the existing button's inline onclick.
   window.tsBulkInvite=function(e){
@@ -5236,926 +6008,6 @@ if(selectedCount){
 
   window.tsInvitationV26={openModal:openModal,send:sendInvitations,sync:syncSelection};
 })();
-</script>
-
-
-<script id="tsCredentialInvitationV27">
-(function(){
-"use strict";
-function getProject(){ return window.project || null; }
-function selected(){
-  var p=getProject();
-  return Array.from(document.querySelectorAll("#participantTable .participant-select:checked"))
-    .map(function(cb){
-      var id=String(cb.value||cb.getAttribute("data-participant-id")||"");
-      return p&&Array.isArray(p.participants)
-        ? p.participants.find(function(x){return String(x.id)===id;})
-        : null;
-    }).filter(Boolean);
-}
-function ensureCredentials(p){
-  p.username=p.email||p.username||"";
-  if(!p.accessCode){
-    var seed=String(p.id||"USER").replace(/[^A-Za-z0-9]/g,"").toUpperCase().slice(0,5)||"USER";
-    p.accessCode="TS-"+seed+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
-  }
-  p.password=p.accessCode;
-  p.credentialType="email-access-code";
-}
-function template(p,prj){
-  return "Halo {{Participant Name}},\n\n"+
-    "Anda diundang untuk mengikuti assessment pada project \""+(prj.name||"TalentScope Assessment")+"\".\n\n"+
-    "LOGIN PARTICIPANT DASHBOARD\n"+
-    "Username : {{Username}}\n"+
-    "Password : {{Password}}\n\n"+
-    "Gunakan username dan password tersebut untuk login ke Participant Dashboard. "+
-    "Password ini tetap berlaku selama akun/link assessment masih aktif.\n\n"+
-    "Silakan login melalui Participant Dashboard untuk melihat assessment yang tersedia.\n\n"+
-    "Terima kasih,\nTalentScope";
-}
-function saveProject(){
-  var p=getProject();
-  if(typeof window.save==="function"){ window.save(); return; }
-  try{
-    var all=JSON.parse(localStorage.getItem("talentscope_projects")||"[]");
-    var i=all.findIndex(function(x){return String(x.id)===String(p.id);});
-    if(i>=0) all[i]=p; else all.push(p);
-    localStorage.setItem("talentscope_projects",JSON.stringify(all));
-  }catch(e){}
-}
-function openInvite(){
-  var ps=selected(), prj=getProject();
-  if(!ps.length){ alert("Pilih minimal satu participant terlebih dahulu."); return; }
-  ps.forEach(ensureCredentials);
-  var m=document.createElement("div");
-  m.id="tsV27Invite";
-  m.style.cssText="position:fixed;inset:0;z-index:2147483647;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;padding:20px";
-  m.innerHTML='<div style="width:min(820px,100%);max-height:92vh;overflow:auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 24px 80px rgba(15,23,42,.25)">'+
-    '<div style="padding:22px 24px;border-bottom:1px solid #e5eaf2;display:flex;justify-content:space-between"><div><h3 style="margin:0;font-size:20px;color:#0f172a">Send Assessment Invitations</h3><p style="margin:6px 0 0;font-size:13px;color:#64748b">'+ps.length+' participant dipilih</p></div><button id="tsV27close" type="button" style="width:34px;height:34px;border:1px solid #dbe3ef;border-radius:9px;background:#fff;font-size:20px;color:#64748b;cursor:pointer">&times;</button></div>'+
-    '<div style="padding:22px 24px">'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">'+
-    '<div style="padding:14px;border:1px solid #e2e8f0;border-radius:11px;background:#f8fafc"><div style="font-size:11px;color:#64748b">Username</div><div style="margin-top:5px;font-weight:700;font-size:13px;color:#0f172a">'+(ps[0].email||"-")+'</div></div>'+
-    '<div style="padding:14px;border:1px solid #e2e8f0;border-radius:11px;background:#f8fafc"><div style="font-size:11px;color:#64748b">Password / Access Code</div><div style="margin-top:5px;font-weight:700;font-size:13px;color:#0f172a">'+ps[0].accessCode+'</div></div></div>'+
-    '<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:7px">Subject</label>'+
-    '<input id="tsV27subject" value="Invitation to Complete Your Assessment - '+String(prj.name||"TalentScope Assessment").replace(/"/g,"&quot;")+'" style="width:100%;box-sizing:border-box;height:42px;border:1px solid #d9e2ec;border-radius:9px;padding:0 12px;margin-bottom:16px">'+
-    '<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:7px">Invitation Message</label>'+
-    '<textarea id="tsV27body" style="width:100%;box-sizing:border-box;min-height:270px;resize:vertical;border:1px solid #d9e2ec;border-radius:9px;padding:12px;font:13px/1.6 system-ui;color:#0f172a"></textarea>'+
-    '<div style="margin-top:12px;padding:12px 14px;background:#f8fbff;border:1px solid #dbeafe;border-radius:10px;font-size:12px;color:#475569;line-height:1.6"><b>Credential:</b> Email peserta = Username. Access Code = Password permanen selama akun/link aktif.</div>'+
-    '</div><div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 24px;border-top:1px solid #e5eaf2"><button id="tsV27cancel" type="button" class="btn">Cancel</button><button id="tsV27send" type="button" class="btn btn-primary">Send Invitations</button></div></div>';
-  document.body.appendChild(m);
-  document.getElementById("tsV27body").value=template(ps[0],prj);
-  document.getElementById("tsV27close").onclick=document.getElementById("tsV27cancel").onclick=function(){m.remove();};
-  document.getElementById("tsV27send").onclick=function(){
-
-    var subject =
-        document.getElementById("tsV27subject").value.trim();
-
-    var body =
-        document.getElementById("tsV27body").value;
-
-
-    if (!subject) {
-        alert("Subject invitation wajib diisi.");
-        return;
-    }
-
-
-    if (!body.trim()) {
-        alert("Invitation message wajib diisi.");
-        return;
-    }
-
-
-    var sentAt =
-        new Date().toISOString();
-
-
-    ps.forEach(function(p){
-
-        /* Pastikan credential tersedia */
-        ensureCredentials(p);
-
-
-        /* Simpan invitation */
-        p.invitationSubject =
-            subject;
-
-        p.invitationTemplate =
-            body;
-
-
-        /* Buat isi invitation final */
-        p.invitationBody =
-            body
-                .replace(
-                    /\{\{Participant Name\}\}/g,
-                    p.name || "Participant"
-                )
-                .replace(
-                    /\{\{Username\}\}/g,
-                    p.username || p.email || ""
-                )
-                .replace(
-                    /\{\{Password\}\}/g,
-                    p.accessCode || ""
-                )
-                .replace(
-                    /\{\{Access Code\}\}/g,
-                    p.accessCode || ""
-                );
-
-
-        /* ================================
-           STATUS INVITATION
-        ================================= */
-
-        p.invitationStatus =
-            "Invited";
-
-
-        /* Waktu invitation dikirim */
-        p.invitedAt =
-            sentAt;
-
-        p.invitationSentAt =
-            sentAt;
-
-
-        /* ================================
-           ACCOUNT
-        ================================= */
-
-        p.accountStatus =
-            "Active";
-
-        p.access =
-            "Invited";
-
-
-        /* ================================
-           ACTIVITY PESERTA
-           Belum login
-        ================================= */
-
-        p.loginTime = "";
-
-        p.loggedInAt = "";
-
-        p.logoutTime = "";
-
-        p.loggedOutAt = "";
-
-        p.isLoggedIn = false;
-
-
-        /* ================================
-           ASSESSMENT
-        ================================= */
-
-        if (!p.assessmentStatus) {
-            p.assessmentStatus =
-                "Not Started";
-        }
-
-    });
-
-
-    /* Simpan ke localStorage */
-    saveProject();
-
-m.remove();
-
-if(typeof window.initPage==="function"){
-  window.initPage();
-}
-
-/* =====================================================
-   RESET SELECTION AFTER SEND INVITATION
-===================================================== */
-
-setTimeout(function(){
-
-  var selectAll =
-    document.getElementById(
-      "selectAllParticipants"
-    );
-
-  if(selectAll){
-    selectAll.checked = false;
-    selectAll.indeterminate = false;
-  }
-
-  document
-    .querySelectorAll(
-      "#participantTable .participant-select"
-    )
-    .forEach(function(cb){
-
-      cb.checked = false;
-
-    });
-
-  var selectedCount =
-    document.getElementById(
-      "selectedParticipantCount"
-    );
-
-  if(selectedCount){
-    selectedCount.textContent = "0 selected";
-  }
-
-}, 100);
-
-alert(
-  "Invitation berhasil diproses untuk " +
-  ps.length +
-  " participant."
-);
-
-};
-}
-window.tsCredentialInvitationV27={open:openInvite};
-window.sendBulkInvitations=function(){openInvite();return false;};
-document.addEventListener("click",function(e){
-  var b=e.target.closest&&e.target.closest("button,a");
-  if(!b)return;
-  if(/send invitations to selected/i.test((b.textContent||"").trim())){
-    e.preventDefault(); e.stopImmediatePropagation(); openInvite();
-  }
-},true);
-})();
-
-(function(){
-"use strict";
-const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-function getP(){return window.project||null}
-function saveP(){const p=getP();if(!p)return;const a=JSON.parse(localStorage.getItem("talentscope_projects")||"[]"),i=a.findIndex(x=>String(x.id)===String(p.id));if(i>=0)a[i]=p;else a.push(p);localStorage.setItem("talentscope_projects",JSON.stringify(a));}
-function refresh(){if(typeof window.initPage==="function")window.initPage();else location.reload()}
-function toast(s){if(typeof window.toast==="function")window.toast(s);else alert(s)}
-function log(t,d,m=""){const p=getP();if(!p)return;p.activityLog=Array.isArray(p.activityLog)?p.activityLog:[];p.activityLog.unshift({title:t,detail:d,meta:m,at:new Date().toISOString(),by:"Administrator"});p.activityLog=p.activityLog.slice(0,100);saveP()}
-function modal(title,body,save){
- const m=document.createElement("div");m.id="tsV40Modal";m.style="position:fixed;inset:0;background:rgba(8,22,40,.48);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";
- m.innerHTML='<div style="width:min(520px,94vw);background:#fff;border-radius:14px;padding:24px;box-shadow:0 25px 70px #0003"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;color:#10233f">'+esc(title)+'</h3><button id="v40x" style="border:0;background:#f3f6f9;border-radius:8px;width:32px;height:32px">×</button></div><div style="margin-top:20px">'+body+'</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:20px"><button id="v40c" class="btn">Cancel</button><button id="v40s" class="btn btn-primary">Save Changes</button></div></div>';
- document.body.appendChild(m);m.querySelector("#v40x").onclick=m.querySelector("#v40c").onclick=()=>m.remove();m.querySelector("#v40s").onclick=()=>save(m);return m;
-}
-function editParticipant(id){
- const p=getP(),x=(p?.participants||[]).find(q=>String(q.id)===String(id));if(!x)return;
- modal("Edit Participant",'<div class="v40f"><label>Name</label><input id="v40n" value="'+esc(x.name||"")+'"></div><div class="v40f"><label>Email</label><input id="v40e" value="'+esc(x.email||"")+'"></div><div class="v40f"><label>Position</label><input id="v40p" value="'+esc(x.position||"")+'"></div>',m=>{
-   const n=$("v40n").value.trim();if(!n)return alert("Name wajib diisi.");x.name=n;x.fullName=n;x.email=$("v40e").value.trim();x.emailAddress=x.email;x.position=$("v40p").value.trim();log("Participant updated",n,"Profile updated");m.remove();saveP();refresh();setTimeout(activity,30);toast("Participant berhasil diperbarui.");
- });
-}
-function addPE(){
- const tb=$("participantTable");if(!tb)return;tb.querySelectorAll("tr").forEach(r=>{if(r.dataset.v40)return;const c=r.querySelectorAll("td");if(c.length<8)return;const id=c[1].textContent.trim(),a=c[7],b=document.createElement("button");b.className="btn";b.style="padding:7px 10px;margin-right:6px";b.textContent="Edit";b.onclick=()=>editParticipant(id);a.insertBefore(b,a.firstChild);r.dataset.v40=1})
-}
-function assess(){
- const p=getP();return (p?.assessments||[]).map((a,i)=>typeof a==="string"?{id:a,name:a,code:a,duration:30,required:true,order:i+1}:a).sort((a,b)=>(a.order||0)-(b.order||0))
-}
-function editA(i){
- const p=getP(),a=assess()[i];if(!a)return;
- modal("Edit Assessment Package",'<div class="v40f"><label>Assessment</label><input value="'+esc(a.name||"")+'" disabled></div><div class="v40f"><label>Duration (minutes)</label><input id="v40d" type="number" min="1" value="'+(a.duration||30)+'"></div><div class="v40f"><label>Order</label><input id="v40o" type="number" min="1" value="'+(i+1)+'"></div><label><input id="v40r" type="checkbox" '+(a.required!==false?"checked":"")+' style="width:auto"> Required</label>',m=>{
-   const list=assess(),target=list[i],raw=p.assessments.findIndex(x=>String(typeof x==="string"?x:(x.id||x.code||x.name))===String(target.id||target.code||target.name));if(raw<0)return;
-   if(typeof p.assessments[raw]==="string")p.assessments[raw]={id:target.id,code:target.code,name:target.name,category:target.category||"Assessment",duration:+$("v40d").value||30,questions:target.questions||"-",required:$("v40r").checked,order:+$("v40o").value||i+1};
-   else{p.assessments[raw].duration=+$("v40d").value||30;p.assessments[raw].required=$("v40r").checked;p.assessments[raw].order=+$("v40o").value||i+1}
-   log("Assessment package updated",target.name,(+$("v40d").value||30)+" min • "+($("v40r").checked?"Required":"Optional"));m.remove();saveP();refresh();setTimeout(activity,30);toast("Assessment package berhasil diperbarui.");
- });
-}
-function addAE(){
- const b=$("assessmentPackageTable");if(!b)return;b.querySelectorAll("tbody tr").forEach((r,i)=>{if(r.dataset.v40)return;const c=r.querySelectorAll("td");if(c.length<8)return;const a=c[7],x=document.createElement("button");x.className="btn";x.style="padding:7px 10px;margin-right:6px";x.textContent="Edit";x.onclick=()=>editA(i);a.querySelector(".order-buttons")?.insertBefore(x,a.querySelector(".order-buttons").firstChild);r.dataset.v40=1})
-}
-function activity(){
- const b=$("timeline"),p=getP();if(!b||!p)return;const l=Array.isArray(p.activityLog)?p.activityLog:[];if(!l.length){b.innerHTML='<div class="v40empty">No activity recorded yet.</div>';return}
- b.innerHTML=l.map(x=>'<div class="v40event"><div class="v40dot"></div><div class="v40card"><div><strong>'+esc(x.title)+'</strong><time>'+new Date(x.at).toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})+'</time></div><p>'+esc(x.detail)+'</p>'+(x.meta?'<small>'+esc(x.meta)+'</small>':'')+'</div></div>').join("")
-}
-const st=document.createElement("style");st.textContent='.v40f{margin-bottom:14px}.v40f label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}.v40f input{width:100%;height:42px;border:1px solid #d7e0ea;border-radius:8px;padding:0 10px}.v40event{display:flex;gap:14px;margin-bottom:14px}.v40dot{width:9px;height:9px;border-radius:50%;background:#0878e8;margin:8px 2px;box-shadow:0 0 0 4px #e8f2fd}.v40card{flex:1;border:1px solid #e5ebf2;border-radius:11px;padding:12px 14px;background:#fff}.v40card>div{display:flex;justify-content:space-between;gap:10px}.v40card time{font-size:10px;color:#8b98a8}.v40card p{margin:5px 0;font-size:12px;color:#62748a}.v40card small{font-size:10px;color:#9aa6b5}.v40empty{padding:30px;text-align:center;color:#8b98a8;border:1px dashed #d7e0ea;border-radius:11px}';document.head.appendChild(st);
-function scan(){addPE();addAE();activity()}
-document.addEventListener("DOMContentLoaded",()=>{scan();new MutationObserver(scan).observe(document.body,{childList:true,subtree:true})});
-window.tsV40EditParticipant=editParticipant;window.tsV40EditAssessment=editA;
-})();
-
-/* TalentScope Project Detail Remove Participant v41
-   Add after the existing v40 enhancement script.
-   Adds a Remove button beside Edit in participant Action column.
-*/
-(function(){
-  "use strict";
-
-  const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? "").replace(/[&<>"']/g, c =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])
-  );
-
-  function project(){
-    return window.project || null;
-  }
-
-  function save(){
-    const p = project();
-    if(!p) return;
-    try{
-      const list = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
-      const i = list.findIndex(x => String(x.id) === String(p.id));
-      if(i >= 0) list[i] = p;
-      else list.push(p);
-      localStorage.setItem("talentscope_projects", JSON.stringify(list));
-    }catch(e){ console.error(e); }
-  }
-
-  function logActivity(title, detail, meta){
-    const p = project();
-    if(!p) return;
-    p.activityLog = Array.isArray(p.activityLog) ? p.activityLog : [];
-    p.activityLog.unshift({
-      id: "ACT-" + Date.now() + "-" + Math.random().toString(36).slice(2,7),
-      title,
-      detail,
-      meta: meta || "",
-      at: new Date().toISOString(),
-      by: "Administrator"
-    });
-    p.activityLog = p.activityLog.slice(0,100);
-  }
-
-  function refresh(){
-    if(typeof window.initPage === "function") window.initPage();
-    else if(typeof window.render === "function") window.render();
-    else location.reload();
-  }
-
-  function toast(message){
-    if(typeof window.toast === "function") window.toast(message);
-    else {
-      const t = document.createElement("div");
-      t.textContent = message;
-      t.style.cssText =
-        "position:fixed;right:22px;bottom:22px;z-index:100000;" +
-        "background:#173b5d;color:#fff;padding:11px 15px;border-radius:9px;" +
-        "font:12px Inter,Arial,sans-serif;box-shadow:0 8px 25px #0003";
-      document.body.appendChild(t);
-      setTimeout(()=>t.remove(),2200);
-    }
-  }
-
-  function findParticipant(identifier){
-    const p = project();
-    if(!p) return {person:null,index:-1};
-
-    const people = p.participants || [];
-    const index = people.findIndex(person =>
-      String(person.id ?? person.participantId ?? "").trim() === String(identifier).trim()
-    );
-    return {person:index >= 0 ? people[index] : null,index};
-  }
-
-  function removeParticipant(identifier){
-    const p = project();
-    if(!p) return;
-
-    const found = findParticipant(identifier);
-    if(found.index < 0){
-      toast("Participant tidak ditemukan.");
-      return;
-    }
-
-    const person = found.person;
-    const name = person.name || person.fullName || "Participant";
-    const email = person.email || person.emailAddress || "";
-
-    const confirmed = window.confirm(
-      "Remove participant ini dari project?\n\n" +
-      name + (email ? " • " + email : "") +
-      "\n\nData peserta akan dihapus dari project ini."
-    );
-
-    if(!confirmed) return;
-
-    p.participants.splice(found.index, 1);
-
-    // Clean selected participant references used by common prototype patterns.
-    if(Array.isArray(p.selectedParticipants)){
-      p.selectedParticipants = p.selectedParticipants.filter(x =>
-        String(x) !== String(identifier)
-      );
-    }
-
-    logActivity(
-      "Participant removed",
-      name + " was removed from the project.",
-      email ? email : "Participant ID: " + identifier
-    );
-
-    save();
-    refresh();
-
-    // Refresh activity if the page's Activity tab is already rendered.
-    setTimeout(()=>{
-      if(typeof window.tsV40EditParticipant === "function") {
-        // v40 observer will re-add the Edit buttons after refresh.
-      }
-    },50);
-
-    toast("Participant berhasil dihapus dari project.");
-  }
-
-  function addRemoveButtons(){
-    const table = $("participantTable");
-    if(!table) return;
-
-    table.querySelectorAll("tbody tr").forEach(row=>{
-      if(row.dataset.v41Remove) return;
-
-      const cells = row.querySelectorAll("td");
-      if(cells.length < 8) return;
-
-      const id = (cells[1].textContent || "").trim();
-      const action = cells[7];
-      if(!id || !action) return;
-
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = "Remove";
-      button.className = "btn";
-      button.style.cssText =
-        "padding:7px 10px;margin-left:5px;" +
-        "border-color:#e0a5a5;color:#a33;background:#fff";
-
-      button.onclick = function(){
-        removeParticipant(id);
-      };
-
-      action.appendChild(button);
-      row.dataset.v41Remove = "1";
-    });
-  }
-
-  window.tsV41RemoveParticipant = removeParticipant;
-
-  document.addEventListener("DOMContentLoaded", function(){
-    addRemoveButtons();
-
-    const observer = new MutationObserver(function(){
-      addRemoveButtons();
-    });
-
-    observer.observe(document.body,{childList:true,subtree:true});
-  });
-})();
-
-/* TalentScope v45 - Assessment Package modal freeze fix
-   Fixes v44 MutationObserver feedback loop that could make the page unresponsive.
-   Use this file INSTEAD OF v44.
-*/
-(function(){
-  "use strict";
-
-  const CATALOG = [
-    {code:"VR",   name:"Verbal Reasoning", category:"Cognitive", duration:30, questions:40},
-    {code:"NR",   name:"Numerical Reasoning", category:"Cognitive", duration:30, questions:40},
-    {code:"AR",   name:"Abstract Reasoning", category:"Cognitive", duration:30, questions:40},
-    {code:"SR",   name:"Spatial Reasoning", category:"Cognitive", duration:30, questions:40},
-    {code:"CFIT", name:"Culture Fair Intelligence Test", category:"Intelligence", duration:45, questions:"-"},
-    {code:"IST",  name:"Intelligenz Struktur Test", category:"Intelligence", duration:90, questions:"-"},
-    {code:"DISC", name:"DISC Personality", category:"Personality", duration:25, questions:"-"},
-    {code:"PAPI", name:"PAPI Kostick", category:"Personality", duration:35, questions:90},
-    {code:"16PF", name:"16 Personality Factors", category:"Personality", duration:45, questions:185},
-    {code:"EPPS", name:"Edwards Personal Preference Schedule", category:"Personality", duration:45, questions:225},
-    {code:"RMIB", name:"Rothwell Miller Interest Blank", category:"Interest", duration:30, questions:72},
-    {code:"VAP",  name:"VAP Test", category:"Performance", duration:60, questions:"-"},
-    {code:"PAU",  name:"Pauli Test", category:"Performance", duration:60, questions:"-"},
-    {code:"SJT",  name:"Situational Judgement Test", category:"Situational Judgement", duration:30, questions:30},
-    {code:"BIG5", name:"Big Five Personality", category:"Personality", duration:30, questions:60}
-  ];
-
-  const esc = v => String(v ?? "").replace(/[&<>"']/g, c =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])
-  );
-  const $ = id => document.getElementById(id);
-
-  function getProjects(){
-    try { return JSON.parse(localStorage.getItem("talentscope_projects") || "[]"); }
-    catch(e){ return []; }
-  }
-
-  function getProject(){
-    if(window.project) return window.project;
-    const all=getProjects();
-    const id=new URLSearchParams(location.search).get("id") || "by";
-    window.project=all.find(p=>String(p.id)===String(id)) || all[0] || null;
-    return window.project;
-  }
-
-  function saveProject(){
-    const p=getProject();
-    if(!p) return;
-    try{
-      const all=getProjects();
-      const i=all.findIndex(x=>String(x.id)===String(p.id));
-      if(i>=0) all[i]=p; else all.push(p);
-      localStorage.setItem("talentscope_projects",JSON.stringify(all));
-    }catch(e){ console.error(e); }
-  }
-
-  function normalize(){
-    const p=getProject();
-    if(!p) return [];
-    p.assessments=Array.isArray(p.assessments)?p.assessments:[];
-    return p.assessments.map((a,i)=>{
-      const key=typeof a==="string"?a:String(a.code||a.id||a.name||"");
-      const c=CATALOG.find(x=>x.code===key||x.name===key);
-      if(typeof a==="string") return {
-        id:c?.code||a,code:c?.code||a,name:c?.name||a,
-        category:c?.category||"Assessment",duration:c?.duration||30,
-        questions:c?.questions??"-",required:true,active:true,order:i+1
-      };
-      return {
-        id:String(a.id||a.code||a.name),
-        code:String(a.code||a.id||""),
-        name:String(a.name||a.title||a.id||"Assessment"),
-        category:String(a.category||"Assessment"),
-        duration:Number(a.duration||30),
-        questions:a.questions??"-",
-        required:a.required!==false,
-        active:a.active!==false,
-        order:Number(a.order||i+1)
-      };
-    }).sort((a,b)=>a.order-b.order);
-  }
-
-  function same(a,b){
-    return String(a.code||a.id||a.name).toLowerCase() ===
-           String(b.code||b.id||b.name).toLowerCase();
-  }
-
-  function addStyles(){
-    if($("tsV45Style")) return;
-    const s=document.createElement("style");
-    s.id="tsV45Style";
-    s.textContent=`
-      .ts-v45-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:0 0 14px}
-      .ts-v45-edit{border:1px solid #cdd9e6;background:#fff;color:#0b5fa5;border-radius:9px;padding:9px 14px;font:700 12px Inter,Segoe UI,Arial,sans-serif;cursor:pointer}
-      .ts-v45-edit:hover{background:#f5f9fd;border-color:#0b7be5}
-      .ts-v45-modal{position:fixed!important;inset:0!important;background:rgba(10,28,48,.50);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:18px}
-      .ts-v45-card{width:min(760px,96vw);max-height:92vh;overflow:hidden;background:#fff;border-radius:16px;box-shadow:0 30px 90px rgba(0,25,55,.28);display:flex;flex-direction:column;pointer-events:auto}
-      .ts-v45-top{padding:20px 22px 15px;border-bottom:1px solid #e8edf3}
-      .ts-v45-topline{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
-      .ts-v45-title{margin:0;color:#102a45;font-size:19px}
-      .ts-v45-sub{margin:6px 0 0;color:#718399;font-size:12px;line-height:1.5}
-      .ts-v45-close{border:0!important;background:#f3f6f9!important;border-radius:8px;width:32px;height:32px;font-size:20px;color:#64748b;cursor:pointer;pointer-events:auto}
-      .ts-v45-toolbar{padding:12px 22px;border-bottom:1px solid #edf1f5;display:flex;align-items:center;justify-content:space-between;gap:12px}
-      .ts-v45-search{width:min(310px,60vw);height:38px;border:1px solid #d5dee8;border-radius:9px;padding:0 12px;outline:none;font-size:12px}
-      .ts-v45-body{overflow:auto;padding:8px 22px 16px}
-      .ts-v45-cat{margin:12px 0 6px;font-size:10px;font-weight:800;letter-spacing:.7px;color:#7890a8;text-transform:uppercase}
-      .ts-v45-option{display:flex;align-items:center;gap:11px;padding:11px 10px;border:1px solid #edf1f5;border-radius:10px;margin:6px 0;cursor:pointer}
-      .ts-v45-option input{width:16px;height:16px;accent-color:#0878e8;cursor:pointer}
-      .ts-v45-info{flex:1}.ts-v45-name{font-size:12px;font-weight:700;color:#243b53}.ts-v45-detail{font-size:10px;color:#8997a8;margin-top:3px}
-      .ts-v45-footer{padding:13px 22px;border-top:1px solid #e8edf3;display:flex;align-items:center;justify-content:space-between;gap:10px}
-      .ts-v45-actions{display:flex;gap:8px}.ts-v45-cancel,.ts-v45-save{height:38px;padding:0 15px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;pointer-events:auto}
-      .ts-v45-cancel{border:1px solid #d5dee8;background:#fff;color:#52667c}.ts-v45-save{border:0;background:#0878e8;color:#fff}
-    `;
-    document.head.appendChild(s);
-  }
-
-  function openModal(){
-    if($("tsV45Modal")) return;
-    addStyles();
-
-    const current=normalize();
-    const selected=new Set(current.map(a=>a.code||a.id||a.name));
-    const grouped={};
-    CATALOG.forEach(c=>(grouped[c.category]??=[]).push(c));
-
-    const m=document.createElement("div");
-    m.id="tsV45Modal";
-    m.className="ts-v45-modal";
-
-    let html="";
-    Object.entries(grouped).forEach(([cat,items])=>{
-      html+=`<div class="ts-v45-cat">${esc(cat)}</div>`;
-      items.forEach(c=>{
-        const checked=selected.has(c.code)||selected.has(c.name);
-        html+=`<label class="ts-v45-option" data-search="${esc((c.name+" "+c.code+" "+c.category).toLowerCase())}">
-          <input type="checkbox" value="${esc(c.code)}" ${checked?"checked":""}>
-          <span class="ts-v45-info"><div class="ts-v45-name">${esc(c.name)}</div>
-          <div class="ts-v45-detail">${esc(c.code)} • ${esc(c.duration)} min • ${esc(c.questions)} questions</div></span>
-        </label>`;
-      });
-    });
-
-    m.innerHTML=`<div class="ts-v45-card">
-      <div class="ts-v45-top"><div class="ts-v45-topline">
-        <div><h3 class="ts-v45-title">Edit Assessment Package</h3>
-        <p class="ts-v45-sub">Pilih jenis assessment yang digunakan dalam project. Anda dapat menambah atau mengurangi assessment.</p></div>
-        <button type="button" class="ts-v45-close" id="tsV45Close" aria-label="Close">×</button>
-      </div></div>
-      <div class="ts-v45-toolbar"><input id="tsV45Search" class="ts-v45-search" placeholder="Cari jenis assessment...">
-        <span id="tsV45Count" style="font-size:11px;color:#718399">0 selected</span></div>
-      <div class="ts-v45-body" id="tsV45Body">${html}</div>
-      <div class="ts-v45-footer"><span style="font-size:11px;color:#718399">Assessment Catalog: 15 jenis tes</span>
-        <div class="ts-v45-actions"><button type="button" class="ts-v45-cancel" id="tsV45Cancel">Cancel</button>
-        <button type="button" class="ts-v45-save" id="tsV45Save">Save Assessment Package</button></div>
-      </div>
-    </div>`;
-
-    document.body.appendChild(m);
-
-    const sync=()=>{$("tsV45Count").textContent=m.querySelectorAll('input[type="checkbox"]:checked').length+" selected";};
-    sync();
-
-    $("tsV45Close").addEventListener("click",()=>m.remove());
-    $("tsV45Cancel").addEventListener("click",()=>m.remove());
-
-    $("tsV45Search").addEventListener("input",function(){
-      const q=this.value.toLowerCase().trim();
-      m.querySelectorAll(".ts-v45-option").forEach(x=>{
-        x.style.display=!q||x.dataset.search.includes(q)?"flex":"none";
-      });
-    });
-
-    m.querySelectorAll('input[type="checkbox"]').forEach(x=>x.addEventListener("change",sync));
-
-    $("tsV45Save").addEventListener("click",()=>{
-      const p=getProject();
-      if(!p) return;
-      const chosen=Array.from(m.querySelectorAll('input[type="checkbox"]:checked'))
-        .map(x=>CATALOG.find(c=>c.code===x.value)).filter(Boolean);
-      const old=normalize();
-      p.assessments=chosen.map((c,i)=>{
-        const oldItem=old.find(a=>same(a,c));
-        return oldItem ? {...oldItem,code:c.code,name:c.name,category:c.category,order:i+1}
-          : {id:c.code,code:c.code,name:c.name,category:c.category,duration:c.duration,questions:c.questions,required:true,active:true,order:i+1};
-      });
-      p.activityLog=Array.isArray(p.activityLog)?p.activityLog:[];
-      p.activityLog.unshift({
-        id:"ACT-"+Date.now(),title:"Assessment package updated",
-        detail:p.assessments.length+" assessment(s) selected",
-        at:new Date().toISOString(),by:"Administrator"
-      });
-      saveProject();
-      m.remove();
-
-      /* Refresh only once. No body-wide MutationObserver. */
-      if(typeof window.render==="function"){try{window.render();}catch(e){}}
-      if(typeof window.initPage==="function"){try{window.initPage();}catch(e){}}
-      renderPackage();
-    });
-  }
-
-  function renderPackage(){
-    const box=$("assessmentList");
-    if(!box) return;
-    const list=normalize();
-    const signature=list.map(a=>(a.code||a.id||a.name)+":"+a.duration).join("|");
-    if(box.dataset.tsV45Signature===signature) return;
-    box.dataset.tsV45Signature=signature;
-    box.innerHTML=list.length
-      ? `<div style="border:1px solid #e1e8f0;border-radius:12px;overflow:hidden;background:#fff">`+
-        list.map((a,i)=>`<div style="padding:13px 15px;border-bottom:1px solid #edf1f5">
-          <div style="font-size:13px;font-weight:700;color:#17304b">${i+1}. ${esc(a.name)}</div>
-          <div style="font-size:11px;color:#8090a3;margin-top:4px">${esc(a.category)} • ${esc(a.duration)} Min • ${a.required?"Required":"Optional"}</div>
-        </div>`).join("")+"</div>"
-      : `<div style="padding:20px;text-align:center;color:#8a98a8">Belum ada assessment dalam package.</div>`;
-  }
-
-  function addButton(){
-    const panel=$("tab-assessment");
-    if(!panel) return;
-    let btn=$("tsV45EditPackage");
-    if(!btn){
-      btn=document.createElement("button");
-      btn.id="tsV45EditPackage";
-      btn.type="button";
-      btn.className="ts-v45-edit";
-      btn.textContent="Edit Assessment Package";
-      btn.addEventListener("click",openModal);
-    }
-    const title=panel.querySelector("h2");
-    if(title){
-      let head=title.parentElement;
-      if(!head.classList.contains("ts-v45-head")){
-        head=document.createElement("div");
-        head.className="ts-v45-head";
-        title.parentNode.insertBefore(head,title);
-        head.appendChild(title);
-      }
-      if(!head.contains(btn)) head.appendChild(btn);
-    }else if(!panel.contains(btn)){
-      panel.insertBefore(btn,panel.firstChild);
-    }
-  }
-
-  function patch(){
-    addStyles();
-    addButton();
-    renderPackage();
-  }
-
-  window.tsV45EditAssessmentPackage=openModal;
-  window.tsV45PatchAssessmentPackage=patch;
-
-  document.addEventListener("DOMContentLoaded",patch);
-  /* Small delayed passes only; deliberately NO MutationObserver. */
-  setTimeout(patch,300);
-  setTimeout(patch,900);
-  setTimeout(patch,1800);
-})();
-
-
-/* TalentScope v46 - Activity Tab
-   Simple, responsive project activity timeline.
-   This module is standalone and does not use MutationObserver.
-*/
-(function(){
-  "use strict";
-
-  const $ = id => document.getElementById(id);
-  const esc = v => String(v ?? "").replace(/[&<>"']/g, c =>
-    ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c])
-  );
-
-  function getProjects(){
-    try { return JSON.parse(localStorage.getItem("talentscope_projects") || "[]"); }
-    catch(e){ return []; }
-  }
-
-  function getProject(){
-    if(window.project) return window.project;
-    const all=getProjects();
-    const id=new URLSearchParams(location.search).get("id") || "by";
-    window.project=all.find(p=>String(p.id)===String(id)) || all[0] || null;
-    return window.project;
-  }
-
-  function saveProjects(p){
-    const all=getProjects();
-    const i=all.findIndex(x=>String(x.id)===String(p.id));
-    if(i>=0) all[i]=p; else all.push(p);
-    localStorage.setItem("talentscope_projects",JSON.stringify(all));
-  }
-
-  function activities(){
-    const p=getProject();
-    if(!p) return [];
-
-    let list=Array.isArray(p.activityLog) ? [...p.activityLog] : [];
-
-    // Build useful historical activity when older project data has no log.
-    if(!list.length){
-      if((p.participants||[]).length){
-        list.push({
-          id:"initial-participants",
-          title:"Participants assigned",
-          detail:`${p.participants.length} participant(s) currently assigned to this project.`,
-          at:p.updatedAt||p.createdAt||new Date().toISOString(),
-          by:p.updatedBy||p.createdBy||"Administrator"
-        });
-      }
-
-      if((p.assessments||[]).length){
-        list.push({
-          id:"initial-assessments",
-          title:"Assessment package configured",
-          detail:`${p.assessments.length} assessment(s) included in the package.`,
-          at:p.updatedAt||p.createdAt||new Date().toISOString(),
-          by:p.updatedBy||p.createdBy||"Administrator"
-        });
-      }
-
-      list.push({
-        id:"project-created",
-        title:"Project created",
-        detail:"Project is available for configuration and participant management.",
-        at:p.createdAt||new Date().toISOString(),
-        by:p.createdBy||"Administrator"
-      });
-    }
-
-    return list.sort((a,b)=>new Date(b.at||0)-new Date(a.at||0));
-  }
-
-  function addStyles(){
-    if($("tsV46Style")) return;
-    const s=document.createElement("style");
-    s.id="tsV46Style";
-    s.textContent=`
-      .ts-v46-wrap{border:1px solid #e3eaf1;border-radius:12px;background:#fff;overflow:hidden}
-      .ts-v46-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;border-bottom:1px solid #edf1f5}
-      .ts-v46-title{font-size:14px;font-weight:800;color:#17304b;margin:0}
-      .ts-v46-sub{font-size:11px;color:#8190a2;margin:4px 0 0}
-      .ts-v46-filter{height:34px;border:1px solid #d7e0e9;border-radius:8px;padding:0 10px;font-size:11px;color:#53677c;background:#fff;outline:none}
-      .ts-v46-list{padding:4px 17px 8px}
-      .ts-v46-item{display:grid;grid-template-columns:34px 1fr auto;gap:12px;padding:15px 2px;border-bottom:1px solid #edf1f5}
-      .ts-v46-item:last-child{border-bottom:0}
-      .ts-v46-dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#eaf4ff;color:#0878e8;font-size:12px;font-weight:900}
-      .ts-v46-event{font-size:12px;font-weight:750;color:#233b54}
-      .ts-v46-detail{font-size:11px;color:#7b8b9d;margin-top:4px;line-height:1.5}
-      .ts-v46-meta{font-size:10px;color:#94a0ad;text-align:right;white-space:nowrap}
-      .ts-v46-empty{text-align:center;padding:38px 20px;color:#8b99a8;font-size:11px}
-      .ts-v46-more{display:block;margin:4px auto 15px;border:1px solid #d5e0eb;background:#fff;color:#0b67a9;border-radius:8px;padding:8px 14px;font-size:11px;font-weight:750;cursor:pointer}
-      .ts-v46-more:hover{background:#f5f9fd}
-      @media(max-width:650px){
-        .ts-v46-toolbar{align-items:flex-start;flex-direction:column}
-        .ts-v46-filter{width:100%}
-        .ts-v46-item{grid-template-columns:30px 1fr}
-        .ts-v46-meta{text-align:left;grid-column:2}
-      }
-    `;
-    document.head.appendChild(s);
-  }
-
-  function formatDate(v){
-    const d=new Date(v);
-    if(Number.isNaN(d.getTime())) return "-";
-    return d.toLocaleString("id-ID",{
-      day:"2-digit",month:"short",year:"numeric",
-      hour:"2-digit",minute:"2-digit"
-    });
-  }
-
-  function icon(title){
-    const t=String(title||"").toLowerCase();
-    if(t.includes("participant") && t.includes("remove")) return "−";
-    if(t.includes("participant")) return "+";
-    if(t.includes("assessment")) return "✓";
-    if(t.includes("invitation")) return "✉";
-    if(t.includes("schedule")) return "◷";
-    return "•";
-  }
-
-  function render(){
-    addStyles();
-
-    const panel=$("tab-activity");
-    if(!panel) return;
-
-    let wrap=$("tsV46Activity");
-    if(!wrap){
-      wrap=document.createElement("div");
-      wrap.id="tsV46Activity";
-      panel.innerHTML="";
-      panel.appendChild(wrap);
-    }
-
-    const list=activities();
-
-    wrap.innerHTML=`
-      <div class="ts-v46-wrap">
-        <div class="ts-v46-toolbar">
-          <div>
-            <div class="ts-v46-title">Project Activity</div>
-            <div class="ts-v46-sub">Riwayat perubahan dan aktivitas project terbaru.</div>
-          </div>
-          <select class="ts-v46-filter" id="tsV46Filter">
-            <option value="all">All Activity</option>
-            <option value="participant">Participants</option>
-            <option value="assessment">Assessment</option>
-            <option value="invitation">Invitation</option>
-            <option value="schedule">Schedule</option>
-          </select>
-        </div>
-        <div class="ts-v46-list" id="tsV46List"></div>
-      </div>`;
-
-    const container=$("tsV46List");
-    const filter=$("tsV46Filter");
-
-    function draw(){
-      const q=filter.value;
-      const filtered=list.filter(a=>{
-        if(q==="all") return true;
-        const t=(a.title+" "+(a.detail||"")).toLowerCase();
-        return t.includes(q);
-      });
-
-      if(!filtered.length){
-        container.innerHTML=`<div class="ts-v46-empty">Belum ada aktivitas untuk kategori ini.</div>`;
-        return;
-      }
-
-      container.innerHTML=filtered.slice(0,50).map(a=>`
-        <div class="ts-v46-item">
-          <div class="ts-v46-dot">${icon(a.title)}</div>
-          <div>
-            <div class="ts-v46-event">${esc(a.title||"Activity")}</div>
-            <div class="ts-v46-detail">${esc(a.detail||"No additional details.")}</div>
-          </div>
-          <div class="ts-v46-meta">${esc(formatDate(a.at||a.createdAt))}<br>${esc(a.by||"Administrator")}</div>
-        </div>
-      `).join("");
-    }
-
-    filter.addEventListener("change",draw);
-    draw();
-  }
-
-  window.tsV46RenderActivity=render;
-  document.addEventListener("DOMContentLoaded",render);
-  setTimeout(render,400);
-  setTimeout(render,1000);
-})();
-
-
-
-
 </script>
 
 <script>
@@ -6237,11 +6089,35 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<!-- SUPABASE LIBRARY -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<!-- SUPABASE CLIENT -->
+
+<script src="js/supabase-client.js"></script>
+
+
+<!-- CENTRAL DATA SERVICE -->
+
+<script src="js/data-service.js"></script>
+
+
+<!-- PROJECT DETAIL SUPABASE -->
+
+<script src="js/project-detail-data.js"></script>
+
+
 <!-- GLOBAL SEARCH -->
+
 <script src="js/global-search.js"></script>
 
-<!-- Panggil script kontrol akses di semua halaman -->
+
+<!-- ACCESS CONTROL -->
+
 <script src="js/app-access-control.js"></script>
+
 <script src="js/project-access-filter.js"></script>
 
 <script src="js/auth-guard.js"></script>
@@ -6308,84 +6184,524 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
-// Skrip otomatis untuk menyisipkan id="globalSearchInput" jika header dimuat secara dinamis
-document.addEventListener("DOMContentLoaded", function() {
-    setTimeout(function() {
-        var searchInput = document.querySelector('.main header input[type="text"], .header input[type="text"], .main input[placeholder*="Cari"]');
-        if (searchInput && !searchInput.id) {
-            searchInput.id = "globalSearchInput";
-        }
-    }, 500); // Memberi jeda waktu agar header selesai dirender oleh layout-loader
-});
-</script>
+function openEditModal() {
+    console.log(
+    "[EDIT PROJECT] window.project:",
+    window.project
+);
 
-<script>
-  function openEditModal() {
-    if (typeof window.project === 'undefined' || !window.project) return;
-    
-    document.getElementById("editName").value = window.project.name || "";
-    document.getElementById("editCompany").value = window.project.company || "";
-    document.getElementById("editType").value = window.project.type || "Assessment";
-    
-    // PERBAIKAN: Hanya ambil dari properti pic/picProyek. Jangan ambil dari createdBy agar tidak tertulis "Administrator"
-    const clientPic = window.project.pic || window.project.picProyek || "";
-    document.getElementById("editPIC").value = clientPic;
-    
-    document.getElementById("editStart").value = window.project.start || "";
-    document.getElementById("editEnd").value = window.project.end || "";
-    
-    const modal = document.getElementById("editModal");
-    if (modal) modal.classList.add("show");
-}
-  function saveEditProject() {
-    if (typeof window.project === 'undefined' || !window.project) return;
-
-    // Ambil nilai dari form input
-    window.project.name = document.getElementById("editName").value;
-    window.project.company = document.getElementById("editCompany").value;
-    window.project.type = document.getElementById("editType").value;
-    
-    // PASTIKAN BARIS INI ADA AGAR NILAI PIC TERSIMPAN
-    window.project.pic = document.getElementById("editPIC").value; 
-    
-    window.project.start = document.getElementById("editStart").value;
-    window.project.end = document.getElementById("editEnd").value;
-    window.project.updatedAt = new Date().toISOString();
-    // Simpan ke sumber data utama, meskipun window.projects belum pernah dibuat sebelumnya.
-    // Ini membuat PIC tersimpan konsisten dengan Project Name dan Company Name.
-    if (typeof window.save === "function") {
-      window.save();
-    } else {
-      try {
-        const storedProjects = JSON.parse(
-          localStorage.getItem("talentscope_projects") || "[]"
-        );
-
-        const index = Array.isArray(storedProjects)
-          ? storedProjects.findIndex(
-              p => String(p.id).trim() === String(window.project.id).trim()
-            )
-          : -1;
-
-        if (index !== -1) {
-          storedProjects[index] = window.project;
-        } else if (Array.isArray(storedProjects)) {
-          storedProjects.push(window.project);
-        }
-
-        localStorage.setItem(
-          "talentscope_projects",
-          JSON.stringify(storedProjects)
-        );
-      } catch (error) {
-        console.error("TalentScope: gagal menyimpan perubahan project.", error);
-        alert("Perubahan project gagal disimpan.");
+    if (
+        typeof window.project === 'undefined' ||
+        !window.project
+    ) {
         return;
-      }
     }
 
-    closeEditModal();
-    location.reload();
+    document.getElementById("editName").value =
+        window.project.name || "";
+
+    document.getElementById("editCompany").value =
+        window.project.company || "";
+
+    document.getElementById("editType").value =
+        window.project.type || "Assessment";
+
+    // PERBAIKAN: Hanya ambil dari properti pic/picProyek.
+    // Jangan ambil dari createdBy agar tidak tertulis "Administrator"
+    const clientPic =
+        window.project.pic ||
+        window.project.picProyek ||
+        "";
+
+    document.getElementById("editPIC").value =
+        clientPic;
+
+    document.getElementById("editStart").value =
+    (
+        window.project.start ||
+        window.project.startDate ||
+        window.project.start_date ||
+        ""
+    ).slice(0, 10);
+
+document.getElementById("editEnd").value =
+    (
+        window.project.end ||
+        window.project.endDate ||
+        window.project.end_date ||
+        ""
+    ).slice(0, 10);
+
+    // TAMBAHAN: tampilkan Assessment Start Time
+    const assessmentTimeInput =
+        document.getElementById("editAssessmentTime");
+
+    if (assessmentTimeInput) {
+        assessmentTimeInput.value =
+            window.project.assessment_start_time ||
+            window.project.assessmentStartTime ||
+            window.project.schedule_time ||
+            "";
+    }
+
+    const modal =
+        document.getElementById("editModal");
+
+    if (modal) {
+        modal.classList.add("show");
+    }
+
+}
+
+
+async function saveEditProject() {
+
+    if (
+        typeof window.project === "undefined" ||
+        !window.project
+    ) {
+        return;
+    }
+
+    const name =
+        document.getElementById("editName").value.trim();
+
+    const company =
+        document.getElementById("editCompany").value.trim();
+
+    const projectType =
+        document.getElementById("editType").value;
+
+    const pic =
+        document.getElementById("editPIC").value.trim();
+
+    const startDate =
+        document.getElementById("editStart").value;
+
+    const endDate =
+        document.getElementById("editEnd").value;
+
+    // TAMBAHAN: Assessment Start Time
+    const assessmentStartTime =
+    document.getElementById("editAssessmentTime").value;
+
+console.log(
+    "[EDIT PROJECT] Assessment Start Time:",
+    assessmentStartTime
+);
+
+
+    if (!name) {
+        alert("Project Name wajib diisi.");
+        return;
+    }
+
+
+    try {
+
+        if (
+            typeof DataService === "undefined" ||
+            typeof DataService.updateProject !== "function"
+        ) {
+            throw new Error(
+                "DataService.updateProject tidak tersedia."
+            );
+        }
+
+
+        const updatedProject =
+            await DataService.updateProject(
+                window.project.id,
+                {
+                    name: name,
+                    company: company,
+                    project_type: projectType,
+                    pic: pic || null,
+                    start_date: startDate || null,
+                    end_date: endDate || null,
+
+                    // TAMBAHAN: simpan waktu assessment
+                    assessment_start_time:
+                        assessmentStartTime || null
+                }
+            );
+
+
+        console.log(
+            "[PROJECT DETAIL] Project updated:",
+            updatedProject
+        );
+
+
+        window.project = {
+            ...window.project,
+            ...updatedProject
+        };
+
+
+        window.currentProject =
+            window.project;
+
+
+        closeEditModal();
+
+
+        alert(
+    "Project berhasil diperbarui."
+);
+
+        setTimeout(
+            function () {
+                location.reload();
+            },
+            700
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[PROJECT DETAIL] Failed to update project:",
+            error
+        );
+
+        alert(
+            "Perubahan project gagal disimpan.\n\n" +
+            (error.message || error)
+        );
+
+    }
+
+}
+</script>
+
+
+<script>
+function renderProjectActions() {
+
+    const container =
+        document.getElementById("actionButtons");
+
+    if (!container || !window.project) {
+        return;
+    }
+
+
+    const status =
+        String(
+            window.project.status || "Draft"
+        )
+        .trim()
+        .toLowerCase();
+
+
+    let html = "";
+
+
+    /*
+     * DRAFT
+     * --------------------------------------------------
+     * Edit + Publish + Cancel
+     */
+
+    if (status === "draft") {
+
+        html = `
+            <button
+                type="button"
+                class="btn"
+                onclick="openEditModal()"
+            >
+                <i class="fa-solid fa-pen"></i>
+                Edit Project
+            </button>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="openPublishModal()"
+            >
+                <i class="fa-solid fa-paper-plane"></i>
+                Publish Project
+            </button>
+
+            <button
+                type="button"
+                class="btn"
+                onclick="cancelProject()"
+                style="color:#dc3545;border-color:#f1b5bc;"
+            >
+                <i class="fa-solid fa-ban"></i>
+                Cancel Project
+            </button>
+        `;
+
+    }
+
+
+    /*
+     * SCHEDULED / ONGOING
+     * --------------------------------------------------
+     * Project sudah publish.
+     */
+
+    else if (
+        status === "scheduled" ||
+        status === "ongoing"
+    ) {
+
+        html = `
+            <button
+                type="button"
+                class="btn"
+                onclick="openEditModal()"
+            >
+                <i class="fa-solid fa-pen"></i>
+                Edit Project
+            </button>
+
+            <button
+                type="button"
+                class="btn"
+                onclick="cancelProject()"
+                style="color:#dc3545;border-color:#f1b5bc;"
+            >
+                <i class="fa-solid fa-ban"></i>
+                Cancel Project
+            </button>
+        `;
+
+    }
+
+
+    /*
+     * COMPLETED / CANCELLED
+     * --------------------------------------------------
+     * Tidak menampilkan action destructive.
+     */
+
+    else {
+
+        html = "";
+
+    }
+
+
+    container.innerHTML =
+        html;
+}
+
+window.addEventListener(
+    "projectLoaded",
+    function () {
+
+        renderProjectActions();
+
+    }
+);
+
+function openPublishModal() {
+
+    const modal =
+        document.getElementById("publishModal");
+
+    if (!modal) {
+        return;
+    }
+
+
+    const summary =
+        document.getElementById("publishSummary");
+
+
+    if (summary && window.project) {
+
+        const participantCount =
+            Array.isArray(
+                window.project.participants
+            )
+                ? window.project.participants.length
+                : 0;
+
+
+        summary.textContent =
+            `${participantCount} participant akan dapat mengakses project setelah dipublish.`;
+
+    }
+
+
+    modal.classList.add("show");
+}
+
+
+function closePublishModal() {
+
+    const modal =
+        document.getElementById("publishModal");
+
+    if (modal) {
+
+        modal.classList.remove("show");
+
+    }
+
+}
+
+
+async function confirmPublishProject() {
+
+    if (
+        !window.project ||
+        !window.project.id
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const updatedProject =
+            await DataService.updateProject(
+                window.project.id,
+                {
+                    status: "Scheduled"
+                }
+            );
+
+
+        window.project =
+            {
+                ...window.project,
+                ...updatedProject
+            };
+
+
+        window.currentProject =
+            window.project;
+
+
+        closePublishModal();
+
+
+        showToast(
+            "Project berhasil dipublish."
+        );
+
+
+        setTimeout(
+            function () {
+
+                location.reload();
+
+            },
+            700
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[PROJECT DETAIL] Publish failed:",
+            error
+        );
+
+
+        alert(
+            "Project gagal dipublish.\n\n" +
+            (error.message || error)
+        );
+
+    }
+
+}
+
+
+async function cancelProject() {
+
+    if (
+        !window.project ||
+        !window.project.id
+    ) {
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Apakah Anda yakin ingin membatalkan project ini?"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        const updatedProject =
+            await DataService.updateProject(
+                window.project.id,
+                {
+                    status: "Cancelled"
+                }
+            );
+
+
+        window.project =
+            {
+                ...window.project,
+                ...updatedProject
+            };
+
+
+        window.currentProject =
+            window.project;
+
+
+        showToast(
+            "Project berhasil dibatalkan."
+        );
+
+
+        setTimeout(
+            function () {
+
+                location.reload();
+
+            },
+            700
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[PROJECT DETAIL] Cancel failed:",
+            error
+        );
+
+
+        alert(
+            "Project gagal dibatalkan.\n\n" +
+            (error.message || error)
+        );
+
+    }
+
+}
+
+function closeEditModal() {
+
+    const modal =
+        document.getElementById("editModal");
+
+    if (modal) {
+
+        modal.classList.remove("show");
+
+    }
+
 }
 
 </script>
@@ -6547,6 +6863,881 @@ document.addEventListener(
 
     }
 );
+</script>
+
+<script id="tsTabNavigationFix">
+(function () {
+
+    "use strict";
+
+    function initializeTabs() {
+
+        const tabs =
+            document.querySelectorAll(
+                ".tabs .tab[data-tab]"
+            );
+
+        const panels =
+            document.querySelectorAll(
+                ".tab-panel"
+            );
+
+
+        if (!tabs.length) {
+
+            console.warn(
+                "[TABS] Tab buttons not found"
+            );
+
+            return;
+
+        }
+
+
+        if (!panels.length) {
+
+            console.warn(
+                "[TABS] Tab panels not found"
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "[TABS] Initializing tabs:",
+            tabs.length
+        );
+
+
+        function activateTab(tabName) {
+
+            console.log(
+                "[TABS] Activating:",
+                tabName
+            );
+
+
+            /*
+             * Reset semua tombol tab
+             */
+
+            tabs.forEach(function (tab) {
+
+                tab.classList.remove(
+                    "active"
+                );
+
+            });
+
+
+            /*
+             * Reset semua panel
+             */
+
+            panels.forEach(function (panel) {
+
+                panel.classList.add(
+                    "hidden"
+                );
+
+            });
+
+
+            /*
+             * Aktifkan tombol yang dipilih
+             */
+
+            const activeTab =
+                document.querySelector(
+                    '.tabs .tab[data-tab="' +
+                    tabName +
+                    '"]'
+                );
+
+
+            if (activeTab) {
+
+                activeTab.classList.add(
+                    "active"
+                );
+
+            }
+
+
+            /*
+             * Tampilkan panel yang sesuai
+             */
+
+            const activePanel =
+                document.getElementById(
+                    "tab-" + tabName
+                );
+
+
+            if (activePanel) {
+
+                activePanel.classList.remove(
+                    "hidden"
+                );
+
+            } else {
+
+                console.warn(
+                    "[TABS] Panel not found:",
+                    "tab-" + tabName
+                );
+
+            }
+
+
+            /*
+             * Jalankan renderer khusus
+             * jika tersedia
+             */
+
+            if (
+                tabName === "assessment" &&
+                typeof window.tsV45PatchAssessmentPackage ===
+                "function"
+            ) {
+
+                try {
+
+                    window.tsV45PatchAssessmentPackage();
+
+                } catch (error) {
+
+                    console.error(
+                        "[TABS] Assessment render error:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            if (
+                tabName === "activity" &&
+                typeof window.tsV46RenderActivity ===
+                "function"
+            ) {
+
+                try {
+
+                    window.tsV46RenderActivity();
+
+                } catch (error) {
+
+                    console.error(
+                        "[TABS] Activity render error:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * Event untuk Schedule
+             */
+
+            if (tabName === "schedule") {
+
+                const event =
+                    new CustomEvent(
+                        "talentscope:schedule-tab-opened"
+                    );
+
+                document.dispatchEvent(
+                    event
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Pasang click event
+         */
+
+        tabs.forEach(function (tab) {
+
+            /*
+             * Hindari binding ganda
+             */
+
+            if (
+                tab.dataset.tsTabBound ===
+                "true"
+            ) {
+
+                return;
+
+            }
+
+
+            tab.dataset.tsTabBound =
+                "true";
+
+
+            tab.addEventListener(
+                "click",
+                function (event) {
+
+                    event.preventDefault();
+
+
+                    const tabName =
+                        this.dataset.tab;
+
+
+                    if (!tabName) {
+
+                        return;
+
+                    }
+
+
+                    activateTab(
+                        tabName
+                    );
+
+                }
+            );
+
+        });
+
+
+        /*
+         * Pastikan tab aktif pertama tampil
+         */
+
+        const activeTab =
+            document.querySelector(
+                ".tabs .tab.active[data-tab]"
+            );
+
+
+        if (activeTab) {
+
+            activateTab(
+                activeTab.dataset.tab
+            );
+
+        }
+
+    }
+
+
+    /*
+     * DOM sudah siap
+     */
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeTabs,
+            {
+                once: true
+            }
+        );
+
+    } else {
+
+        initializeTabs();
+
+    }
+
+
+    /*
+     * Expose untuk debugging
+     */
+
+    window.tsInitializeTabs =
+        initializeTabs;
+
+
+})();
+</script>
+<script>
+
+let assessmentPackageEditorState = { catalog: [], currentRelations: [] };
+
+
+/* =====================================================
+   ASSESSMENT PACKAGE HTML ESCAPER
+   Local helper: does not alter existing DataService scope.
+===================================================== */
+
+function escapeAssessmentPackageHTML(value) {
+
+    return String(
+        value === undefined || value === null
+            ? ""
+            : value
+    )
+    .replace(
+        /[&<>"']/g,
+        function (character) {
+
+            return {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#039;"
+            }[character];
+
+        }
+    );
+
+}
+
+
+function closeAssessmentPackageEditor() {
+    const modal = document.getElementById("editAssessmentPackageModal");
+    if (modal) modal.classList.remove("show");
+}
+
+function updateAssessmentPackageSelectionUI() {
+    const checks = Array.from(document.querySelectorAll("#assessmentPackagePicker input[type=checkbox]"));
+    const count = checks.filter(c => c.checked).length;
+    const countEl = document.getElementById("assessmentPackageSelectionCount");
+    if (countEl) countEl.innerHTML = `<i class="fa-solid fa-check"></i> ${count} selected`;
+    checks.forEach(check => {
+        const row = check.closest(".assessment-picker-item");
+        if (row) row.classList.toggle("is-selected", check.checked);
+    });
+}
+
+function renderAssessmentPackagePicker(catalog, selectedIds) {
+    const container = document.getElementById("assessmentPackagePicker");
+    if (!container) return;
+    if (!Array.isArray(catalog) || catalog.length === 0) {
+        container.innerHTML = '<div class="assessment-picker-empty">No assessment catalog is available.</div>';
+        updateAssessmentPackageSelectionUI();
+        return;
+    }
+    container.innerHTML = catalog.map(function(item) {
+        const id = String(item.id || item.assessment_id || "");
+        const name = escapeAssessmentPackageHTML(item.assessment_name || item.name || item.title || item.code || "Assessment instrument");
+        const category = escapeAssessmentPackageHTML(item.category || item.type || item.assessment_type || "Assessment");
+        const duration = item.duration || item.duration_minutes || item.estimated_duration || "";
+        const checked = selectedIds.has(id) ? "checked" : "";
+        return `<label class="assessment-picker-item ${checked ? 'is-selected' : ''}"><input class="assessment-picker-check" type="checkbox" value="${escapeAssessmentPackageHTML(id)}" ${checked} onchange="updateAssessmentPackageSelectionUI()"><div class="assessment-picker-main"><div class="assessment-picker-name">${name}</div><div class="assessment-picker-meta"><span><i class="fa-regular fa-folder-open"></i> ${category}</span>${duration !== "" ? `<span><i class="fa-regular fa-clock"></i> ${escapeAssessmentPackageHTML(duration)} min</span>` : ""}</div></div></label>`;
+    }).join("");
+    updateAssessmentPackageSelectionUI();
+}
+
+async function loadAssessmentCatalogForPackageEditor() {
+    let lastError = null;
+
+    // 1) Use the existing DataService first (normal application path).
+    if (typeof DataService !== "undefined" && typeof DataService.getAssessments === "function") {
+        try {
+            const catalog = await DataService.getAssessments();
+            if (Array.isArray(catalog)) return catalog;
+        } catch (error) {
+            lastError = error;
+            console.warn("[ASSESSMENT PACKAGE] DataService catalog load failed:", error);
+        }
+    }
+
+    // 2) Safe direct fallback for deployments where getAssessments() fails because
+    //    ordering/legacy service code differs, while the catalog itself is readable.
+    if (typeof supabaseClient !== "undefined") {
+        const tableCandidates = ["assessments", "assessment_catalog"];
+        for (const table of tableCandidates) {
+            try {
+                const { data, error } = await supabaseClient.from(table).select("*");
+                if (!error && Array.isArray(data)) {
+                    console.log(`[ASSESSMENT PACKAGE] Catalog loaded directly from ${table}:`, data.length);
+                    return data;
+                }
+                if (error) {
+                    lastError = error;
+                    console.warn(`[ASSESSMENT PACKAGE] Direct query ${table} failed:`, error);
+                }
+            } catch (error) {
+                lastError = error;
+            }
+        }
+    }
+
+    throw lastError || new Error("Assessment catalog could not be loaded.");
+}
+
+async function openAssessmentPackageEditor() {
+    if (typeof DataService === "undefined" || !window.project || !window.project.id) {
+        alert("Project or DataService is not available.");
+        return;
+    }
+
+    const modal = document.getElementById("editAssessmentPackageModal");
+    if (modal) modal.classList.add("show");
+
+    const container = document.getElementById("assessmentPackagePicker");
+    if (container) {
+        container.innerHTML = '<div class="assessment-picker-empty"><i class="fa-solid fa-spinner fa-spin"></i> Loading assessment catalog...</div>';
+    }
+
+    // IMPORTANT: Do not use Promise.all here. If catalog loading fails, project
+    // relations must still be allowed to resolve independently for diagnostics/fallback.
+    let catalog = [];
+    let currentRelations = [];
+    let catalogError = null;
+
+    try {
+        catalog = await loadAssessmentCatalogForPackageEditor();
+    } catch (error) {
+        catalogError = error;
+        console.error("[ASSESSMENT PACKAGE] Catalog load failed:", error);
+    }
+
+    try {
+        currentRelations = await DataService.getProjectAssessments(window.project.id);
+    } catch (error) {
+        console.warn("[ASSESSMENT PACKAGE] Project assessment relations load failed:", error);
+        currentRelations = Array.isArray(window.project.assessments) ? window.project.assessments : [];
+    }
+
+    if (catalogError && catalog.length === 0) {
+        if (container) {
+            container.innerHTML = '<div class="assessment-picker-empty"><strong>Assessment Catalog could not be loaded.</strong><br><small>Please check the browser Console for the database error.</small></div>';
+        }
+        return;
+    }
+
+    const selectedIds = new Set(currentRelations.map(function(item) {
+        return String(item && (item.assessment_id || item.assessment_uuid || item.catalog_assessment_id || item.id || ""));
+    }).filter(Boolean));
+
+    // Legacy fallback: preserve selected package items even if relation data uses old shape.
+    // Item lama (dari raw_data.assessments) sering punya "id" buatan browser
+    // yang bukan UUID asli tabel assessments, jadi pencocokan utama dilakukan
+    // lewat "code" / "assessment_code" yang selalu konsisten.
+    if (selectedIds.size === 0 && Array.isArray(window.project.assessments)) {
+
+        const catalogByCode = new Map();
+        catalog.forEach(function(catalogItem) {
+            const catalogId = String(catalogItem.id || catalogItem.assessment_id || "");
+            const catalogCode = String(catalogItem.assessment_code || catalogItem.code || "").trim().toLowerCase();
+            if (catalogId && catalogCode) catalogByCode.set(catalogCode, catalogId);
+        });
+
+        window.project.assessments.forEach(function(item) {
+
+            const directId = item && (item.assessment_id || item.catalog_assessment_id || item.id);
+
+            // Coba cocokkan langsung dulu (kalau kebetulan id-nya valid UUID catalog).
+            if (directId && catalog.some(function(c) { return String(c.id) === String(directId); })) {
+                selectedIds.add(String(directId));
+                return;
+            }
+
+            // Fallback utama: cocokkan lewat code (mis. "DISC", "PAPI", "VAP").
+            const itemCode = String(item && (item.code || item.assessment_code) || "").trim().toLowerCase();
+            if (itemCode && catalogByCode.has(itemCode)) {
+                selectedIds.add(catalogByCode.get(itemCode));
+            }
+
+        });
+    }
+
+    assessmentPackageEditorState = { catalog: catalog, currentRelations: currentRelations };
+    renderAssessmentPackagePicker(catalog, selectedIds);
+}
+async function saveAssessmentPackageEditor() {
+    if (typeof DataService === "undefined" || !window.project || !window.project.id) return;
+    const button = document.getElementById("saveAssessmentPackageBtn");
+    const selectedIds = new Set(Array.from(document.querySelectorAll("#assessmentPackagePicker input[type=checkbox]:checked")).map(function(input) { return String(input.value); }).filter(Boolean));
+    const currentRelations = Array.isArray(assessmentPackageEditorState.currentRelations) ? assessmentPackageEditorState.currentRelations : [];
+    const currentByAssessmentId = new Map();
+    currentRelations.forEach(function(rel) {
+        const assessmentId = rel && (rel.assessment_id || rel.assessment_uuid || rel.catalog_assessment_id);
+        if (assessmentId) currentByAssessmentId.set(String(assessmentId), rel);
+    });
+    const toRemove = Array.from(currentByAssessmentId.entries()).filter(([id]) => !selectedIds.has(id)).map(([, rel]) => rel);
+    const toAdd = Array.from(selectedIds).filter(id => !currentByAssessmentId.has(id));
+    try {
+        if (button) { button.disabled = true; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...'; }
+        for (const relation of toRemove) {
+            if (relation && relation.id) await DataService.deleteProjectAssessment(relation.id);
+        }
+        if (toAdd.length) {
+            await DataService.createProjectAssessments(toAdd.map(function(assessmentId) {
+                return { project_id: window.project.id, assessment_id: assessmentId };
+            }));
+        }
+        const refreshed = await DataService.getProjectAssessments(window.project.id);
+        window.project.assessments = Array.isArray(refreshed) ? refreshed : window.project.assessments;
+        const assessmentList = document.getElementById("assessmentList");
+        if (typeof window.renderAssessmentPackage === "function") window.renderAssessmentPackage(assessmentList, refreshed);
+        closeAssessmentPackageEditor();
+    } catch (error) {
+        console.error("[ASSESSMENT PACKAGE] Save failed:", error);
+        alert("Failed to update assessment package. No unrelated project functions were changed.");
+    } finally {
+        if (button) { button.disabled = false; button.innerHTML = 'Save Assessment Package'; }
+    }
+}
+
+let currentEditingAssessmentId = null;
+
+
+/* =====================================================
+   OPEN EDIT ASSESSMENT
+===================================================== */
+
+async function openEditAssessmentModal(
+    assessmentId
+) {
+
+    if (!assessmentId) {
+
+        return;
+
+    }
+
+
+    if (
+        typeof DataService === "undefined"
+    ) {
+
+        alert(
+            "DataService belum tersedia."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        let assessment = [];
+
+        try {
+            assessment = await DataService.getProjectAssessments(
+                window.project && window.project.id
+            );
+        } catch (loadError) {
+            console.warn("[PROJECT DETAIL] Database assessment lookup failed, using project fallback:", loadError);
+        }
+
+        if (!Array.isArray(assessment) || assessment.length === 0) {
+            assessment = Array.isArray(window.project && window.project.assessments)
+                ? window.project.assessments
+                : [];
+        }
+
+        const selected =
+            assessment.find(
+                function (item) {
+                    return item && String(item.id || item.assessment_id || item.uuid) ===
+                        String(assessmentId);
+                }
+            );
+
+
+        if (!selected) {
+
+            alert(
+                "Assessment tidak ditemukan."
+            );
+
+            return;
+
+        }
+
+
+        currentEditingAssessmentId =
+            selected.id;
+
+
+        document.getElementById(
+            "editAssessmentName"
+        ).value =
+            selected.assessment_name ||
+            selected.name ||
+            selected.code ||
+            "";
+
+
+        document.getElementById(
+            "editAssessmentDuration"
+        ).value =
+            selected.duration ||
+            "";
+
+
+        document.getElementById(
+            "editAssessmentStatus"
+        ).value =
+            selected.status ||
+            "Active";
+
+
+        const scheduleInput =
+            document.getElementById(
+                "editAssessmentSchedule"
+            );
+
+
+        if (
+            scheduleInput &&
+            selected.schedule_date
+        ) {
+
+            const date =
+                new Date(
+                    selected.schedule_date
+                );
+
+
+            if (
+                !isNaN(
+                    date.getTime()
+                )
+            ) {
+
+                const localDate =
+                    new Date(
+                        date.getTime() -
+                        date.getTimezoneOffset() *
+                        60000
+                    );
+
+
+                scheduleInput.value =
+                    localDate
+                        .toISOString()
+                        .slice(
+                            0,
+                            16
+                        );
+
+            }
+
+        }
+
+
+        const modal =
+            document.getElementById(
+                "editAssessmentModal"
+            );
+
+
+        if (modal) {
+
+            modal.classList.add(
+                "show"
+            );
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "[PROJECT DETAIL] Failed to open assessment:",
+            error
+        );
+
+
+        alert(
+            "Assessment gagal dimuat."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   CLOSE EDIT ASSESSMENT
+===================================================== */
+
+function closeEditAssessmentModal() {
+
+    const modal =
+        document.getElementById(
+            "editAssessmentModal"
+        );
+
+
+    if (modal) {
+
+        modal.classList.remove(
+            "show"
+        );
+
+    }
+
+
+    currentEditingAssessmentId =
+        null;
+
+}
+
+
+/* =====================================================
+   SAVE EDIT ASSESSMENT
+===================================================== */
+
+async function saveEditAssessment() {
+
+    if (
+        !currentEditingAssessmentId
+    ) {
+
+        return;
+
+    }
+
+
+    const name =
+        document.getElementById(
+            "editAssessmentName"
+        ).value.trim();
+
+
+    const duration =
+        document.getElementById(
+            "editAssessmentDuration"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "editAssessmentStatus"
+        ).value;
+
+
+    const schedule =
+        document.getElementById(
+            "editAssessmentSchedule"
+        ).value;
+
+
+    if (!name) {
+
+        alert(
+            "Assessment Name wajib diisi."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        !duration ||
+        Number(duration) <= 0
+    ) {
+
+        alert(
+            "Duration harus lebih dari 0."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const updated =
+            await DataService.updateProjectAssessment(
+                currentEditingAssessmentId,
+                {
+
+                    assessment_name:
+                        name,
+
+                    schedule_date:
+                        schedule
+                            ? new Date(
+                                schedule
+                            ).toISOString()
+                            : null,
+
+                    duration:
+                        Number(duration),
+
+                    status:
+                        status
+
+                }
+            );
+
+
+        console.log(
+            "[PROJECT DETAIL] Assessment updated:",
+            updated
+        );
+
+
+        closeEditAssessmentModal();
+
+
+        if (
+            typeof showToast ===
+            "function"
+        ) {
+
+            showToast(
+                "Assessment berhasil diperbarui."
+            );
+
+        } else {
+
+            alert(
+                "Assessment berhasil diperbarui."
+            );
+
+        }
+
+
+        setTimeout(
+            function () {
+
+                location.reload();
+
+            },
+            700
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[PROJECT DETAIL] Failed to update assessment:",
+            error
+        );
+
+
+        alert(
+            "Assessment gagal diperbarui.\n\n" +
+            (
+                error.message ||
+                error
+            )
+        );
+
+    }
+
+}
+
 </script>
 </body>
 

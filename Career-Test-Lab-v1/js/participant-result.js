@@ -141,8 +141,12 @@ console.log("Participant ID:", participantId);
 
 
     const assessmentDate =
+        project.start_date ||
         project.startDate ||
         project.start ||
+        project.assessmentDate ||
+        project.schedule_start ||
+        project.date ||
         "-";
 
 
@@ -214,6 +218,37 @@ console.log("Participant ID:", participantId);
     project.id,
     participant.id || participant.participantId
 );
+
+}
+
+
+/* ==========================================================
+   SETUP TOMBOL "VIEW COMBINED RESULT"
+   Menghubungkan tombol #combinedResultBtn ke halaman
+   combined-result.html dengan projectId & participantId
+   yang sesuai.
+========================================================== */
+
+function setupCombinedResultButton(projectId, participantId) {
+
+    const btn =
+        document.getElementById(
+            "combinedResultBtn"
+        );
+
+    if (!btn) {
+        return;
+    }
+
+    btn.onclick = function () {
+
+        window.location.href =
+            "combined-result.html?projectId=" +
+            encodeURIComponent(projectId) +
+            "&participantId=" +
+            encodeURIComponent(participantId);
+
+    };
 
 }
 

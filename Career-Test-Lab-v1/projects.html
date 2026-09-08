@@ -2,8 +2,7 @@
 <html lang="id">
 
 <head>
-
-    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+<!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
     (function() {
         "use strict";
@@ -73,6 +72,7 @@
     })();
     </script>
 
+<script src="js/ts-supabase-sync.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -1367,15 +1367,30 @@
 </div>
 
 <script src="js/layout/layout-loader.js"></script>
+
+<!-- SUPABASE LIBRARY -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- SUPABASE CLIENT -->
+<script src="js/supabase-client.js"></script>
+
+<!-- CENTRAL DATA SERVICE -->
+<script src="js/data-service.js"></script>
+
+<!-- APPLICATION DATA -->
 <script src="js/assessment-data.js"></script>
 <script src="js/projects-data.js"></script>
+
+<!-- APPLICATION RENDER -->
 <script src="js/projects-render.js"></script>
 <script src="js/projects-modal.js"></script>
+
 <script src="js/global-search.js"></script>
 <script src="js/project-export.js"></script>
 <script src="js/app-access-control.js"></script>
 <script src="js/project-access-filter.js"></script>
 <script src="js/auth-guard.js"></script>
+
 
 <!-- SCRIPT PENGISIAN PROFIL PENGGUNA & HAMBURGER MENU MOBILE -->
 <script>

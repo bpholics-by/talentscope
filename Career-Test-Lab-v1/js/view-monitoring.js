@@ -2,25 +2,23 @@
    TALENTSCOPE
    VIEW & MONITORING
    SOURCE:
-   localStorage -> talentscope_projects
+   SUPABASE (tabel `projects`, `project_participants`,
+   `participants`)
+
+   Sebelumnya membaca dari localStorage -> talentscope_projects.
+   Sekarang project & participant diambil live dari Supabase
+   lewat DataService (js/data-service.js), yang harus sudah
+   dimuat sebelum file ini (lihat view-monitoring.html).
 ========================================================== */
 
 document.addEventListener(
     "DOMContentLoaded",
-    function () {
+    async function () {
 
-        initializeMonitoring();
+        await initializeMonitoring();
 
     }
 );
-
-
-/* ==========================================================
-   STORAGE KEY
-========================================================== */
-
-const MONITORING_STORAGE_KEY =
-    "talentscope_projects";
 
 
 /* ==========================================================
@@ -38,9 +36,9 @@ let selectedParticipant = null;
    INITIALIZE
 ========================================================== */
 
-function initializeMonitoring() {
+async function initializeMonitoring() {
 
-    loadMonitoringProjects();
+    await loadMonitoringProjects();
 
     renderMonitoringProjects();
 
@@ -57,19 +55,54 @@ function initializeMonitoring() {
 }
 
 /* ==========================================================
-   LOAD PROJECTS
+   LOAD PROJECTS (SUPABASE)
+   ==========================================================
+   Ambil semua project dari tabel `projects`, lalu untuk
+   tiap project ambil daftar pesertanya dari
+   `project_participants` + `participants` (lewat
+   DataService.getProjectParticipants, yang sudah ada).
+
+   Hasilnya dibentuk ulang supaya field-nya tetap kompatibel
+   dengan seluruh fungsi render/helper di bawah (yang dulu
+   dibuat mengikuti bentuk data localStorage): project.id,
+   project.participants[], participant.isLoggedIn,
+   participant.activityHistory, dst.
 ========================================================== */
 
-function loadMonitoringProjects() {
+async function loadMonitoringProjects() {
+
+    if (
+        typeof DataService === "undefined" ||
+        !DataService ||
+        typeof DataService.getProjects !== "function"
+    ) {
+
+        console.error(
+            "[MONITORING] DataService tidak tersedia. " +
+            "Pastikan supabase-js, js/supabase-client.js, dan " +
+            "js/data-service.js dimuat SEBELUM js/view-monitoring.js."
+        );
+
+        monitoringProjects = [];
+
+        return;
+
+    }
 
     try {
 
-        const raw =
-            localStorage.getItem(
-                MONITORING_STORAGE_KEY
-            );
+        console.log(
+            "[MONITORING] Loading projects from Supabase..."
+        );
 
-        if (!raw) {
+        const projectRows =
+            await DataService.getProjects();
+
+        if (!Array.isArray(projectRows)) {
+
+            console.warn(
+                "[MONITORING] Data project dari Supabase tidak valid"
+            );
 
             monitoringProjects = [];
 
@@ -78,21 +111,54 @@ function loadMonitoringProjects() {
         }
 
 
-        const data =
-            JSON.parse(raw);
+        const built = [];
+
+        for (const projectRow of projectRows) {
+
+            const project =
+                buildMonitoringProject(
+                    projectRow
+                );
+
+            try {
+
+                const relations =
+                    await DataService.getProjectParticipants(
+                        projectRow.id
+                    );
+
+                project.participants =
+                    relations.map(
+                        buildMonitoringParticipant
+                    );
+
+            } catch (participantError) {
+
+                console.error(
+                    "[MONITORING] Gagal memuat peserta project",
+                    projectRow.id,
+                    participantError
+                );
+
+                project.participants = [];
+
+            }
+
+            built.push(project);
+
+        }
 
 
-        monitoringProjects =
-            Array.isArray(data)
-                ? data
-                : [];
+        monitoringProjects = built;
 
-    }
+        console.log(
+            `[MONITORING] Loaded ${monitoringProjects.length} projects from Supabase`
+        );
 
-    catch (error) {
+    } catch (error) {
 
         console.error(
-            "TalentScope: gagal membaca project.",
+            "TalentScope: gagal membaca project dari Supabase.",
             error
         );
 
@@ -102,10 +168,102 @@ function loadMonitoringProjects() {
 
 }
 
+
+/* ==========================================================
+   BUILD PROJECT OBJECT DARI ROW SUPABASE
+
+   Digabung dengan project.raw_data supaya field lama
+   (mis. `start`, `pic`) tetap ada sebagai fallback, tapi
+   kolom asli tabel `projects` (name, project_name, company,
+   client, pic, status, start_date, dst) selalu menang karena
+   itu yang paling update.
+========================================================== */
+
+function buildMonitoringProject(projectRow) {
+
+    const rawData =
+        (projectRow && projectRow.raw_data) || {};
+
+    const project =
+        Object.assign(
+            {},
+            rawData,
+            projectRow
+        );
+
+    // Alias supaya cocok dengan fallback chain yang dipakai
+    // di seluruh file ini: project.startDate || project.start
+    project.startDate =
+        projectRow.start_date ||
+        rawData.startDate ||
+        rawData.start ||
+        null;
+
+    // Jangan bawa snapshot participants lama dari raw_data;
+    // akan diisi ulang dengan data live dari tabel participants.
+    project.participants = [];
+
+    return project;
+
+}
+
+
+/* ==========================================================
+   BUILD PARTICIPANT OBJECT DARI RELASI SUPABASE
+
+   `relation` = hasil DataService.getProjectParticipants(),
+   berbentuk { ...project_participants row, participant: {...} }
+
+   participant.raw_data berisi snapshot lengkap gaya
+   localStorage lama (isLoggedIn, activityHistory,
+   currentActivity, dst) dan diprioritaskan karena field
+   itulah yang dibaca semua fungsi render di bawah.
+========================================================== */
+
+function buildMonitoringParticipant(relation) {
+
+    const participantRow =
+        (relation && relation.participant) || {};
+
+    const rawData =
+        participantRow.raw_data || {};
+
+    const participant =
+        Object.assign(
+            {},
+            participantRow,
+            rawData
+        );
+
+    // ID yang dipakai di seluruh UI (mis. "AA01"), fallback
+    // ke UUID kalau participant_code kosong.
+    participant.id =
+        participantRow.participant_code ||
+        participantRow.id ||
+        rawData.id;
+
+    // Referensi internal (bukan untuk ditampilkan) supaya
+    // automatic-logout bisa disimpan balik ke Supabase.
+    participant._supabaseParticipantId =
+        participantRow.id;
+
+    participant._supabaseRawData =
+        rawData;
+
+    return participant;
+
+}
+
 /* ==========================================================
    LIVE MONITORING REFRESH
-   Membaca ulang data participant dari localStorage
+   Membaca ulang data participant dari Supabase
    tanpa mengubah status secara paksa berdasarkan waktu.
+
+   Untuk hemat query, refresh berkala ini HANYA mengambil
+   ulang peserta dari project yang sedang dibuka
+   (selectedProject) -- persis seperti perilaku lama, yang
+   juga cuma memproses ulang tampilan kalau ada project yang
+   sedang aktif dibuka.
 ========================================================== */
 
 function startLiveMonitoringRefresh() {
@@ -116,169 +274,245 @@ function startLiveMonitoringRefresh() {
 
     window.talentScopeMonitoringRefreshStarted = true;
 
-    setInterval(function () {
+    setInterval(async function () {
         try {
-            const raw = localStorage.getItem(MONITORING_STORAGE_KEY);
-            if (!raw) {
+
+            if (!selectedProject) {
                 return;
             }
 
-            const latestProjects = JSON.parse(raw);
-            if (!Array.isArray(latestProjects)) {
+            const selectedProjectId =
+                getProjectId(selectedProject);
+
+            if (!selectedProjectId) {
                 return;
             }
 
-            monitoringProjects = latestProjects;
+            const relations =
+                await DataService.getProjectParticipants(
+                    selectedProjectId
+                );
 
-            if (selectedProject) {
-                const selectedProjectId = getProjectId(selectedProject);
+            const latestParticipants =
+                relations.map(
+                    buildMonitoringParticipant
+                );
 
-                const latestSelectedProject = monitoringProjects.find(
+            // HAPUS SEMUA LOGIKA AUTO-OFFLINE BERBASIS WAKTU (> 10 DETIK).
+            // Biarkan halaman admin murni merender data terbaru apa adanya
+            // berdasarkan aksi nyata peserta (Login / Tutup Tab / Logout).
+
+            selectedProject.participants =
+                latestParticipants;
+
+            // Sinkronkan juga ke daftar utama, supaya kalau
+            // admin kembali ke daftar project, datanya konsisten.
+            const projectIndex =
+                monitoringProjects.findIndex(
                     function (project) {
                         return getProjectId(project) === selectedProjectId;
                     }
                 );
 
-                if (latestSelectedProject) {
-                    // HAPUS SEMUA LOGIKA AUTO-OFFLINE BERBASIS WAKTU (> 10 DETIK).
-                    // Biarkan halaman admin murni merender data terbaru apa adanya
-                    // berdasarkan aksi nyata peserta (Login / Tutup Tab / Logout).
-
-                    selectedProject = latestSelectedProject;
-
-                    /* ======================================================
-   CEK PARTICIPANT YANG SUDAH DISCONNECT
-====================================================== */
-
-const latestParticipants =
-    getParticipants(
-        latestSelectedProject
-    );
+            if (projectIndex !== -1) {
+                monitoringProjects[projectIndex].participants =
+                    latestParticipants;
+            }
 
 
-let hasAutomaticLogout =
-    false;
+            /* ======================================================
+               CEK PARTICIPANT YANG SUDAH DISCONNECT
+            ====================================================== */
+
+            let hasAutomaticLogout =
+                false;
+
+            const changedParticipants =
+                [];
 
 
-/* ==========================================================
-   CEK PESERTA YANG SUDAH TIDAK AKTIF
-   DAN CATAT AUTOMATIC LOGOUT
-========================================================== */
+            /* ==========================================================
+               CEK PESERTA YANG SUDAH TIDAK AKTIF
+               DAN CATAT AUTOMATIC LOGOUT
+            ========================================================== */
 
-latestParticipants.forEach(
-    function(participant) {
+            latestParticipants.forEach(
+                function (participant) {
 
-        const updated =
-            recordAutomaticLogout(
-                latestSelectedProject,
-                participant
+                    const updated =
+                        recordAutomaticLogout(
+                            selectedProject,
+                            participant
+                        );
+
+
+                    if (updated) {
+
+                        hasAutomaticLogout =
+                            true;
+
+                        changedParticipants.push(
+                            participant
+                        );
+
+                    }
+
+                }
             );
 
 
-        if (updated) {
+            /* ==========================================================
+               PENTING:
+               JIKA ADA AUTOMATIC LOGOUT,
+               SIMPAN PERUBAHAN KE SUPABASE
 
-            hasAutomaticLogout =
-                true;
+               Sebelumnya object participant berubah di memory,
+               tetapi perubahan logout belum tentu tersimpan permanen.
+            ========================================================== */
 
-        }
+            if (hasAutomaticLogout) {
 
-    }
-);
-
-
-/* ==========================================================
-   PENTING:
-   JIKA ADA AUTOMATIC LOGOUT,
-   SIMPAN PERUBAHAN KE LOCALSTORAGE
-
-   Sebelumnya object participant berubah di memory,
-   tetapi perubahan logout belum tentu tersimpan permanen.
-========================================================== */
-
-if (hasAutomaticLogout) {
-
-    try {
-
-        localStorage.setItem(
-            MONITORING_STORAGE_KEY,
-            JSON.stringify(monitoringProjects)
-        );
-
-        console.log(
-            "[Monitoring] Automatic logout berhasil disimpan."
-        );
-
-    }
-    catch (error) {
-
-        console.error(
-            "[Monitoring] Gagal menyimpan automatic logout:",
-            error
-        );
-
-    }
-
-}
-
-
-/* ==========================================================
-   RENDER ULANG TAMPILAN
-========================================================== */
-
-renderParticipants(
-    latestSelectedProject
-);
-
-
-/* ======================================================
-   UPDATE DETAIL PARTICIPANT YANG SEDANG DIBUKA
-====================================================== */
-
-if (selectedParticipant) {
-
-    const selectedParticipantId =
-        getParticipantId(
-            selectedParticipant
-        );
-
-
-    const latestParticipant =
-        getParticipants(
-            latestSelectedProject
-        ).find(
-            function(participant) {
-
-                return (
-                    getParticipantId(
-                        participant
-                    ) === selectedParticipantId
+                await persistAutomaticLogouts(
+                    changedParticipants
                 );
 
             }
-        );
 
 
-    if (latestParticipant) {
+            /* ==========================================================
+               RENDER ULANG TAMPILAN
+            ========================================================== */
 
-        selectedParticipant =
-            latestParticipant;
+            renderParticipants(
+                selectedProject
+            );
 
 
-        fillParticipantDetail(
-            latestSelectedProject,
-            latestParticipant
-        );
+            /* ======================================================
+               UPDATE DETAIL PARTICIPANT YANG SEDANG DIBUKA
+            ====================================================== */
 
-    }
+            if (selectedParticipant) {
 
-}
+                const selectedParticipantId =
+                    getParticipantId(
+                        selectedParticipant
+                    );
+
+
+                const latestParticipant =
+                    latestParticipants.find(
+                        function (participant) {
+
+                            return (
+                                getParticipantId(
+                                    participant
+                                ) === selectedParticipantId
+                            );
+
+                        }
+                    );
+
+
+                if (latestParticipant) {
+
+                    selectedParticipant =
+                        latestParticipant;
+
+
+                    fillParticipantDetail(
+                        selectedProject,
+                        latestParticipant
+                    );
+
                 }
+
             }
+
         }
         catch (error) {
             console.warn("Live monitoring refresh gagal:", error);
         }
     }, 3000);
+}
+
+
+/* ==========================================================
+   SIMPAN AUTOMATIC LOGOUT KE SUPABASE
+
+   recordAutomaticLogout() di atas cuma mengubah object
+   participant di memory (browser). Fungsi ini yang
+   menuliskan perubahan itu balik ke tabel `participants`
+   di Supabase, supaya tidak hilang saat halaman di-refresh
+   atau dibuka admin lain.
+
+   Best-effort per participant: kalau satu gagal disimpan,
+   yang lain tetap dicoba (tidak saling menggagalkan).
+========================================================== */
+
+async function persistAutomaticLogouts(participants) {
+
+    for (const participant of participants) {
+
+        if (
+            !participant ||
+            !participant._supabaseParticipantId
+        ) {
+            continue;
+        }
+
+        try {
+
+            const updatedRawData =
+                Object.assign(
+                    {},
+                    participant._supabaseRawData,
+                    {
+                        isLoggedIn: participant.isLoggedIn,
+                        onlineStatus: participant.onlineStatus,
+                        status: participant.status,
+                        logoutTime: participant.logoutTime,
+                        loggedOutAt: participant.loggedOutAt,
+                        logoutAt: participant.logoutAt,
+                        lastLogoutAt: participant.lastLogoutAt,
+                        lastLogout: participant.lastLogout,
+                        waktuLogout: participant.waktuLogout,
+                        currentActivity: participant.currentActivity,
+                        activityHistory: participant.activityHistory
+                    }
+                );
+
+            await DataService.updateParticipant(
+                participant._supabaseParticipantId,
+                {
+                    is_logged_in: false,
+                    status: "Offline",
+                    activity: "Offline",
+                    current_activity: "Offline",
+                    logout_at: participant.logoutTime,
+                    logged_out_at: participant.logoutTime,
+                    last_logout_at: participant.logoutTime,
+                    raw_data: updatedRawData
+                }
+            );
+
+            console.log(
+                "[Monitoring] Automatic logout tersimpan ke Supabase:",
+                participant.id
+            );
+
+        } catch (error) {
+
+            console.error(
+                "[Monitoring] Gagal menyimpan automatic logout ke Supabase:",
+                participant.id,
+                error
+            );
+
+        }
+
+    }
+
 }
 
 /* ==========================================================

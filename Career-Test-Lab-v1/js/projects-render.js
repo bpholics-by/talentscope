@@ -1,43 +1,73 @@
 /* ==========================================================
-   TalentScope Enterprise
-   Projects Render
+   INITIAL PROJECT RENDER
+   WAIT FOR SUPABASE DATA
 ========================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-    const table = document.getElementById("projectTable");
-
-    if (!table) return;
-
-    // Ambil data project langsung dari localStorage saat
-    // halaman pertama kali dibuka agar tabel tidak menunggu
-    // variabel/global state dari proses lain.
-    let initialProjects = [];
-
-    try {
-        const storedProjects =
-            JSON.parse(
-                localStorage.getItem("talentscope_projects") || "[]"
+        const table =
+            document.getElementById(
+                "projectTable"
             );
 
-        initialProjects =
-            Array.isArray(storedProjects)
-                ? storedProjects
-                : [];
 
-    } catch (error) {
+        if (!table) {
 
-        console.error(
-            "Gagal memuat project saat initial render:",
-            error
+            console.warn(
+                "[PROJECT RENDER] projectTable tidak ditemukan"
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "[PROJECT RENDER] Waiting for Supabase project data..."
         );
 
-        initialProjects = [];
+
+        // =================================================
+        // LISTEN DATA READY EVENT FROM projects-data.js
+        // =================================================
+
+        window.addEventListener(
+            "projectsLoaded",
+            function(event) {
+
+                const projectData =
+                    event.detail &&
+                    Array.isArray(
+                        event.detail.projects
+                    )
+                        ? event.detail.projects
+                        : [];
+
+
+                console.log(
+                    `[PROJECT RENDER] Rendering ${projectData.length} projects`
+                );
+
+
+                renderProjects(
+                    projectData
+                );
+
+
+                console.log(
+                    "[PROJECT RENDER] Render completed successfully"
+                );
+
+            },
+            {
+                once: true
+            }
+        );
+
     }
-
-    renderProjects(initialProjects);
-
-});
+);
 
 
 /* ==========================================================
@@ -46,11 +76,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function formatDate(date) {
 
-    if (!date) return "-";
+    if (!date) {
 
-    const d = new Date(date + "T00:00:00");
+        return "-";
 
-    if (isNaN(d)) return "-";
+    }
+
+
+    const d =
+        new Date(date);
+
+
+    if (isNaN(d.getTime())) {
+
+        return "-";
+
+    }
+
 
     return d.toLocaleDateString(
         "en-GB",
@@ -150,10 +192,11 @@ function renderProjects(data) {
         ================================================== */
 
         const projectName =
-            project.projectName ||
-            project.name ||
-            project.project ||
-            "-";
+    project.project_name ||
+    project.projectName ||
+    project.name ||
+    project.project ||
+    "-";
 
 
         /* ==================================================
@@ -161,9 +204,14 @@ function renderProjects(data) {
         ================================================== */
 
         const participantCount =
-            Array.isArray(project.participants)
-                ? project.participants.length
-                : 0;
+    Number(
+        project.participant_count
+    ) ||
+    (
+        Array.isArray(project.participants)
+            ? project.participants.length
+            : 0
+    );
 
 
         /* ==================================================
@@ -209,7 +257,10 @@ function renderProjects(data) {
 
                             <span>
 
-                                ${escapeHtml(project.id)}
+                                ${escapeHtml(
+                                    project.project_code ||
+                                    String(project.id || "").slice(0, 8)
+                                )}
 
                             </span>
 
@@ -228,9 +279,10 @@ function renderProjects(data) {
                 <td>
 
                     ${escapeHtml(
-                        project.company ||
-                        project.organization ||
-                        "-"
+                        project.client ||
+project.company ||
+project.organization ||
+"-"
                     )}
 
                 </td>
@@ -244,9 +296,11 @@ function renderProjects(data) {
                 <td>
 
                     ${formatDate(
-                        project.startDate ||
-                        project.start
-                    )}
+                       
+    project.start_date ||
+    project.startDate ||
+    project.start
+)}
 
                 </td>
 

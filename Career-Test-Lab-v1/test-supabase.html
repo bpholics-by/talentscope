@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Supabase Connection Test</title>
+
+</head>
+
+<body>
+
+    <h1>Supabase Test</h1>
+
+    <button id="testButton">
+        Test Database
+    </button>
+
+    <pre id="output">Ready...</pre>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+    <script>
+
+        // =====================================================
+        // MASUKKAN DATA SUPABASE ANDA
+        // =====================================================
+
+        const SUPABASE_URL = "https://nixmychfhsnsvymkuxtm.supabase.co";
+
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peG15Y2hmaHNuc3Z5bWt1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NzU0MzMsImV4cCI6MjEwMzA1MTQzM30.Ak9SMJkhwtTlo8zIcHha8uecF4ayz172zIwGbdliNm4";
+
+
+        // =====================================================
+        // CEK LIBRARY
+        // =====================================================
+
+        const output = document.getElementById("output");
+
+        console.log("Supabase library:", window.supabase);
+
+
+        // =====================================================
+        // BUAT CLIENT
+        // =====================================================
+
+        let supabaseClient;
+
+        try {
+
+            supabaseClient =
+                window.supabase.createClient(
+                    SUPABASE_URL,
+                    SUPABASE_ANON_KEY
+                );
+
+            console.log(
+                "Supabase client berhasil dibuat"
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "Gagal membuat Supabase client:",
+                error
+            );
+
+            output.textContent =
+                "ERROR MEMBUAT CLIENT:\n\n" +
+                error.message;
+
+        }
+
+
+        // =====================================================
+        // TEST DATABASE
+        // =====================================================
+
+        async function testSupabase() {
+
+            output.textContent =
+                "Testing Supabase connection...\n";
+
+            console.log(
+                "Memulai test Supabase..."
+            );
+
+
+            try {
+
+                // ---------------------------------------------
+                // TEST PROJECTS
+                // ---------------------------------------------
+
+                output.textContent +=
+                    "\nLoading projects...";
+
+                const {
+                    data: projects,
+                    error: projectsError
+                } =
+                await supabaseClient
+                    .from("projects")
+                    .select("*");
+
+
+                console.log(
+                    "PROJECTS:",
+                    projects
+                );
+
+                console.log(
+                    "PROJECTS ERROR:",
+                    projectsError
+                );
+
+
+                if (projectsError) {
+
+                    throw new Error(
+                        "Projects Error: " +
+                        projectsError.message
+                    );
+
+                }
+
+
+                // ---------------------------------------------
+                // TEST PARTICIPANTS
+                // ---------------------------------------------
+
+                output.textContent +=
+                    "\nLoading participants...";
+
+
+                const {
+                    data: participants,
+                    error: participantsError
+                } =
+                await supabaseClient
+                    .from("participants")
+                    .select("*");
+
+
+                console.log(
+                    "PARTICIPANTS:",
+                    participants
+                );
+
+                console.log(
+                    "PARTICIPANTS ERROR:",
+                    participantsError
+                );
+
+
+                if (participantsError) {
+
+                    throw new Error(
+                        "Participants Error: " +
+                        participantsError.message
+                    );
+
+                }
+
+
+                // ---------------------------------------------
+                // TEST RESULTS
+                // ---------------------------------------------
+
+                output.textContent +=
+                    "\nLoading assessment results...";
+
+
+                const {
+                    data: results,
+                    error: resultsError
+                } =
+                await supabaseClient
+                    .from("assessment_results")
+                    .select("*");
+
+
+                console.log(
+                    "RESULTS:",
+                    results
+                );
+
+                console.log(
+                    "RESULTS ERROR:",
+                    resultsError
+                );
+
+
+                if (resultsError) {
+
+                    throw new Error(
+                        "Results Error: " +
+                        resultsError.message
+                    );
+
+                }
+
+
+                // ---------------------------------------------
+                // SUCCESS
+                // ---------------------------------------------
+
+                output.textContent =
+
+`SUCCESS!
+
+SUPABASE BERHASIL TERHUBUNG
+
+================================
+
+PROJECTS:
+${projects.length} records
+
+PARTICIPANTS:
+${participants.length} records
+
+ASSESSMENT RESULTS:
+${results.length} records
+
+================================
+
+DETAIL DATA:
+
+${JSON.stringify({
+    projects: projects,
+    participants: participants,
+    results: results
+}, null, 2)}`;
+
+            }
+            catch (error) {
+
+                console.error(
+                    "SUPABASE TEST ERROR:",
+                    error
+                );
+
+
+                output.textContent =
+
+`ERROR!
+
+${error.message}
+
+Silakan buka:
+F12 → Console
+
+Untuk melihat detail error.`;
+
+            }
+
+        }
+
+
+        // =====================================================
+        // BUTTON EVENT
+        // =====================================================
+
+        document
+            .getElementById("testButton")
+            .addEventListener(
+                "click",
+                testSupabase
+            );
+
+
+    </script>
+
+
+</body>
+</html>

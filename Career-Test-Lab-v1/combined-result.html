@@ -3,6 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
+    <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
+    <script src="js/ts-supabase-sync.js"></script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Combined Test Result | TalentScope</title>
     
@@ -806,7 +809,7 @@
 
   function render() {
     if (!projectId || !participantId) {
-      $("combinedReportsList").innerHTML = `
+      $("combinedDetail").innerHTML = `
         <div class="combined-error">
           <strong>Data project atau peserta tidak lengkap.</strong><br>
           Halaman Combined Result membutuhkan <code>projectId</code> dan <code>participantId</code>.
@@ -818,7 +821,7 @@
     const participant = getParticipant(project);
 
     if (!project) {
-      $("combinedReportsList").innerHTML = `
+      $("combinedDetail").innerHTML = `
         <div class="combined-error">
           <strong>Project tidak ditemukan.</strong><br>
           Tidak ada project dengan ID <code>${esc(projectId)}</code> pada data aplikasi.
@@ -827,7 +830,7 @@
     }
 
     if (!participant) {
-      $("combinedReportsList").innerHTML = `
+      $("combinedDetail").innerHTML = `
         <div class="combined-error">
           <strong>Peserta tidak ditemukan.</strong><br>
           Tidak ada peserta dengan ID <code>${esc(participantId)}</code> pada project ini.
@@ -853,6 +856,7 @@
     $("assessmentDate").textContent = formatDate(
       participant.assessmentDate ||
       participant.assessment_date ||
+      project.start_date ||
       project.assessmentDate ||
       project.assessment_date ||
       project.startDate ||
@@ -860,7 +864,7 @@
     );
 
     const tests = getAssessments(project);
-    const list = $("combinedReportsList");
+    const list = $("combinedDetail");
     const detail = $("combinedDetail");
 
     if (!tests.length) {
@@ -869,7 +873,6 @@
           <strong>Paket assessment kosong.</strong><br>
           Tidak ada assessment yang tersimpan pada project ini.
         </div>`;
-      detail.innerHTML = "";
       return;
     }
 

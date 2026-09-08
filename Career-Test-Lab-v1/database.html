@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
+<script src="js/ts-supabase-sync.js"></script>
+<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database Peserta | TalentScope</title>
     
@@ -438,9 +439,52 @@
     </div>
 </div>
 
+<!-- SUPABASE (WAJIB DIMUAT SEBELUM script utama di bawah, SUPAYA
+     window.DataService TERSEDIA DAN DATABASE PESERTA BISA AMBIL
+     DATA LANGSUNG DARI SUPABASE, BUKAN LOCALSTORAGE LAMA) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+
 <script>
     // DISAMAKAN Kuncinya agar membaca data asli dari project
     const STORAGE_KEY = 'talentscope_participants';
+
+    /* ==========================================================
+       HELPER: Banyak data peserta (pendidikan, no. telepon,
+       tanggal assessment, dll) ternyata TIDAK tersimpan sebagai
+       kolom terpisah, melainkan di dalam kolom "raw_data" (JSON)
+       dari Supabase. Dua fungsi ini membuka isi raw_data supaya
+       datanya tetap bisa ditemukan.
+       ========================================================== */
+    function getRawData(item) {
+        try {
+            const raw = item && item.raw_data;
+            if (!raw) return {};
+            if (typeof raw === 'string') return JSON.parse(raw);
+            if (typeof raw === 'object') return raw;
+        } catch (e) {
+            console.warn('Gagal membaca raw_data peserta:', e);
+        }
+        return {};
+    }
+
+    function pickField(item, keys, fallback) {
+        for (const k of keys) {
+            const v = item ? item[k] : undefined;
+            if (v !== undefined && v !== null && String(v).trim() !== '') {
+                return v;
+            }
+        }
+        const raw = getRawData(item);
+        for (const k of keys) {
+            const v = raw ? raw[k] : undefined;
+            if (v !== undefined && v !== null && String(v).trim() !== '') {
+                return v;
+            }
+        }
+        return fallback !== undefined ? fallback : '-';
+    }
 
     // Data Sesi Pengguna
     const currentUserSession = JSON.parse(localStorage.getItem('talentscope_current_user')) || 
@@ -452,7 +496,211 @@
 
     let rawDatabaseParticipants = [];
 
-    document.addEventListener("DOMContentLoaded", function() {
+
+    /* ==========================================================
+       SYNC DARI SUPABASE (SUMBER DATA UTAMA)
+       ----------------------------------------------------------
+       Dipanggil sebelum loadParticipantsFromLocalStorage(), supaya
+       localStorage ("talentscope_projects" & "talentscope_participants")
+       selalu diisi ulang dengan data TERBARU dari Supabase dulu.
+       Kalau Supabase gagal/tidak tersedia, fungsi ini diam-diam
+       berhenti dan halaman tetap jalan pakai localStorage lama
+       (fallback), tidak mengganggu apa pun di bawahnya.
+       ========================================================== */
+
+    async function waitForDatabaseDataService(timeoutMs) {
+
+        const startedAt = Date.now();
+
+        while (
+            typeof window.DataService === "undefined" &&
+            Date.now() - startedAt < timeoutMs
+        ) {
+            await new Promise(function (resolve) {
+                setTimeout(resolve, 100);
+            });
+        }
+
+        return (
+            typeof window.DataService !== "undefined" &&
+            typeof window.DataService.getProjects === "function"
+        );
+    }
+
+    async function syncDatabaseFromSupabase() {
+
+        try {
+
+            const ready = await waitForDatabaseDataService(6000);
+
+            if (!ready) {
+                console.warn(
+                    "[DATABASE] DataService tidak tersedia, pakai data localStorage yang ada."
+                );
+                return;
+            }
+
+            const projects = await window.DataService.getProjects();
+
+            const hydratedProjects = await Promise.all(
+                (projects || []).map(async function (project) {
+
+                    let participants = [];
+
+                    try {
+
+                        if (typeof window.DataService.getProjectParticipants === "function") {
+
+                            const relations =
+                                await window.DataService.getProjectParticipants(project.id);
+
+                            participants = (relations || [])
+                                .map(function (relation) {
+
+                                    const participant = relation.participant || {};
+
+                                    if (!participant || !Object.keys(participant).length) {
+                                        return null;
+                                    }
+
+                                    return {
+                                        ...participant,
+                                        status:
+                                            participant.status ||
+                                            relation.status ||
+                                            relation.participant_status ||
+                                            participant.assessment_status ||
+                                            "Not Started"
+                                    };
+
+                                })
+                                .filter(Boolean);
+
+                        } else if (typeof window.DataService.getParticipantsByProject === "function") {
+
+                            participants =
+                                await window.DataService.getParticipantsByProject(project.id);
+
+                        }
+
+                    } catch (error) {
+                        console.warn(
+                            "[DATABASE] Gagal ambil peserta untuk project:",
+                            project.id,
+                            error
+                        );
+                    }
+
+                    return {
+                        ...project,
+                        participants: Array.isArray(participants) ? participants : []
+                    };
+
+                })
+            );
+
+            // Simpan sebagai cache lokal (dipakai oleh semua fungsi
+            // lain di halaman ini yang membaca talentscope_projects).
+            localStorage.setItem(
+                "talentscope_projects",
+                JSON.stringify(hydratedProjects)
+            );
+
+            // Ratakan jadi daftar peserta datar untuk talentscope_participants,
+            // dengan alias field yang sama seperti yang dipakai halaman ini
+            // (nama, perusahaan, pic, tanggal, dst).
+            const participantMap = new Map();
+
+            hydratedProjects.forEach(function (project) {
+
+                const projectPurpose =
+                    project && (project.tujuanTes || project.purpose || project.type || "");
+
+                (Array.isArray(project.participants) ? project.participants : [])
+                    .forEach(function (participant) {
+
+                        if (!participant || typeof participant !== "object") {
+                            return;
+                        }
+
+                        const participantId =
+                            participant.id || participant.participantId || "";
+
+                        const participantEmail =
+                            participant.email || participant.emailAddress || "";
+
+                        const key = participantId
+                            ? "id:" + String(participantId)
+                            : participantEmail
+                                ? "email:" + String(participantEmail).toLowerCase().trim()
+                                : "";
+
+                        if (!key) {
+                            return;
+                        }
+
+                        participantMap.set(key, {
+                            ...participant,
+                            id: participantId,
+                            participantId: participantId,
+                            nama: participant.nama || participant.name || "",
+                            email: participantEmail,
+                            perusahaan:
+                                participant.perusahaan || participant.company ||
+                                (project && project.company) || "-",
+                            company:
+                                participant.company || participant.perusahaan ||
+                                (project && project.company) || "-",
+                            pic:
+                                participant.pic || participant.picProyek ||
+                                (project && project.pic) || "-",
+                            projectId: project && project.id ? project.id : "",
+                            namaProject: project && project.name ? project.name : "",
+                            projectName: project && project.name ? project.name : "",
+                            tujuanTes:
+                                participant.tujuanTes || participant.purpose ||
+                                projectPurpose || "",
+                            purpose:
+                                participant.purpose || participant.tujuanTes ||
+                                projectPurpose || "",
+                            tanggal:
+                                participant.tanggal || participant.assessmentDate ||
+                                participant.assessment_date || (project && project.start) || "",
+                            assessmentDate:
+                                participant.assessmentDate || participant.assessment_date ||
+                                (project && project.start) || ""
+                        });
+
+                    });
+
+            });
+
+            localStorage.setItem(
+                "talentscope_participants",
+                JSON.stringify(Array.from(participantMap.values()))
+            );
+
+            console.log(
+                "[DATABASE] Sinkron dari Supabase berhasil:",
+                hydratedProjects.length,
+                "project,",
+                participantMap.size,
+                "peserta"
+            );
+
+        } catch (error) {
+
+            console.warn(
+                "[DATABASE] Sinkron dari Supabase gagal, pakai data localStorage yang ada:",
+                error
+            );
+
+        }
+
+    }
+
+
+    document.addEventListener("DOMContentLoaded", async function() {
 
     initUserPermissions();
 
@@ -477,12 +725,71 @@
         }
     }
 
+    // Tarik data terbaru dari Supabase dulu, supaya localStorage
+    // yang dibaca loadParticipantsFromLocalStorage() di bawah ini
+    // selalu berisi data terkini (bukan cache lama/kosong).
+    await syncDatabaseFromSupabase();
+
     loadParticipantsFromLocalStorage(initialSearchValue);
 
     setupRealtimeSearch();
 
     setupDatabaseAutoRefresh();
+
+    // Kalau datang dari halaman lain (mis. tombol View/Edit di
+    // halaman Participants), otomatis buka modal yang sesuai.
+    openModalFromUrlParams(urlParams);
 });
+
+
+/* ==========================================================
+   BUKA MODAL OTOMATIS DARI HALAMAN LAIN
+   Dipakai oleh tombol View/Edit di halaman Participants agar
+   langsung menuju detail/edit peserta yang sama di sini.
+   ========================================================== */
+function openModalFromUrlParams(urlParams) {
+
+    const detailId = urlParams.get("detail");
+    const editId = urlParams.get("edit");
+    const nameHint = urlParams.get("name");
+
+    if (!detailId && !editId) {
+        return;
+    }
+
+    const targetId = detailId || editId;
+
+    // Cari berdasarkan ID dulu (paling akurat).
+    let match = rawDatabaseParticipants.find(
+        item => String(item.id) === String(targetId)
+    );
+
+    // Kalau ID tidak ketemu, coba cocokkan lewat nama sebagai cadangan.
+    if (!match && nameHint) {
+
+        const normalizedName =
+            decodeURIComponent(nameHint).toLowerCase().trim();
+
+        match = rawDatabaseParticipants.find(
+            item => (item.nama || "").toLowerCase().trim() === normalizedName
+        );
+    }
+
+    if (!match) {
+        console.warn(
+            "[DATABASE] Peserta dari halaman Participants tidak ditemukan:",
+            targetId,
+            nameHint
+        );
+        return;
+    }
+
+    if (detailId) {
+        openDetailModal(match.id);
+    } else if (editId) {
+        openEditModal(match.id);
+    }
+}
 
 
 /* ==========================================================
@@ -931,6 +1238,34 @@ function getProjectPurposeForParticipant(item, projects) {
         return hydrated;
     }
 
+    /* ==========================================================
+       AMBIL KODE PROJECT YANG PENDEK (Contoh: PRJ-7793229)
+       berdasarkan ID project yang panjang (UUID), dengan mencari
+       ke data project di talentscope_projects.
+       ========================================================== */
+    function getProjectCodeById(projectIdValue) {
+        if (!projectIdValue) return '';
+
+        try {
+            const projects = JSON.parse(localStorage.getItem('talentscope_projects') || '[]');
+
+            if (!Array.isArray(projects)) return '';
+
+            const found = projects.find(function (proj) {
+                return proj && String(proj.id) === String(projectIdValue);
+            });
+
+            if (found) {
+                return found.projectCode || found.project_code || found.code || '';
+            }
+
+        } catch (e) {
+            console.warn('Gagal mengambil kode project:', e);
+        }
+
+        return '';
+    }
+
     function loadParticipantsFromLocalStorage(searchQuery = '') {
         let storedData = localStorage.getItem(STORAGE_KEY);
         let parsedData = [];
@@ -944,25 +1279,40 @@ function getProjectPurposeForParticipant(item, projects) {
         parsedData = hydrateParticipantPurposeFromProjects(parsedData);
         parsedData = hydrateParticipantActivityFromProjects(parsedData);
 
-        rawDatabaseParticipants = parsedData.map((item, index) => ({
-            ...item,
-            id: item.id || index,
-            nama: item.nama || item.fullName || item.name || '-',
-            namaProject: item.namaProject || item.projectName || '-',
-            projectId: item.projectId || item.idProject || 'P001',
-            tanggal: item.tanggal || item.date || item.assessmentDate || item.tanggalAsesmen || '-',
-            perusahaan: item.perusahaan || item.company || '-'
-        }));
+        rawDatabaseParticipants = parsedData.map((item, index) => {
+            const projectId = item.projectId || item.idProject || 'P001';
+
+            return {
+                ...item,
+                id: item.id || index,
+                nama: item.nama || item.fullName || item.name || '-',
+                namaProject: item.namaProject || item.projectName || '-',
+                projectId: projectId,
+                projectCode:
+                    getProjectCodeById(projectId) ||
+                    item.projectCode ||
+                    item.project_code ||
+                    projectId,
+                tanggal: pickField(
+                    item,
+                    ['tanggal', 'date', 'assessmentDate', 'assessment_date', 'tanggalAsesmen', 'tanggal_assessment'],
+                    '-'
+                ),
+                perusahaan: item.perusahaan || item.company || '-'
+            };
+        });
 
         const query = (searchQuery || '').toLowerCase().trim();
         const filteredData = rawDatabaseParticipants.filter(item => {
             const nama = (item.nama || '').toLowerCase();
             const projectId = (item.projectId || '').toLowerCase();
+            const projectCode = (item.projectCode || '').toLowerCase();
             const perusahaan = (item.perusahaan || '').toLowerCase();
             const namaProject = (item.namaProject || '').toLowerCase();
 
             return nama.includes(query) || 
                    projectId.includes(query) || 
+                   projectCode.includes(query) ||
                    perusahaan.includes(query) || 
                    namaProject.includes(query);
         });
@@ -1009,7 +1359,7 @@ function getProjectPurposeForParticipant(item, projects) {
                 <td style="text-align: center;"><input type="checkbox" class="row-checkbox" value="${item.id}"></td>
                 <td class="participant-name">${item.nama || '-'}</td>
                 <td>${item.namaProject || '-'}</td>
-                <td><strong>${item.projectId || '-'}</strong></td>
+                <td><strong>${item.projectCode || item.projectId || '-'}</strong></td>
                 <td>${item.tanggal || '-'}</td>
                 <td>${item.perusahaan || '-'}</td>
                 <td style="text-align: center;">
@@ -1154,8 +1504,8 @@ function getProjectPurposeForParticipant(item, projects) {
 
     const participantName = detailParticipant.nama || detailParticipant.name || 'Tanpa Nama';
     const participantEmail = detailParticipant.email || detailParticipant.emailUser || '-';
-    const participantPhone = detailParticipant.telepon || detailParticipant.phone || detailParticipant.noTelepon || '-';
-    const participantEdu = detailParticipant.pendidikan || detailParticipant.education || '-';
+    const participantPhone = pickField(detailParticipant, ['telepon', 'phone', 'noTelepon', 'no_telepon', 'phoneNumber'], '-');
+    const participantEdu = pickField(detailParticipant, ['pendidikan', 'education', 'education_level'], '-');
     const participantCompany = detailParticipant.perusahaan || detailParticipant.company || '-';
     const participantPos = detailParticipant.posisi || detailParticipant.position || 'Posisi belum diatur';
     const participantPurpose = detailParticipant.tujuanTes || detailParticipant.purpose || '-';
@@ -1353,6 +1703,85 @@ function formatNiceDate(isoStr) {
         document.getElementById(modalId).style.display = 'none';
     }
 
+    /* ==========================================================
+       SIMPAN PERUBAHAN DARI MODAL EDIT
+       PENTING: sebelumnya fungsi ini belum ada sama sekali,
+       sehingga tombol "Simpan Perubahan" gagal (form ikut
+       ter-submit ke browser secara default dan halaman jadi
+       pindah/reload). Sekarang perubahan disimpan ke
+       talentscope_participants dan modal ditutup tanpa reload,
+       jadi tetap di halaman Database Peserta.
+       ========================================================== */
+    function saveParticipantDetail(event) {
+
+        event.preventDefault();
+
+        const getVal = (elementId) => {
+            const el = document.getElementById(elementId);
+            return el ? el.value.trim() : "";
+        };
+
+        const rowId = getVal('editRowId');
+
+        if (!rowId) {
+            alert('ID peserta tidak ditemukan, gagal menyimpan.');
+            return;
+        }
+
+        const index = rawDatabaseParticipants.findIndex(
+            item => String(item.id) === String(rowId)
+        );
+
+        if (index === -1) {
+            alert('Data peserta tidak ditemukan, gagal menyimpan.');
+            return;
+        }
+
+        const updated = {
+            ...rawDatabaseParticipants[index],
+            name: getVal('editName'),
+            nama: getVal('editName'),
+            email: getVal('editEmail'),
+            username: getVal('editEmail'),
+            password: getVal('editPassword'),
+            accessCode: getVal('editPassword'),
+            education: getVal('editEducation'),
+            pendidikan: getVal('editEducation'),
+            position: getVal('editPosition'),
+            posisi: getVal('editPosition'),
+            phone: getVal('editPhone'),
+            telepon: getVal('editPhone'),
+            assessmentDate: getVal('editAssessmentDate'),
+            tanggal: getVal('editAssessmentDate'),
+            assessmentStatus: getVal('editAssessmentStatus'),
+            status: getVal('editAssessmentStatus')
+        };
+
+        rawDatabaseParticipants[index] = updated;
+
+        try {
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(rawDatabaseParticipants)
+            );
+        } catch (e) {
+            console.warn('Gagal menyimpan perubahan peserta:', e);
+            alert('Gagal menyimpan perubahan. Coba lagi.');
+            return;
+        }
+
+        closeModal('editParticipantModal');
+
+        // Tetap di halaman Database Peserta, cukup refresh tabelnya.
+        loadParticipantsFromLocalStorage(
+            document.getElementById('globalSearchInput')
+                ? document.getElementById('globalSearchInput').value
+                : ''
+        );
+
+        alert('Perubahan berhasil disimpan.');
+    }
+
     function handleSelectAllChange(mainCheckbox) {
         document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = mainCheckbox.checked);
     }
@@ -1410,10 +1839,10 @@ function formatNiceDate(isoStr) {
     setSafeVal('editName', participant.name || participant.fullName);
     setSafeVal('editEmail', participant.email || participant.username);
     setSafeVal('editPassword', participant.password || participant.accessCode);
-    setSafeVal('editEducation', participant.education || participant.pendidikan);
+    setSafeVal('editEducation', pickField(participant, ['education', 'pendidikan']));
     setSafeVal('editPosition', participant.position || participant.jobTitle);
-    setSafeVal('editPhone', participant.phone || participant.phoneNumber);
-    setSafeVal('editAssessmentDate', participant.assessmentDate || participant.date);
+    setSafeVal('editPhone', pickField(participant, ['phone', 'phoneNumber', 'telepon']));
+    setSafeVal('editAssessmentDate', pickField(participant, ['assessmentDate', 'assessment_date', 'tanggal', 'date']));
     setSafeVal('editAssessmentStatus', participant.assessmentStatus || participant.status || "Not Started");
 
     const editModal = document.getElementById('editParticipantModal');

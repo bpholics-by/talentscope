@@ -80,6 +80,9 @@
     </script>
 
 <meta charset="UTF-8">
+    <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
+    <script src="js/ts-supabase-sync.js"></script>
+
 
 <meta
     name="viewport"
@@ -2226,6 +2229,185 @@ tbody tr:hover{
     line-height: 1.4;
 }
 
+
+/* ==========================================================
+   HAMBURGER MENU (MOBILE ONLY)
+========================================================== */
+
+.hamburger-btn{
+    display:none;
+
+    align-items:center;
+    justify-content:center;
+
+    flex-direction:column;
+
+    gap:4px;
+
+    width:40px;
+    height:40px;
+
+    flex:0 0 40px;
+
+    border:1px solid var(--line2);
+    border-radius:10px;
+
+    background:#fff;
+
+    padding:0;
+
+    box-shadow:var(--shadow);
+}
+
+.hamburger-btn:active{
+    background:#eef6ff;
+}
+
+.hamburger-btn span{
+    display:block;
+
+    width:19px;
+    height:2px;
+
+    border-radius:2px;
+
+    background:var(--blue);
+
+    transition:
+        transform .25s ease,
+        opacity .2s ease;
+}
+
+.hamburger-btn.active span:nth-child(1){
+    transform:translateY(6px) rotate(45deg);
+}
+
+.hamburger-btn.active span:nth-child(2){
+    opacity:0;
+}
+
+.hamburger-btn.active span:nth-child(3){
+    transform:translateY(-6px) rotate(-45deg);
+}
+
+.sidebar-overlay{
+    display:none;
+
+    position:fixed;
+    inset:0;
+
+    background:rgba(9,25,60,.5);
+
+    z-index:55;
+
+    opacity:0;
+
+    transition:opacity .25s ease;
+}
+
+.sidebar-overlay.active{
+    display:block;
+    opacity:1;
+}
+
+
+/* ==========================================================
+   RESPONSIVE MOBILE (HP) - SIDEBAR AS SLIDE-IN DRAWER
+========================================================== */
+
+@media(max-width:768px){
+
+    .sidebar{
+        width:267px;
+
+        transform:translateX(-100%);
+
+        transition:transform .3s ease;
+
+        z-index:60;
+
+        box-shadow:0 15px 45px rgba(6,20,50,.35);
+    }
+
+    .sidebar.active{
+        transform:translateX(0);
+    }
+
+    .brand{
+        justify-content:flex-start;
+
+        padding:22px 24px 28px;
+    }
+
+    .brand > div:last-child{
+        display:block;
+    }
+
+    .sidebar-body{
+        padding:40px 22px 120px;
+    }
+
+    .monitoring-module{
+        padding:15px 18px;
+
+        text-align:left;
+    }
+
+    .monitoring-module-icon{
+        margin:0;
+    }
+
+    .monitoring-module h3,
+    .monitoring-module p,
+    .module-divider,
+    .module-status{
+        display:block;
+    }
+
+    .sidebar-footer{
+        left:22px;
+        right:22px;
+    }
+
+    .logout-btn{
+        width:100%;
+
+        margin:0;
+
+        font-size:13px;
+    }
+
+    .logout-btn i{
+        font-size:14px;
+    }
+
+    .platform-info{
+        display:block;
+    }
+
+    .app{
+        display:flex !important;
+
+        width:100% !important;
+    }
+
+    html body div.app > div.main{
+        margin-left:0 !important;
+
+        width:100vw !important;
+
+        max-width:100vw !important;
+
+        min-width:0 !important;
+
+        flex:none !important;
+    }
+
+    .hamburger-btn{
+        display:flex;
+    }
+}
+
 </style>
 
 </head>
@@ -2321,6 +2503,9 @@ tbody tr:hover{
                 </aside>
 
 
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
 
     <!-- =====================================================
          MAIN
@@ -2365,6 +2550,20 @@ tbody tr:hover{
 
 
             <div class="header-user">
+
+                <button
+                    type="button"
+                    class="hamburger-btn"
+                    id="hamburgerBtn"
+                    aria-label="Toggle menu"
+                >
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </button>
+
 
                 <div class="header-user-icon">
 
@@ -2830,6 +3029,14 @@ tbody tr:hover{
 
 
 
+<!-- SUPABASE (harus dimuat SEBELUM view-monitoring.js) -->
+<!-- PENTING: samakan persis dengan tag yang dipakai di projects.html
+     (versi @supabase/supabase-js dan path supabase-client.js) supaya
+     tidak dobel-inisialisasi atau beda versi client. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+
 <script src="js/view-monitoring.js"></script>
 <!-- Panggil script kontrol akses di semua halaman -->
 <script src="js/app-access-control.js"></script>
@@ -3104,6 +3311,66 @@ tbody tr:hover{
      * Status participant tidak lagi dipaksa Online dan lastLogout
      * tidak lagi dihapus ketika halaman monitoring dibuka.
      */
+</script>
+
+<!-- SCRIPT HAMBURGER MENU (SIDEBAR DRAWER UNTUK MOBILE) -->
+<script>
+(function() {
+    "use strict";
+
+    function initHamburgerMenu() {
+        var hamburgerBtn = document.getElementById("hamburgerBtn");
+        var sidebar = document.querySelector(".sidebar");
+        var overlay = document.getElementById("sidebarOverlay");
+
+        if (!hamburgerBtn || !sidebar || !overlay) return;
+
+        function openSidebar() {
+            sidebar.classList.add("active");
+            overlay.classList.add("active");
+            hamburgerBtn.classList.add("active");
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+            hamburgerBtn.classList.remove("active");
+        }
+
+        hamburgerBtn.addEventListener("click", function() {
+            if (sidebar.classList.contains("active")) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        overlay.addEventListener("click", closeSidebar);
+
+        // Tutup sidebar otomatis saat menu di dalamnya diklik (khusus mobile)
+        sidebar.querySelectorAll("a, button").forEach(function(el) {
+            if (el.id === "hamburgerBtn") return;
+            el.addEventListener("click", function() {
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+
+        // Tutup sidebar otomatis jika layar diperbesar melewati breakpoint mobile
+        window.addEventListener("resize", function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initHamburgerMenu);
+    } else {
+        initHamburgerMenu();
+    }
+})();
 </script>
 
 </body>

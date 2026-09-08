@@ -2,12 +2,7 @@
 <html lang="id">
 
 <head>
-
-    <head>
-
-        
-
-    <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
+<!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
     <script>
     (function() {
         "use strict";
@@ -83,7 +78,8 @@
     })();
     </script>
 
-    <meta charset="UTF-8">
+    <script src="js/ts-supabase-sync.js"></script>
+<meta charset="UTF-8">
 
     <meta
         name="viewport"
@@ -1776,17 +1772,38 @@
 
 <script src="js/layout/layout-loader.js"></script>
 
+<!-- SUPABASE LIBRARY -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- SUPABASE CLIENT -->
+<script src="js/supabase-client.js"></script>
+
+<!-- CENTRAL DATA SERVICE -->
+<script src="js/data-service.js"></script>
+
+<!-- ASSESSMENT DATA -->
 <script src="js/assessment-data.js"></script>
 
+<!-- ASSESSMENT RENDER -->
 <script src="js/assessment-render.js"></script>
+
+<!-- ASSESSMENT MODAL -->
 <script src="js/assessment-modal.js"></script>
+
+<!-- ASSESSMENT LOGIC -->
 <script src="js/assessment.js"></script>
+
+<!-- PROJECT SELECTION FLOW -->
+<script src="js/assessment-project-selection.js"></script>
+
+<!-- GLOBAL SEARCH -->
 <script src="js/global-search.js"></script>
 
-<!-- Panggil script kontrol akses di semua halaman -->
+<!-- ACCESS CONTROL -->
 <script src="js/app-access-control.js"></script>
 <script src="js/project-access-filter.js"></script>
 
+<!-- AUTH GUARD -->
 <script src="js/auth-guard.js"></script>
 
 <script>

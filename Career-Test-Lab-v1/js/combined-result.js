@@ -151,8 +151,12 @@ function loadCombinedResult() {
 
 
     const assessmentDate =
+        project.start_date ||
         project.startDate ||
         project.start ||
+        project.assessmentDate ||
+        project.schedule_start ||
+        project.date ||
         "-";
 
 

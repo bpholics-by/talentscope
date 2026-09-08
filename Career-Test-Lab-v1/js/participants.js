@@ -3,33 +3,250 @@
    File: js/participants.js
    ========================================================== */
 
+/* ==========================================================
+   TALENTSCOPE PARTICIPANTS - SUPABASE INITIALIZATION
+   ========================================================== */
+
+window.__talentScopeProjectsCache =
+    window.__talentScopeProjectsCache || [];
+
+window.__talentScopeParticipantDataLoaded =
+    window.__talentScopeParticipantDataLoaded || false;
+
+
 document.addEventListener("DOMContentLoaded", function () {
-
     initializeParticipants();
-
 });
 
 
-/* ==========================================================
-   MAIN INITIALIZATION
-   ========================================================== */
-
-function initializeParticipants() {
+async function initializeParticipants() {
 
     initializeActionButtons();
-
     initializeSearch();
-
     initializeFilter();
-
     initializeExport();
 
-    // Sinkronkan data peserta yang sudah ada ke Central Participant Database.
+    try {
+        await loadParticipantDataFromSupabase();
+    } catch (error) {
+        console.error(
+            "[PARTICIPANTS] Supabase load failed, using legacy cache:",
+            error
+        );
+        loadLegacyProjectsIntoCache();
+    }
+
+    // Cache lokal hanya untuk kompatibilitas fitur lama.
+    // Supabase tetap menjadi sumber data utama.
     syncParticipantsDatabase(getProjects());
 
-    refreshParticipantTable();
 
-    refreshStatistics();
+/* =========================================
+   REFRESH UI
+========================================= */
+
+refreshParticipantTable();
+
+
+/* =========================================
+   REFRESH STATISTICS
+========================================= */
+
+refreshStatistics();
+
+
+console.log(
+    "[PARTICIPANTS] Initialization completed"
+);
+}
+
+
+/* ==========================================================
+   WAIT FOR DATA SERVICE
+   ========================================================== */
+
+async function waitForDataService() {
+
+    const startedAt = Date.now();
+
+    while (
+        typeof window.DataService === "undefined" &&
+        Date.now() - startedAt < 10000
+    ) {
+        await new Promise(function (resolve) {
+            setTimeout(resolve, 100);
+        });
+    }
+
+    if (
+        typeof window.DataService === "undefined" ||
+        typeof window.DataService.getProjects !== "function"
+    ) {
+        throw new Error("DataService belum tersedia");
+    }
+
+    console.log(
+        "[PARTICIPANTS] DataService ready"
+    );
+}
+
+
+
+async function loadParticipantDataFromSupabase() {
+
+    await waitForDataService();
+
+    console.log(
+        "[PARTICIPANTS] Loading real data from Supabase..."
+    );
+
+    const projects =
+        await window.DataService.getProjects();
+
+    // PERBAIKAN PERFORMA: ambil peserta semua project SECARA
+    // PARALEL (Promise.all), bukan satu-satu berurutan seperti
+    // sebelumnya. Loading awal sebelumnya = total waktu semua
+    // request dijumlahkan; sekarang = waktu request paling lama
+    // saja, karena semuanya jalan bersamaan.
+    const hydratedProjects = await Promise.all(
+        (projects || []).map(async function (project) {
+
+            let participants = [];
+
+            try {
+
+                if (
+                    typeof window.DataService.getProjectParticipants === "function"
+                ) {
+
+                    const relations =
+                        await window.DataService.getProjectParticipants(
+                            project.id
+                        );
+
+                    participants =
+                        (relations || [])
+                        .map(function (relation) {
+
+                            const participant =
+                                relation.participant || {};
+
+                            if (
+                                !participant ||
+                                !Object.keys(participant).length
+                            ) {
+                                return null;
+                            }
+
+                            return {
+                                ...participant,
+
+                                // Simpan status relasi project bila ada.
+                                projectParticipantStatus:
+                                    relation.status ||
+                                    relation.participant_status ||
+                                    "",
+
+                                status:
+                                    participant.status ||
+                                    relation.status ||
+                                    relation.participant_status ||
+                                    participant.assessment_status ||
+                                    "Not Started"
+                            };
+
+                        })
+                        .filter(Boolean);
+
+                } else if (
+                    typeof window.DataService.getParticipantsByProject === "function"
+                ) {
+
+                    participants =
+                        await window.DataService.getParticipantsByProject(
+                            project.id
+                        );
+
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "[PARTICIPANTS] Failed to load participants for project:",
+                    project.id,
+                    error
+                );
+
+            }
+
+            return {
+                ...project,
+                participants: Array.isArray(participants)
+                    ? participants
+                    : []
+            };
+
+        })
+    );
+
+    window.__talentScopeProjectsCache =
+        hydratedProjects;
+
+    window.__talentScopeParticipantDataLoaded =
+        true;
+
+    // Legacy cache diperbarui agar fungsi lama yang masih
+    // bergantung pada localStorage tidak kehilangan data.
+    try {
+        localStorage.setItem(
+            "talentscope_projects",
+            JSON.stringify(hydratedProjects)
+        );
+    } catch (error) {
+        console.warn(
+            "[PARTICIPANTS] Unable to update legacy cache:",
+            error
+        );
+    }
+
+    console.log(
+        "[PARTICIPANTS] Supabase data ready:",
+        hydratedProjects
+    );
+
+    return hydratedProjects;
+
+}
+
+
+function loadLegacyProjectsIntoCache() {
+
+    try {
+
+        const raw =
+            localStorage.getItem("talentscope_projects");
+
+        const projects =
+            raw ? JSON.parse(raw) : [];
+
+        window.__talentScopeProjectsCache =
+            Array.isArray(projects)
+                ? projects
+                : [];
+
+        return window.__talentScopeProjectsCache;
+
+    } catch (error) {
+
+        console.error(
+            "[PARTICIPANTS] Legacy cache unavailable:",
+            error
+        );
+
+        window.__talentScopeProjectsCache = [];
+        return [];
+
+    }
 
 }
 
@@ -40,53 +257,46 @@ function initializeParticipants() {
 
 function getProjects() {
 
-    try {
-
-        const raw = localStorage.getItem("talentscope_projects");
-
-        if (!raw) {
-            return [];
-        }
-
-        const data = JSON.parse(raw);
-
-        return Array.isArray(data) ? data : [];
-
-    } catch (error) {
-
-        console.error("Gagal membaca talentscope_projects:", error);
-
-        return [];
-
+    if (
+        Array.isArray(
+            window.__talentScopeProjectsCache
+        )
+    ) {
+        return window.__talentScopeProjectsCache;
     }
+
+    return loadLegacyProjectsIntoCache();
 
 }
 
 
-function saveProjects(projects) {
+async function saveProjects(projects) {
 
+    const safeProjects =
+        Array.isArray(projects)
+            ? projects
+            : [];
+
+    window.__talentScopeProjectsCache =
+        safeProjects;
+
+    // Legacy cache tetap disimpan untuk kompatibilitas
+    // fungsi lama, tetapi bukan lagi sumber data utama.
     try {
-
         localStorage.setItem(
             "talentscope_projects",
-            JSON.stringify(projects)
+            JSON.stringify(safeProjects)
         );
-
-        // Tetap simpan project seperti sebelumnya, lalu sinkronkan
-        // participant ke Central Participant Database.
-        syncParticipantsDatabase(projects);
-
-        return true;
-
     } catch (error) {
-
-        console.error("Gagal menyimpan projects:", error);
-
-        alert("Data peserta gagal disimpan.");
-
-        return false;
-
+        console.warn(
+            "[PARTICIPANTS] Failed to save legacy cache:",
+            error
+        );
     }
+
+    syncParticipantsDatabase(safeProjects);
+
+    return true;
 
 }
 
@@ -640,6 +850,41 @@ function showAddParticipantModal() {
 
                         <div class="ts-form-group">
 
+                            <label>Pendidikan</label>
+
+                            <input
+                                id="newParticipantEducation"
+                                type="text"
+                                placeholder="Contoh: S1 Teknik Industri">
+
+                        </div>
+
+
+                        <div class="ts-form-group">
+
+                            <label>No. Telepon</label>
+
+                            <input
+                                id="newParticipantPhone"
+                                type="tel"
+                                placeholder="Contoh: 08123456789">
+
+                        </div>
+
+
+                        <div class="ts-form-group">
+
+                            <label>Tanggal Assessment</label>
+
+                            <input
+                                id="newParticipantAssessmentDate"
+                                type="date">
+
+                        </div>
+
+
+                        <div class="ts-form-group">
+
                             <label>Access Code</label>
 
                             <div style="
@@ -769,6 +1014,27 @@ function saveNewParticipant(event) {
             .trim();
 
 
+    const education =
+        document
+            .getElementById("newParticipantEducation")
+            .value
+            .trim();
+
+
+    const phone =
+        document
+            .getElementById("newParticipantPhone")
+            .value
+            .trim();
+
+
+    const assessmentDate =
+        document
+            .getElementById("newParticipantAssessmentDate")
+            .value
+            .trim();
+
+
     const accessCode =
         document
             .getElementById("newParticipantCode")
@@ -857,6 +1123,12 @@ function saveNewParticipant(event) {
         email: email,
 
         position: position || "-",
+
+        education: education || "-",
+
+        phone: phone || "-",
+
+        assessmentDate: assessmentDate || "",
 
         accessCode: accessCode,
 
@@ -1604,14 +1876,25 @@ function filterTable() {
 
 function refreshParticipantTable() {
 
-    const tbody =
+    console.log(
+        "[PARTICIPANTS] Refreshing participant table..."
+    );
+
+
+    const tableBody =
         document.querySelector(
             ".participant-table tbody"
         );
 
 
-    if (!tbody) {
+    if (!tableBody) {
+
+        console.warn(
+            "[PARTICIPANTS] Table body not found"
+        );
+
         return;
+
     }
 
 
@@ -1619,182 +1902,421 @@ function refreshParticipantTable() {
         getProjects();
 
 
-    const participants = [];
+    const rows = [];
 
 
-    projects.forEach(function (project) {
+    projects.forEach(
+        function (project) {
 
-        const list =
-            Array.isArray(project.participants)
-                ? project.participants
-                : [];
-
-
-        list.forEach(function (participant) {
-
-            participants.push({
-
-                participant: participant,
-
-                project: project
-
-            });
-
-        });
-
-    });
+            const participants =
+                Array.isArray(
+                    project.participants
+                )
+                    ? project.participants
+                    : [];
 
 
-    /*
-     * Jika tidak ada data, jangan
-     * menghapus struktur HTML yang
-     * sudah ada.
-     */
+            participants.forEach(
+                function (participant) {
 
-    if (!participants.length) {
+                    rows.push({
+                        participant:
+                            participant,
+
+                        project:
+                            project
+                    });
+
+                }
+            );
+
+        }
+    );
+
+
+    /* =========================================
+       EMPTY STATE
+    ========================================= */
+
+    if (rows.length === 0) {
+
+        tableBody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    style="
+                        text-align:center;
+                        padding:30px;
+                        color:#64748b;
+                    "
+                >
+
+                    No participants found.
+
+                </td>
+
+            </tr>
+
+        `;
+
 
         return;
 
     }
 
 
-    tbody.innerHTML = "";
+    /* =========================================
+       RENDER ROWS
+    ========================================= */
+
+    tableBody.innerHTML =
+        rows.map(
+            function (item, index) {
+
+                const p =
+                    item.participant || {};
+
+                const project =
+                    item.project || {};
 
 
-    participants.forEach(function (item) {
-
-        const p = item.participant;
-
-        const project = item.project;
-
-
-        const name =
-            p.name ||
-            p.fullName ||
-            p.full_name ||
-            "-";
+                const name =
+                    p.name ||
+                    p.nama ||
+                    p.fullName ||
+                    "-";
 
 
-        const email =
-            p.email ||
-            p.emailAddress ||
-            "-";
+                const email =
+                    p.email ||
+                    p.emailAddress ||
+                    "-";
 
 
-        const position =
-            p.position ||
-            "-";
+
+                const participantId =
+                    p.id ||
+                    p.participantId ||
+                    "-";
+
+                // Keep the full UUID internally for View/Edit/Remove,
+                // but render a compact, readable ID in the table.
+                const shortParticipantId =
+                    participantId && participantId !== "-"
+                        ? "PRT-" + String(participantId)
+                            .replace(/[^a-zA-Z0-9]/g, "")
+                            .slice(0, 8)
+                            .toUpperCase()
+                        : "-";
 
 
-        const status =
-            p.status ||
-            "Not Started";
+                const projectName =
+                    project.name ||
+                    project.project_name ||
+                    "-";
 
 
-        const company =
-    project.company ||
-    "-";
+                const status =
+                    p.assessment_status ||
+                    p.assessmentStatus ||
+                    p.status ||
+                    p.projectParticipantStatus ||
+                    "Not Started";
 
 
-        const avatar =
-            name.charAt(0).toUpperCase();
+                return `
+
+                    <tr>
+
+                        <td>
+                            ${index + 1}
+                        </td>
 
 
-        const row =
-            document.createElement("tr");
+                        <td>
+
+                            <div
+                                style="
+                                    font-weight:600;
+                                "
+                            >
+                                ${escapeHtml(name)}
+                            </div>
+
+                            <div
+                                style="
+                                    font-size:12px;
+                                    color:#64748b;
+                                    margin-top:3px;
+                                "
+                            >
+                                ${escapeHtml(email)}
+                            </div>
+
+                        </td>
 
 
-        row.innerHTML = `
+                        <td>
 
-            <td>
+                            ${escapeHtml(
+                                projectName
+                            )}
 
-                <div class="participant-info">
-
-                    <div class="participant-avatar">
-                        ${escapeHtml(avatar)}
-                    </div>
-
-                    <div>
-
-                        <strong>
-                            ${escapeHtml(name)}
-                        </strong>
-
-                        <span>
-                            ${escapeHtml(email)}
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </td>
+                        </td>
 
 
-            <td>
-                ${escapeHtml(position)}
-            </td>
+
+                        <td>
+
+                            <span
+                                class="participant-id-chip"
+                                title="${escapeHtml(participantId)}"
+                            >
+                                ${escapeHtml(shortParticipantId)}
+                            </span>
+
+                        </td>
 
 
-            <td>
+                        <td>
 
-                <span class="status ${getStatusClass(status)}">
+                            <span
+                                class="status ${getStatusClass(status)}"
+                            >
 
-                    ${escapeHtml(status)}
+                                ${escapeHtml(
+                                    status
+                                )}
 
-                </span>
+                            </span>
 
-            </td>
-
-
-            <td>
-
-                <strong>
-                    ${escapeHtml(company)}
-                </strong>
-
-            </td>
+                        </td>
 
 
-            <td>
+                        <td>
 
-                <div class="table-actions">
+                            <div class="participant-action-buttons">
+                                <button
+                                    type="button"
+                                    class="action-btn view-btn"
+                                    onclick="viewParticipant('${escapeJs(participantId)}')"
+                                    title="View participant"
+                                >
+                                    <i class="fa-solid fa-eye"></i>
+                                    <span>View</span>
+                                </button>
 
-                    <button
-                        type="button"
-                        title="View"
-                        onclick="viewParticipant('${escapeJs(p.id || "")}')">
+                                <button
+                                    type="button"
+                                    class="action-btn edit-btn"
+                                    onclick="editParticipant('${escapeJs(participantId)}')"
+                                    title="Edit participant"
+                                >
+                                    <i class="fa-solid fa-pen"></i>
+                                    <span>Edit</span>
+                                </button>
 
-                        <i class="fa-solid fa-eye"></i>
+                                <button
+                                    type="button"
+                                    class="action-btn remove-btn"
+                                    onclick="deleteParticipant('${escapeJs(participantId)}')"
+                                    title="Remove participant"
+                                >
+                                    <i class="fa-solid fa-trash-can"></i>
+                                    <span>Remove</span>
+                                </button>
+                            </div>
 
-                    </button>
+                        </td>
+
+                    </tr>
+
+                `;
+
+            }
+        )
+        .join("");
 
 
-                                        <button
-                        type="button"
-                        class="danger"
-                        title="Delete"
-                        onclick="deleteParticipant('${escapeJs(p.id || "")}')">
+    console.log(
+        "[PARTICIPANTS] Table rendered:",
+        rows.length,
+        "participants"
+    );
 
-                        <i class="fa-solid fa-trash"></i>
-
-                    </button>
-
-                </div>
-
-            </td>
-
-        `;
+}
 
 
-        tbody.appendChild(row);
+
+
+/* ==========================================================
+   PARTICIPANT TABLE ACTIONS
+   ========================================================== */
+
+const __tsParticipantActionStyle = `
+.participant-action-buttons{display:flex;align-items:center;justify-content:flex-start;gap:8px;white-space:nowrap;}
+.participant-action-buttons .action-btn{appearance:none;border:1px solid #dbe4ef;background:#fff;border-radius:9px;min-width:76px;height:34px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font:600 12px/1 inherit;cursor:pointer;box-shadow:0 2px 6px rgba(15,23,42,.05);transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease;}
+.participant-action-buttons .action-btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(15,23,42,.10);}
+.participant-action-buttons .action-btn i{font-size:11px;}
+.participant-action-buttons .view-btn{color:#2563eb;background:#f8fbff;border-color:#cfe0ff;}
+.participant-action-buttons .view-btn:hover{background:#eff6ff;border-color:#93c5fd;}
+.participant-action-buttons .edit-btn{color:#0f766e;background:#f0fdfa;border-color:#bdebe5;}
+.participant-action-buttons .edit-btn:hover{background:#e6fffb;border-color:#79d7cb;}
+.participant-action-buttons .remove-btn{color:#b42318;background:#fff7f7;border-color:#f5c4c0;}
+.participant-action-buttons .remove-btn:hover{background:#fff0f0;border-color:#ee9b95;}
+.participant-id-chip{display:inline-flex;align-items:center;min-height:28px;padding:0 9px;border-radius:8px;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;font-size:11px;font-weight:700;letter-spacing:.025em;white-space:nowrap;}
+`;
+
+if (!document.getElementById("tsParticipantActionStyle")) {
+    const style = document.createElement("style");
+    style.id = "tsParticipantActionStyle";
+    style.textContent = __tsParticipantActionStyle;
+    document.head.appendChild(style);
+}
+
+/* ==========================================================
+   STATISTICS
+   ========================================================== */
+
+function refreshStatistics() {
+
+    const projects = getProjects();
+
+    let total = 0;
+    let active = 0;
+    let completed = 0;
+    let scoreTotal = 0;
+    let scoreCount = 0;
+
+    projects.forEach(function (project) {
+
+        const participants =
+            Array.isArray(project.participants)
+                ? project.participants
+                : [];
+
+        participants.forEach(function (p) {
+
+            total++;
+
+            const status =
+                normalize(
+                    p.assessment_status ||
+                    p.assessmentStatus ||
+                    p.status ||
+                    p.projectParticipantStatus ||
+                    ""
+                );
+
+            if (
+                status.includes("running") ||
+                status.includes("progress") ||
+                status.includes("active") ||
+                status.includes("ongoing")
+            ) {
+                active++;
+            }
+
+            if (
+                status.includes("complete") ||
+                status.includes("completed") ||
+                status.includes("finish") ||
+                status.includes("finished")
+            ) {
+                completed++;
+            }
+
+            const rawScore =
+                p.average_score ??
+                p.averageScore ??
+                p.score ??
+                p.final_score ??
+                p.finalScore;
+
+            if (
+                rawScore !== undefined &&
+                rawScore !== null &&
+                rawScore !== ""
+            ) {
+
+                const score =
+                    Number(rawScore);
+
+                if (!isNaN(score)) {
+                    scoreTotal += score;
+                    scoreCount++;
+                }
+
+            }
+
+        });
 
     });
 
+    const average =
+        scoreCount
+            ? Math.round(scoreTotal / scoreCount)
+            : 0;
 
-    filterTable();
+    // Current HTML uses ID-based cards.
+    const statTotal =
+        document.getElementById("statTotal");
+
+    const statActive =
+        document.getElementById("statActive");
+
+    const statCompleted =
+        document.getElementById("statCompleted");
+
+    const statAverage =
+        document.getElementById("statAverage");
+
+    if (statTotal) statTotal.textContent = total;
+    if (statActive) statActive.textContent = active;
+    if (statCompleted) statCompleted.textContent = completed;
+    if (statAverage) statAverage.textContent = average + "%";
+
+    // Backward compatibility with older .stat-card layout.
+    const statCards =
+        document.querySelectorAll(
+            ".participant-stats .stat-card"
+        );
+
+    if (statCards.length >= 4) {
+
+        const numbers = [
+            total,
+            active,
+            completed,
+            average + "%"
+        ];
+
+        statCards.forEach(
+            function (card, index) {
+
+                const number =
+                    card.querySelector(
+                        ".stat-content h3"
+                    ) ||
+                    card.querySelector("h3");
+
+                if (number) {
+                    number.textContent =
+                        numbers[index];
+                }
+
+            }
+        );
+
+    }
 
 }
+
+
+/* ==========================================================
+   EXPORT
 
 
 /* ==========================================================
@@ -1838,139 +2360,6 @@ function getStatusClass(status) {
    STATISTICS
    ========================================================== */
 
-function refreshStatistics() {
-
-    const projects =
-        getProjects();
-
-
-    let total = 0;
-
-    let active = 0;
-
-    let completed = 0;
-
-    let scoreTotal = 0;
-
-    let scoreCount = 0;
-
-
-    projects.forEach(function (project) {
-
-        const participants =
-            Array.isArray(project.participants)
-                ? project.participants
-                : [];
-
-
-        participants.forEach(function (p) {
-
-            total++;
-
-
-            const status =
-                normalize(p.status);
-
-
-            if (
-                status.includes("running") ||
-                status.includes("progress") ||
-                status.includes("active")
-            ) {
-
-                active++;
-
-            }
-
-
-            if (
-                status.includes("complete") ||
-                status.includes("completed") ||
-                status.includes("finish")
-            ) {
-
-                completed++;
-
-            }
-
-
-            if (
-                p.score !== undefined &&
-                p.score !== null &&
-                p.score !== ""
-            ) {
-
-                const score =
-                    Number(p.score);
-
-
-                if (!isNaN(score)) {
-
-                    scoreTotal += score;
-
-                    scoreCount++;
-
-                }
-
-            }
-
-        });
-
-    });
-
-
-    const average =
-        scoreCount
-            ? Math.round(
-                scoreTotal / scoreCount
-            )
-            : 0;
-
-
-    /*
-     * Cari angka statistik berdasarkan
-     * struktur HTML yang sudah ada.
-     */
-
-    const statCards =
-        document.querySelectorAll(
-            ".participant-stats .stat-card"
-        );
-
-
-    if (statCards.length >= 4) {
-
-        const numbers = [
-            total,
-            active,
-            completed,
-            average + "%"
-        ];
-
-
-        statCards.forEach(
-            function (card, index) {
-
-                const number =
-                    card.querySelector(
-                        ".stat-content h3"
-                    );
-
-
-                if (number) {
-
-                    number.textContent =
-                        numbers[index];
-
-                }
-
-            }
-        );
-
-    }
-
-}
-
 
 
 /* ==========================================================
@@ -1988,6 +2377,26 @@ function viewParticipant(id) {
     }
 
     const p = result.participant || {};
+
+    // Buka detail participant di halaman Database (tab baru),
+    // sesuai ID-nya masing-masing.
+    const url =
+        "database.html?detail=" +
+        encodeURIComponent(p.id || id) +
+        "&name=" +
+        encodeURIComponent(p.name || "");
+
+    window.open(url, "_blank");
+
+    return;
+
+    /* =====================================================
+       KODE LAMA DI BAWAH INI TIDAK LAGI DIPAKAI
+       (modal detail sekarang dibuka dari database.html).
+       Dibiarkan sebagai referensi, tidak akan pernah
+       tereksekusi karena ada `return;` di atas.
+    ===================================================== */
+
     const project = result.project || {};
 
     const modal = document.getElementById(
@@ -2022,6 +2431,75 @@ function viewParticipant(id) {
         }
 
         return "-";
+    }
+
+    /* =====================================================
+       ROBUST PARTICIPANT FIELD RESOLVER
+       Keeps DataService unchanged. This only reads aliases /
+       nested participant payloads returned by Supabase.
+
+       PENTING: Banyak data (education, phone, assessmentDate, dll)
+       ternyata TIDAK disimpan sebagai kolom terpisah di Supabase,
+       melainkan di dalam kolom "raw_data" (berbentuk JSON).
+       Jadi kita wajib membuka isi raw_data juga saat mencari data.
+    ===================================================== */
+    function parseRawData(source) {
+
+        try {
+
+            const raw =
+                source && source.raw_data;
+
+            if (!raw) {
+                return {};
+            }
+
+            if (typeof raw === "string") {
+                return JSON.parse(raw);
+            }
+
+            if (typeof raw === "object") {
+                return raw;
+            }
+
+        } catch (error) {
+
+            console.warn(
+                "Gagal membaca raw_data participant:",
+                error
+            );
+
+        }
+
+        return {};
+
+    }
+
+    function getParticipantField(source, keys, fallback) {
+
+        const rawData = parseRawData(source);
+
+        const containers = [
+            source || {},
+            rawData,
+            (source && source.profile) || {},
+            (source && source.personalInfo) || {},
+            (source && source.personal_info) || {},
+            (source && source.details) || {},
+            (source && source.metadata) || {},
+            (source && source.data) || {}
+        ];
+
+        for (const container of containers) {
+            for (const key of keys) {
+                const value = container ? container[key] : undefined;
+                if (value !== undefined && value !== null && String(value).trim() !== "") {
+                    return value;
+                }
+            }
+        }
+
+        return fallback === undefined ? "-" : fallback;
     }
 
 
@@ -2582,18 +3060,33 @@ const fields = {
         participantEmail,
 
         detailParticipantPassword:
-    latestParticipant.accessCode ||
-    latestParticipant.password ||
-    latestParticipant.access_code ||
-    "-",
+    getParticipantField(
+        latestParticipant,
+        ["accessCode", "access_code", "password", "passcode", "pass_code", "credential", "credentialCode"]
+    ) !== "-"
+        ? getParticipantField(latestParticipant, ["accessCode", "access_code", "password", "passcode", "pass_code", "credential", "credentialCode"])
+        : getParticipantField(p, ["accessCode", "access_code", "password", "passcode", "pass_code", "credential", "credentialCode"]),
 
 detailParticipantEducation:
-    latestParticipant.education ||
-    latestParticipant.educationLevel ||
-    latestParticipant.education_level ||
-    latestParticipant.pendidikan ||
-    latestParticipant.degree ||
-    "-",
+    getParticipantField(
+        latestParticipant,
+        [
+            "education", "educationLevel", "education_level",
+            "pendidikan", "pendidikanTerakhir", "pendidikan_terakhir",
+            "lastEducation", "last_education", "degree", "qualification",
+            "academicLevel", "academic_level", "jenjang"
+        ],
+        getParticipantField(
+            p,
+            [
+                "education", "educationLevel", "education_level",
+                "pendidikan", "pendidikanTerakhir", "pendidikan_terakhir",
+                "lastEducation", "last_education", "degree", "qualification",
+                "academicLevel", "academic_level", "jenjang"
+            ],
+            "-"
+        )
+    ),
 
     detailParticipantId:
         latestParticipant.id ||
@@ -2601,34 +3094,53 @@ detailParticipantEducation:
         participantId,
 
     detailParticipantPosition:
-        latestParticipant.position ||
-        latestParticipant.jobPosition ||
-        participantPosition,
+        getParticipantField(
+            latestParticipant,
+            ["position", "jobPosition", "job_position", "jobTitle", "job_title", "jabatan", "posisi", "department", "division"]
+        ) !== "-"
+            ? getParticipantField(latestParticipant, ["position", "jobPosition", "job_position", "jobTitle", "job_title", "jabatan", "posisi", "department", "division"])
+            : participantPosition,
 
     detailParticipantPhone:
-    latestParticipant.phone ||
-    latestParticipant.phoneNumber ||
-    latestParticipant.phone_number ||
-    latestParticipant.mobile ||
-    latestParticipant.mobilePhone ||
-    latestParticipant.mobile_phone ||
-    latestParticipant.telephone ||
-    latestParticipant.telephoneNumber ||
-    latestParticipant.telephone_number ||
-    latestParticipant.telepon ||
-    latestParticipant.noTelepon ||
-    latestParticipant.no_telepon ||
-    latestParticipant.noHp ||
-    latestParticipant.no_hp ||
-    latestParticipant.hp ||
-    participantPhone ||
-    "-",
+    getParticipantField(
+        latestParticipant,
+        [
+            "phone", "phoneNumber", "phone_number", "mobile",
+            "mobilePhone", "mobile_phone", "mobileNumber", "mobile_number",
+            "telephone", "telephoneNumber", "telephone_number",
+            "telepon", "noTelepon", "no_telepon", "noHp", "no_hp",
+            "phoneNo", "phone_no", "contactNumber", "contact_number", "hp", "telp"
+        ],
+        getParticipantField(
+            p,
+            [
+                "phone", "phoneNumber", "phone_number", "mobile",
+                "mobilePhone", "mobile_phone", "mobileNumber", "mobile_number",
+                "telephone", "telephoneNumber", "telephone_number",
+                "telepon", "noTelepon", "no_telepon", "noHp", "no_hp",
+                "phoneNo", "phone_no", "contactNumber", "contact_number", "hp", "telp"
+            ],
+            participantPhone || "-"
+        )
+    ),
     
     detailAssessmentDate:
         formatDate(
-            latestParticipant.assessmentDate ||
-            latestParticipant.assessment_date ||
-            assessmentDate
+            getParticipantField(
+                latestParticipant,
+                [
+                    "assessmentDate", "assessment_date",
+                    "tanggal", "tanggalAssessment", "tanggal_assessment"
+                ],
+                getParticipantField(
+                    p,
+                    [
+                        "assessmentDate", "assessment_date",
+                        "tanggal", "tanggalAssessment", "tanggal_assessment"
+                    ],
+                    assessmentDate
+                )
+            )
         ),
 
     detailLoginTime:
@@ -2835,6 +3347,24 @@ function editParticipant(id) {
 
     const p = result.participant;
 
+    // Buka form edit participant di halaman Database (tab baru),
+    // sesuai ID-nya masing-masing.
+    const editUrl =
+        "database.html?edit=" +
+        encodeURIComponent(p.id || id) +
+        "&name=" +
+        encodeURIComponent(p.name || "");
+
+    window.open(editUrl, "_blank");
+
+    return;
+
+    /* =====================================================
+       KODE LAMA DI BAWAH INI TIDAK LAGI DIPAKAI
+       (form edit sekarang dibuka dari database.html).
+       Dibiarkan sebagai referensi, tidak akan pernah
+       tereksekusi karena ada `return;` di atas.
+    ===================================================== */
 
     const newName =
         prompt(
@@ -2860,12 +3390,57 @@ function editParticipant(id) {
     }
 
 
+    const newEducation =
+        prompt(
+            "Pendidikan:",
+            (p.education && p.education !== "-") ? p.education : ""
+        );
+
+    if (newEducation === null) {
+        return;
+    }
+
+
+    const newPhone =
+        prompt(
+            "No. Telepon:",
+            (p.phone && p.phone !== "-") ? p.phone : ""
+        );
+
+    if (newPhone === null) {
+        return;
+    }
+
+
+    const newAssessmentDate =
+        prompt(
+            "Tanggal Assessment (format: YYYY-MM-DD):",
+            p.assessmentDate || ""
+        );
+
+    if (newAssessmentDate === null) {
+        return;
+    }
+
+
     p.name =
         newName.trim() || p.name;
 
 
     p.position =
         newPosition.trim() || p.position;
+
+
+    p.education =
+        newEducation.trim() || "-";
+
+
+    p.phone =
+        newPhone.trim() || "-";
+
+
+    p.assessmentDate =
+        newAssessmentDate.trim();
 
 
     const projects =
@@ -2897,6 +3472,15 @@ function editParticipant(id) {
 
             participant.position =
                 p.position;
+
+            participant.education =
+                p.education;
+
+            participant.phone =
+                p.phone;
+
+            participant.assessmentDate =
+                p.assessmentDate;
 
         }
 
