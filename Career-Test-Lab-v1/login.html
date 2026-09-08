@@ -1962,23 +1962,70 @@ async function loadParticipantAssessments(
         );
 
 
-        return possiblePasswords.some(
+        /*
+         * Access code ini pada dasarnya kode undangan yang
+         * dikirim lewat email/WA (bukan password rahasia),
+         * jadi dibuat toleran terhadap:
+         * - perbedaan huruf besar/kecil (auto-capitalize HP)
+         * - spasi berlebih di awal/akhir/tengah (hasil copy-paste)
+         */
+        function normalizeAccessCode(value) {
+            return String(value)
+                .trim()
+                .toUpperCase()
+                .replace(/\s+/g, "");
+        }
+
+        const normalizedInput = normalizeAccessCode(passIn);
+
+        const isValid = possiblePasswords.some(
             function (password) {
 
                 if (
                     password === null ||
-                    password === undefined
+                    password === undefined ||
+                    password === ""
                 ) {
                     return false;
                 }
 
                 return (
-                    String(password).trim() ===
-                    String(passIn).trim()
+                    normalizeAccessCode(password) ===
+                    normalizedInput
                 );
 
             }
         );
+
+        if (!isValid) {
+
+            /*
+             * Log panjang & 2 karakter pertama/terakhir saja
+             * (tidak expose access code penuh di console),
+             * supaya kalau masih gagal kita bisa lihat apakah
+             * penyebabnya beda panjang (karakter tersembunyi)
+             * atau memang beda isinya.
+             */
+            console.warn(
+                "🔎 DEBUG PASSWORD MISMATCH:",
+                {
+                    input_length: normalizedInput.length,
+                    input_preview:
+                        normalizedInput.slice(0, 2) +
+                        "..." +
+                        normalizedInput.slice(-2),
+                    stored_lengths: possiblePasswords
+                        .filter(function (p) {
+                            return p !== null && p !== undefined && p !== "";
+                        })
+                        .map(function (p) {
+                            return normalizeAccessCode(p).length;
+                        })
+                }
+            );
+        }
+
+        return isValid;
     }
 
 
