@@ -20,7 +20,6 @@
 (function () {
     "use strict";
 
-    const STORAGE_KEY = "assessments";
     const SELECTED_KEY = "selectedAssessments";
     const PER_PAGE = 10;
 
@@ -52,16 +51,7 @@
     }
 
     function isActive(item) {
-        return (
-            item.status === true ||
-            item.status === "true" ||
-            item.status === "Active" ||
-            item.status === "active" ||
-            item.active === true ||
-            item.active === "true" ||
-            item.active === "Active" ||
-            item.active === "active"
-        );
+        return text(item.status).trim().toLowerCase() === "active";
     }
 
     function getDuration(item) {
@@ -70,97 +60,50 @@
     }
 
     function getQuestions(item) {
-        if (item.question != null) {
-            return Number(item.question) || 0;
-        }
-
-        if (item.questions != null) {
-            return Number(item.questions) || 0;
-        }
-
-        return 0;
-    }
-
-    function makeId() {
-        return Date.now().toString() + Math.random().toString(16).slice(2);
+        const value = Number(item.questions);
+        return Number.isFinite(value) ? value : 0;
     }
 
     /* ======================================================
-       STORAGE
+       STORAGE (SUPABASE via DataService)
        ====================================================== */
 
-    function loadData() {
-        let stored = null;
+    /*
+     * Ubah 1 row mentah dari tabel `assessments` (Supabase)
+     * menjadi bentuk yang dipakai render/form di file ini.
+     * Dipakai baik saat load awal maupun setelah create/update,
+     * supaya tidak ada dua logic mapping yang bisa beda-beda.
+     */
+    function normalizeRow(row) {
+        return {
+            id: row.id,
+            code: row.assessment_code || "",
+            name: row.name || row.assessment_name || "",
+            category: row.category || "",
+            status: row.status || "Active",
+            duration: Number(row.duration) || 0,
+            questions: Number(row.total_questions) || 0,
+            description: row.description || ""
+        };
+    }
 
+    async function loadData() {
         try {
-            stored = JSON.parse(
-                localStorage.getItem(STORAGE_KEY)
-            );
+            const rows = await DataService.getAssessments();
+
+            assessments = (rows || []).map(normalizeRow);
         } catch (error) {
-            console.warn(
-                "localStorage assessments tidak valid.",
+            console.error(
+                "Gagal memuat assessment dari Supabase:",
                 error
             );
-        }
 
-        if (Array.isArray(stored)) {
-            assessments = stored;
-        } else if (
-            Array.isArray(window.assessments)
-        ) {
-            assessments = window.assessments;
-        } else {
+            alert(
+                "Gagal memuat data assessment. Silakan refresh halaman."
+            );
+
             assessments = [];
         }
-
-        normalizeData();
-        saveData();
-    }
-
-    function normalizeData() {
-        assessments = assessments.map(function (item, index) {
-            const normalized = {
-                ...item
-            };
-
-            if (
-                normalized.id == null ||
-                normalized.id === ""
-            ) {
-                normalized.id =
-                    Date.now().toString() + "-" + index;
-            }
-
-            if (normalized.question == null) {
-                normalized.question =
-                    normalized.questions || 0;
-            }
-
-            if (normalized.questions == null) {
-                normalized.questions =
-                    normalized.question || 0;
-            }
-
-            if (normalized.status == null) {
-                normalized.status =
-                    isActive(normalized);
-            }
-
-            if (normalized.description == null) {
-                normalized.description = "";
-            }
-
-            return normalized;
-        });
-    }
-
-    function saveData() {
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(assessments)
-        );
-
-        window.assessments = assessments;
     }
 
     /* ======================================================
@@ -901,7 +844,7 @@
     function bindDelete() {
         document.addEventListener(
             "click",
-            function (event) {
+            async function (event) {
 
                 const button =
                     event.target.closest(
@@ -939,6 +882,24 @@
                     return;
                 }
 
+                button.disabled = true;
+
+                try {
+                    await DataService.deleteAssessment(id);
+                } catch (error) {
+                    console.error(
+                        "Gagal menghapus assessment:",
+                        error
+                    );
+
+                    alert(
+                        "Gagal menghapus assessment. Coba lagi."
+                    );
+
+                    button.disabled = false;
+                    return;
+                }
+
                 assessments =
                     assessments.filter(function (assessment) {
                         return String(assessment.id) !==
@@ -951,8 +912,6 @@
                             String(id);
                     });
 
-                saveData();
-
                 currentPage = 1;
                 renderTable();
                 updateStatistics();
@@ -964,7 +923,7 @@
        SAVE
        ====================================================== */
 
-    function saveAssessment() {
+    async function saveAssessment() {
         const codeEl =
             $("assessmentCode");
 
@@ -1011,7 +970,7 @@
             categoryEl.value.trim();
 
         const status =
-            statusEl.value === "Active";
+            statusEl.value.trim() || "Active";
 
         const duration =
             Number(durationEl.value) || 0;
@@ -1038,46 +997,73 @@
             return;
         }
 
-        if (editMode) {
-            const item =
-                assessments.find(function (assessment) {
-                    return String(assessment.id) ===
-                        String(editId);
-                });
+        /*
+         * Payload dipetakan ke nama kolom asli tabel `assessments`
+         * di Supabase. `name` dan `assessment_name` ditulis kembar
+         * karena keduanya sudah dipakai berdampingan pada data lama.
+         * Kolom `raw_data` sengaja tidak diisi lagi untuk data baru.
+         */
+        const payload = {
+            assessment_code: code,
+            name: name,
+            assessment_name: name,
+            category: category,
+            status: status,
+            duration: duration,
+            total_questions: question,
+            description: description
+        };
 
-            if (!item) {
-                alert(
-                    "Assessment yang diedit tidak ditemukan."
-                );
-                return;
-            }
+        const saveButton = $("saveAssessment");
 
-            item.code = code;
-            item.name = name;
-            item.category = category;
-            item.status = status;
-            item.active = status;
-            item.duration = duration;
-            item.question = question;
-            item.questions = question;
-            item.description = description;
-
-        } else {
-            assessments.push({
-                id: makeId(),
-                code: code,
-                name: name,
-                category: category,
-                status: status,
-                active: status,
-                duration: duration,
-                question: question,
-                questions: question,
-                description: description
-            });
+        if (saveButton) {
+            saveButton.disabled = true;
         }
 
-        saveData();
+        try {
+            if (editMode) {
+                const savedRow =
+                    await DataService.updateAssessment(
+                        editId,
+                        payload
+                    );
+
+                const normalized = normalizeRow(savedRow);
+
+                const index =
+                    assessments.findIndex(function (assessment) {
+                        return String(assessment.id) ===
+                            String(editId);
+                    });
+
+                if (index === -1) {
+                    assessments.push(normalized);
+                } else {
+                    assessments[index] = normalized;
+                }
+
+            } else {
+                const savedRow =
+                    await DataService.createAssessment(payload);
+
+                assessments.push(normalizeRow(savedRow));
+            }
+        } catch (error) {
+            console.error(
+                "Gagal menyimpan assessment:",
+                error
+            );
+
+            alert(
+                "Gagal menyimpan assessment. Coba lagi."
+            );
+
+            return;
+        } finally {
+            if (saveButton) {
+                saveButton.disabled = false;
+            }
+        }
 
         closeModal();
         resetForm();
@@ -1098,9 +1084,9 @@
 
         button.addEventListener(
             "click",
-            function (event) {
+            async function (event) {
                 event.preventDefault();
-                saveAssessment();
+                await saveAssessment();
             }
         );
     }
@@ -1353,8 +1339,8 @@
        INITIALIZE
        ====================================================== */
 
-    function init() {
-        loadData();
+    async function init() {
+        await loadData();
 
         bindAdd();
         bindEdit();
@@ -1389,4 +1375,3 @@
     }
 
 })();
-

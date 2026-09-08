@@ -386,7 +386,8 @@
 .participant-table th.col-id{width:16%;}
 .participant-table th.col-status{width:12%;}
 .participant-table th.col-action{width:23%;}
-.participant-table td{line-height:1.4;overflow-wrap:anywhere;}
+.participant-table td{line-height:1.4;}
+.participant-table td:nth-child(2){overflow-wrap:anywhere;}
 .participant-table td:last-child{overflow:visible;}
 
 /* Compact desktop layout: six columns fit without horizontal scrolling */
@@ -931,6 +932,35 @@
     .participant-table th.col-action{width:24%;}
     .participant-table .participant-action-buttons{gap:4px;}
     .participant-table .participant-action-buttons .action-btn{padding:0 7px;}
+}
+
+/* Mobile: kolom terlalu sempit untuk table-layout:fixed + overflow-x:hidden.
+   Solusinya bukan memaksa muat, tapi biarkan tabel selebar kontennya
+   dan geser ke samping (scroll horizontal). */
+@media(max-width:800px){
+    .participant-table{
+        overflow-x:auto;
+        overflow-y:hidden;
+        -webkit-overflow-scrolling:touch;
+    }
+
+    .participant-table table{
+        table-layout:auto;
+        min-width:640px;
+    }
+
+    .participant-table th,
+    .participant-table td{
+        white-space:nowrap;
+    }
+
+    .participant-table td:nth-child(2){
+        white-space:normal;
+    }
+
+    .participant-table .participant-action-buttons{
+        white-space:nowrap;
+    }
 }
 
 /* =========================================================

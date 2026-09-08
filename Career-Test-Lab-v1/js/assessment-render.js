@@ -452,11 +452,7 @@ document.addEventListener(
     "DOMContentLoaded",
     function(){
 
-        /*
-           assessment-data.js harus sudah
-           dimuat sebelum renderer ini.
-        */
-
+        
         if(
             typeof assessments !==
             "undefined"

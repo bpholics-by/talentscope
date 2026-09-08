@@ -987,6 +987,88 @@ async getParticipantByCodeOrEmail(
     },
 
 
+    async createAssessment(assessmentData) {
+
+        console.log(
+            '[DATA SERVICE] Creating assessment...'
+        );
+
+        const { data, error } = await supabaseClient
+            .from('assessments')
+            .insert([assessmentData])
+            .select()
+            .single();
+
+        if (error) {
+
+            this.handleError(
+                'CREATE ASSESSMENT',
+                error
+            );
+
+        }
+
+        console.log(
+            '[DATA SERVICE] Assessment created successfully:',
+            data
+        );
+
+        return data;
+    },
+
+
+    async updateAssessment(assessmentId, assessmentData) {
+
+        console.log(
+            '[DATA SERVICE] Updating assessment:',
+            assessmentId
+        );
+
+        const { data, error } = await supabaseClient
+            .from('assessments')
+            .update(assessmentData)
+            .eq('id', assessmentId)
+            .select()
+            .single();
+
+        if (error) {
+
+            this.handleError(
+                'UPDATE ASSESSMENT',
+                error
+            );
+
+        }
+
+        return data;
+    },
+
+
+    async deleteAssessment(assessmentId) {
+
+        console.log(
+            '[DATA SERVICE] Deleting assessment:',
+            assessmentId
+        );
+
+        const { error } = await supabaseClient
+            .from('assessments')
+            .delete()
+            .eq('id', assessmentId);
+
+        if (error) {
+
+            this.handleError(
+                'DELETE ASSESSMENT',
+                error
+            );
+
+        }
+
+        return true;
+    },
+
+
     // ============================================
     // ASSESSMENT RESULTS
     // ============================================
