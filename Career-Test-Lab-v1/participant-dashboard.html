@@ -1877,6 +1877,28 @@ a{text-decoration:none;color:inherit}
                 participant.lastLoginAt =
                     loginTime;
 
+                // FIX: bersihkan jejak logout dari sesi
+                // sebelumnya. Tanpa ini, "Waktu Log Out" di
+                // Admin tetap menampilkan tanggal lama padahal
+                // peserta sedang online di sesi baru.
+                participant.logoutTime =
+                    null;
+
+                participant.loggedOutAt =
+                    null;
+
+                participant.logoutAt =
+                    null;
+
+                participant.lastLogoutAt =
+                    null;
+
+                participant.lastLogout =
+                    null;
+
+                participant.waktuLogout =
+                    null;
+
                 participant.activity =
                     "Online";
 
@@ -2010,7 +2032,7 @@ a{text-decoration:none;color:inherit}
 
 
                 var isDoingTest =
-                    /^Sedang mengerjakan tes\s*\(/i
+                    /^Sedang mengerjakan tes\s*\d*\s*\(/i
                     .test(activity);
 
 
@@ -2425,8 +2447,18 @@ a{text-decoration:none;color:inherit}
             new Date().toISOString();
 
 
+        // FIX: sertakan nomor urut tes sesuai urutan paket,
+        // bukan cuma nama tes -- assessmentIndex berbasis 0,
+        // jadi ditampilkan +1 supaya "Tes 1", "Tes 2", dst.
+        var ordinal =
+            Number.isFinite(Number(assessmentIndex))
+                ? (Number(assessmentIndex) + 1)
+                : null;
+
         var activityText =
-            "Sedang mengerjakan tes (" +
+            "Sedang mengerjakan tes" +
+            (ordinal ? " " + ordinal : "") +
+            " (" +
             assessmentName +
             ")";
 

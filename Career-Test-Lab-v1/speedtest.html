@@ -96,6 +96,7 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
   <div id="numericControls" class="controls"></div><div id="letterControls" class="controls letters hidden"><button class="same" onclick="answer('S')">SAMA</button><button class="different" onclick="answer('B')">BERBEDA</button></div>
 </section>
 <section id="break" class="hidden break"><div class="card"><div class="check">✓</div><h2>Session 1 Selesai</h2><p>Silakan beristirahat sejenak sebelum melanjutkan.</p><button class="btn primary" onclick="startSession(2)">Mulai Session 2</button></div></section>
+<section id="finish" class="hidden break"><div class="card"><div class="check">✓</div><h2>Tes Selesai</h2><p id="finishMessage">Jawaban Anda telah berhasil disimpan. Sedang mengalihkan...</p></div></section>
 <section id="results" class="hidden results">
   <div class="card">
     <small>VAP REPORT</small>
@@ -233,6 +234,102 @@ function getAssessmentDisplayName(){
     ctx.testTitle ||
     "VAP"
   ).trim() || "VAP";
+}
+
+function getAssessmentSequenceLabel(){
+  try{
+    const ids = getAssessmentIdentity();
+    const params = new URLSearchParams(location.search);
+    const assessmentIndex = Number(params.get("assessmentIndex") || 0);
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return "";
+    const project = projects.find(pr => String(
+      pr?.id || pr?.projectId || pr?.project_id || ""
+    ).trim() === ids.projectId);
+    if(!project) return "";
+    const list = Array.isArray(project.assessments) ? project.assessments
+      : (Array.isArray(project.assessmentPackage) ? project.assessmentPackage
+      : (Array.isArray(project.packages) ? project.packages : []));
+    if(list.length > 0){
+      return " — Tes " + (assessmentIndex + 1) + " dari " + list.length;
+    }
+    return "";
+  }catch(e){
+    return "";
+  }
+}
+
+/* ==========================================================
+   NEXT ASSESSMENT ROUTER
+   Menentukan assessment berikutnya dari paket Project, sama
+   seperti pola di disc_test.html / papi_kostick_test.html.
+========================================================== */
+
+function packageCodeOf(item){
+  if(!item || typeof item !== "object") return "";
+  return String(
+    item.code || item.assessmentCode || item.assessment_code ||
+    item.id || item.assessmentId || item.testId || ""
+  ).trim();
+}
+
+function packageNameOf(item){
+  if(typeof item === "string") return item.trim();
+  if(!item || typeof item !== "object") return "";
+  return String(
+    item.name || item.title || item.assessmentName ||
+    item.assessment_name || item.testName || item.label || item.code || ""
+  ).trim();
+}
+
+function resolveAssessmentRoute(code, name){
+  const c = String(code || "").toLowerCase();
+  const n = String(name || "").toLowerCase();
+  if(c.includes("disc") || n.includes("disc")) return "disc_test.html";
+  if(c.includes("papi") || n.includes("papi") || n.includes("kostick")) return "papi_kostick_test.html";
+  if(c.includes("vap") || n.includes("vap") || n.includes("visual") || n.includes("performance") || n.includes("sustained attention") || n.includes("speed")) return "speedtest.html";
+  return "";
+}
+
+function goToNextOrDashboard(){
+  const ids = getAssessmentIdentity();
+  const params = new URLSearchParams(location.search);
+  const currentIndex = Number(params.get("assessmentIndex") || 0);
+  const next = currentIndex + 1;
+
+  let packs = [];
+  try{
+    const ps = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
+    const part = proj?.participants?.find(x => String(
+      x.id || x.participantId || x.employeeId || x.employee_id || ""
+    ) === ids.participantId);
+    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0)
+      ? part.assessments
+      : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
+  }catch(e){
+    packs = [];
+  }
+
+  // Navigasi internal, bukan logout sebenarnya.
+  sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+
+  if(next >= packs.length){
+    location.href = "participant-dashboard.html?completed=true";
+    return;
+  }
+
+  const nextPkg = packs[next];
+  const nextCode = packageCodeOf(nextPkg);
+  const nextName = packageNameOf(nextPkg) || "Assessment";
+  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
+
+  if(nextRoute){
+    location.href = `${nextRoute}?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }else{
+    console.warn("[VAP] Tidak bisa menentukan tes berikutnya dari code/name:", nextCode, nextName);
+    location.href = `assessment.html?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }
 }
 
 function syncAssessmentActivity(activity, historyType){
@@ -606,20 +703,20 @@ window.addEventListener(
 
 function markAssessmentStarted(){
   const name = getAssessmentDisplayName();
-  syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")", "test-start");
+  syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")" + getAssessmentSequenceLabel(), "test-start");
 }
 
 function markAssessmentSessionChange(sessionNumber){
   const name = getAssessmentDisplayName();
   syncAssessmentActivity(
-    "Sedang mengerjakan tes (" + name + ") — Sesi " + sessionNumber,
+    "Sedang mengerjakan tes (" + name + ")" + getAssessmentSequenceLabel() + " — Sesi " + sessionNumber,
     "test-session"
   );
 }
 
 function markAssessmentFinished(){
   const name = getAssessmentDisplayName();
-  syncAssessmentActivity("Tes selesai (" + name + ")", "test-complete");
+  syncAssessmentActivity("Tes selesai (" + name + ")" + getAssessmentSequenceLabel(), "test-complete");
 }
 
 function getContext() {
@@ -894,7 +991,7 @@ function backToDashboard(e){
 let assessmentStarted=false, heartbeatTimer=null;
 function heartbeat(){
   if(!assessmentStarted||totalRemaining<=0)return;
-  syncAssessmentActivity("Sedang mengerjakan tes ("+getAssessmentDisplayName()+") — Sesi "+currentSession,null);
+  syncAssessmentActivity("Sedang mengerjakan tes ("+getAssessmentDisplayName()+")"+getAssessmentSequenceLabel()+" — Sesi "+currentSession,null);
 }
 function begin(){
   if(!el("confirmRead").checked)return;
@@ -996,6 +1093,8 @@ function finishAssessment(){
 
             const assessmentName = getAssessmentDisplayName();
 
+            const assessmentSeqLabel = getAssessmentSequenceLabel();
+
             const now = new Date().toISOString();
 
             projects.forEach(project => {
@@ -1041,22 +1140,26 @@ function finishAssessment(){
                     p.testActivity =
                         "Tes selesai (" +
                         assessmentName +
-                        ")";
+                        ")" +
+                        assessmentSeqLabel;
 
                     p.currentActivity =
                         "Tes selesai (" +
                         assessmentName +
-                        ")";
+                        ")" +
+                        assessmentSeqLabel;
 
                     p.activity =
                         "Tes selesai (" +
                         assessmentName +
-                        ")";
+                        ")" +
+                        assessmentSeqLabel;
 
                     p.lastActivity =
                         "Tes selesai (" +
                         assessmentName +
-                        ")";
+                        ")" +
+                        assessmentSeqLabel;
 
                     p.activityUpdatedAt = now;
 
@@ -1221,7 +1324,8 @@ function finishAssessment(){
                             activity:
                                 "Tes selesai (" +
                                 assessmentName +
-                                ")",
+                                ")" +
+                                assessmentSeqLabel,
 
                             title:
                                 "Assessment Completed",
@@ -1317,37 +1421,90 @@ function finishAssessment(){
 
 
     /* ==========================================
-       TAMPILKAN REPORT
+       SIMPAN HASIL TES (UNTUK ADMIN)
+       Report VAP tidak ditampilkan ke peserta —
+       data skor disimpan ke penyimpanan hasil tes
+       yang sama dengan DISC / PAPI, supaya bisa
+       dilihat lewat halaman admin.
+    ========================================== */
+
+    try{
+
+        const ids = getAssessmentIdentity();
+        const params = new URLSearchParams(location.search);
+        const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
+        const assessmentCodeStr = String(params.get("assessmentCode") || "VAP").trim();
+        const assessmentNameStr = getAssessmentDisplayName();
+
+        if(ids.projectId && ids.participantId && result){
+
+            const submittedAt = new Date().toISOString();
+
+            const vapResult = {
+                version: 1,
+                resultType: "VAP",
+                projectId: ids.projectId,
+                participantId: ids.participantId,
+                assessmentIndex: assessmentIndexNum,
+                assessmentCode: assessmentCodeStr,
+                assessmentName: assessmentNameStr,
+                scores: result,
+                sessions: sessions,
+                submittedAt: submittedAt
+            };
+
+            localStorage.setItem(
+                `assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`,
+                JSON.stringify(vapResult)
+            );
+
+            let allResults = [];
+
+            try{
+                allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]");
+            }catch(e){
+                allResults = [];
+            }
+
+            if(!Array.isArray(allResults)) allResults = [];
+
+            allResults = allResults.filter(item => !(
+                String(item?.projectId || "") === ids.projectId &&
+                String(item?.participantId || "") === ids.participantId &&
+                String(item?.assessmentIndex ?? "") === String(assessmentIndexNum) &&
+                String(item?.assessmentCode || "").toUpperCase() === "VAP"
+            ));
+
+            allResults.push(vapResult);
+
+            localStorage.setItem("talent_scope_results", JSON.stringify(allResults));
+
+        }
+
+    }catch(error){
+
+        console.error(
+            "Gagal menyimpan hasil VAP:",
+            error
+        );
+
+    }
+
+
+    /* ==========================================
+       TES SELESAI — TIDAK MENAMPILKAN VAP REPORT
+       KE PESERTA. Report VAP khusus dilihat admin
+       lewat hasil tes. Peserta langsung diarahkan
+       ke tes berikutnya, atau kembali ke dashboard
+       jika ini tes terakhir.
     ========================================== */
 
     el("test").classList.add("hidden");
 
     el("break").classList.add("hidden");
 
-    el("results").classList.remove("hidden");
+    el("finish").classList.remove("hidden");
 
-
-    if(result){
-
-        try{
-
-            render(result);
-
-        }catch(error){
-
-            console.error(
-                "Gagal merender report VAP:",
-                error
-            );
-
-        }
-
-    }
-
-
-    /* ==========================================
-       SCROLL KE ATAS REPORT
-    ========================================== */
 
     window.scrollTo({
 
@@ -1361,6 +1518,8 @@ function finishAssessment(){
     console.log(
         "VAP Assessment berhasil diselesaikan"
     );
+
+    setTimeout(goToNextOrDashboard, 1200);
 
 }
 function median(a){if(!a.length)return null;a=[...a].sort((x,y)=>x-y);const m=Math.floor(a.length/2);return a.length%2?a[m]:(a[m-1]+a[m])/2}
@@ -1680,7 +1839,7 @@ function exportJSON(){const payload={assessment:"VAP",generatedAt:new Date().toI
 document.addEventListener("visibilitychange", ()=>{
   if(document.visibilityState === "visible" && assessmentStarted && currentSession && totalRemaining > 0){
     syncAssessmentActivity(
-      "Sedang mengerjakan tes (" + getAssessmentDisplayName() + ") — Sesi " + currentSession,
+      "Sedang mengerjakan tes (" + getAssessmentDisplayName() + ")" + getAssessmentSequenceLabel() + " — Sesi " + currentSession,
       null
     );
   }

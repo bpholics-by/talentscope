@@ -1845,7 +1845,7 @@ function renderParticipantActivity(
             rawActivity.toLowerCase();
 
         const isDoingTest =
-            /^sedang\s+mengerjakan\s+tes\s*\(/i.test(rawActivity) ||
+            /^sedang\s+mengerjakan\s+tes\s*\d*\s*\(/i.test(rawActivity) ||
             activityLower.includes("mengerjakan tes") ||
             activityLower.includes("assessment") ||
             activityLower.includes("test") ||
@@ -1924,11 +1924,18 @@ if (
     isDoingTest
 ) {
 
+    const testOrdinal =
+        Number.isFinite(Number(participant?.currentAssessmentIndex))
+            ? (Number(participant.currentAssessmentIndex) + 1)
+            : null;
+
     displayActivity =
         rawActivity ||
         (
             participant?.currentTest
-                ? "Sedang mengerjakan tes (" +
+                ? "Sedang mengerjakan tes" +
+                  (testOrdinal ? " " + testOrdinal : "") +
+                  " (" +
                   participant.currentTest +
                   ")"
                 : "Sedang mengerjakan tes"
@@ -3058,9 +3065,14 @@ function renderActivityLog(
                     type === "test-session" ||
                     type === "test-complete"
                 ) &&
-                !/mengerjakan\s+tes\s*\(/i.test(activity) &&
+                !/mengerjakan\s+tes\s*\d*\s*\(/i.test(activity) &&
                 !/tes\s+selesai\s*\(/i.test(activity)
             ) {
+                const ordinal =
+                    Number.isFinite(Number(item?.assessmentIndex))
+                        ? (Number(item.assessmentIndex) + 1)
+                        : null;
+
                 if (type === "test-complete") {
                     activity =
                         "Tes selesai (" +
@@ -3068,7 +3080,9 @@ function renderActivityLog(
                         ")";
                 } else {
                     activity =
-                        "Sedang mengerjakan tes (" +
+                        "Sedang mengerjakan tes" +
+                        (ordinal ? " " + ordinal : "") +
+                        " (" +
                         testName +
                         ")";
                 }

@@ -260,6 +260,32 @@ function loadTestResult() {
 
     }
 
+    /* ======================================================
+       NORMALISASI NAMA & KODE DARI STRUKTUR DATA ASLI
+       (assessment_name / raw_data.name / raw_data.code)
+    ====================================================== */
+
+    if (
+        !assessment.name &&
+        !assessment.title
+    ) {
+
+        assessment.name =
+            assessment.assessment_name ||
+            assessment?.raw_data?.name ||
+            "";
+
+    }
+
+    if (!assessment.code) {
+
+        assessment.code =
+            assessment?.raw_data?.code ||
+            assessment?.raw_data?.assessment_code ||
+            "";
+
+    }
+
 
     /* ======================================================
        TEST TITLE
@@ -299,6 +325,10 @@ function loadTestResult() {
         codeUpper.includes("PAPI") ||
         nameUpper.includes("PAPI");
 
+    const isVAP =
+        codeUpper.includes("VAP") ||
+        nameUpper.includes("VAP");
+
 
     /* ======================================================
        HEADER
@@ -327,7 +357,8 @@ function loadTestResult() {
             isDISC,
             isPAPI,
             project,
-            participant
+            participant,
+            isVAP
         );
 
     // Hapus seluruh blok dummy statis/fallback di sini!
@@ -414,6 +445,40 @@ function loadTestResult() {
             return;
         }
     }
+
+    /* ======================================================
+        VAP (WORK PERFORMANCE & SUSTAINED ATTENTION)
+    ====================================================== */
+
+    if (isVAP) {
+
+        if (
+            typeof VAPAssessment !==
+            "undefined"
+        ) {
+
+            const result =
+                VAPAssessment.calculate(
+                    participantResult
+                );
+
+            VAPAssessment.render(
+                resultContainer,
+                result,
+                assessment
+            );
+
+        } else {
+
+            showResultMessage(
+                "Module VAP belum dimuat. Pastikan vap.js dipasang sebelum test-result.js."
+            );
+
+        }
+
+        return;
+    }
+
     /* ======================================================
        GENERIC FALLBACK
     ====================================================== */
@@ -451,7 +516,8 @@ function getAssessmentResult(
     isDISC,
     isPAPI,
     project,
-    participant
+    participant,
+    isVAP
 ) {
 
     console.log(
@@ -510,7 +576,8 @@ function getAssessmentResult(
                 assessmentIndex,
                 assessmentCode,
                 isDISC,
-                isPAPI
+                isPAPI,
+                isVAP
             );
 
 
@@ -587,6 +654,51 @@ function getAssessmentResult(
             } catch (e) {
                 console.warn("Gagal membaca sessionStorage key:", sessionKey, e);
             }
+        }
+    }
+
+
+
+    /*
+       ======================================================
+       1b. VAP RESULT v3
+       ------------------------------------------------------
+       Format yang ditulis oleh speedtest.html:
+       assessment_result_v3_{projectId}_{participantId}_{index}
+       ======================================================
+    */
+
+    if (isVAP) {
+
+        var vapV3Key =
+            "assessment_result_v3_" +
+            projectId +
+            "_" +
+            participantId +
+            "_" +
+            assessmentIndex;
+
+        var vapV3Raw = readLocalStorageObject(vapV3Key);
+
+        if (vapV3Raw) {
+            var normalizedVapV3 = tryNormalize(vapV3Raw, vapV3Key);
+            if (normalizedVapV3) {
+                console.info("VAP v3 RESULT DIPAKAI:", vapV3Key);
+                return normalizedVapV3;
+            }
+        }
+
+        try {
+            var vapSessionRaw = JSON.parse(sessionStorage.getItem(vapV3Key) || "null");
+            if (vapSessionRaw) {
+                var normalizedVapSession = tryNormalize(vapSessionRaw, "sessionStorage:" + vapV3Key);
+                if (normalizedVapSession) {
+                    console.info("VAP RESULT DIPAKAI DARI SESSION:", vapV3Key);
+                    return normalizedVapSession;
+                }
+            }
+        } catch (e) {
+            console.warn("Gagal membaca sessionStorage key:", vapV3Key, e);
         }
     }
 
@@ -1395,7 +1507,8 @@ function normalizeAssessmentResult(
     assessmentIndex,
     assessmentCode,
     isDISC,
-    isPAPI
+    isPAPI,
+    isVAP
 ) {
 
     if (
@@ -1429,6 +1542,22 @@ function normalizeAssessmentResult(
             raw.assessmentCode ??
             assessmentCode
     };
+
+
+    /* ======================================================
+       VAP: KEMBALIKAN APA ADANYA
+       Data VAP (scores berisi speed/accuracy/dst.) sudah dalam
+       bentuk final dari speedtest.html — jangan diproses lewat
+       logika format DISC/PAPI di bawah, supaya tidak tertimpa.
+    ====================================================== */
+
+    if (
+        isVAP &&
+        result.scores &&
+        typeof result.scores === "object"
+    ) {
+        return result;
+    }
 
 
     /* ======================================================
@@ -1841,7 +1970,11 @@ function resolveAssessmentCode(
         return String(
             projectAssessment.code ||
             projectAssessment.assessmentCode ||
+            projectAssessment.assessment_code ||
+            projectAssessment?.raw_data?.code ||
+            projectAssessment?.raw_data?.assessment_code ||
             projectAssessment.assessmentId ||
+            projectAssessment.assessment_id ||
             projectAssessment.id ||
             ""
         ).trim();

@@ -404,6 +404,21 @@ function loadMeta(){
  }catch(e){console.warn('DISC metadata:',e)}
 }
 function save(){localStorage.setItem(answerKey,JSON.stringify(answers))}
+function getAssessmentSequenceLabel(){
+ try{
+  const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
+  const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
+  if(!proj)return'';
+  const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
+  const list=(Array.isArray(part?.assessments)&&part.assessments.length>0)
+   ?part.assessments
+   :(proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
+  if(Array.isArray(list)&&list.length>0){
+   return' — Tes '+(assessmentIndex+1)+' dari '+list.length;
+  }
+  return'';
+ }catch(e){return''}
+}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2300)}
 function renderPages(){
  const n=answers.filter(a=>a.M!==null&&a.L!==null).length;
@@ -432,7 +447,7 @@ function pick(kind,i){
 function go(i){current=Math.max(0,Math.min(questions.length-1,i));render();window.scrollTo({top:document.querySelector('.quiz-card').offsetTop-82,behavior:'smooth'})}
 function startQuiz(){
  if(!projectId||!participantId){alert('Identitas project atau peserta tidak valid. Silakan kembali dan login ulang.');return}
- updateParticipantAssessmentStatus('Ongoing', 'Sedang mengerjakan tes (DISC Personality)', 'Memulai tes DISC Personality', 'test-start');
+ updateParticipantAssessmentStatus('Ongoing', 'Sedang mengerjakan tes (DISC Personality)'+getAssessmentSequenceLabel(), 'Memulai tes DISC Personality', 'test-start');
  document.getElementById('instruction').style.display='none';document.getElementById('quiz').style.display='block';render();startTimer();window.scrollTo({top:0,behavior:'smooth'});
 }
 function startTimer(){
@@ -464,7 +479,7 @@ function finalize(auto){
  if(!Array.isArray(all))all=[];
  all=all.filter(x=>!(String(x?.projectId||'')===projectId&&String(x?.participantId||'')===participantId&&String(x?.assessmentIndex??'')===String(assessmentIndex)&&String(x?.assessmentCode||'').toUpperCase()==='DISC'));
  all.push(result);localStorage.setItem('talent_scope_results',JSON.stringify(all));localStorage.removeItem(answerKey);
- updateParticipantAssessmentStatus('Completed', 'Tes DISC telah selesai — peserta masih aktif dalam sesi', 'Menyelesaikan tes DISC Personality', 'test-complete');
+ updateParticipantAssessmentStatus('Completed', 'Tes DISC telah selesai — peserta masih aktif dalam sesi'+getAssessmentSequenceLabel(), 'Menyelesaikan tes DISC Personality', 'test-complete');
  // IMPORTANT: selesai tes ≠ logout. Presence/session tetap ONLINE sampai peserta klik Logout atau menutup tab/window.
  document.getElementById('modal').classList.remove('show');document.getElementById('quiz').style.display='none';document.getElementById('finish').style.display='block';
 }
@@ -841,7 +856,7 @@ window.addEventListener("pagehide", function(event) {
 // Catat peserta sedang membuka halaman DISC.
 updateParticipantAssessmentStatus(
     "Ongoing",
-    "Sedang berada pada halaman tes (DISC Personality)",
+    "Sedang berada pada halaman tes (DISC Personality)" + getAssessmentSequenceLabel(),
     "Membuka halaman tes DISC Personality",
     "test-open"
 );

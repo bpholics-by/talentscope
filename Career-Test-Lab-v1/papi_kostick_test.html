@@ -850,6 +850,63 @@
    Menandai bahwa peserta benar-benar berada di halaman PAPI.
 ===================================================== */
 
+function getAssessmentSequenceLabel() {
+
+    try {
+
+        const projects =
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
+
+        if (!Array.isArray(projects)) {
+            return "";
+        }
+
+        const project =
+            projects.find(function (p) {
+
+                return String(
+                    p?.id ||
+                    p?.projectId ||
+                    p?.project_id ||
+                    ""
+                ).trim() === String(projId).trim();
+
+            });
+
+        if (!project) {
+            return "";
+        }
+
+        const list =
+            Array.isArray(project.assessments)
+                ? project.assessments
+                : Array.isArray(project.assessmentPackage)
+                    ? project.assessmentPackage
+                    : Array.isArray(project.packages)
+                        ? project.packages
+                        : [];
+
+        if (Array.isArray(list) && list.length > 0) {
+            return (
+                " — Tes " +
+                (Number(assessmentIndex) + 1) +
+                " dari " +
+                list.length
+            );
+        }
+
+        return "";
+
+    } catch (error) {
+
+        return "";
+    }
+}
+
 function getPapiAssessmentName() {
 
     const urlName =
@@ -961,16 +1018,21 @@ function updatePapiActivity(
         const now =
             new Date().toISOString();
 
+        const seqLabel =
+            getAssessmentSequenceLabel();
+
         const activity =
             eventType === "test-complete"
 
                 ? "Tes selesai (" +
                   testName +
-                  ")"
+                  ")" +
+                  seqLabel
 
                 : "Sedang mengerjakan tes (" +
                   testName +
-                  ")";
+                  ")" +
+                  seqLabel;
 
 
         projects.forEach(

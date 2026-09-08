@@ -279,10 +279,23 @@
                 var participant = participantById[String(rel.participant_id)];
                 if (!participant) return null;
 
+                // PENTING (FIX): raw_data (JSONB) berisi snapshot presence
+                // & activity log yang ditulis pushParticipantsPresence()
+                // -- isLoggedIn, lastSeenAt, currentActivity, activityHistory,
+                // dst. Sebelumnya field ini TIDAK di-unpack ke level atas,
+                // jadi setiap kali halaman peserta berpindah (ts-supabase-
+                // sync.js wajib dimuat pertama di SETIAP halaman -> syncDown
+                // jalan lagi -> localStorage ditimpa), activityHistory ikut
+                // hilang karena dianggap tidak ada. Unpack raw_data DULU,
+                // baru timpa dengan kolom asli tabel participants supaya
+                // kolom tabel tetap sumber kebenaran kalau bentrok.
+                var rawData = (participant && participant.raw_data) || {};
+
                 // Gabungkan status relasi (project_participants.status) ke
                 // dalam object participant, tanpa menghapus status asli
                 // kalau memang sudah ada di tabel participants.
                 var merged = {};
+                for (var k in rawData) merged[k] = rawData[k];
                 for (var k in participant) merged[k] = participant[k];
 
                 merged.status =
@@ -467,6 +480,13 @@
                                 {
                                     isLoggedIn: participant.isLoggedIn,
                                     onlineStatus: participant.onlineStatus,
+                                    // FIX: waktu login sebelumnya tidak pernah
+                                    // ikut terkirim, jadi "Waktu Login" di
+                                    // database.html selalu tampil "-".
+                                    loginTime: participant.loginTime,
+                                    loginAt: participant.loginAt,
+                                    loggedInAt: participant.loggedInAt,
+                                    lastLoginAt: participant.lastLoginAt,
                                     lastSeen: participant.lastSeen,
                                     lastSeenAt: participant.lastSeenAt,
                                     lastHeartbeat: participant.lastHeartbeat,
