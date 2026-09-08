@@ -162,6 +162,12 @@
             10
         );
 
+        // URL tes sebenarnya yang sudah dihitung dengan benar oleh
+        // dashboard (lewat getAssessmentRoute). Ini prioritas utama,
+        // supaya halaman ini tidak perlu menebak ulang dari nama paket.
+        const nextTestUrlParam =
+            (urlParams.get('nextTestUrl') || '').trim();
+
         if (!projectId || !participantId) {
             console.error('IDENTITAS ASSESSMENT TIDAK VALID:', {
                 projectId,
@@ -447,17 +453,35 @@ function getSelectedAssessmentName() {
                 : ""
         ).trim();
 
-    const pkgLower = assessmentName.toLowerCase();
+    if (nextTestUrlParam) {
 
-    // Mapping halaman tes sesuai assessment yang benar-benar ada di project.
-    if (pkgLower.includes("disc")) {
-        targetTestUrl = "disc_test.html";
-    } else if (pkgLower.includes("papi")) {
-        targetTestUrl = "papi_kostick_test.html";
-    } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance")) {
-        targetTestUrl = "speedtest.html";
+        // Dashboard sudah menghitung tes tujuan yang benar
+        // (berdasarkan kode + nama assessment) — pakai ini,
+        // jangan tebak ulang dari nama paket.
+        targetTestUrl = nextTestUrlParam;
+
     } else {
-        targetTestUrl = "general-test.html";
+
+        const pkgLower = assessmentName.toLowerCase();
+
+        // Fallback (dipakai hanya kalau halaman ini dibuka tanpa
+        // parameter nextTestUrl, misalnya diakses langsung).
+        // Sengaja tidak diarahkan ke halaman yang tidak ada
+        // ("general-test.html") — default ke disc_test.html
+        // supaya tidak 404.
+        if (pkgLower.includes("disc")) {
+            targetTestUrl = "disc_test.html";
+        } else if (pkgLower.includes("papi")) {
+            targetTestUrl = "papi_kostick_test.html";
+        } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance")) {
+            targetTestUrl = "speedtest.html";
+        } else {
+            console.warn(
+                "Tipe assessment tidak dikenali dari nama paket, memakai fallback disc_test.html:",
+                assessmentName
+            );
+            targetTestUrl = "disc_test.html";
+        }
     }
 
     /*

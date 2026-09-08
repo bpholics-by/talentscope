@@ -3483,7 +3483,7 @@ document.addEventListener("change", function(e){
 
 document
     .getElementById("removeProjectBtn")
-    .addEventListener("click", function(){
+    .addEventListener("click", async function(){
 
         const selected =
             Array.from(
@@ -3508,7 +3508,7 @@ document
             confirm(
                 "Apakah Anda yakin ingin menghapus " +
                 selected.length +
-                " project?"
+                " project? Semua data peserta yang terkait di project ini juga akan terhapus."
             );
 
 
@@ -3519,20 +3519,47 @@ document
         }
 
 
-        const data = get();
+        const removeBtn = document.getElementById("removeProjectBtn");
+        const originalBtnHtml = removeBtn.innerHTML;
+        removeBtn.disabled = true;
+        removeBtn.innerHTML = "Menghapus...";
 
+        const failed = [];
 
-        const remaining =
-            data.filter(function(project){
+        for (const projectId of selected) {
 
-                return !selected.includes(
-                    String(project.id)
+            try {
+
+                await DataService.deleteProject(projectId);
+
+            } catch (error) {
+
+                console.error(
+                    "[ASSESSMENT PROJECT] Gagal menghapus project:",
+                    projectId,
+                    error
                 );
 
-            });
+                failed.push(projectId);
 
+            }
 
-        set(remaining);
+        }
+
+        removeBtn.disabled = false;
+        removeBtn.innerHTML = originalBtnHtml;
+
+        if (failed.length > 0) {
+
+            alert(
+                "Gagal menghapus " +
+                failed.length +
+                " dari " +
+                selected.length +
+                " project. Silakan cek console untuk detail error (kemungkinan izin akses/RLS di Supabase)."
+            );
+
+        }
 
 
         document.getElementById(

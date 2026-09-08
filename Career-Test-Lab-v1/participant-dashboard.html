@@ -2723,7 +2723,7 @@ a{text-decoration:none;color:inherit}
                 /*
                    Determine route
                 */
-                var targetTestUrl =
+                var resolvedTestUrl =
                     getAssessmentRoute(
                         assessmentCode,
                         assessmentName
@@ -2731,7 +2731,11 @@ a{text-decoration:none;color:inherit}
 
 
                 /*
-   Masuk ke Petunjuk Umum terlebih dahulu
+   Masuk ke Petunjuk Umum terlebih dahulu.
+   URL tes sebenarnya (resolvedTestUrl) diteruskan lewat
+   parameter nextTestUrl, supaya assessment.html tidak perlu
+   menebak ulang dari data project di localStorage yang
+   bisa saja sudah usang/tidak lengkap.
 */
 var targetTestUrl =
     "assessment.html";
@@ -2767,6 +2771,11 @@ var targetTestUrl =
                     "&assessmentName=" +
                     encodeURIComponent(
                         assessmentName
+                    ) +
+
+                    "&nextTestUrl=" +
+                    encodeURIComponent(
+                        resolvedTestUrl
                     );
             }
         );

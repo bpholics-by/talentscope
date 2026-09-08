@@ -363,6 +363,33 @@ async deleteProjectAssessment(assessmentRelationId) {
             projectId
         );
 
+        // Hapus dulu data anak (relasi) yang menunjuk ke project ini,
+        // supaya delete project tidak gagal karena foreign key constraint
+        // (misalnya project yang sudah punya peserta terdaftar).
+        const { error: participantsError } = await supabaseClient
+            .from('project_participants')
+            .delete()
+            .eq('project_id', projectId);
+
+        if (participantsError) {
+            this.handleError(
+                'DELETE PROJECT (project_participants)',
+                participantsError
+            );
+        }
+
+        const { error: assessmentsError } = await supabaseClient
+            .from('project_assessments')
+            .delete()
+            .eq('project_id', projectId);
+
+        if (assessmentsError) {
+            this.handleError(
+                'DELETE PROJECT (project_assessments)',
+                assessmentsError
+            );
+        }
+
         const { error } = await supabaseClient
             .from('projects')
             .delete()
