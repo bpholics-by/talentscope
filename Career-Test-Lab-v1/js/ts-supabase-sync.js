@@ -404,6 +404,131 @@
 
 
     /* ------------------------------------------------------
+       PUSH PRESENCE PESERTA LANGSUNG KE TABEL `participants`
+       ----------------------------------------------------
+       KENAPA INI PERLU:
+       Heartbeat presence (isLoggedIn, lastSeenAt, currentActivity,
+       dst.) selama ini hanya tersimpan di localStorage lalu ikut
+       terkirim ke tabel LAMA `ts_projects` (blob per-project).
+       Tapi halaman monitoring admin (view-monitoring.js) membaca
+       status online/offline dari kolom `raw_data` di tabel
+       `participants` (hasil assembly relasional), BUKAN dari
+       `ts_projects`. Akibatnya heartbeat peserta tidak pernah
+       sampai ke tempat yang benar-benar dibaca admin — peserta
+       bisa aktif mengerjakan tes tapi tetap terlihat "Offline".
+
+       Fungsi ini menutup celah itu: setiap peserta yang datanya
+       sudah pernah tersinkron dari Supabase (sehingga punya
+       `id` asli, hasil assembleProjectsFromRelationalTables)
+       akan di-PATCH langsung ke baris `participants` miliknya.
+    ------------------------------------------------------ */
+
+    function pushParticipantsPresence(projects) {
+        (projects || []).forEach(function (project) {
+
+            var participants =
+                Array.isArray(project && project.participants)
+                    ? project.participants
+                    : [];
+
+            participants.forEach(function (participant) {
+
+                var participantRowId =
+                    participant && participant.id;
+
+                // Hanya peserta yang id-nya sudah berupa id asli
+                // dari Supabase (hasil sync-down) yang bisa di-PATCH.
+                if (!participantRowId) return;
+
+                fetch(
+                    SUPABASE_URL +
+                    "/rest/v1/participants?id=eq." +
+                    encodeURIComponent(participantRowId) +
+                    "&select=raw_data",
+                    {
+                        headers: {
+                            "apikey": SUPABASE_ANON_KEY,
+                            "Authorization": "Bearer " + SUPABASE_ANON_KEY
+                        }
+                    }
+                )
+                    .then(function (res) {
+                        return res.ok ? res.json() : [];
+                    })
+                    .then(function (rows) {
+
+                        var existingRawData =
+                            (rows && rows[0] && rows[0].raw_data) || {};
+
+                        var mergedRawData =
+                            Object.assign(
+                                {},
+                                existingRawData,
+                                {
+                                    isLoggedIn: participant.isLoggedIn,
+                                    onlineStatus: participant.onlineStatus,
+                                    lastSeen: participant.lastSeen,
+                                    lastSeenAt: participant.lastSeenAt,
+                                    lastHeartbeat: participant.lastHeartbeat,
+                                    currentActivity: participant.currentActivity,
+                                    currentTest: participant.currentTest,
+                                    currentAssessmentIndex: participant.currentAssessmentIndex,
+                                    currentAssessmentCode: participant.currentAssessmentCode,
+                                    activity: participant.activity,
+                                    lastActivity: participant.lastActivity,
+                                    activityUpdatedAt: participant.activityUpdatedAt,
+                                    activityHistory: participant.activityHistory,
+                                    assessmentStatus: participant.assessmentStatus,
+                                    logoutTime: participant.logoutTime,
+                                    loggedOutAt: participant.loggedOutAt,
+                                    logoutAt: participant.logoutAt
+                                }
+                            );
+
+                        return fetch(
+                            SUPABASE_URL +
+                            "/rest/v1/participants?id=eq." +
+                            encodeURIComponent(participantRowId),
+                            {
+                                method: "PATCH",
+                                headers: {
+                                    "apikey": SUPABASE_ANON_KEY,
+                                    "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+                                    "Content-Type": "application/json",
+                                    "Prefer": "return=minimal"
+                                },
+                                body: JSON.stringify({
+                                    is_logged_in: participant.isLoggedIn === true,
+                                    raw_data: mergedRawData
+                                })
+                            }
+                        );
+                    })
+                    .then(function (res) {
+                        if (res && !res.ok) {
+                            res.text().then(function (text) {
+                                console.warn(
+                                    "[TS-Sync] Gagal update presence peserta:",
+                                    participantRowId,
+                                    res.status,
+                                    text
+                                );
+                            });
+                        }
+                    })
+                    .catch(function (error) {
+                        console.warn(
+                            "[TS-Sync] Presence sync error:",
+                            participantRowId,
+                            error
+                        );
+                    });
+            });
+        });
+    }
+
+
+    /* ------------------------------------------------------
        SYNC-UP: BUNGKUS localStorage.setItem
        Setiap kali kode lama menulis ke key yang relevan,
        kirim juga ke Supabase (debounce agar tidak spam saat
@@ -429,6 +554,12 @@
                     var arr = readLocalArray("talentscope_projects");
                     var rows = arr.map(projectToRow).filter(Boolean);
                     restUpsert("ts_projects", rows);
+
+                    // FIX: heartbeat/presence peserta sekarang juga
+                    // sampai ke tabel `participants` (bukan cuma
+                    // blob ts_projects), supaya status online/offline
+                    // di halaman monitoring admin akurat real-time.
+                    pushParticipantsPresence(arr);
                 });
 
             } else if (key === RESULTS_KEY) {

@@ -462,22 +462,24 @@ function getSelectedAssessmentName() {
 
     } else {
 
+        const codeLower = assessmentCode.toLowerCase();
         const pkgLower = assessmentName.toLowerCase();
 
         // Fallback (dipakai hanya kalau halaman ini dibuka tanpa
         // parameter nextTestUrl, misalnya diakses langsung).
-        // Sengaja tidak diarahkan ke halaman yang tidak ada
-        // ("general-test.html") — default ke disc_test.html
-        // supaya tidak 404.
-        if (pkgLower.includes("disc")) {
+        // Cek code DAN name, supaya assessment dengan nama generik
+        // (mis. "Personality Assessment") tapi code jelas (mis. "PAPI")
+        // tetap terdeteksi dengan benar.
+        if (codeLower.includes("disc") || pkgLower.includes("disc")) {
             targetTestUrl = "disc_test.html";
-        } else if (pkgLower.includes("papi")) {
+        } else if (codeLower.includes("papi") || pkgLower.includes("papi") || pkgLower.includes("kostick")) {
             targetTestUrl = "papi_kostick_test.html";
-        } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance")) {
+        } else if (codeLower.includes("vap") || pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("speed")) {
             targetTestUrl = "speedtest.html";
         } else {
             console.warn(
-                "Tipe assessment tidak dikenali dari nama paket, memakai fallback disc_test.html:",
+                "Tipe assessment tidak dikenali dari code/nama paket, memakai fallback disc_test.html:",
+                assessmentCode,
                 assessmentName
             );
             targetTestUrl = "disc_test.html";

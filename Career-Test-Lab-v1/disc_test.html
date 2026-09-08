@@ -468,11 +468,56 @@ function finalize(auto){
  // IMPORTANT: selesai tes ≠ logout. Presence/session tetap ONLINE sampai peserta klik Logout atau menutup tab/window.
  document.getElementById('modal').classList.remove('show');document.getElementById('quiz').style.display='none';document.getElementById('finish').style.display='block';
 }
+function packageCodeOf(item){
+ if(!item||typeof item!=='object')return'';
+ return String(item.code||item.assessmentCode||item.assessment_code||item.id||item.assessmentId||item.testId||'').trim();
+}
+function packageNameOf(item){
+ if(typeof item==='string')return item.trim();
+ if(!item||typeof item!=='object')return'';
+ return String(item.name||item.title||item.assessmentName||item.assessment_name||item.testName||item.label||item.code||'').trim();
+}
+function resolveAssessmentRoute(code,name){
+ const c=String(code||'').toLowerCase(),n=String(name||'').toLowerCase();
+ if(c.includes('disc')||n.includes('disc'))return'disc_test.html';
+ if(c.includes('papi')||n.includes('papi')||n.includes('kostick'))return'papi_kostick_test.html';
+ if(c.includes('vap')||n.includes('vap')||n.includes('visual')||n.includes('performance')||n.includes('sustained attention')||n.includes('speed'))return'speedtest.html';
+ return'';
+}
 function nextTest(){
- const next=assessmentIndex+1;let more=false;
- try{const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');const proj=ps.find(x=>String(x.id||x.projectId||'')===projectId);const packs=proj?.assessmentPackage||proj?.assessments||proj?.packages||[];more=next<packs.length}catch(e){}
+ const next=assessmentIndex+1;
+ let packs=[];
+ try{
+  const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
+  const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
+  const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
+  packs=(Array.isArray(part?.assessments)&&part.assessments.length>0)
+   ?part.assessments
+   :(proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
+ }catch(e){packs=[]}
+
  markInternalNavigation();
- location.href=more?`assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}`:`participant-dashboard.html?completed=true`;
+
+ if(next>=packs.length){
+  location.href=`participant-dashboard.html?completed=true`;
+  return;
+ }
+
+ const nextPkg=packs[next];
+ const nextCode=packageCodeOf(nextPkg);
+ const nextName=packageNameOf(nextPkg)||'Assessment';
+ const nextRoute=resolveAssessmentRoute(nextCode,nextName);
+
+ if(nextRoute){
+  // Langsung ke tes berikutnya, tanpa halaman petunjuk umum lagi.
+  location.href=`${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+ }else{
+  // Tidak bisa dipastikan jenis tesnya dari code/name yang ada —
+  // lewat halaman petunjuk dulu sebagai jalan aman, supaya tidak
+  // salah meloncat ke tes yang keliru (mis. balik ke DISC).
+  console.warn('[DISC] Tidak bisa menentukan tes berikutnya dari code/name:',nextCode,nextName);
+  location.href=`assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+ }
 }
 document.getElementById('confirm').addEventListener('change',e=>document.getElementById('start').disabled=!e.target.checked);
 document.getElementById('start').addEventListener('click',startQuiz);
