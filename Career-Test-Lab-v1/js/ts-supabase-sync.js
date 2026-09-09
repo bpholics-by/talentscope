@@ -39,6 +39,10 @@
      Skrip ini juga menulis ulang key per-tes yang dipakai
      halaman hasil (assessment_result_v3_..., assessment_result_...,
      <kode>_result_v3_..., <kode>_result_...) dari data Supabase.
+   - talentscope_settings_users       → tabel ts_users
+     (akun Admin/Client/Asesor yang dibuat lewat tab "Users" di
+     settings.html, supaya bisa login dari perangkat/browser mana
+     pun — sebelumnya akun ini murni localStorage per-device).
 
    DATA YANG TIDAK DISINKRONKAN (sengaja tetap lokal per-device)
    - Jawaban yang sedang dikerjakan (draft autosave) & sisa waktu
@@ -62,6 +66,7 @@
 
     var PROJECTS_KEYS = ["talentscope_projects", "projects"];
     var RESULTS_KEY = "talent_scope_results";
+    var USERS_KEY = "talentscope_settings_users";
 
 
     /* ------------------------------------------------------
@@ -200,6 +205,17 @@
             assessment_code: code,
             data: item
         };
+    }
+
+
+    /* ------------------------------------------------------
+       KONVERSI: USER OBJECT -> ROW ts_users
+    ------------------------------------------------------ */
+
+    function userToRow(user) {
+        var uid = String(user && user.id || "");
+        if (!uid) return null;
+        return { id: uid, data: user };
     }
 
 
@@ -409,11 +425,54 @@
 
 
     /* ------------------------------------------------------
+       SYNC-DOWN: USERS ADMIN/CLIENT/ASESOR (Supabase -> localStorage)
+       ----------------------------------------------------
+       KENAPA INI PERLU:
+       Sebelumnya akun Admin/Client/Asesor (dibuat lewat tab
+       "Users" di settings.html) hanya tersimpan di localStorage
+       key "talentscope_settings_users" — TIDAK PERNAH disinkronkan
+       ke Supabase sama sekali. Akibatnya:
+       - Akun yang dibuat di satu browser/perangkat tidak bisa
+         dipakai login dari perangkat/browser lain.
+       - login.html tidak punya sumber data terpusat untuk akun
+         non-peserta, sehingga sebelumnya terpaksa scan SEMUA
+         key localStorage sebagai tebakan (lihat catatan lama
+         di login.html, sudah dihapus).
+       Sama seperti projects & results, key ini sekarang disalin
+       ke tabel `ts_users` (id, data jsonb) setiap kali berubah,
+       dan ditarik turun setiap halaman yang memuat skrip ini
+       dibuka.
+    ------------------------------------------------------ */
+
+    function syncUsersDown() {
+        var remote = restGetSync("/rest/v1/ts_users?select=id,data");
+
+        if (remote === null) {
+            // Gagal konek (offline / tabel belum dibuat) -> biarkan data lokal apa adanya.
+            return;
+        }
+
+        if (remote.length > 0) {
+            var users = remote.map(function (row) { return row.data; });
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+        } else {
+            var local = readLocalArray(USERS_KEY);
+            if (local.length > 0) {
+                var rows = local.map(userToRow).filter(Boolean);
+                restUpsert("ts_users", rows);
+            }
+        }
+    }
+
+
+    /* ------------------------------------------------------
        JALANKAN SYNC-DOWN SEKARANG (SEBELUM SKRIP LAIN JALAN)
     ------------------------------------------------------ */
 
     syncProjectsDown();
     syncResultsDown();
+    syncUsersDown();
 
 
     /* ------------------------------------------------------
@@ -588,6 +647,14 @@
                     var arr = readLocalArray(RESULTS_KEY);
                     var rows = arr.map(resultToRow).filter(Boolean);
                     restUpsert("ts_results", rows);
+                });
+
+            } else if (key === USERS_KEY) {
+
+                debouncedPush("users", function () {
+                    var arr = readLocalArray(USERS_KEY);
+                    var rows = arr.map(userToRow).filter(Boolean);
+                    restUpsert("ts_users", rows);
                 });
             }
         } catch (error) {

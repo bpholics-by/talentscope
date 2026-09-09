@@ -25,6 +25,37 @@ document.addEventListener("DOMContentLoaded", function () {
    MAIN CONTROLLER
 ========================================================== */
 
+/* ==========================================================
+   GENERIC LABEL DETECTOR
+   Sama seperti helper di participant-dashboard.html: dipakai
+   supaya placeholder generik ("Assessment 1", "Assessment",
+   dst) tidak dianggap sebagai nama/kode assessment yang valid.
+========================================================== */
+
+function isGenericAssessmentLabel(value) {
+
+    const v =
+        String(value == null ? "" : value)
+        .trim()
+        .toLowerCase();
+
+    if (!v) {
+        return true;
+    }
+
+    const stripped =
+        v.replace(/\s*#?\d+\s*$/, "").trim();
+
+    return (
+        stripped === "assessment" ||
+        stripped === "assessment package" ||
+        stripped === "generic assessment" ||
+        stripped === "test" ||
+        stripped === "untitled"
+    );
+}
+
+
 function loadTestResult() {
 
     const params = new URLSearchParams(window.location.search);
@@ -263,25 +294,56 @@ function loadTestResult() {
     /* ======================================================
        NORMALISASI NAMA & KODE DARI STRUKTUR DATA ASLI
        (assessment_name / raw_data.name / raw_data.code)
+
+       FIX: sebelumnya blok ini cuma jalan kalau
+       assessment.name/title MASIH KOSONG. Padahal
+       assessment.name/title sering sudah keburu terisi
+       placeholder generik ("Assessment 1", dari data
+       session/legacy) SEBELUM assessment_name (canonical,
+       dari project_assessments) sempat dibaca -- akibatnya
+       placeholder generik itu yang menang dan dipakai
+       sebagai judul & untuk deteksi tipe test (VAP/DISC/PAPI).
+
+       Sekarang: assessment_name (kalau ada isinya dan bukan
+       placeholder generik) SELALU diprioritaskan di atas
+       assessment.name/title yang generik.
     ====================================================== */
 
+    const canonicalAssessmentName =
+        String(
+            assessment.assessment_name ||
+            assessment?.raw_data?.name ||
+            ""
+        ).trim();
+
     if (
+        canonicalAssessmentName &&
+        !isGenericAssessmentLabel(canonicalAssessmentName)
+    ) {
+
+        assessment.name = canonicalAssessmentName;
+        assessment.title = canonicalAssessmentName;
+
+    } else if (
         !assessment.name &&
         !assessment.title
     ) {
 
         assessment.name =
-            assessment.assessment_name ||
-            assessment?.raw_data?.name ||
+            canonicalAssessmentName ||
             "";
 
     }
 
-    if (!assessment.code) {
+    if (
+        !assessment.code ||
+        isGenericAssessmentLabel(assessment.code)
+    ) {
 
         assessment.code =
             assessment?.raw_data?.code ||
             assessment?.raw_data?.assessment_code ||
+            assessment.code ||
             "";
 
     }
@@ -305,6 +367,11 @@ function loadTestResult() {
 
     /* ======================================================
        IDENTIFY ASSESSMENT
+
+       FIX: deteksi tipe test sekarang juga mengenali frasa
+       nama asli assessment (bukan cuma kode "DISC"/"PAPI"/"VAP"
+       yang sering tidak tersedia), supaya tetap benar walau
+       assessmentCode gagal di-resolve (mis. masih berupa UUID).
     ====================================================== */
 
     const codeUpper =
@@ -323,11 +390,16 @@ function loadTestResult() {
 
     const isPAPI =
         codeUpper.includes("PAPI") ||
-        nameUpper.includes("PAPI");
+        nameUpper.includes("PAPI") ||
+        nameUpper.includes("KOSTICK");
 
     const isVAP =
         codeUpper.includes("VAP") ||
-        nameUpper.includes("VAP");
+        nameUpper.includes("VAP") ||
+        nameUpper.includes("VISUAL ATTENTION") ||
+        nameUpper.includes("WORK PERFORMANCE") ||
+        nameUpper.includes("SUSTAINED ATTENTION") ||
+        nameUpper.includes("SPEED TEST");
 
 
     /* ======================================================
@@ -1967,12 +2039,71 @@ function resolveAssessmentCode(
         "object"
     ) {
 
+        const directCode =
+            String(
+                projectAssessment.code ||
+                projectAssessment.assessmentCode ||
+                projectAssessment.assessment_code ||
+                projectAssessment?.raw_data?.code ||
+                projectAssessment?.raw_data?.assessment_code ||
+                ""
+            ).trim();
+
+        if (directCode) {
+            return directCode;
+        }
+
+        /*
+           FIX: tabel project_assessments TIDAK PUNYA kolom
+           code sendiri (cuma assessment_id, UUID, yang
+           menunjuk ke tabel master "assessments").
+
+           Sebelum jatuh ke assessment_id/id (UUID) sebagai
+           fallback code -- yang menyebabkan judul & deteksi
+           tipe test (isDISC/isPAPI/isVAP) salah total karena
+           UUID tidak pernah match "DISC"/"PAPI"/"VAP" -- coba
+           cari code ASLI dari master "assessments" (localStorage
+           key "assessments") lewat assessment_id.
+        */
+        const refId =
+            String(
+                projectAssessment.assessment_id ||
+                projectAssessment.assessmentId ||
+                ""
+            ).trim();
+
+        if (
+            refId &&
+            Array.isArray(masterAssessments)
+        ) {
+
+            const byId =
+                masterAssessments.find(
+                    function (item) {
+
+                        return String(
+                            item?.id || ""
+                        ).toLowerCase() ===
+                        refId.toLowerCase();
+                    }
+                );
+
+            if (byId) {
+
+                const resolvedCode =
+                    String(
+                        byId.assessment_code ||
+                        byId.code ||
+                        ""
+                    ).trim();
+
+                if (resolvedCode) {
+                    return resolvedCode;
+                }
+            }
+        }
+
         return String(
-            projectAssessment.code ||
-            projectAssessment.assessmentCode ||
-            projectAssessment.assessment_code ||
-            projectAssessment?.raw_data?.code ||
-            projectAssessment?.raw_data?.assessment_code ||
             projectAssessment.assessmentId ||
             projectAssessment.assessment_id ||
             projectAssessment.id ||

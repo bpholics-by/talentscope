@@ -1846,6 +1846,17 @@
 
     migrateRoles();
 
+    /*
+       PENTING: pastikan state saat ini (termasuk defaultUsers
+       kalau ini pertama kali dibuka di perangkat ini) selalu
+       tertulis ke localStorage lewat save() — bukan cuma saat
+       migrateRoles() mendeteksi ada perubahan. Ini yang memicu
+       ts-supabase-sync.js mengirim akun Admin/Client/Asesor ke
+       tabel ts_users. Tanpa baris ini, defaultUsers hanya ada
+       di memori tab ini dan tidak pernah sampai ke Supabase.
+    */
+    save();
+
     renderAll();
 
 })();

@@ -2,6 +2,11 @@
 <html lang="id">
 <head>
 <script src="js/ts-supabase-sync.js"></script>
+<!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/participant-activity.js"></script>
 <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Petunjuk Asesmen — TalentScope</title>
@@ -168,12 +173,74 @@
         const nextTestUrlParam =
             (urlParams.get('nextTestUrl') || '').trim();
 
+        // Context assessment dari dashboard adalah sumber paling spesifik.
+        // Jangan biarkan cache participant lama seperti "Assessment 1"
+        // menimpa assessment aktual dari project_assessments.
+        const requestedAssessmentName =
+            (urlParams.get('assessmentName') || '').trim();
+
+        const requestedAssessmentCode =
+            (urlParams.get('assessmentCode') || '').trim();
+
+        function isUuidLike(value) {
+            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+        }
+
+        function getAssessmentDisplayName(item) {
+            if (typeof item === 'string') return item.trim();
+            if (!item || typeof item !== 'object') return '';
+            return String(
+                item.assessment_name ||
+                item.assessmentName ||
+                item.name ||
+                item.title ||
+                item.testName ||
+                item.label ||
+                item.assessment_code ||
+                item.assessmentCode ||
+                item.code ||
+                ''
+            ).trim();
+        }
+
+        function getAssessmentRoutingCode(item) {
+            if (typeof item === 'string') return item.trim();
+            if (!item || typeof item !== 'object') return '';
+            var candidate = String(
+                item.assessment_code ||
+                item.assessmentCode ||
+                item.code ||
+                item.assessment_type ||
+                item.type ||
+                ''
+            ).trim();
+            return isUuidLike(candidate) ? '' : candidate;
+        }
+
         if (!projectId || !participantId) {
             console.error('IDENTITAS ASSESSMENT TIDAK VALID:', {
                 projectId,
                 participantId,
                 url: window.location.href
             });
+        }
+
+        // Catat "masuk ke halaman Petunjuk Umum" + pantau switch tab.
+        // Dilakukan lewat shared tracker supaya activity ini juga
+        // tersinkron ke Supabase (participants.raw_data), bukan
+        // cuma tersimpan di localStorage peserta.
+        if (
+            typeof ParticipantActivity !== "undefined"
+        ) {
+
+            ParticipantActivity.trackPageEntry(
+                "Petunjuk Umum"
+            );
+
+            ParticipantActivity.trackTabSwitch(
+                "Petunjuk Umum"
+            );
+
         }
 
            let currentProjectPackages = [];
@@ -289,48 +356,62 @@ try {
 
         /* =========================================
            LOAD ASSESSMENT PACKAGE
+
+           PRIORITAS:
+           1. project.assessments (project_assessments Supabase)
+           2. assessmentPackage proyek
+           3. assessments peserta (legacy)
+           4. packages lama
+
+           Ini penting karena raw_data peserta bisa masih menyimpan
+           "Assessment 1" dari versi lama.
         ========================================= */
         if (
-            currentParticipant &&
-            Array.isArray(
-                currentParticipant.assessments
-            ) &&
-            currentParticipant.assessments.length > 0
-        ) {
-
-            currentProjectPackages =
-                currentParticipant.assessments;
-
-        } else if (
-            Array.isArray(
-                currentProj.assessmentPackage
-            ) &&
-            currentProj.assessmentPackage.length > 0
-        ) {
-
-            currentProjectPackages =
-                currentProj.assessmentPackage;
-
-        } else if (
-            Array.isArray(
-                currentProj.assessments
-            ) &&
+            Array.isArray(currentProj.assessments) &&
             currentProj.assessments.length > 0
         ) {
-
-            currentProjectPackages =
-                currentProj.assessments;
+            currentProjectPackages = currentProj.assessments;
 
         } else if (
-            Array.isArray(
-                currentProj.packages
-            ) &&
+            Array.isArray(currentProj.assessmentPackage) &&
+            currentProj.assessmentPackage.length > 0
+        ) {
+            currentProjectPackages = currentProj.assessmentPackage;
+
+        } else if (
+            currentParticipant &&
+            Array.isArray(currentParticipant.assessments) &&
+            currentParticipant.assessments.length > 0
+        ) {
+            currentProjectPackages = currentParticipant.assessments;
+
+        } else if (
+            Array.isArray(currentProj.packages) &&
             currentProj.packages.length > 0
         ) {
-
-            currentProjectPackages =
-                currentProj.packages;
+            currentProjectPackages = currentProj.packages;
         }
+
+        // Jika dashboard mengirim context eksplisit, context tersebut
+        // selalu menang atas cache lokal.
+        if (requestedAssessmentName) {
+            var explicitItem = currentProjectPackages[currentStep] || {};
+            if (typeof explicitItem === 'string') explicitItem = { name: explicitItem };
+            currentProjectPackages[currentStep] = Object.assign({}, explicitItem, {
+                assessment_name: requestedAssessmentName,
+                assessment_code: requestedAssessmentCode || getAssessmentRoutingCode(explicitItem)
+            });
+        }
+
+        var displayAssessmentName = requestedAssessmentName ||
+            getAssessmentDisplayName(currentProjectPackages[currentStep]) ||
+            'Assessment';
+
+        var titleElement = document.getElementById('assessment-title');
+        if (titleElement) {
+            titleElement.textContent = 'Petunjuk Pengerjaan ' + displayAssessmentName;
+        }
+
 
 
     } else {
@@ -366,46 +447,16 @@ try {
 ========================================= */
 function getSelectedAssessmentName() {
 
+    if (requestedAssessmentName) {
+        return requestedAssessmentName;
+    }
+
     const item =
         currentProjectPackages.length > 0
             ? currentProjectPackages[currentStep]
             : null;
 
-
-    if (typeof item === "string") {
-
-        return (
-            item.trim() ||
-            "Assessment"
-        );
-    }
-
-
-    if (!item) {
-
-        return "Assessment";
-    }
-
-
-    return String(
-
-        item.name ||
-
-        item.title ||
-
-        item.assessmentName ||
-
-        item.assessment_name ||
-
-        item.testName ||
-
-        item.label ||
-
-        item.code ||
-
-        "Assessment"
-
-    ).trim();
+    return getAssessmentDisplayName(item) || "Assessment";
 }
 
                 // Aksi ketika tombol "Mulai Tes Sekarang" diklik
@@ -425,33 +476,25 @@ function getSelectedAssessmentName() {
             : null;
 
     const packageName =
-        typeof activePkg === "string"
-            ? activePkg
-            : (
-                activePkg?.name ||
-                activePkg?.title ||
-                activePkg?.assessmentName ||
-                activePkg?.testName ||
-                activePkg?.label ||
-                activePkg?.code ||
-                ""
-            );
+        requestedAssessmentName ||
+        getAssessmentDisplayName(activePkg) ||
+        "Assessment";
 
     const assessmentName =
-        String(packageName || "Assessment").trim();
+        String(packageName).trim();
 
     const assessmentCode =
         String(
-            typeof activePkg === "object" && activePkg
-                ? (
-                    activePkg.code ||
-                    activePkg.id ||
-                    activePkg.assessmentId ||
-                    activePkg.testId ||
-                    ""
-                )
-                : ""
+            requestedAssessmentCode ||
+            getAssessmentRoutingCode(activePkg) ||
+            ""
         ).trim();
+
+    // Perbarui judul juga jika halaman dibuka dari cache lama.
+    const liveTitle = document.getElementById('assessment-title');
+    if (liveTitle) {
+        liveTitle.textContent = 'Petunjuk Pengerjaan ' + assessmentName;
+    }
 
     if (nextTestUrlParam) {
 
@@ -470,12 +513,14 @@ function getSelectedAssessmentName() {
         // Cek code DAN name, supaya assessment dengan nama generik
         // (mis. "Personality Assessment") tapi code jelas (mis. "PAPI")
         // tetap terdeteksi dengan benar.
-        if (codeLower.includes("disc") || pkgLower.includes("disc")) {
-            targetTestUrl = "disc_test.html";
+        // Cek VAP terlebih dahulu. Nama assessment dari project_assessments
+        // adalah sumber canonical dan tidak boleh kalah oleh field/cache legacy.
+        if (codeLower.includes("vap") || pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("speed")) {
+            targetTestUrl = "speedtest.html";
         } else if (codeLower.includes("papi") || pkgLower.includes("papi") || pkgLower.includes("kostick")) {
             targetTestUrl = "papi_kostick_test.html";
-        } else if (codeLower.includes("vap") || pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("speed")) {
-            targetTestUrl = "speedtest.html";
+        } else if (codeLower.includes("disc") || pkgLower.includes("disc")) {
+            targetTestUrl = "disc_test.html";
         } else {
             console.warn(
                 "Tipe assessment tidak dikenali dari code/nama paket, memakai fallback disc_test.html:",
@@ -489,126 +534,46 @@ function getSelectedAssessmentName() {
     /*
        Simpan assessment yang benar ke participant.
        Ini menjadi sumber activity untuk halaman monitoring.
+       Ditulis ke localStorage (kompatibilitas lama) DAN
+       disinkronkan ke Supabase lewat shared tracker.
     */
-    try {
-        const projectsData =
-            JSON.parse(
-                localStorage.getItem("talentscope_projects") || "[]"
-            );
+    if (typeof ParticipantActivity !== "undefined") {
 
-        if (Array.isArray(projectsData)) {
+        var startActivityLabel =
+            "Online - Mengerjakan tes (" +
+            assessmentName +
+            ")";
 
-            const now =
-                new Date().toISOString();
+        ParticipantActivity.recordActivity({
 
-            projectsData.forEach(function(project) {
+            type: "test-start",
 
-                const pid =
-                    String(
-                        project?.id ||
-                        project?.projectId ||
-                        project?.project_id ||
-                        ""
-                    ).trim();
+            label: startActivityLabel,
 
-                if (pid !== String(projectId).trim()) {
-                    return;
-                }
+            description:
+                "Peserta mulai mengerjakan " +
+                assessmentName +
+                ".",
 
-                const participants =
-                    Array.isArray(project.participants)
-                        ? project.participants
-                        : [];
+            patch: {
+                currentTest: assessmentName,
+                currentAssessmentIndex: Number(currentStep),
+                currentAssessmentCode: assessmentCode
+            },
 
-                participants.forEach(function(participant) {
+            extra: {
+                action: "Start Assessment",
+                test: assessmentName,
+                testName: assessmentName,
+                assessmentName: assessmentName,
+                assessmentCode: assessmentCode,
+                assessmentIndex: Number(currentStep),
+                projectId: String(projectId),
+                participantId: String(participantId)
+            }
 
-                    const participantPid =
-                        String(
-                            participant?.id ||
-                            participant?.participantId ||
-                            participant?.employeeId ||
-                            participant?.employee_id ||
-                            ""
-                        ).trim();
+        });
 
-                    if (
-                        participantPid !==
-                        String(participantId).trim()
-                    ) {
-                        return;
-                    }
-
-                    const activity =
-                        "Sedang mengerjakan tes (" +
-                        assessmentName +
-                        ")";
-
-                    participant.currentTest =
-                        assessmentName;
-
-                    participant.currentAssessmentIndex =
-                        Number(currentStep);
-
-                    participant.currentAssessmentCode =
-                        assessmentCode;
-
-                    participant.currentActivity =
-                        activity;
-
-                    participant.activity =
-                        activity;
-
-                    participant.testActivity =
-                        activity;
-
-                    participant.lastActivity =
-                        activity;
-
-                    participant.activityUpdatedAt =
-                        now;
-
-                    if (
-                        !Array.isArray(
-                            participant.activityHistory
-                        )
-                    ) {
-                        participant.activityHistory = [];
-                    }
-
-                    participant.activityHistory.push({
-                        type: "test-start",
-                        activity: activity,
-                        title: activity,
-                        action: "Start Assessment",
-                        test: assessmentName,
-                        testName: assessmentName,
-                        assessmentName: assessmentName,
-                        assessmentCode: assessmentCode,
-                        assessmentIndex: Number(currentStep),
-                        projectId: String(projectId),
-                        participantId: String(participantId),
-                        timestamp: now,
-                        time: now,
-                        description:
-                            "Peserta mulai mengerjakan " +
-                            assessmentName + "."
-                    });
-
-                });
-
-            });
-
-            localStorage.setItem(
-                "talentscope_projects",
-                JSON.stringify(projectsData)
-            );
-        }
-
-    } catch (e) {
-        console.warn(
-            "Gagal menyimpan activity assessment:",
-            e
-        );
     }
 
     // Kirim context lengkap ke halaman tes.

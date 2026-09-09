@@ -2579,116 +2579,163 @@ const {
 
 
             /* =============================================
-               ADMIN / CLIENT / ASESOR LOCAL STORAGE
+               ADMIN / CLIENT / ASESOR — SUPABASE (ts_users)
+               ----------------------------------------------
+               GANTI TOTAL dari cara lama (scan SEMUA key
+               localStorage, lalu tebak mana yang "user").
+               Sekarang query terarah ke tabel `ts_users`,
+               sama pola dengan findParticipant() di atas:
+               satu sumber kebenaran, konsisten di semua
+               device/browser, tidak lagi rapuh terhadap data
+               lain yang kebetulan tersimpan di localStorage.
             ============================================= */
 
-            let allSavedUsers = [];
+            let matchedAdmin = null;
 
 
             try {
 
-                for (
-                    let i = 0;
-                    i < localStorage.length;
-                    i++
-                ) {
-
-                    const key =
-                        localStorage.key(i);
-
-                    const value =
-                        localStorage.getItem(key);
+                const client = getSupabaseClient();
 
 
-                    if (
-                        !value ||
-                        !(
-                            value.startsWith("[") ||
-                            value.startsWith("{")
-                        )
+                if (client) {
+
+                    const {
+                        data: userRows,
+                        error: userError
+                    } = await client
+                        .from("ts_users")
+                        .select("id, data");
+
+
+                    if (userError) {
+
+                        console.error(
+                            "❌ GAGAL BACA ts_users:",
+                            userError
+                        );
+
+                    } else if (
+                        Array.isArray(userRows)
                     ) {
-                        continue;
-                    }
+
+                        const candidateRow =
+                            userRows.find(
+                                function (row) {
+
+                                    const u =
+                                        row && row.data;
+
+                                    if (!u) {
+                                        return false;
+                                    }
 
 
-                    try {
+                                    const uUsername =
+                                        normalize(
+                                            u.username || ""
+                                        );
 
-                        const parsed =
-                            JSON.parse(value);
+                                    const uEmail =
+                                        normalize(
+                                            u.email || ""
+                                        );
+
+                                    const uPassword =
+                                        String(
+                                            u.password || ""
+                                        ).trim();
+
+                                    const uStatus =
+                                        normalize(
+                                            u.status || "active"
+                                        );
 
 
-                        if (
-                            Array.isArray(parsed)
-                        ) {
+                                    const identityMatches =
+                                        (uUsername && uUsername === userIn) ||
+                                        (uEmail && uEmail === userIn);
 
-                            allSavedUsers =
-                                allSavedUsers.concat(
-                                    parsed
-                                );
 
-                        } else if (
-                            parsed &&
-                            typeof parsed === "object"
-                        ) {
-
-                            allSavedUsers.push(
-                                parsed
+                                    return (
+                                        identityMatches &&
+                                        uPassword === passIn &&
+                                        uStatus !== "inactive"
+                                    );
+                                }
                             );
-                        }
 
-                    } catch (error) {
-                        /* ignore invalid json */
+
+                        if (candidateRow) {
+                            matchedAdmin = candidateRow.data;
+                        }
                     }
+
+                } else {
+
+                    console.warn(
+                        "⚠️ SUPABASE TIDAK TERSEDIA — fallback ke cache lokal (talentscope_settings_users)"
+                    );
+
+
+                    /*
+                       FALLBACK OFFLINE: baca HANYA key user yang
+                       benar (bukan scan semua key seperti dulu).
+                       Cache ini diisi oleh js/ts-supabase-sync.js
+                       di halaman-halaman yang memuatnya (mis.
+                       settings.html), jadi tetap ada data terbaru
+                       untuk dipakai kalau Supabase sedang tidak
+                       terjangkau.
+                    */
+
+                    const localUsers = safeJsonParse(
+                        localStorage.getItem(
+                            "talentscope_settings_users"
+                        ),
+                        []
+                    );
+
+
+                    matchedAdmin =
+                        (Array.isArray(localUsers) ? localUsers : []).find(
+                            function (u) {
+
+                                const uUsername =
+                                    normalize(
+                                        u.username || ""
+                                    );
+
+                                const uEmail =
+                                    normalize(
+                                        u.email || ""
+                                    );
+
+                                const uPassword =
+                                    String(
+                                        u.password || ""
+                                    ).trim();
+
+
+                                const identityMatches =
+                                    (uUsername && uUsername === userIn) ||
+                                    (uEmail && uEmail === userIn);
+
+
+                                return (
+                                    identityMatches &&
+                                    uPassword === passIn
+                                );
+                            }
+                        ) || null;
                 }
 
             } catch (error) {
 
-                console.warn(
-                    "⚠️ LocalStorage read error:",
+                console.error(
+                    "❌ ADMIN LOGIN ERROR:",
                     error
                 );
             }
-
-
-            /* =============================================
-               FIND ADMIN
-            ============================================= */
-
-            const matchedAdmin =
-                allSavedUsers.find(
-                    function (user) {
-
-                        if (!user) {
-                            return false;
-                        }
-
-
-                        const adminUsername =
-                            normalize(
-                                user.username ||
-                                user.user ||
-                                user.email ||
-                                user.login ||
-                                ""
-                            );
-
-
-                        const adminPassword =
-                            String(
-                                user.password ||
-                                user.pass ||
-                                user.accessCode ||
-                                user.access_code ||
-                                ""
-                            ).trim();
-
-
-                        return (
-                            adminUsername === userIn &&
-                            adminPassword === passIn
-                        );
-                    }
-                );
 
 
             if (matchedAdmin) {
@@ -2704,7 +2751,7 @@ const {
 
                     role:
                         matchedAdmin.role ||
-                        "Client Administrator",
+                        "Client",
 
                     name:
                         matchedAdmin.name ||
@@ -2738,49 +2785,24 @@ const {
 
 
             /* =============================================
-               DEFAULT ADMIN
-            ============================================= */
-
-            if (
-                userIn === "admin" &&
-                passIn === "admin123"
-            ) {
-
-                clearLoginSessions();
-
-
-                sessionStorage.setItem(
-                    "ts_admin_session",
-                    JSON.stringify({
-
-                        username:
-                            "admin",
-
-                        role:
-                            "System Administrator",
-
-                        permission:
-                            "System Admin",
-
-                        name:
-                            "System Admin",
-
-                        projectId:
-                            "ALL"
-                    })
-                );
-
-
-                window.location.replace(
-                    "dashboard.html"
-                );
-
-                return;
-            }
-
-
-            /* =============================================
                LOGIN FAILED
+
+               CATATAN: default "admin / admin123" hardcoded
+               yang sebelumnya ada di sini SUDAH DIHAPUS.
+               Kredensial itu tertanam di source code (bisa
+               dilihat siapa saja lewat View Source) dan jadi
+               backdoor permanen. Akun System Administrator
+               default ("admin" / "admin123", id USR-001) tetap
+               ada — tapi sekarang sebagai baris biasa di tabel
+               `ts_users`, sama seperti akun lain, dan sudah
+               tidak lagi hardcoded di halaman ini.
+
+               PENTING SEBELUM DEPLOY: buka settings.html SATU
+               KALI dulu (dengan koneksi Supabase aktif) supaya
+               akun default ini tersimpan ke `ts_users` — kalau
+               belum, tidak akan ada akun admin yang bisa login
+               sama sekali. Setelah itu, segera ganti password
+               admin123 lewat tab Security.
             ============================================= */
 
             console.warn(

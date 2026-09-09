@@ -1,6 +1,17 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8">
     <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
     <script src="js/ts-supabase-sync.js"></script>
+    <!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/participant-activity.js"></script>
+    <script>
+        if (typeof ParticipantActivity !== "undefined") {
+            ParticipantActivity.trackPageEntry("Tes DISC Personality");
+            ParticipantActivity.trackTabSwitch("Tes DISC Personality");
+        }
+    </script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TalentScope Enterprise — DISC Assessment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

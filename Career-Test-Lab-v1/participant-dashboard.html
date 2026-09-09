@@ -1007,7 +1007,48 @@ a{text-decoration:none;color:inherit}
 
     /* =====================================================
        ASSESSMENT HELPERS
+
+       FIX (assessment name/routing bug):
+       - assessment_id (dan item.id pada baris project_assessments)
+         adalah UUID, BUKAN kode/nama assessment. UUID tidak boleh
+         lagi dipakai sebagai fallback code.
+       - assessment_name dari project_assessments adalah nama
+         canonical dan sekarang diprioritaskan di ATAS field
+         generic seperti .name / .title, supaya value placeholder
+         generik ("Assessment") tidak menang lebih dulu.
+       - isGenericAssessmentLabel() melewati value yang memang
+         cuma placeholder generik ("Assessment", "Assessment 1",
+         dst) walaupun value itu ada di field yang lebih diprioritaskan,
+         supaya tetap lanjut mencari nama yang benar-benar spesifik
+         (mis. "VAP Test") di field berikutnya.
     ===================================================== */
+    function isGenericAssessmentLabel(value) {
+
+        var v =
+            normalize(value)
+            .toLowerCase();
+
+        if (!v) {
+            return true;
+        }
+
+        /* buang angka trailing: "assessment 1" -> "assessment" */
+        var stripped =
+            v.replace(
+                /\s*#?\d+\s*$/,
+                ""
+            ).trim();
+
+        return (
+            stripped === "assessment" ||
+            stripped === "assessment package" ||
+            stripped === "generic assessment" ||
+            stripped === "test" ||
+            stripped === "untitled"
+        );
+    }
+
+
     function assessmentCodeOf(item) {
 
         if (typeof item === "string") {
@@ -1020,11 +1061,15 @@ a{text-decoration:none;color:inherit}
             return "";
         }
 
+        /*
+           PENTING: item.id / item.assessment_id SENGAJA TIDAK
+           dipakai di sini karena keduanya UUID (primary key),
+           bukan kode assessment (mis. "VAP", "DISC").
+        */
         return normalize(
             item.code ||
             item.assessmentCode ||
             item.assessment_code ||
-            item.id ||
             item.name
         ).toUpperCase();
     }
@@ -1040,14 +1085,61 @@ a{text-decoration:none;color:inherit}
             return "Assessment";
         }
 
-        return normalize(
-            item.name ||
-            item.title ||
-            item.assessmentName ||
-            item.assessment_name ||
-            item.testName ||
-            item.label ||
-            item.code ||
+        /*
+           PRIORITAS (sesuai permintaan):
+           1. assessment.assessment_name  (canonical, dari project_assessments)
+           2. assessment.assessmentName
+           3. assessment.name
+           4. assessment.title
+           5. fallback lainnya
+
+           Setiap kandidat yang cuma placeholder generik
+           ("Assessment", "Assessment 1", dst) dilewati dulu,
+           baru dipakai kalau memang tidak ada kandidat lain
+           yang lebih spesifik.
+        */
+        var candidates = [
+            item.assessment_name,
+            item.assessmentName,
+            item.name,
+            item.title,
+            item.testName,
+            item.label,
+            item.code
+        ];
+
+        var firstNonEmpty = "";
+
+        for (
+            var i = 0;
+            i < candidates.length;
+            i++
+        ) {
+
+            var candidate =
+                normalize(
+                    candidates[i]
+                );
+
+            if (!candidate) {
+                continue;
+            }
+
+            if (!firstNonEmpty) {
+                firstNonEmpty = candidate;
+            }
+
+            if (
+                !isGenericAssessmentLabel(
+                    candidate
+                )
+            ) {
+                return candidate;
+            }
+        }
+
+        return (
+            firstNonEmpty ||
             "Assessment"
         );
     }
@@ -1174,6 +1266,119 @@ a{text-decoration:none;color:inherit}
 
 
     /* =====================================================
+       SNAPSHOT CANONICAL ASSESSMENT DATA
+
+       FIX (root cause utama nama/rute assessment salah):
+       currentProject.assessments di titik ini masih berisi
+       data ASLI hasil sinkronisasi Supabase
+       (ts-supabase-sync.js -> tabel project_assessments,
+       lengkap dengan assessment_name yang benar, mis. "VAP Test").
+
+       Diambil SEKARANG (sebelum block "SYNC SESSION DATA TO
+       PARTICIPANT" di bawah), karena block itu SEBELUMNYA
+       langsung menimpa currentProject.assessments dengan
+       sessionAssessments (data dari sessionStorage saat login)
+       yang ternyata generik/tidak lengkap -> itulah sumber
+       "Assessment 1" dan salah routing ke DISC.
+    ===================================================== */
+    var canonicalProjectAssessments =
+        Array.isArray(
+            currentProject.assessments
+        ) ?
+        currentProject.assessments.slice() :
+        [];
+
+    console.log(
+        "[ASSESSMENT FLOW] Canonical project_assessments (dari Supabase sync):",
+        canonicalProjectAssessments
+    );
+
+    var canonicalAssessmentById = {};
+
+    canonicalProjectAssessments.forEach(
+        function (row, idx) {
+
+            var key =
+                normalize(
+                    row && (
+                        row.assessment_id ||
+                        row.assessmentId ||
+                        row.id
+                    )
+                ).toLowerCase();
+
+            if (key) {
+                canonicalAssessmentById[key] = row;
+            }
+
+            /* fallback pairing berdasarkan posisi/urutan */
+            canonicalAssessmentById["__index_" + idx] = row;
+        }
+    );
+
+
+    function mergeWithCanonicalAssessment(sessionItem, index) {
+
+        if (typeof sessionItem === "string") {
+            sessionItem = { name: sessionItem };
+        }
+
+        if (!sessionItem || typeof sessionItem !== "object") {
+            sessionItem = {};
+        }
+
+        var key =
+            normalize(
+                sessionItem.assessment_id ||
+                sessionItem.assessmentId ||
+                sessionItem.id
+            ).toLowerCase();
+
+        var canonical =
+            (key && canonicalAssessmentById[key]) ||
+            canonicalAssessmentById["__index_" + index] ||
+            null;
+
+        if (!canonical) {
+            return sessionItem;
+        }
+
+        /*
+           Merge: field dari canonical (project_assessments,
+           mis. assessment_name, assessment_id, schedule_date)
+           MENANG di atas field sessionItem yang sama.
+           Field lain milik sessionItem (mis. status pengerjaan)
+           tetap dipertahankan.
+        */
+        var merged = {};
+
+        for (var k in sessionItem) {
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    sessionItem,
+                    k
+                )
+            ) {
+                merged[k] = sessionItem[k];
+            }
+        }
+
+        for (var k2 in canonical) {
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    canonical,
+                    k2
+                )
+            ) {
+                merged[k2] = canonical[k2];
+            }
+        }
+
+        return merged;
+    }
+
+
+    /* =====================================================
        FIND PARTICIPANT
     ===================================================== */
     if (
@@ -1288,23 +1493,53 @@ a{text-decoration:none;color:inherit}
     /* =====================================================
        IMPORTANT FIX:
        SYNC SESSION DATA TO PARTICIPANT
+
+       FIX: dulu block ini langsung menimpa
+       currentProject.assessments dengan sessionAssessments
+       mentah, sehingga assessment_name yang benar dari
+       Supabase (canonicalProjectAssessments) hilang dan
+       diganti data generik dari sessionStorage.
+
+       Sekarang di-MERGE: identitas assessment tetap ambil
+       dari canonicalProjectAssessments (assessment_name,
+       assessment_id, schedule_date), field lain dari
+       sessionAssessments tetap dipakai.
     ===================================================== */
     if (
         sessionAssessments.length > 0
     ) {
 
+        var mergedSessionAssessments =
+            sessionAssessments.map(
+                function (item, idx) {
+                    return mergeWithCanonicalAssessment(
+                        item,
+                        idx
+                    );
+                }
+            );
+
+        console.log(
+            "[ASSESSMENT FLOW] Merge session + canonical assessment data:",
+            {
+                sessionAssessments: sessionAssessments,
+                canonicalProjectAssessments: canonicalProjectAssessments,
+                mergedSessionAssessments: mergedSessionAssessments
+            }
+        );
+
         currentParticipant.assessments =
-            sessionAssessments;
+            mergedSessionAssessments;
 
         /*
            Project assessments juga sync
            agar dashboard selalu bisa render.
         */
         currentProject.assessments =
-            sessionAssessments;
+            mergedSessionAssessments;
 
         currentProject.assessmentPackage =
-            sessionAssessments;
+            mergedSessionAssessments;
     }
 
 
@@ -1641,6 +1876,24 @@ a{text-decoration:none;color:inherit}
         "TalentScope Dashboard Entries:",
         entries
     );
+
+    entries.forEach(function (entry) {
+
+        console.log(
+            "[ASSESSMENT FLOW] Project assessment (raw):",
+            entry.assessment
+        );
+
+        console.log(
+            "[ASSESSMENT FLOW] Canonical assessment name:",
+            entry.assessmentName
+        );
+
+        console.log(
+            "[ASSESSMENT FLOW] Resolved assessment code:",
+            entry.assessmentCode
+        );
+    });
 
 
     /* =====================================================
@@ -2760,6 +3013,15 @@ a{text-decoration:none;color:inherit}
                         assessmentCode,
                         assessmentName
                     );
+
+                console.log(
+                    "[ASSESSMENT FLOW] Routing assessment:",
+                    {
+                        assessmentCode: assessmentCode,
+                        assessmentName: assessmentName,
+                        resolvedTestUrl: resolvedTestUrl
+                    }
+                );
 
 
                 /*
