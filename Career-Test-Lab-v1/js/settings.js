@@ -492,7 +492,7 @@
        TOAST
     ========================================================== */
 
-    function showToast(message){
+    function showToast(message, type){
 
         const toast = $("settingsToast");
 
@@ -502,6 +502,15 @@
 
         toast.textContent = message;
 
+        // Pembeda visual error vs sukses/netral. Inline style dipakai
+        // (bukan class baru di settings.css) supaya tidak bergantung
+        // pada CSS yang mungkin belum diperbarui.
+        if(type === "error"){
+            toast.style.background = "#dc2626";
+        }else{
+            toast.style.background = "";
+        }
+
         toast.classList.add("show");
 
         clearTimeout(window.settingsToastTimer);
@@ -510,7 +519,7 @@
 
             toast.classList.remove("show");
 
-        }, 2800);
+        }, type === "error" ? 4500 : 2800);
     }
 
 
@@ -1054,7 +1063,7 @@
 
     $("passwordForm").addEventListener(
         "submit",
-        event => {
+        async event => {
 
             event.preventDefault();
 
@@ -1081,7 +1090,8 @@
             ){
 
                 showToast(
-                    "Current password tidak sesuai"
+                    "Current password tidak sesuai",
+                    "error"
                 );
 
                 return;
@@ -1091,7 +1101,113 @@
             if(next !== confirmPassword){
 
                 showToast(
-                    "Konfirmasi password belum sama"
+                    "Konfirmasi password belum sama",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            /* ==========================================
+               KIRIM DULU KE SUPABASE, BARU TANDAI SUKSES
+               ------------------------------------------
+               Sebelumnya: mainUser.password langsung
+               diubah + save(), lalu toast "berhasil"
+               langsung tampil -- padahal push ke Supabase
+               (ts_users) baru terjadi ~800ms kemudian di
+               background dan BISA GAGAL DIAM-DIAM (RLS,
+               constraint, dst). Akibatnya password baru
+               cuma tersimpan di browser ini, sementara
+               login.html membaca password dari Supabase --
+               jadi login gagal walau UI sempat bilang
+               sukses.
+
+               Sekarang: kirim payload dengan password baru
+               ke Supabase LEBIH DULU lewat pushUsersNow(),
+               TUNGGU hasilnya, dan hanya commit ke
+               localStorage + tampilkan "berhasil" kalau
+               push itu benar-benar sukses. Kalau gagal,
+               mainUser.password TIDAK diubah sama sekali
+               (form tidak di-reset) supaya pengguna bisa
+               langsung coba lagi tanpa kebingungan soal
+               "current password" mana yang berlaku.
+            ========================================== */
+
+            const submitBtn =
+                event.target.querySelector(
+                    "button[type=submit]"
+                );
+
+            const originalBtnHtml =
+                submitBtn ? submitBtn.innerHTML : "";
+
+            if(submitBtn){
+                submitBtn.disabled = true;
+                submitBtn.innerHTML =
+                    '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            }
+
+            const canSyncNow =
+                window.TalentScopeSync &&
+                typeof window.TalentScopeSync.pushUsersNow === "function";
+
+            if(!canSyncNow){
+
+                // js/ts-supabase-sync.js tidak termuat sama sekali di
+                // halaman ini -- jangan pura-pura sukses, karena login
+                // pasti akan membaca password lama dari Supabase.
+                if(submitBtn){
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                }
+
+                showToast(
+                    "Gagal: modul sinkronisasi server tidak tersedia. Password TIDAK diperbarui.",
+                    "error"
+                );
+
+                return;
+            }
+
+            const candidateUsers = users.map(user =>
+                user.id === "USR-001"
+                    ? { ...user, password: next }
+                    : user
+            );
+
+            let syncResult;
+
+            try{
+
+                syncResult = await window.TalentScopeSync.pushUsersNow(
+                    candidateUsers
+                );
+
+            }catch(error){
+
+                syncResult = {
+                    ok: false,
+                    message: String((error && error.message) || error)
+                };
+            }
+
+            if(submitBtn){
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
+            }
+
+            if(!syncResult || !syncResult.ok){
+
+                console.error(
+                    "[Settings] Gagal sinkronkan password baru ke Supabase:",
+                    syncResult
+                );
+
+                showToast(
+                    "Password TIDAK tersimpan ke server (sinkronisasi gagal). " +
+                    "Coba lagi, atau hubungi admin jika terus terjadi.",
+                    "error"
                 );
 
                 return;

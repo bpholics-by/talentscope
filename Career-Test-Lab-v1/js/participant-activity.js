@@ -369,6 +369,38 @@
         participant.lastSeen = now;
         participant.lastSeenAt = now;
 
+        /*
+           FIX: sebelumnya SEMUA event non-"logout" (termasuk
+           event PASIF seperti "tab-visible"/"tab-hidden") ikut
+           memaksa status Online. Ini bermasalah karena listener
+           visibilitychange di trackTabSwitch() tetap menempel di
+           SEMUA tab/halaman peserta yang pernah dibuka, walau
+           peserta sudah logout & selesai lewat tab lain -- begitu
+           salah satu tab LAMA itu sempat terlihat lagi (mis. tab
+           browser lain diklik balik), event "tab-visible" terpicu
+           dan menimpa status "Offline" yang baru saja benar
+           tercatat dari proses logout di halaman lain.
+
+           Sekarang: HANYA event "page-enter" (peserta benar-benar
+           baru memuat sebuah halaman -- sinyal aktif yang jelas)
+           yang boleh memaksa status Online. Event pasif seperti
+           tab-visible/tab-hidden dicatat ke activity log seperti
+           biasa, tapi TIDAK mengubah status online/offline.
+        */
+        var isLogoutEvent =
+            String(type).indexOf("logout") === 0;
+
+        var isActiveEntryEvent =
+            type === "page-enter";
+
+        if (isActiveEntryEvent && !isLogoutEvent) {
+
+            participant.isLoggedIn = true;
+            participant.status = "Online";
+            participant.onlineStatus = "Online";
+
+        }
+
         Object.assign(
             participant,
             patch
@@ -402,19 +434,23 @@
 
         writeProjects(projects);
 
+        /*
+           FIX: syncToSupabase() (DataService.updateParticipant,
+           overwrite raw_data TANPA baca-gabung-dulu) SUDAH DIHAPUS
+           dari sini. writeProjects() di atas menulis ke
+           localStorage("talentscope_projects"), yang otomatis
+           memicu ts-supabase-sync.js (baca dulu raw_data lama →
+           gabung → PATCH) -- itu sudah cukup dan lebih aman.
 
-        // ID untuk update Supabase HARUS UUID asli
-        // participants.id (bukan participant_code). Field ini
-        // sudah diisi UUID sejak login.html melakukan
-        // sinkronisasi awal ke localStorage.
-        var supabaseParticipantId =
-            identity.participantId ||
-            normalize(participant.id);
-
-        syncToSupabase(
-            supabaseParticipantId,
-            participant
-        );
+           Sebelumnya DUA jalur ini jalan bersamaan tanpa koordinasi:
+           salah satu melakukan overwrite penuh raw_data tanpa merge,
+           sehingga kalau overwrite itu selesai BELAKANGAN dari
+           versi yang lebih lama, data terbaru (activityHistory,
+           loginAt, dst dari event lain) ikut hilang tertimpa.
+           Sekarang cuma ts-supabase-sync.js yang menulis ke
+           Supabase, jadi tidak ada lagi dua penulis yang saling
+           balapan.
+        */
 
     }
 

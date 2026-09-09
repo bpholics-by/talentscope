@@ -124,39 +124,143 @@
 
 
     /* ------------------------------------------------------
-       HELPER: REST UPSERT (ASYNC, FIRE-AND-FORGET)
+       HELPER: REST UPSERT (INTI, MENGEMBALIKAN PROMISE)
+       ----------------------------------------------------
+       Dipakai oleh restUpsert() (fire-and-forget, perilaku
+       lama tidak berubah) DAN oleh pushUsersNow() yang bisa
+       di-await oleh kode lain (mis. settings.js) supaya tahu
+       PASTI apakah upsert ke Supabase benar-benar berhasil,
+       bukan cuma "sudah dikirim".
+
+       options.keepalive (default FALSE): SENGAJA default
+       mati, sama seperti restUpsert() versi sebelumnya --
+       payload tabel seperti ts_projects/ts_results bisa
+       lebih besar dari batas 64KB yang dikenakan browser
+       untuk request keepalive:true, dan kalau kelewat itu
+       fetch GAGAL TOTAL di setiap pemanggilan (bukan cuma
+       saat unload). Hanya nyalakan keepalive secara eksplisit
+       untuk payload yang dijamin kecil (mis. daftar akun user
+       di pushUsersNow()).
     ------------------------------------------------------ */
 
-    function restUpsert(table, rows) {
-        if (!rows || !rows.length) return;
+    function performUpsertRequest(table, rows, options) {
+
+        if (!rows || !rows.length) {
+            return Promise.resolve({ ok: true, skipped: true });
+        }
 
         var deduped = dedupeRowsById(rows);
 
-        if (!deduped.length) return;
+        if (!deduped.length) {
+            return Promise.resolve({ ok: true, skipped: true });
+        }
 
-        try {
-            fetch(SUPABASE_URL + "/rest/v1/" + table + "?on_conflict=id", {
-                method: "POST",
-                headers: {
-                    "apikey": SUPABASE_ANON_KEY,
-                    "Authorization": "Bearer " + SUPABASE_ANON_KEY,
-                    "Content-Type": "application/json",
-                    "Prefer": "resolution=merge-duplicates,return=minimal"
-                },
-                body: JSON.stringify(deduped)
-            }).then(function (response) {
-                if (!response.ok) {
-                    response.text().then(function (text) {
-                        console.warn("[TS-Sync] Upsert ditolak server:", table, response.status, text);
-                    });
+        var useKeepalive = !!(options && options.keepalive);
+
+        var fetchOptions = {
+            method: "POST",
+            headers: {
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+                "Content-Type": "application/json",
+                "Prefer": "resolution=merge-duplicates,return=minimal"
+            },
+            body: JSON.stringify(deduped)
+        };
+
+        // CATATAN: keepalive:true HANYA dipasang kalau caller minta
+        // secara eksplisit (lihat komentar di atas soal batas 64KB).
+        if (useKeepalive) {
+            fetchOptions.keepalive = true;
+        }
+
+        return fetch(SUPABASE_URL + "/rest/v1/" + table + "?on_conflict=id", fetchOptions)
+            .then(function (response) {
+
+                if (response.ok) {
+                    return { ok: true, status: response.status };
                 }
+
+                return response.text().then(function (text) {
+                    console.warn("[TS-Sync] Upsert ditolak server:", table, response.status, text);
+                    return { ok: false, status: response.status, message: text };
+                });
+
             }).catch(function (error) {
                 console.warn("[TS-Sync] Upsert gagal (network):", table, error);
+                return { ok: false, status: 0, message: String((error && error.message) || error) };
             });
+    }
+
+
+    /* ------------------------------------------------------
+       HELPER: REST UPSERT (ASYNC, FIRE-AND-FORGET)
+       Perilaku lama dipertahankan persis: dipanggil dari
+       localStorage.setItem() yang dibungkus di bawah, tanpa
+       keepalive (lihat catatan batas 64KB di atas), tidak ada
+       yang menunggu hasilnya.
+    ------------------------------------------------------ */
+
+    function restUpsert(table, rows) {
+        try {
+            performUpsertRequest(table, rows, { keepalive: false });
         } catch (error) {
             console.warn("[TS-Sync] Upsert error:", table, error);
         }
     }
+
+
+    /* ------------------------------------------------------
+       PUBLIC API: pushUsersNow()
+       ----------------------------------------------------
+       Dipakai settings.js saat ganti password, supaya UI bisa
+       menunggu (await) dan tahu PASTI apakah perubahan sudah
+       tersimpan di Supabase `ts_users` sebelum menampilkan
+       "berhasil" ke pengguna -- bukan lagi asumsi otomatis
+       seperti alur debounce biasa.
+
+       keepalive DINYALAKAN di sini (beda dari restUpsert() di
+       atas) karena payload-nya cuma daftar akun Admin/Client/
+       Asesor -- jauh di bawah batas 64KB -- dan justru butuh
+       bertahan kalau pengguna buru-buru pindah halaman persis
+       saat password sedang disimpan.
+
+       usersOverride (opsional): array users yang MAU dikirim,
+       dipakai kalau caller belum/tidak mau commit perubahan ke
+       localStorage sebelum push ke server sukses (lihat
+       settings.js). Kalau tidak diisi, baca dari localStorage
+       seperti biasa.
+
+       Mengembalikan Promise<{ ok, status, message? }>.
+    ------------------------------------------------------ */
+
+    function pushUsersNow(usersOverride) {
+
+        try {
+
+            var arr = Array.isArray(usersOverride)
+                ? usersOverride
+                : readLocalArray(USERS_KEY);
+
+            var rows = arr.map(userToRow).filter(Boolean);
+
+            return performUpsertRequest("ts_users", rows, { keepalive: true });
+
+        } catch (error) {
+
+            console.warn("[TS-Sync] pushUsersNow error:", error);
+
+            return Promise.resolve({
+                ok: false,
+                status: 0,
+                message: String((error && error.message) || error)
+            });
+        }
+    }
+
+
+    window.TalentScopeSync = window.TalentScopeSync || {};
+    window.TalentScopeSync.pushUsersNow = pushUsersNow;
 
 
     /* ------------------------------------------------------
@@ -521,7 +625,8 @@
                         headers: {
                             "apikey": SUPABASE_ANON_KEY,
                             "Authorization": "Bearer " + SUPABASE_ANON_KEY
-                        }
+                        },
+                        keepalive: true
                     }
                 )
                     .then(function (res) {
@@ -531,6 +636,49 @@
 
                         var existingRawData =
                             (rows && rows[0] && rows[0].raw_data) || {};
+
+                        /*
+                           FIX: activityHistory TIDAK BOLEH ditimpa
+                           langsung dengan Object.assign — itu shallow
+                           merge, jadi array lokal (yang bisa saja lebih
+                           pendek/basi daripada yang sudah tersimpan di
+                           Supabase dari tab/perangkat lain) akan
+                           MENGGANTIKAN riwayat yang sudah lebih
+                           lengkap, bukan digabung. Ini akar penyebab
+                           "activity history hilang" yang dilaporkan.
+
+                           Solusi: gabungkan (union) riwayat lokal +
+                           riwayat remote, hapus duplikat, urutkan
+                           terbaru duluan — baru dipakai.
+                        */
+
+                        var existingHistory =
+                            Array.isArray(existingRawData.activityHistory)
+                                ? existingRawData.activityHistory
+                                : [];
+
+                        var localHistory =
+                            Array.isArray(participant.activityHistory)
+                                ? participant.activityHistory
+                                : [];
+
+                        var seenHistoryKeys = {};
+
+                        var mergedHistory =
+                            localHistory.concat(existingHistory).filter(function (item) {
+                                var key = JSON.stringify([
+                                    item && item.type,
+                                    item && (item.activity || item.description),
+                                    item && item.timestamp
+                                ]);
+                                if (seenHistoryKeys[key]) return false;
+                                seenHistoryKeys[key] = true;
+                                return true;
+                            });
+
+                        mergedHistory.sort(function (a, b) {
+                            return new Date((b && b.timestamp) || 0) - new Date((a && a.timestamp) || 0);
+                        });
 
                         var mergedRawData =
                             Object.assign(
@@ -556,11 +704,14 @@
                                     activity: participant.activity,
                                     lastActivity: participant.lastActivity,
                                     activityUpdatedAt: participant.activityUpdatedAt,
-                                    activityHistory: participant.activityHistory,
+                                    activityHistory: mergedHistory,
                                     assessmentStatus: participant.assessmentStatus,
                                     logoutTime: participant.logoutTime,
                                     loggedOutAt: participant.loggedOutAt,
-                                    logoutAt: participant.logoutAt
+                                    logoutAt: participant.logoutAt,
+                                    lastLogoutAt: participant.lastLogoutAt,
+                                    lastLogout: participant.lastLogout,
+                                    waktuLogout: participant.waktuLogout
                                 }
                             );
 
@@ -579,7 +730,13 @@
                                 body: JSON.stringify({
                                     is_logged_in: participant.isLoggedIn === true,
                                     raw_data: mergedRawData
-                                })
+                                }),
+                                // FIX: sama seperti di restUpsert() -- PATCH
+                                // presence ini paling sering terpicu justru
+                                // pada saat logout (pagehide/beforeunload),
+                                // yaitu momen paling rawan request dibatalkan
+                                // browser karena halaman langsung ditutup.
+                                keepalive: true
                             }
                         );
                     })
@@ -617,10 +774,50 @@
     var originalSetItem = localStorage.setItem.bind(localStorage);
     var debounceTimers = {};
 
+    // FIX: simpan fungsi yang masih "menunggu" debounce per bucket,
+    // supaya bisa di-flush SEKARANG JUGA (bukan nunggu delay) begitu
+    // halaman mau ditutup/pindah -- lihat listener pagehide/beforeunload
+    // di bawah. Tanpa ini, presence logout (recordAssessmentLogout di
+    // speedtest.html, dipanggil dari pagehide) menulis ke localStorage
+    // tepat saat halaman ditutup, tapi push ke Supabase-nya baru terjadi
+    // 800ms KEMUDIAN -- yang mana halaman sudah keburu hilang duluan,
+    // jadi PATCH ke Supabase tidak pernah sempat dikirim sama sekali.
+    var pendingPushes = {};
+
     function debouncedPush(bucket, fn, delay) {
         clearTimeout(debounceTimers[bucket]);
-        debounceTimers[bucket] = setTimeout(fn, delay || 800);
+        pendingPushes[bucket] = fn;
+
+        debounceTimers[bucket] = setTimeout(function () {
+            delete pendingPushes[bucket];
+            fn();
+        }, delay || 800);
     }
+
+    function flushPendingPushesNow() {
+        Object.keys(pendingPushes).forEach(function (bucket) {
+            clearTimeout(debounceTimers[bucket]);
+            var fn = pendingPushes[bucket];
+            delete pendingPushes[bucket];
+            try {
+                fn();
+            } catch (error) {
+                console.warn("[TS-Sync] Gagal flush pending push:", bucket, error);
+            }
+        });
+    }
+
+    // Momen paling rawan kehilangan data: peserta menutup tab / pindah
+    // halaman (logout, pindah assessment, dsb). Paksa kirim SEKARANG,
+    // jangan tunggu debounce, dan andalkan keepalive:true di atas supaya
+    // request tetap selesai walau halaman sudah unload.
+    window.addEventListener("pagehide", flushPendingPushesNow);
+    window.addEventListener("beforeunload", flushPendingPushesNow);
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") {
+            flushPendingPushesNow();
+        }
+    });
 
     localStorage.setItem = function (key, value) {
         // Perilaku asli TIDAK diubah sama sekali.

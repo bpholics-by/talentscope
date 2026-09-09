@@ -563,23 +563,69 @@
                                         return null;
                                     }
 
-                                    return {
-                                        ...participant,
-                                        status:
-                                            participant.status ||
-                                            relation.status ||
-                                            relation.participant_status ||
-                                            participant.assessment_status ||
-                                            "Not Started"
+                                    /*
+                                       PENTING (FIX): kolom `raw_data` (JSONB) di
+                                       tabel `participants` menyimpan snapshot
+                                       presence & activity log (isLoggedIn,
+                                       lastSeen, activityHistory, dst — lihat
+                                       js/ts-supabase-sync.js & js/view-monitoring.js
+                                       yang menulis/membacanya di tempat lain).
+                                       Sebelumnya field ini TIDAK dibongkar ke
+                                       level atas object peserta di sini, jadi
+                                       setiap kali database.html memuat ulang
+                                       data lewat DataService, hasilnya
+                                       MENIMPA localStorage("talentscope_projects")
+                                       dengan salinan yang activityHistory-nya
+                                       hilang — padahal sync-down awal dari
+                                       ts-supabase-sync.js sudah benar. Bongkar
+                                       raw_data DULU, baru timpa dengan kolom
+                                       asli tabel supaya kolom tabel tetap jadi
+                                       sumber kebenaran kalau bentrok.
+                                    */
+
+                                    const rawData =
+                                        participant.raw_data || {};
+
+                                    const merged = {
+                                        ...rawData,
+                                        ...participant
                                     };
+
+                                    merged.status =
+                                        participant.status ||
+                                        relation.status ||
+                                        relation.participant_status ||
+                                        participant.assessment_status ||
+                                        "Not Started";
+
+                                    return merged;
 
                                 })
                                 .filter(Boolean);
 
                         } else if (typeof window.DataService.getParticipantsByProject === "function") {
 
-                            participants =
+                            const rawParticipants =
                                 await window.DataService.getParticipantsByProject(project.id);
+
+                            // FIX yang sama seperti di atas: bongkar raw_data
+                            // dulu supaya activityHistory & presence tidak
+                            // ikut hilang lewat jalur fallback ini.
+                            participants = (rawParticipants || [])
+                                .map(function (participant) {
+
+                                    if (!participant) return null;
+
+                                    const rawData =
+                                        participant.raw_data || {};
+
+                                    return {
+                                        ...rawData,
+                                        ...participant
+                                    };
+
+                                })
+                                .filter(Boolean);
 
                         }
 
@@ -736,10 +782,139 @@
 
     setupDatabaseAutoRefresh();
 
+    setupRealtimeParticipantSync();
+
     // Kalau datang dari halaman lain (mis. tombol View/Edit di
     // halaman Participants), otomatis buka modal yang sesuai.
     openModalFromUrlParams(urlParams);
 });
+
+
+/* ==========================================================
+   REALTIME SYNC DARI SUPABASE
+   ----------------------------------------------------------
+   setupDatabaseAutoRefresh() (di atas) cuma mendeteksi
+   perubahan localStorage DI BROWSER INI SENDIRI (mis. tab lain
+   di browser yang sama) — dia TIDAK tahu kalau seorang peserta
+   sedang mengerjakan tes di perangkat/browser lain, karena
+   localStorage tidak dibagi antar perangkat.
+
+   Fungsi ini menutup celah itu: berlangganan (subscribe) ke
+   Supabase Realtime untuk tabel `participants` &
+   `project_participants`. Begitu ada baris yang berubah di
+   Supabase — dari perangkat MANA PUN — event masuk ke sini,
+   lalu kita tarik ulang data (syncDatabaseFromSupabase) dan
+   render ulang tabel, tanpa perlu refresh manual (F5).
+
+   PRASYARAT (WAJIB, kalau belum di-set event tidak akan pernah
+   masuk sama sekali — bukan error, tapi diam saja):
+   Di Supabase Dashboard → Database → Replication → cari tabel
+   `participants` dan `project_participants` → aktifkan toggle
+   "Realtime" untuk keduanya. Atau lewat SQL Editor:
+
+       alter publication supabase_realtime
+           add table public.participants;
+
+       alter publication supabase_realtime
+           add table public.project_participants;
+   ========================================================== */
+
+function setupRealtimeParticipantSync() {
+
+    if (
+        typeof window.supabaseClient === "undefined" ||
+        typeof window.supabaseClient.channel !== "function"
+    ) {
+
+        console.warn(
+            "[DATABASE][REALTIME] supabaseClient belum siap — realtime tidak diaktifkan. " +
+            "Pastikan js/supabase-client.js sudah dimuat sebelum blok ini jalan."
+        );
+
+        return;
+
+    }
+
+    let realtimeDebounceTimer = null;
+
+    function scheduleRealtimeRefresh(sourceLabel) {
+
+        clearTimeout(realtimeDebounceTimer);
+
+        realtimeDebounceTimer = setTimeout(async function () {
+
+            console.log(
+                "[DATABASE][REALTIME] Perubahan terdeteksi (" +
+                sourceLabel +
+                "), sinkronisasi ulang dari Supabase..."
+            );
+
+            try {
+
+                await syncDatabaseFromSupabase();
+
+                // Pakai fungsi yang sudah ada supaya nilai kotak
+                // pencarian yang sedang diketik admin tidak ikut
+                // ter-reset saat data di-refresh otomatis.
+                refreshDatabaseIfChanged();
+
+            } catch (error) {
+
+                console.warn(
+                    "[DATABASE][REALTIME] Gagal refresh setelah perubahan:",
+                    error
+                );
+
+            }
+
+        }, 700);
+
+    }
+
+    window.supabaseClient
+        .channel("database-participants-realtime")
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "participants"
+            },
+            function () {
+                scheduleRealtimeRefresh("participants");
+            }
+        )
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "project_participants"
+            },
+            function () {
+                scheduleRealtimeRefresh("project_participants");
+            }
+        )
+        .subscribe(function (status) {
+
+            console.log(
+                "[DATABASE][REALTIME] Status channel:",
+                status
+            );
+
+            if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+
+                console.warn(
+                    "[DATABASE][REALTIME] Gagal subscribe. Kemungkinan Realtime " +
+                    "belum diaktifkan untuk tabel participants/project_participants " +
+                    "di Supabase Dashboard → Database → Replication."
+                );
+
+            }
+
+        });
+
+}
 
 
 /* ==========================================================
@@ -1475,6 +1650,10 @@ function getProjectPurposeForParticipant(item, projects) {
         detailParticipant.loggedInAt ||
         detailParticipant.loginAt ||
         detailParticipant.lastLoginAt ||
+        detailParticipant.login_time ||
+        detailParticipant.logged_in_at ||
+        detailParticipant.login_at ||
+        detailParticipant.last_login_at ||
         '';
 
     const logoutTime =
@@ -1482,6 +1661,10 @@ function getProjectPurposeForParticipant(item, projects) {
         detailParticipant.loggedOutAt ||
         detailParticipant.logoutAt ||
         detailParticipant.lastLogoutAt ||
+        detailParticipant.logout_time ||
+        detailParticipant.logged_out_at ||
+        detailParticipant.logout_at ||
+        detailParticipant.last_logout_at ||
         '';
 
     function formatNiceDate(isoStr) {
@@ -1652,8 +1835,8 @@ function getProjectPurposeForParticipant(item, projects) {
                                 }
                                 return `• ${h}`;
                               }).join('<br>') 
-                            : (detailParticipant.activityHistory && detailParticipant.activityHistory.length 
-                                ? detailParticipant.activityHistory.map(h => {
+                            : ((detailParticipant.activityHistory || detailParticipant.activity_history) && (detailParticipant.activityHistory || detailParticipant.activity_history).length 
+                                ? (detailParticipant.activityHistory || detailParticipant.activity_history).map(h => {
                                     const text = h.description || h.activity || h.type || '';
                                     const time = h.timestamp || h.date || h.time || h.createdAt || '';
                                     return `• ${text} ${time ? '(' + formatNiceDate(time) + ')' : ''}`;

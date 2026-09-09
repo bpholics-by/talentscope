@@ -95,7 +95,10 @@
         }
 
         .btn-start { 
-            display: block; 
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             width: 100%; 
             padding: 15px; 
             background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
@@ -111,10 +114,38 @@
             box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
         }
 
-        .btn-start:hover { 
+        .btn-start:hover:not(:disabled) { 
             background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
             box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
             transform: translateY(-1px);
+        }
+
+        .btn-start:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-start:disabled {
+            cursor: not-allowed;
+            opacity: 0.75;
+        }
+
+        .btn-start .btn-spinner {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.45);
+            border-top-color: #fff;
+            animation: btn-spin 0.7s linear infinite;
+            display: none;
+            flex: 0 0 auto;
+        }
+
+        .btn-start.loading .btn-spinner {
+            display: inline-block;
+        }
+
+        @keyframes btn-spin {
+            to { transform: rotate(360deg); }
         }
                 </style>
 </head>
@@ -142,7 +173,10 @@
         </div>
 
         <!-- Tombol untuk menuju ke paket asesmen masing-masing -->
-        <button id="btnMulaiUjian" class="btn-start">Mulai Tes Sekarang</button>
+        <button id="btnMulaiUjian" class="btn-start">
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <span class="btn-label">Mulai Tes Sekarang</span>
+        </button>
     </div>
 
     <script>
@@ -468,6 +502,12 @@ function getSelectedAssessmentName() {
         alert('Identitas project atau peserta tidak valid. Silakan login ulang.');
         window.location.href = 'login.html';
         return;
+    }
+
+    const btnMulaiUjian = document.getElementById('btnMulaiUjian');
+    if (btnMulaiUjian) {
+        btnMulaiUjian.disabled = true;
+        btnMulaiUjian.classList.add('loading');
     }
 
     const activePkg =

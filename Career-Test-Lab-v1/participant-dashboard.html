@@ -314,6 +314,23 @@ a{text-decoration:none;color:inherit}
   height:45px;border:0;border-radius:10px;padding:0 20px;background:linear-gradient(135deg,#176df1,#075bd9);
   color:#fff;font-weight:850;cursor:pointer;box-shadow:0 7px 16px rgba(16,103,233,.18)
 }
+.action,.logout{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s ease,box-shadow .15s ease,opacity .15s ease;
+}
+.action:hover:not(:disabled),.logout:hover:not(:disabled){
+  transform:translateY(-1px);box-shadow:0 10px 22px rgba(15,106,233,.28);
+}
+.action:active:not(:disabled),.logout:active:not(:disabled){transform:translateY(0);}
+.action:disabled,.logout:disabled{cursor:not-allowed;opacity:.75;}
+.btn-spinner{
+  width:14px;height:14px;border-radius:50%;flex:0 0 auto;
+  border:2px solid rgba(255,255,255,.45);border-top-color:#fff;
+  animation:btn-spin .7s linear infinite;display:none;
+}
+.action.loading .btn-spinner,.logout.loading .btn-spinner{display:inline-block;}
+.action.loading .btn-label,.logout.loading .btn-label{opacity:.85;}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
 .page{max-width:1160px;margin:0 auto;padding:26px 28px 24px}
 .breadcrumb{font-size:12px;color:#8291ad;margin:3px 0 18px}
 .hero{
@@ -690,7 +707,10 @@ a{text-decoration:none;color:inherit}
       </div>
     </div>
   </div>
-  <button class="logout" id="logout" type="button">⇥ &nbsp; Logout</button>
+  <button class="logout" id="logout" type="button">
+    <span class="btn-spinner" aria-hidden="true"></span>
+    <span class="btn-label">⇥ &nbsp; Logout</span>
+  </button>
 </header>
 
 <main class="page">
@@ -2669,6 +2689,10 @@ a{text-decoration:none;color:inherit}
 
                     'type="button">' +
 
+                    '<span class="btn-spinner" aria-hidden="true"></span>' +
+
+                    '<span class="btn-label">' +
+
                     (
                         packageStatus ===
                         "Completed"
@@ -2677,6 +2701,8 @@ a{text-decoration:none;color:inherit}
 
                             : "Start Assessment"
                     ) +
+
+                    '</span>' +
 
                 '</button>' +
 
@@ -2931,6 +2957,10 @@ a{text-decoration:none;color:inherit}
 
                     return;
                 }
+
+
+                actionButton.disabled = true;
+                actionButton.classList.add("loading");
 
 
                 var projectId =
@@ -3411,6 +3441,10 @@ var targetTestUrl =
         logoutButton.addEventListener(
             "click",
             function () {
+
+                logoutButton.disabled = true;
+                logoutButton.classList.add("loading");
+
 
                 window.__tsParticipantInternalNavigation =
                     false;
