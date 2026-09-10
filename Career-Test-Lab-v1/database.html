@@ -445,6 +445,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/data-service.js"></script>
+<script src="js/role-permissions.js"></script>
 
 <script>
     // DISAMAKAN Kuncinya agar membaca data asli dari project
@@ -2357,6 +2358,13 @@ function formatNiceDate(isoStr) {
 
         event.preventDefault();
 
+        if (
+            typeof RolePermissions !== "undefined" &&
+            RolePermissions.blockIfViewOnly("menyimpan perubahan data peserta")
+        ) {
+            return;
+        }
+
         const getVal = (elementId) => {
             const el = document.getElementById(elementId);
             return el ? el.value.trim() : "";
@@ -2436,6 +2444,14 @@ function formatNiceDate(isoStr) {
     }
 
     function removeSelected() {
+
+        if (
+            typeof RolePermissions !== "undefined" &&
+            RolePermissions.blockIfViewOnly("menghapus data peserta")
+        ) {
+            return;
+        }
+
         const selectedBoxes = document.querySelectorAll('.row-checkbox:checked');
         if (selectedBoxes.length === 0) {
             alert('Pilih setidaknya satu peserta untuk dihapus.');
@@ -2456,6 +2472,14 @@ function formatNiceDate(isoStr) {
     }
 
     function openEditModal(id) {
+
+    if (
+        typeof RolePermissions !== "undefined" &&
+        RolePermissions.blockIfViewOnly("mengedit data peserta")
+    ) {
+        return;
+    }
+
     let participant = rawDatabaseParticipants.find(item => {
         const itemId = item.id || item.participantId || item.employeeId || "";
         return String(itemId) === String(id);

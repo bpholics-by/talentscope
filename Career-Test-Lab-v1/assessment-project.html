@@ -3530,6 +3530,13 @@ document
     .getElementById("removeProjectBtn")
     .addEventListener("click", async function(){
 
+        if (
+            typeof RolePermissions !== "undefined" &&
+            RolePermissions.blockIfViewOnly("menghapus project")
+        ) {
+            return;
+        }
+
         const selected =
             Array.from(
                 document.querySelectorAll(".project-checkbox:checked")
@@ -3917,6 +3924,13 @@ function valid(){
 
 function createProject(){
 
+    if (
+        typeof RolePermissions !== "undefined" &&
+        RolePermissions.blockIfViewOnly("membuat project baru")
+    ) {
+        return;
+    }
+
     /* =====================================================
        AMBIL PROJECT LAMA
     ===================================================== */
@@ -4175,7 +4189,18 @@ function createProject(){
 document
     .getElementById("createBtn")
     .onclick =
-        openCreate;
+        function () {
+
+            if (
+                typeof RolePermissions !== "undefined" &&
+                RolePermissions.blockIfViewOnly("membuat project baru")
+            ) {
+                return;
+            }
+
+            openCreate();
+
+        };
 
 
 document
@@ -4370,6 +4395,7 @@ document.addEventListener(
 <!-- DATA SERVICE -->
 
 <script src="js/data-service.js"></script>
+<script src="js/role-permissions.js"></script>
 
 
 <!-- PROJECT CREATE -->

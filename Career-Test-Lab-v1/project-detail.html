@@ -150,6 +150,14 @@
                 // baris itu belum ada di DOM saat pengecekan pertama.
                 if (isAsesor) {
 
+                    // FIX (permintaan terbaru): tombol aksi TIDAK
+                    // disembunyikan lagi. Tetap tampil apa adanya,
+                    // tapi klik-nya di-intercept (capture phase,
+                    // sebelum handler asli sempat jalan) dan
+                    // ditampilkan pop up "tidak memiliki akses".
+                    // Deteksi tombol mana yang dibatasi tetap
+                    // memakai daftar kata kunci yang sama seperti
+                    // sebelumnya.
                     function enforceReadOnlyButtons() {
                         document.querySelectorAll("button, .btn, .btn-primary, a.btn").forEach(function(btn) {
                             var bt = btn.textContent.toLowerCase();
@@ -166,18 +174,40 @@
                                 bt.includes("invitation") ||
                                 bt.includes("kirim")
                             ) {
-                                btn.style.setProperty("display", "none", "important");
+
+                                if (btn.dataset.rolePermGuarded) {
+                                    return;
+                                }
+
+                                btn.dataset.rolePermGuarded = "1";
+
+                                btn.addEventListener("click", function (event) {
+
+                                    event.preventDefault();
+                                    event.stopImmediatePropagation();
+
+                                    if (typeof RolePermissions !== "undefined") {
+                                        RolePermissions.blockIfViewOnly("melakukan aksi ini");
+                                    } else {
+                                        alert("Anda tidak memiliki akses untuk melakukan aksi ini.\n\nRole Anda hanya memiliki akses lihat & export data.");
+                                    }
+
+                                }, true);
+
                             }
                         });
 
-                        // Checkbox "Select All" & per-baris juga bagian dari
-                        // alur bulk-action (kirim undangan/hapus) -- ikut
-                        // disembunyikan supaya tidak ada jalan lain memicu
-                        // aksi yang sama lewat kotak centang.
+                        // Checkbox "Select All" & per-baris: TETAP
+                        // TAMPIL, tapi dinonaktifkan (bukan
+                        // disembunyikan) supaya tidak ada jalan lain
+                        // memicu aksi bulk (kirim undangan/hapus)
+                        // lewat kotak centang.
                         document.querySelectorAll(
                             "#selectAllParticipants, input[type=checkbox].row-select, td.select-cell, th.select-header"
                         ).forEach(function(el) {
-                            el.style.setProperty("display", "none", "important");
+                            if (el.tagName === "INPUT") {
+                                el.disabled = true;
+                            }
                         });
                     }
 
@@ -6170,6 +6200,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <!-- CENTRAL DATA SERVICE -->
 
 <script src="js/data-service.js"></script>
+<script src="js/role-permissions.js"></script>
 
 
 <!-- PROJECT DETAIL SUPABASE -->
