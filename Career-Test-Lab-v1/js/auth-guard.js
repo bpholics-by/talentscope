@@ -4,8 +4,8 @@
   function applyAccessControl() {
     // 1. Ambil session user aktif
     var keys = [
-      "talentscope_current_user",
       "ts_admin_session",
+      "talentscope_current_user",
       "user",
       "currentUser",
     ];
@@ -47,26 +47,49 @@
     });
 
     // 3. Sembunyikan Menu Sidebar Sesuai Role
+    //
+    // FIX PENTING: role yang benar-benar dibuat lewat "Generate
+    // Credentials" di projects-render.js HANYA ADA DUA nilai
+    // persis: "Client Administrator" dan "Client User" (lihat
+    // loadClientRoles()/syncAccessToUsersDirectory() di file
+    // itu). Tidak pernah ada role bernama "Asesor"/"Assessor".
+    // "Client User" itulah yang SECARA PERILAKU harus diperlakukan
+    // sebagai Asesor (dashboard asesor, view-only, dst) - bukan
+    // "Client Administrator". Regex /client/i lama mencocokkan
+    // KEDUANYA sekaligus, dan /asesor|assessor/i tidak pernah
+    // cocok sama sekali, jadi sebelumnya "Client User" selalu
+    // jatuh ke cabang isClient (disamakan dengan Client
+    // Administrator) - inilah bug utama yang bikin dashboard
+    // Client User identik dengan Client Administrator.
     var isSystemAdmin = /system/i.test(role);
-    var isAdmin = /administrator/i.test(role) && !isSystemAdmin;
-    var isClient = /client/i.test(role);
-    var isAsesor = /asesor|assessor/i.test(role);
+    var isAsesor =
+      !isSystemAdmin &&
+      (/asesor|assessor/i.test(role) ||
+        (/client/i.test(role) && /user/i.test(role)));
+    var isClient = !isSystemAdmin && !isAsesor && /client/i.test(role);
+    var isAdmin = !isSystemAdmin && !isAsesor && !isClient && /administrator/i.test(role);
 
     var hideList = [];
     if (isClient) {
+      // FIX: dikonfirmasi Client Administrator HARUS bisa buka menu
+      // Participants (dibatasi ke project miliknya saja - scoping
+      // dilakukan di participants.js, bukan di sini). Sebelumnya
+      // menu ini ikut disembunyikan.
       hideList = [
         "Assessment Catalog",
-        "Participants",
         "Test Builder",
         "Test Bank",
         "Settings",
       ];
     } else if (isAsesor) {
+      // FIX: Asesor HARUS tetap melihat "Assessment Project" dan
+      // "Participants" (partisipan hanya di project miliknya,
+      // tanpa edit/remove) — sebelumnya kedua menu ini malah ikut
+      // disembunyikan, jadi menu yang muncul cuma Dashboard +
+      // Project Access, tidak sesuai spesifikasi.
       hideList = [
         "Assessment Catalog",
-        "Assessment Project",
         "Assessment Detail",
-        "Participants",
         "Test Builder",
         "Test Bank",
         "Settings",
@@ -89,8 +112,10 @@
       });
     }
 
-    // 4. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
-    if (isClient || isAsesor) {
+    // 4. Sembunyikan Tombol Aksi Sensitif untuk Asesor saja
+    // (Client Administrator = PIC/pemilik project, tetap full akses
+    // ke semua tombol pada project miliknya sendiri)
+    if (isAsesor) {
       var buttons = document.querySelectorAll(
         "button, .btn, .btn-primary, .btn-danger",
       );

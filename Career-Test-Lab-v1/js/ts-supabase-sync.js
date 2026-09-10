@@ -599,7 +599,186 @@
        akan di-PATCH langsung ke baris `participants` miliknya.
     ------------------------------------------------------ */
 
+    function pushOneParticipantPresence(participantRowId, participant) {
+
+        if (!participantRowId) {
+            return Promise.resolve({ ok: false, skipped: true });
+        }
+
+        return fetch(
+            SUPABASE_URL +
+            "/rest/v1/participants?id=eq." +
+            encodeURIComponent(participantRowId) +
+            "&select=raw_data",
+            {
+                headers: {
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": "Bearer " + SUPABASE_ANON_KEY
+                },
+                keepalive: true
+            }
+        )
+            .then(function (res) {
+                return res.ok ? res.json() : [];
+            })
+            .then(function (rows) {
+
+                var existingRawData =
+                    (rows && rows[0] && rows[0].raw_data) || {};
+
+                /*
+                   FIX: activityHistory TIDAK BOLEH ditimpa
+                   langsung dengan Object.assign — itu shallow
+                   merge, jadi array lokal (yang bisa saja lebih
+                   pendek/basi daripada yang sudah tersimpan di
+                   Supabase dari tab/perangkat lain) akan
+                   MENGGANTIKAN riwayat yang sudah lebih
+                   lengkap, bukan digabung. Ini akar penyebab
+                   "activity history hilang" yang dilaporkan.
+
+                   Solusi: gabungkan (union) riwayat lokal +
+                   riwayat remote, hapus duplikat, urutkan
+                   terbaru duluan — baru dipakai.
+                */
+
+                var existingHistory =
+                    Array.isArray(existingRawData.activityHistory)
+                        ? existingRawData.activityHistory
+                        : [];
+
+                var localHistory =
+                    Array.isArray(participant.activityHistory)
+                        ? participant.activityHistory
+                        : [];
+
+                var seenHistoryKeys = {};
+
+                var mergedHistory =
+                    localHistory.concat(existingHistory).filter(function (item) {
+                        var key = JSON.stringify([
+                            item && item.type,
+                            item && (item.activity || item.description),
+                            item && item.timestamp
+                        ]);
+                        if (seenHistoryKeys[key]) return false;
+                        seenHistoryKeys[key] = true;
+                        return true;
+                    });
+
+                mergedHistory.sort(function (a, b) {
+                    return new Date((b && b.timestamp) || 0) - new Date((a && a.timestamp) || 0);
+                });
+
+                var mergedRawData =
+                    Object.assign(
+                        {},
+                        existingRawData,
+                        {
+                            isLoggedIn: participant.isLoggedIn,
+                            onlineStatus: participant.onlineStatus,
+                            // FIX: waktu login sebelumnya tidak pernah
+                            // ikut terkirim, jadi "Waktu Login" di
+                            // database.html selalu tampil "-".
+                            loginTime: participant.loginTime,
+                            loginAt: participant.loginAt,
+                            loggedInAt: participant.loggedInAt,
+                            lastLoginAt: participant.lastLoginAt,
+                            lastSeen: participant.lastSeen,
+                            lastSeenAt: participant.lastSeenAt,
+                            lastHeartbeat: participant.lastHeartbeat,
+                            currentActivity: participant.currentActivity,
+                            currentTest: participant.currentTest,
+                            currentAssessmentIndex: participant.currentAssessmentIndex,
+                            currentAssessmentCode: participant.currentAssessmentCode,
+                            activity: participant.activity,
+                            lastActivity: participant.lastActivity,
+                            activityUpdatedAt: participant.activityUpdatedAt,
+                            activityHistory: mergedHistory,
+                            assessmentStatus: participant.assessmentStatus,
+                            logoutTime: participant.logoutTime,
+                            loggedOutAt: participant.loggedOutAt,
+                            logoutAt: participant.logoutAt,
+                            // FIX: field ini dibersihkan (di-null-kan) saat
+                            // login di participant-dashboard.html, tapi
+                            // sebelumnya tidak ikut ditimpa di sini --
+                            // database.html jatuh ke fallback lastLogoutAt
+                            // yang masih bawa tanggal logout sesi lama.
+                            lastLogoutAt: participant.lastLogoutAt,
+                            lastLogout: participant.lastLogout,
+                            waktuLogout: participant.waktuLogout
+                        }
+                    );
+
+                return fetch(
+                    SUPABASE_URL +
+                    "/rest/v1/participants?id=eq." +
+                    encodeURIComponent(participantRowId),
+                    {
+                        method: "PATCH",
+                        headers: {
+                            "apikey": SUPABASE_ANON_KEY,
+                            "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+                            "Content-Type": "application/json",
+                            "Prefer": "return=minimal"
+                        },
+                        body: JSON.stringify({
+                            is_logged_in: participant.isLoggedIn === true,
+                            raw_data: mergedRawData
+                        }),
+                        // FIX: sama seperti di restUpsert() -- PATCH
+                        // presence ini paling sering terpicu justru
+                        // pada saat logout (pagehide/beforeunload),
+                        // yaitu momen paling rawan request dibatalkan
+                        // browser karena halaman langsung ditutup.
+                        keepalive: true
+                    }
+                );
+            })
+            .then(function (res) {
+                if (res && !res.ok) {
+                    return res.text().then(function (text) {
+                        console.warn(
+                            "[TS-Sync] Gagal update presence peserta:",
+                            participantRowId,
+                            res.status,
+                            text
+                        );
+                        return { ok: false, status: res.status };
+                    });
+                }
+                return { ok: true };
+            })
+            .catch(function (error) {
+                console.warn(
+                    "[TS-Sync] Presence sync error:",
+                    participantRowId,
+                    error
+                );
+                return { ok: false, error: String((error && error.message) || error) };
+            });
+    }
+
+
+    /*
+       PUBLIC API: pushParticipantPresenceNow(participantRowId, participant)
+       ----------------------------------------------------------------
+       Dipakai halaman yang perlu MEMASTIKAN sync ke Supabase betul-betul
+       selesai sebelum pindah halaman (mis. tombol Logout di
+       participant-dashboard.html) -- await fungsi ini SEBELUM
+       window.location.href, alih-alih mengandalkan keepalive di
+       pagehide/beforeunload yang tidak menjamin promise chain lanjut
+       jalan setelah halaman dinavigasi pergi.
+
+       Mengembalikan Promise<{ ok, status?, error? }>.
+    */
+    window.TalentScopeSync = window.TalentScopeSync || {};
+    window.TalentScopeSync.pushParticipantPresenceNow = pushOneParticipantPresence;
+
+
     function pushParticipantsPresence(projects) {
+
+        var pending = [];
+
         (projects || []).forEach(function (project) {
 
             var participants =
@@ -616,151 +795,16 @@
                 // dari Supabase (hasil sync-down) yang bisa di-PATCH.
                 if (!participantRowId) return;
 
-                fetch(
-                    SUPABASE_URL +
-                    "/rest/v1/participants?id=eq." +
-                    encodeURIComponent(participantRowId) +
-                    "&select=raw_data",
-                    {
-                        headers: {
-                            "apikey": SUPABASE_ANON_KEY,
-                            "Authorization": "Bearer " + SUPABASE_ANON_KEY
-                        },
-                        keepalive: true
-                    }
-                )
-                    .then(function (res) {
-                        return res.ok ? res.json() : [];
-                    })
-                    .then(function (rows) {
-
-                        var existingRawData =
-                            (rows && rows[0] && rows[0].raw_data) || {};
-
-                        /*
-                           FIX: activityHistory TIDAK BOLEH ditimpa
-                           langsung dengan Object.assign — itu shallow
-                           merge, jadi array lokal (yang bisa saja lebih
-                           pendek/basi daripada yang sudah tersimpan di
-                           Supabase dari tab/perangkat lain) akan
-                           MENGGANTIKAN riwayat yang sudah lebih
-                           lengkap, bukan digabung. Ini akar penyebab
-                           "activity history hilang" yang dilaporkan.
-
-                           Solusi: gabungkan (union) riwayat lokal +
-                           riwayat remote, hapus duplikat, urutkan
-                           terbaru duluan — baru dipakai.
-                        */
-
-                        var existingHistory =
-                            Array.isArray(existingRawData.activityHistory)
-                                ? existingRawData.activityHistory
-                                : [];
-
-                        var localHistory =
-                            Array.isArray(participant.activityHistory)
-                                ? participant.activityHistory
-                                : [];
-
-                        var seenHistoryKeys = {};
-
-                        var mergedHistory =
-                            localHistory.concat(existingHistory).filter(function (item) {
-                                var key = JSON.stringify([
-                                    item && item.type,
-                                    item && (item.activity || item.description),
-                                    item && item.timestamp
-                                ]);
-                                if (seenHistoryKeys[key]) return false;
-                                seenHistoryKeys[key] = true;
-                                return true;
-                            });
-
-                        mergedHistory.sort(function (a, b) {
-                            return new Date((b && b.timestamp) || 0) - new Date((a && a.timestamp) || 0);
-                        });
-
-                        var mergedRawData =
-                            Object.assign(
-                                {},
-                                existingRawData,
-                                {
-                                    isLoggedIn: participant.isLoggedIn,
-                                    onlineStatus: participant.onlineStatus,
-                                    // FIX: waktu login sebelumnya tidak pernah
-                                    // ikut terkirim, jadi "Waktu Login" di
-                                    // database.html selalu tampil "-".
-                                    loginTime: participant.loginTime,
-                                    loginAt: participant.loginAt,
-                                    loggedInAt: participant.loggedInAt,
-                                    lastLoginAt: participant.lastLoginAt,
-                                    lastSeen: participant.lastSeen,
-                                    lastSeenAt: participant.lastSeenAt,
-                                    lastHeartbeat: participant.lastHeartbeat,
-                                    currentActivity: participant.currentActivity,
-                                    currentTest: participant.currentTest,
-                                    currentAssessmentIndex: participant.currentAssessmentIndex,
-                                    currentAssessmentCode: participant.currentAssessmentCode,
-                                    activity: participant.activity,
-                                    lastActivity: participant.lastActivity,
-                                    activityUpdatedAt: participant.activityUpdatedAt,
-                                    activityHistory: mergedHistory,
-                                    assessmentStatus: participant.assessmentStatus,
-                                    logoutTime: participant.logoutTime,
-                                    loggedOutAt: participant.loggedOutAt,
-                                    logoutAt: participant.logoutAt,
-                                    lastLogoutAt: participant.lastLogoutAt,
-                                    lastLogout: participant.lastLogout,
-                                    waktuLogout: participant.waktuLogout
-                                }
-                            );
-
-                        return fetch(
-                            SUPABASE_URL +
-                            "/rest/v1/participants?id=eq." +
-                            encodeURIComponent(participantRowId),
-                            {
-                                method: "PATCH",
-                                headers: {
-                                    "apikey": SUPABASE_ANON_KEY,
-                                    "Authorization": "Bearer " + SUPABASE_ANON_KEY,
-                                    "Content-Type": "application/json",
-                                    "Prefer": "return=minimal"
-                                },
-                                body: JSON.stringify({
-                                    is_logged_in: participant.isLoggedIn === true,
-                                    raw_data: mergedRawData
-                                }),
-                                // FIX: sama seperti di restUpsert() -- PATCH
-                                // presence ini paling sering terpicu justru
-                                // pada saat logout (pagehide/beforeunload),
-                                // yaitu momen paling rawan request dibatalkan
-                                // browser karena halaman langsung ditutup.
-                                keepalive: true
-                            }
-                        );
-                    })
-                    .then(function (res) {
-                        if (res && !res.ok) {
-                            res.text().then(function (text) {
-                                console.warn(
-                                    "[TS-Sync] Gagal update presence peserta:",
-                                    participantRowId,
-                                    res.status,
-                                    text
-                                );
-                            });
-                        }
-                    })
-                    .catch(function (error) {
-                        console.warn(
-                            "[TS-Sync] Presence sync error:",
-                            participantRowId,
-                            error
-                        );
-                    });
+                pending.push(
+                    pushOneParticipantPresence(
+                        participantRowId,
+                        participant
+                    )
+                );
             });
         });
+
+        return Promise.all(pending);
     }
 
 

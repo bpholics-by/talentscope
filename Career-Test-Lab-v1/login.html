@@ -2814,6 +2814,26 @@ const {
                         matchedAdmin.email ||
                         "",
 
+                    /*
+                       Dipakai database.html untuk membatasi
+                       akses Client/Asesor hanya ke data
+                       perusahaan mereka sendiri
+                       (canAccessDatabaseProject /
+                       canAccessDatabaseParticipant).
+                       Cek beberapa kemungkinan nama field
+                       karena belum pasti nama kolom yang
+                       dipakai saat akun dibuat di settings.html.
+                    */
+                    company:
+                        matchedAdmin.company ||
+                        matchedAdmin.perusahaan ||
+                        matchedAdmin.companyName ||
+                        matchedAdmin.company_name ||
+                        matchedAdmin.organization ||
+                        matchedAdmin.clientName ||
+                        matchedAdmin.client ||
+                        "",
+
                     projectId:
                         matchedAdmin.projectId ||
                         matchedAdmin.project_id ||

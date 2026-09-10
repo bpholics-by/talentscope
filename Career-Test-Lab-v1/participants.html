@@ -1,38 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<!-- SCRIPT PROTEKSI HALAMAN PARTICIPANTS (UNTUK ASESOR & CLIENT) -->
-    <script>
-    (function() {
-        "use strict";
-
-        // 1. Ambil data session user yang sedang login
-        function getActiveUser() {
-            try {
-                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-                return d ? JSON.parse(d) : null;
-            } catch(e) { 
-                return null; 
-            }
-        }
-
-        var activeUser = getActiveUser();
-
-        if (activeUser) {
-            var role = String(activeUser.role || "").toLowerCase();
-
-            // 2. Cek apakah role mengandung 'asesor', 'assessor', atau 'client'
-            var isAsesor = role.includes("asesor") || role.includes("assessor");
-            var isClient = role.includes("client");
-
-            // 3. Jika Role adalah Asesor atau Client, Blokir Akses & Redirect ke Dashboard
-            if (isAsesor || isClient) {
-                alert("Akses Ditolak: Role Anda tidak memiliki izin untuk mengakses halaman Participants.");
-                window.location.href = "dashboard.html"; // Redirect ke halaman Dashboard
-            }
-        }
-    })();
-    </script>
 
     <script src="js/ts-supabase-sync.js"></script>
 <meta charset="UTF-8">
@@ -78,18 +46,63 @@
                 });
 
                 // B. Filter Menu Sidebar
-                var isClient = /client/i.test(role);
-                var isAsesor = /asesor|assessor/i.test(role);
-                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+//
+// Client Administrator:
+// - boleh membuka Participants
+// - hanya melihat project miliknya
+//
+// Client User:
+// - boleh membuka Participants
+// - hanya melihat project miliknya
+// - bersifat view-only
+//
+// Asesor:
+// - boleh membuka Participants
+// - bersifat view-only
 
-                var hideList = [];
-                if (isClient) {
-                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAsesor) {
-                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAdmin) {
-                    hideList = ["Settings"];
-                }
+var isSystemAdmin = /system/i.test(role);
+
+var isAsesor =
+    !isSystemAdmin &&
+    (
+        /asesor|assessor/i.test(role) ||
+        (/client/i.test(role) && /user/i.test(role))
+    );
+
+var isClient =
+    !isSystemAdmin &&
+    !isAsesor &&
+    /client/i.test(role);
+
+var isAdmin =
+    !isSystemAdmin &&
+    !isAsesor &&
+    !isClient &&
+    /administrator/i.test(role);
+
+var hideList = [];
+
+if (isClient) {
+    hideList = [
+        "Assessment Catalog",
+        "Test Builder",
+        "Test Bank",
+        "Settings"
+    ];
+} else if (isAsesor) {
+    hideList = [
+        "Assessment Catalog",
+        "Assessment Project",
+        "Assessment Detail",
+        "Test Builder",
+        "Test Bank",
+        "Settings"
+    ];
+} else if (isAdmin) {
+    hideList = [
+        "Settings"
+    ];
+}
 
                 if (hideList.length > 0) {
                     var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
@@ -103,15 +116,23 @@
                     });
                 }
 
-                // C. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
-                if (isClient || isAsesor) {
-                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
-                        var bt = btn.textContent.toLowerCase();
-                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
-                            btn.style.setProperty("display", "none", "important");
-                        }
-                    });
-                }
+                // C. Sembunyikan Tombol Aksi Sensitif hanya untuk
+// Client User / Asesor yang bersifat view-only.
+if (isAsesor) {
+    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
+        var bt = btn.textContent.toLowerCase();
+
+        if (
+            bt.includes("remove") ||
+            bt.includes("create") ||
+            bt.includes("add") ||
+            bt.includes("delete") ||
+            bt.includes("tambah")
+        ) {
+            btn.style.setProperty("display", "none", "important");
+        }
+    });
+}
             });
         }
     })();

@@ -16,7 +16,7 @@
         // 2. Ambil data user yang sedang login dari Storage
         function getActiveUser() {
             try {
-                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
                 return d ? JSON.parse(d) : null;
             } catch(e) { 
                 return null; 
@@ -61,7 +61,7 @@
         // 1. Ambil session user asli dari login
         function getSavedUser() {
             try {
-                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
                 return d ? JSON.parse(d) : null;
             } catch(e) { return null; }
         }
@@ -90,15 +90,33 @@
                 });
 
                 // B. Filter Menu Sidebar
-                var isClient = /client/i.test(role);
-                var isAsesor = /asesor|assessor/i.test(role);
-                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+                //
+                // FIX PENTING: role yang benar-benar tersimpan dari
+                // "Generate Credentials" cuma ada 2 nilai persis:
+                // "Client Administrator" dan "Client User" (lihat
+                // participants.js -- getSessionRoleFlags()). Tidak
+                // pernah ada role literal "Asesor"/"Assessor". "Client
+                // User" itu yang SECARA PERILAKU = Asesor (view-only).
+                //
+                // Kode lama di sini cuma cek /asesor|assessor/i, yang
+                // TIDAK PERNAH cocok dengan "Client User" -- makanya
+                // Client User selalu jatuh ke isClient (dianggap PIC
+                // pemilik project, full akses tombol) padahal harusnya
+                // read-only. Ini akar penyebab tombol Edit/Remove/Send
+                // Invitations/Import Excel masih aktif untuk Client User.
+                var isSystemAdmin = /system/i.test(role);
+                var isAsesor =
+                    !isSystemAdmin &&
+                    (/asesor|assessor/i.test(role) ||
+                        (/client/i.test(role) && /user/i.test(role)));
+                var isClient = !isSystemAdmin && !isAsesor && /client/i.test(role);
+                var isAdmin = !isSystemAdmin && !isClient && !isAsesor && /administrator/i.test(role);
 
                 var hideList = [];
                 if (isClient) {
-                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                    hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
                 } else if (isAsesor) {
-                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                    hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
                 } else if (isAdmin) {
                     hideList = ["Settings"];
                 }
@@ -115,13 +133,63 @@
                     });
                 }
 
-                // C. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
-                if (isClient || isAsesor) {
-                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
-                        var bt = btn.textContent.toLowerCase();
-                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
-                            btn.style.setProperty("display", "none", "important");
-                        }
+                // Client Administrator = PIC/pemilik project, tetap full
+                // akses tombol. Cuma Asesor (termasuk Client User) yang
+                // dibatasi view-only.
+                //
+                // FIX: kata kunci ditambah "edit", "import", "send",
+                // "invite"/"invitation", "kirim" -- sebelumnya cuma
+                // remove/create/add/delete/tambah, jadi tombol "Edit",
+                // "Import Excel", dan "Send Invitations to Selected"
+                // ikut lolos tidak ke-hide.
+                //
+                // FIX (lanjutan): dibungkus jadi fungsi + MutationObserver,
+                // karena baris tabel peserta (dengan tombol Edit/Remove-nya)
+                // di-render belakangan lewat DataService (async, setelah
+                // DOMContentLoaded) -- sekali jalan saja bisa kelewat kalau
+                // baris itu belum ada di DOM saat pengecekan pertama.
+                if (isAsesor) {
+
+                    function enforceReadOnlyButtons() {
+                        document.querySelectorAll("button, .btn, .btn-primary, a.btn").forEach(function(btn) {
+                            var bt = btn.textContent.toLowerCase();
+                            if (
+                                bt.includes("remove") ||
+                                bt.includes("create") ||
+                                bt.includes("add") ||
+                                bt.includes("delete") ||
+                                bt.includes("tambah") ||
+                                bt.includes("edit") ||
+                                bt.includes("import") ||
+                                bt.includes("send") ||
+                                bt.includes("invite") ||
+                                bt.includes("invitation") ||
+                                bt.includes("kirim")
+                            ) {
+                                btn.style.setProperty("display", "none", "important");
+                            }
+                        });
+
+                        // Checkbox "Select All" & per-baris juga bagian dari
+                        // alur bulk-action (kirim undangan/hapus) -- ikut
+                        // disembunyikan supaya tidak ada jalan lain memicu
+                        // aksi yang sama lewat kotak centang.
+                        document.querySelectorAll(
+                            "#selectAllParticipants, input[type=checkbox].row-select, td.select-cell, th.select-header"
+                        ).forEach(function(el) {
+                            el.style.setProperty("display", "none", "important");
+                        });
+                    }
+
+                    enforceReadOnlyButtons();
+
+                    var readOnlyObserver = new MutationObserver(function() {
+                        enforceReadOnlyButtons();
+                    });
+
+                    readOnlyObserver.observe(document.body, {
+                        childList: true,
+                        subtree: true
                     });
                 }
             });
@@ -278,7 +346,7 @@ a{
     background:#0878e8;
     color:#ffffff;
 
-    font-size:21px;
+    font-size:20px;
     font-weight:800;
 }
 
@@ -296,8 +364,8 @@ a{
 
     color:#ffffff;
 
-    font-size:27px;
-    font-weight:700;
+    font-size:26px;
+    font-weight:750;
 
     line-height:1.1;
 
@@ -400,7 +468,7 @@ a{
 
     text-decoration:none;
 
-    font-size:17px;
+    font-size:16px;
     font-weight:400;
 
     white-space:nowrap;
@@ -6139,7 +6207,7 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
     function enforceHideSettings() {
-        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
         if (!userRaw) return;
 
         var activeUser = JSON.parse(userRaw);

@@ -555,6 +555,97 @@ function generateParticipantId() {
 
 
 /* ==========================================================
+   ROLE / PROJECT SCOPING (Asesor & Client)
+   ==========================================================
+   Session admin/asesor/client disimpan login.html di
+   sessionStorage "ts_admin_session" dengan bentuk:
+   { username, role, name, email, projectId }
+   projectId diisi dari kolom projectId/project_id pada baris
+   user (ts_users) yang dipakai saat login - ini yang dipakai
+   untuk membatasi project, BUKAN parsing username. Kalau
+   projectId kosong atau "ALL", user dianggap full-access
+   (System Administrator / akun lama tanpa scoping).
+   ========================================================== */
+
+function getSessionUser() {
+    try {
+        const raw = sessionStorage.getItem("ts_admin_session");
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function getSessionRoleFlags() {
+    const user = getSessionUser();
+    const roleStr = String((user && user.role) || "");
+
+    // FIX PENTING: role yang benar2 tersimpan dari "Generate
+    // Credentials" cuma ada 2 nilai persis: "Client Administrator"
+    // dan "Client User" (lihat loadClientRoles() di
+    // projects-render.js). Tidak pernah ada role bernama
+    // "Asesor"/"Assessor" secara harfiah. "Client User" itu yang
+    // SECARA PERILAKU = Asesor (dashboard asesor, view-only).
+    // Regex /client/i saja akan mencocokkan "Client Administrator"
+    // MAUPUN "Client User" sekaligus - makanya perlu dibedakan
+    // lewat kata "user" di dalamnya.
+    const isSystemAdmin = /system/i.test(roleStr);
+    const isAsesor =
+        !isSystemAdmin &&
+        (/asesor|assessor/i.test(roleStr) ||
+            (/client/i.test(roleStr) && /user/i.test(roleStr)));
+    const isClient = !isSystemAdmin && !isAsesor && /client/i.test(roleStr);
+
+    return {
+        user: user,
+        isAsesor: isAsesor,
+        isClient: isClient,
+        isSystemAdmin: isSystemAdmin
+    };
+}
+
+// Asesor tidak boleh edit/remove partisipan (hanya View).
+// Dipakai baik untuk sembunyikan tombolnya di tabel, maupun
+// sebagai penjaga kedua di editParticipant/deleteParticipant
+// supaya tidak bisa dipanggil manual lewat console.
+function isReadOnlyParticipantRole() {
+    return getSessionRoleFlags().isAsesor;
+}
+
+// Hanya tampilkan project milik user yang sedang login (dipakai
+// untuk Asesor & Client). Full-access role (System Admin, atau
+// projectId "ALL"/kosong) tetap melihat semua project.
+function getVisibleProjectsForCurrentUser(projects) {
+    const list = Array.isArray(projects) ? projects : [];
+    const flags = getSessionRoleFlags();
+
+    if (!flags.isAsesor && !flags.isClient) {
+        return list;
+    }
+
+    const scopedProjectId =
+        flags.user && flags.user.projectId != null
+            ? String(flags.user.projectId).trim()
+            : "";
+
+    if (!scopedProjectId || scopedProjectId.toUpperCase() === "ALL") {
+        // Tidak ada projectId spesifik di session - jangan tampilkan
+        // apa-apa untuk role terbatas, daripada salah tampil semua
+        // project (fail-safe, bukan fail-open).
+        console.warn(
+            "[PARTICIPANTS] Role " + (flags.user && flags.user.role) +
+            " tidak punya projectId pada session - project disembunyikan semua sampai session diperbaiki."
+        );
+        return [];
+    }
+
+    return list.filter(function (project) {
+        return String(project.id) === scopedProjectId;
+    });
+}
+
+
+/* ==========================================================
    GET ACTIVE PROJECT
    ========================================================== */
 
@@ -1899,7 +1990,7 @@ function refreshParticipantTable() {
 
 
     const projects =
-        getProjects();
+        getVisibleProjectsForCurrentUser(getProjects());
 
 
     const rows = [];
@@ -2108,6 +2199,7 @@ function refreshParticipantTable() {
                                     <span>View</span>
                                 </button>
 
+                                ${isReadOnlyParticipantRole() ? "" : `
                                 <button
                                     type="button"
                                     class="action-btn edit-btn"
@@ -2127,6 +2219,7 @@ function refreshParticipantTable() {
                                     <i class="fa-solid fa-trash-can"></i>
                                     <span>Remove</span>
                                 </button>
+                                `}
                             </div>
 
                         </td>
@@ -2182,7 +2275,17 @@ if (!document.getElementById("tsParticipantActionStyle")) {
 
 function refreshStatistics() {
 
-    const projects = getProjects();
+    // FIX: sebelumnya pakai getProjects() langsung, jadi card
+    // statistik selalu menghitung SEMUA project di seluruh sistem
+    // -- tidak peduli siapa yang login. Padahal refreshParticipantTable()
+    // di atas sudah benar menyaring lewat getVisibleProjectsForCurrentUser()
+    // supaya Client/Asesor cuma lihat project miliknya sendiri.
+    // Card statistik disamakan di sini supaya konsisten dengan
+    // tabel di bawahnya.
+    const projects =
+        getVisibleProjectsForCurrentUser(
+            getProjects()
+        );
 
     let total = 0;
     let active = 0;
@@ -3332,6 +3435,11 @@ document.addEventListener(
 
 function editParticipant(id) {
 
+    if (isReadOnlyParticipantRole()) {
+        alert("Akses Ditolak: Asesor tidak memiliki izin untuk mengedit partisipan.");
+        return;
+    }
+
     const result =
         findParticipantById(id);
 
@@ -3503,6 +3611,11 @@ function editParticipant(id) {
    ========================================================== */
 
 function deleteParticipant(id) {
+
+    if (isReadOnlyParticipantRole()) {
+        alert("Akses Ditolak: Asesor tidak memiliki izin untuk menghapus partisipan.");
+        return;
+    }
 
     const result =
         findParticipantById(id);

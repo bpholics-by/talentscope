@@ -2112,20 +2112,21 @@ a{text-decoration:none;color:inherit}
 
     function recordParticipantLogin() {
 
-        var now =
-            new Date().toISOString();
+         var now =
+        new Date().toISOString();
 
-        var loginTime =
-            s.loginAt ||
-            s.loggedInAt ||
-            now;
+    var loginTime =
+        new Date().toISOString();
 
+    var matchedLoginParticipant =
+        null;
 
-        updateParticipantStatus(
-            function (
-                participant
-            ) {
-
+    updateParticipantStatus(
+        function (
+            participant
+        ) {
+matchedLoginParticipant =
+    participant;
                 participant.isLoggedIn =
                     true;
 
@@ -2243,10 +2244,43 @@ a{text-decoration:none;color:inherit}
                 }
             }
         );
+        return matchedLoginParticipant;
     }
 
 
+    var loggedInParticipant =
     recordParticipantLogin();
+
+if (
+    loggedInParticipant &&
+    loggedInParticipant.id &&
+    window.TalentScopeSync &&
+    typeof window.TalentScopeSync.pushParticipantPresenceNow ===
+        "function"
+) {
+
+    window.TalentScopeSync
+        .pushParticipantPresenceNow(
+            loggedInParticipant.id,
+            loggedInParticipant
+        )
+        .then(function (result) {
+
+            console.log(
+                "[LOGIN SYNC] Waktu login berhasil dikirim ke Supabase:",
+                result
+            );
+
+        })
+        .catch(function (error) {
+
+            console.warn(
+                "[LOGIN SYNC] Gagal mengirim waktu login:",
+                error
+            );
+
+        });
+}
 
 
     /* =====================================================
@@ -3112,11 +3146,14 @@ var targetTestUrl =
     var logoutRecorded =
         false;
 
+    var matchedLogoutParticipant =
+        null;
+
 
     function recordParticipantLogout() {
 
         if (logoutRecorded) {
-            return;
+            return matchedLogoutParticipant;
         }
 
 
@@ -3126,7 +3163,7 @@ var targetTestUrl =
         if (
             window.__tsParticipantInternalNavigation
         ) {
-            return;
+            return null;
         }
 
 
@@ -3408,6 +3445,9 @@ var targetTestUrl =
 
                         changed =
                             true;
+
+                        matchedLogoutParticipant =
+                            participant;
                     }
                 );
             }
@@ -3424,6 +3464,8 @@ var targetTestUrl =
             projects =
                 latestProjects;
         }
+
+        return matchedLogoutParticipant;
     }
 
 
@@ -3440,7 +3482,7 @@ var targetTestUrl =
 
         logoutButton.addEventListener(
             "click",
-            function () {
+            async function () {
 
                 logoutButton.disabled = true;
                 logoutButton.classList.add("loading");
@@ -3450,7 +3492,61 @@ var targetTestUrl =
                     false;
 
 
-                recordParticipantLogout();
+                var loggedOutParticipant =
+                    recordParticipantLogout();
+
+
+                /*
+                   FIX: sebelumnya langsung window.location.href
+                   dipanggil di sini, TANPA menunggu sync ke
+                   Supabase selesai. Karena sync-nya 2 langkah
+                   berantai (GET raw_data lama -> gabung -> PATCH),
+                   dan halaman keburu berpindah sebelum langkah
+                   kedua sempat jalan, catatan logout SERING tidak
+                   pernah sampai ke Supabase (activity log admin
+                   tidak update) walau sudah benar di localStorage
+                   milik peserta sendiri.
+
+                   Sekarang: tunggu (await) sync-nya betul-betul
+                   selesai dulu -- tapi tetap dibatasi waktu (race
+                   dengan timeout 2.5 detik) supaya kalau koneksi
+                   lambat/mati, peserta tidak ter-stuck selamanya
+                   di halaman ini dan tetap bisa logout secara
+                   lokal.
+                */
+                try {
+
+                    if (
+                        loggedOutParticipant &&
+                        loggedOutParticipant.id &&
+                        window.TalentScopeSync &&
+                        typeof window.TalentScopeSync
+                            .pushParticipantPresenceNow ===
+                            "function"
+                    ) {
+
+                        await Promise.race([
+
+                            window.TalentScopeSync.pushParticipantPresenceNow(
+                                loggedOutParticipant.id,
+                                loggedOutParticipant
+                            ),
+
+                            new Promise(function (resolve) {
+                                setTimeout(resolve, 2500);
+                            })
+
+                        ]);
+                    }
+
+                } catch (error) {
+
+                    console.warn(
+                        "[LOGOUT] Sync ke Supabase gagal, lanjut logout lokal:",
+                        error
+                    );
+
+                }
 
 
                 try {

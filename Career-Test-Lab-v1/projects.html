@@ -9,7 +9,7 @@
 
         function getSavedUser() {
             try {
-                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
                 return d ? JSON.parse(d) : null;
             } catch(e) { return null; }
         }
@@ -34,15 +34,30 @@
                     }
                 });
 
-                var isClient = /client/i.test(role);
-                var isAsesor = /asesor|assessor/i.test(role);
-                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+                // FIX PENTING: role yang benar-benar tersimpan dari
+                // "Generate Credentials" cuma ada 2 nilai persis:
+                // "Client Administrator" dan "Client User" (lihat
+                // participants.js -- getSessionRoleFlags()). Tidak
+                // pernah ada role literal "Asesor"/"Assessor". "Client
+                // User" itu yang SECARA PERILAKU = Asesor (view-only).
+                //
+                // Kode lama di sini cuma cek /asesor|assessor/i, yang
+                // TIDAK PERNAH cocok dengan "Client User" -- makanya
+                // Client User selalu jatuh ke isClient (dianggap PIC
+                // pemilik project, full akses tombol).
+                var isSystemAdmin = /system/i.test(role);
+                var isAsesor =
+                    !isSystemAdmin &&
+                    (/asesor|assessor/i.test(role) ||
+                        (/client/i.test(role) && /user/i.test(role)));
+                var isClient = !isSystemAdmin && !isAsesor && /client/i.test(role);
+                var isAdmin = !isSystemAdmin && !isClient && !isAsesor && /administrator/i.test(role);
 
                 var hideList = [];
                 if (isClient) {
-                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                    hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
                 } else if (isAsesor) {
-                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                    hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
                 } else if (isAdmin) {
                     hideList = ["Settings"];
                 }
@@ -59,12 +74,71 @@
                     });
                 }
 
-                if (isClient || isAsesor) {
-                    document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
-                        var bt = btn.textContent.toLowerCase();
-                        if (bt.includes("remove") || bt.includes("create") || bt.includes("add") || bt.includes("delete") || bt.includes("tambah")) {
-                            btn.style.setProperty("display", "none", "important");
-                        }
+                // Client Administrator = PIC/pemilik project, tetap full
+                // akses tombol. Cuma Asesor (termasuk Client User) yang
+                // dibatasi view-only.
+                //
+                // FIX: kata kunci ditambah "edit", "generate", "password",
+                // "key", "credential", "import", "send", "invite"/
+                // "invitation", "kirim" -- sebelumnya cuma
+                // remove/create/add/delete/tambah.
+                //
+                // CATATAN: kalau tombol "Edit"/"Generate Password" di
+                // tabel Project Access ternyata cuma ikon tanpa teks
+                // (dirender oleh js/projects-render.js yang belum saya
+                // punya), pencarian lewat textContent di sini TIDAK akan
+                // menangkapnya -- perlu file itu untuk target yang presisi
+                // (lihat title/aria-label/data-action pada tombolnya).
+                if (isAsesor) {
+
+                    function enforceReadOnlyButtons() {
+                        document.querySelectorAll(
+                            "button, .btn, .btn-primary, a.btn, " +
+                            "[title*='edit' i], [title*='generate' i], [title*='password' i], " +
+                            "[aria-label*='edit' i], [aria-label*='generate' i], [aria-label*='password' i]"
+                        ).forEach(function(btn) {
+                            var bt = btn.textContent.toLowerCase();
+                            var titleAttr = (btn.getAttribute("title") || "").toLowerCase();
+                            var ariaAttr = (btn.getAttribute("aria-label") || "").toLowerCase();
+                            var combined = bt + " " + titleAttr + " " + ariaAttr;
+
+                            if (
+                                combined.includes("remove") ||
+                                combined.includes("create") ||
+                                combined.includes("add") ||
+                                combined.includes("delete") ||
+                                combined.includes("tambah") ||
+                                combined.includes("edit") ||
+                                combined.includes("generate") ||
+                                combined.includes("password") ||
+                                combined.includes("key") ||
+                                combined.includes("credential") ||
+                                combined.includes("import") ||
+                                combined.includes("send") ||
+                                combined.includes("invite") ||
+                                combined.includes("invitation") ||
+                                combined.includes("kirim")
+                            ) {
+                                btn.style.setProperty("display", "none", "important");
+                            }
+                        });
+
+                        document.querySelectorAll(
+                            "#selectAllProjects, input[type=checkbox].row-select, td.select-cell, th.select-header"
+                        ).forEach(function(el) {
+                            el.style.setProperty("display", "none", "important");
+                        });
+                    }
+
+                    enforceReadOnlyButtons();
+
+                    var readOnlyObserver = new MutationObserver(function() {
+                        enforceReadOnlyButtons();
+                    });
+
+                    readOnlyObserver.observe(document.body, {
+                        childList: true,
+                        subtree: true
                     });
                 }
             });
@@ -1410,7 +1484,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     try {
-        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
         if (userRaw) {
             var activeUser = JSON.parse(userRaw);
             var name = activeUser.name || activeUser.username || "System Administrator";
@@ -1432,7 +1506,7 @@ document.addEventListener("DOMContentLoaded", function() {
     "use strict";
 
     function updateUnifiedStats() {
-        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+        var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
         var activeUser = userRaw ? JSON.parse(userRaw) : null;
         var role = activeUser ? String(activeUser.role || "").toLowerCase() : "";
 
@@ -1502,32 +1576,42 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function applyProjectFilter() {
-        var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-        if (!userRaw) return;
-
-        var activeUser = JSON.parse(userRaw);
-        var projectIdTarget = (activeUser.projectId || "").toLowerCase();
-
-        if (projectIdTarget === "all" || /system/i.test(activeUser.role || "")) {
-            updateUnifiedStats();
-            return;
-        }
-
-        var tbody = document.getElementById("projectTable");
-        if (tbody) {
-            var rows = tbody.querySelectorAll("tr");
-            rows.forEach(function(row) {
-                var rowText = row.textContent.toLowerCase();
-                if (projectIdTarget && rowText.indexOf(projectIdTarget) === -1) {
-                    row.style.setProperty("display", "none", "important");
-                }
-            });
-        }
+        // FIX: logic lama di sini mencoba menyembunyikan baris tabel
+        // dengan mencari string UUID projectId secara literal di teks
+        // baris (row.textContent). Padahal baris tabel tidak pernah
+        // menampilkan UUID mentah - isinya cuma Nama Project, Company,
+        // Tanggal, dst. Akibatnya rowText.indexOf(projectIdTarget)
+        // SELALU -1, dan SEMUA baris (termasuk yang sudah benar)
+        // selalu ikut disembunyikan lewat display:none - inilah
+        // kenapa tabel Project Access selalu kelihatan kosong padahal
+        // card ringkasan di atasnya tetap benar (updateUnifiedStats
+        // baca data dari baris yang di-DOM meski sudah disembunyikan).
+        //
+        // Filtering data yang benar SUDAH dilakukan di projects-render.js
+        // (getVisibleProjectsForCurrentUser - mencocokkan project.id
+        // dengan session.projectId) SEBELUM baris tabel dibuat, jadi
+        // baris yang sampai ke sini memang sudah cuma milik project
+        // user yang login. Tidak perlu filter ulang / sembunyikan lagi.
         updateUnifiedStats();
     }
 
     document.addEventListener("DOMContentLoaded", function() {
+        // Fallback awal (jaga-jaga kalau projectsLoaded sudah lama selesai)
         setTimeout(applyProjectFilter, 300);
+
+        // FIX: pemicu utama - tunggu event "projectsLoaded" yang
+        // di-dispatch projects-data.js SETELAH data Supabase beneran
+        // siap & renderProjects() sudah membuat baris tabel. Sebelumnya
+        // cuma mengandalkan setTimeout(300ms) & window.load, yang
+        // TIDAK menunggu fetch() ke Supabase selesai - kalau respons
+        // Supabase lebih lambat dari 300ms, card kebaca sebelum ada
+        // baris sama sekali dan permanen menampilkan "-".
+        window.addEventListener("projectsLoaded", function() {
+            // setTimeout(...,0) memastikan renderProjects() (listener
+            // projectsLoaded lain, dari projects-render.js) sudah
+            // selesai membuat <tr> dulu sebelum kita baca isinya.
+            setTimeout(applyProjectFilter, 0);
+        });
     });
     window.addEventListener("load", applyProjectFilter);
 })();
@@ -1548,7 +1632,7 @@ document.addEventListener("DOMContentLoaded", function() {
   "use strict";
 
   function enforceHideSettings() {
-    var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+    var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
     if (!userRaw) return;
 
     var activeUser = JSON.parse(userRaw);

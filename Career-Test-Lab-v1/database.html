@@ -487,14 +487,444 @@
     }
 
     // Data Sesi Pengguna
-    const currentUserSession = JSON.parse(localStorage.getItem('talentscope_current_user')) || 
-                               JSON.parse(localStorage.getItem('userSession')) || {
-        username: "admin",
-        role: "System Administrator",
-        assignedProjects: []
-    };
+    //
+    // PENTING: login.html menyimpan session admin/Client/Asesor ke
+    // sessionStorage["ts_admin_session"] (bukan localStorage
+    // "talentscope_current_user"/"userSession" yang sebelumnya
+    // dicek di sini). Karena dua key lama itu tidak pernah ditulis
+    // oleh proses login manapun, currentUserSession SELALU jatuh
+    // ke default "System Administrator" di bawah — akibatnya
+    // filter database-per-perusahaan untuk Client/Asesor tidak
+    // pernah benar-benar aktif. Ditambahkan ts_admin_session
+    // sebagai sumber utama, sama seperti pola yang dipakai
+    // halaman lain (projects.html, assessment-catalog.html, dst).
+const currentUserSession = JSON.parse(sessionStorage.getItem('ts_admin_session')) ||
+                           JSON.parse(localStorage.getItem('talentscope_current_user')) || 
+                           JSON.parse(localStorage.getItem('userSession')) || {
+    username: "admin",
+    role: "System Administrator",
+    company: "",
+    assignedProjects: []
+};
 
-    let rawDatabaseParticipants = [];
+let rawDatabaseParticipants = [];
+
+    
+
+/* ==========================================================
+   COMPANY DATABASE ACCESS FILTER
+   ----------------------------------------------------------
+   Client dan Asesor hanya dapat melihat database peserta
+   dari perusahaan yang sama dengan perusahaan pada session.
+
+   Admin / System Administrator tetap dapat melihat semua data.
+   ========================================================== */
+
+
+/* ==========================================================
+   NORMALISASI TEXT
+   Digunakan agar:
+   "PT ABC"
+   "pt abc"
+   " PT ABC "
+   dianggap sebagai perusahaan yang sama.
+   ========================================================== */
+
+function normalizeCompanyValue(value) {
+
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+
+}
+
+
+/* ==========================================================
+   AMBIL ROLE USER SAAT INI
+   ========================================================== */
+
+function getCurrentDatabaseRole() {
+
+    return normalizeCompanyValue(
+        currentUserSession.role ||
+        currentUserSession.userRole ||
+        currentUserSession.roleName ||
+        ""
+    );
+
+}
+
+
+/* ==========================================================
+   CEK APAKAH USER ADALAH ADMIN
+   Admin tetap dapat melihat seluruh perusahaan.
+   ========================================================== */
+
+function isDatabaseAdmin() {
+
+    const role = getCurrentDatabaseRole();
+
+    return [
+        "admin",
+        "administrator",
+        "system administrator",
+        "super admin",
+        "superadmin"
+    ].includes(role);
+
+}
+
+
+/* ==========================================================
+   CEK APAKAH USER MENGGUNAKAN ROLE CLIENT / ASESOR
+   ========================================================== */
+
+function isCompanyRestrictedRole() {
+
+    const role = getCurrentDatabaseRole();
+
+    if (!role) {
+        return false;
+    }
+
+    /*
+       PAKAI "includes" (mengandung kata), BUKAN kecocokan
+       persis. Role di lapangan sering berupa variasi seperti
+       "Client Administrator", "Client Admin", "Asesor
+       Internal", dst — bukan cuma kata "client"/"asesor" polos.
+       Exact-match sebelumnya membuat role seperti "Client
+       Administrator" lolos tidak terbatasi sama sekali.
+
+       Aman dari bentrok dengan role admin (dicek terpisah di
+       isDatabaseAdmin(), pakai exact-match, dan dipanggil
+       LEBIH DULU di canAccessDatabaseProject /
+       canAccessDatabaseParticipant) karena tidak ada string
+       role admin yang mengandung kata "client"/"asesor"/
+       "assessor".
+    */
+    return (
+        role.includes("client") ||
+        role.includes("asesor") ||
+        role.includes("assessor")
+    );
+
+}
+
+
+/* ==========================================================
+   AMBIL NAMA PERUSAHAAN DARI SESSION USER
+   Mendukung beberapa kemungkinan nama field.
+   ========================================================== */
+
+function getCurrentUserCompany() {
+
+    const companyCandidates = [
+
+        currentUserSession.company,
+        currentUserSession.perusahaan,
+        currentUserSession.companyName,
+        currentUserSession.namaPerusahaan,
+        currentUserSession.organization,
+        currentUserSession.organisation,
+        currentUserSession.clientName,
+        currentUserSession.client,
+
+        currentUserSession.company_name,
+        currentUserSession.nama_perusahaan
+
+    ];
+
+
+    for (const company of companyCandidates) {
+
+        const normalized = normalizeCompanyValue(company);
+
+        if (normalized) {
+            return normalized;
+        }
+
+    }
+
+
+    return "";
+
+}
+
+
+/* ==========================================================
+   AMBIL NAMA PERUSAHAAN DARI PROJECT
+   ========================================================== */
+
+function getProjectCompany(project) {
+
+    if (!project || typeof project !== "object") {
+        return "";
+    }
+
+
+    const companyCandidates = [
+
+        project.company,
+        project.perusahaan,
+        project.companyName,
+        project.namaPerusahaan,
+        project.organization,
+        project.organisation,
+        project.clientName,
+        project.client,
+
+        project.company_name,
+        project.nama_perusahaan
+
+    ];
+
+
+    for (const company of companyCandidates) {
+
+        const normalized = normalizeCompanyValue(company);
+
+        if (normalized) {
+            return normalized;
+        }
+
+    }
+
+
+    return "";
+
+}
+
+
+/* ==========================================================
+   AMBIL NAMA PERUSAHAAN DARI PESERTA
+   ========================================================== */
+
+function getParticipantCompany(participant) {
+
+    if (!participant || typeof participant !== "object") {
+        return "";
+    }
+
+
+    const rawData = getRawData(participant);
+
+
+    const companyCandidates = [
+
+        participant.company,
+        participant.perusahaan,
+        participant.companyName,
+        participant.namaPerusahaan,
+        participant.organization,
+        participant.organisation,
+        participant.clientName,
+        participant.client,
+
+        participant.company_name,
+        participant.nama_perusahaan,
+
+        rawData.company,
+        rawData.perusahaan,
+        rawData.companyName,
+        rawData.namaPerusahaan,
+        rawData.organization,
+        rawData.organisation,
+        rawData.clientName,
+        rawData.client,
+
+        rawData.company_name,
+        rawData.nama_perusahaan
+
+    ];
+
+
+    for (const company of companyCandidates) {
+
+        const normalized = normalizeCompanyValue(company);
+
+        if (normalized) {
+            return normalized;
+        }
+
+    }
+
+
+    return "";
+
+}
+
+
+/* ==========================================================
+   CEK AKSES LANGSUNG VIA projectId
+
+   Akun yang dibuat lewat fitur "Project Access" (lihat
+   projects.html) tidak punya field company sama sekali —
+   yang tersimpan cuma projectId spesifik (lihat struktur
+   ts_users.data: {..., "projectId": "...", "source":
+   "project-access"}). Untuk akun seperti ini, akses
+   diberikan langsung ke project tersebut, terlepas dari
+   pencocokan nama perusahaan.
+   ========================================================== */
+
+function canAccessProjectByDirectAssignment(project) {
+
+    if (!project) {
+        return false;
+    }
+
+    const sessionProjectId =
+        String(
+            currentUserSession.projectId ||
+            currentUserSession.project_id ||
+            ""
+        ).trim();
+
+    if (!sessionProjectId || sessionProjectId === "ALL") {
+        return false;
+    }
+
+    const projectId =
+        String(
+            project.id ||
+            project.projectId ||
+            project.project_id ||
+            ""
+        ).trim();
+
+    if (sessionProjectId === projectId) {
+        return true;
+    }
+
+    /*
+       assignedProjects: array of project id, untuk akun yang
+       nantinya diberi akses ke lebih dari satu project
+       sekaligus (belum ada UI-nya sekarang, tapi field ini
+       sudah disiapkan di object session default).
+    */
+    const assigned =
+        Array.isArray(currentUserSession.assignedProjects)
+            ? currentUserSession.assignedProjects
+            : [];
+
+    return assigned
+        .map(function (value) {
+            return String(value).trim();
+        })
+        .includes(projectId);
+
+}
+
+
+/* ==========================================================
+   CEK AKSES PROJECT BERDASARKAN PERUSAHAAN
+   ========================================================== */
+
+function canAccessDatabaseProject(project) {
+
+    /* Admin melihat semua project */
+    if (isDatabaseAdmin()) {
+        return true;
+    }
+
+
+    /* Role selain Client / Asesor tetap mengikuti
+       perilaku lama agar fungsi lain tidak berubah */
+    if (!isCompanyRestrictedRole()) {
+        return true;
+    }
+
+
+    /* Akun hasil generate "Project Access" (tidak punya
+       company, tapi punya projectId spesifik) */
+    if (canAccessProjectByDirectAssignment(project)) {
+        return true;
+    }
+
+
+    const userCompany =
+        getCurrentUserCompany();
+
+
+    /* Fail Closed:
+       Client/Asesor tanpa nama perusahaan DAN tanpa
+       projectId yang cocok TIDAK boleh melihat seluruh
+       database */
+    if (!userCompany) {
+
+        console.warn(
+            "[DATABASE ACCESS] Client/Asesor tidak memiliki perusahaan maupun projectId yang cocok pada session."
+        );
+
+        return false;
+
+    }
+
+
+    const projectCompany =
+        getProjectCompany(project);
+
+
+    return projectCompany === userCompany;
+
+}
+
+
+/* ==========================================================
+   CEK AKSES PESERTA BERDASARKAN PERUSAHAAN
+   ========================================================== */
+
+function canAccessDatabaseParticipant(participant) {
+
+    /* Admin melihat semua peserta */
+    if (isDatabaseAdmin()) {
+        return true;
+    }
+
+
+    /* Role selain Client / Asesor tidak diubah */
+    if (!isCompanyRestrictedRole()) {
+        return true;
+    }
+
+
+    /* Akun hasil generate "Project Access" — cocokkan lewat
+       projectId yang melekat di data peserta */
+    const participantProjectId =
+        String(
+            (participant && (
+                participant.projectId ||
+                participant.project_id
+            )) || ""
+        ).trim();
+
+    if (
+        participantProjectId &&
+        canAccessProjectByDirectAssignment({
+            id: participantProjectId
+        })
+    ) {
+        return true;
+    }
+
+
+    const userCompany =
+        getCurrentUserCompany();
+
+
+    /* Fail Closed */
+    if (!userCompany) {
+        return false;
+    }
+
+
+    const participantCompany =
+        getParticipantCompany(participant);
+
+
+    return participantCompany === userCompany;
+
+}
 
 
     /* ==========================================================
@@ -542,8 +972,21 @@
 
             const projects = await window.DataService.getProjects();
 
-            const hydratedProjects = await Promise.all(
-                (projects || []).map(async function (project) {
+
+/* ==========================================================
+   FILTER PROJECT BERDASARKAN PERUSAHAAN USER
+========================================================== */
+
+const accessibleProjects =
+    (projects || []).filter(function (project) {
+
+        return canAccessDatabaseProject(project);
+
+    });
+
+
+const hydratedProjects = await Promise.all(
+    accessibleProjects.map(async function (project) {
 
                     let participants = [];
 
@@ -1453,6 +1896,21 @@ function getProjectPurposeForParticipant(item, projects) {
         // di record participant lama.
         parsedData = hydrateParticipantPurposeFromProjects(parsedData);
         parsedData = hydrateParticipantActivityFromProjects(parsedData);
+
+        
+
+/* ==========================================================
+   LAPISAN KEDUA FILTER PERUSAHAAN
+   ----------------------------------------------------------
+   Mencegah data cache/localStorage perusahaan lain
+   muncul pada Client dan Asesor.
+========================================================== */
+
+parsedData = parsedData.filter(function (participant) {
+
+    return canAccessDatabaseParticipant(participant);
+
+});
 
         rawDatabaseParticipants = parsedData.map((item, index) => {
             const projectId = item.projectId || item.idProject || 'P001';

@@ -6,7 +6,7 @@
 
     // 1. Ambil session user dari penyimpanan browser
     function getActiveUser() {
-        var keys = ["talentscope_current_user", "ts_admin_session", "user", "currentUser"];
+        var keys = ["ts_admin_session", "talentscope_current_user", "user", "currentUser"];
         for (var i = 0; i < keys.length; i++) {
             var data = sessionStorage.getItem(keys[i]) || localStorage.getItem(keys[i]);
             if (data) {
@@ -52,15 +52,24 @@
 
         // B. Filter Menu Sidebar Sesuai Role Active
         var isSystemAdmin = /system/i.test(role);
-        var isAdmin = /administrator/i.test(role) && !isSystemAdmin;
-        var isClient = /client/i.test(role);
-        var isAsesor = /asesor|assessor/i.test(role);
+
+        // PENTING: role "Client User" (hasil Generate Credentials dengan
+        // Account Role = Client User) harus berperilaku seperti Asesor
+        // (dashboard terbatas), BUKAN seperti Client Administrator.
+        // Sebelumnya "Client User" ikut ke-detect sebagai Client karena
+        // sama-sama mengandung kata "client".
+        var isAsesor = /asesor|assessor/i.test(role) || /client\s*user/i.test(role);
+        var isClient = /client/i.test(role) && !isAsesor;
+        var isAdmin = /administrator/i.test(role) && !isSystemAdmin && !isClient;
 
         var restrictedMenus = [];
         if (isClient) {
-            restrictedMenus = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+            restrictedMenus = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
         } else if (isAsesor) {
-            restrictedMenus = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+            // Client User (login sebagai Asesor): menu yang tampil hanya
+            // Dashboard, Assessment Project, Participants (dibatasi ke
+            // project miliknya sendiri), dan Project Access.
+            restrictedMenus = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
         } else if (isAdmin) {
             restrictedMenus = ["Settings"];
         }
@@ -81,7 +90,13 @@
         if (isAsesor) {
             document.querySelectorAll("button, .btn, .btn-primary").forEach(function (btn) {
                 var text = btn.textContent.toLowerCase();
-                if (text.includes("add") || text.includes("tambah") || text.includes("create") || text.includes("delete")) {
+                if (
+                    text.includes("add") || text.includes("tambah") ||
+                    text.includes("create") || text.includes("delete") ||
+                    text.includes("remove") || text.includes("hapus") ||
+                    text.includes("edit") || text.includes("ubah") ||
+                    text.includes("generate")
+                ) {
                     btn.style.setProperty("display", "none", "important");
                 }
             });

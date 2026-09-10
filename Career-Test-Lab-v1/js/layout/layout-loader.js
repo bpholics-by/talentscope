@@ -3,11 +3,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         // =========================================================
         // 1. AMBIL SESSION USER TERLEBIH DAHULU
         // =========================================================
-        const keys = ["talentscope_current_user", "ts_admin_session", "user", "currentUser"];
+        const keys = ["ts_admin_session", "talentscope_current_user", "user", "currentUser"];
         let activeUser = null;
 
         for (const key of keys) {
-            const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+            const raw = sessionStorage.getItem(key) || localStorage.getItem(key);
             if (raw) {
                 try {
                     const parsed = JSON.parse(raw);
@@ -41,9 +41,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             // --- FILTER MENU DARI HYPERLINK / TEKS SEBELUM DITAMPILKAN ---
             let hideList = [];
             if (isClient) {
-                hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
+                hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
             } else if (isAsesor) {
-                hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
+                hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
             } else if (isAdmin) {
                 hideList = ["Settings"];
             }
@@ -156,6 +156,7 @@ document.addEventListener("click", function (e) {
         // Hanya hapus data sesi login saja, data peserta & proyek aman
 localStorage.removeItem('auth_token');
 localStorage.removeItem('current_user');
+localStorage.removeItem('talentscope_current_user');
 sessionStorage.clear();
         
         // Sesuaikan tujuan redirect (pilih salah satu: "login.html" atau "../index.html")

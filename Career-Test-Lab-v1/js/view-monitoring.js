@@ -22,6 +22,235 @@ document.addEventListener(
 
 
 /* ==========================================================
+   AKSES DATA BERDASARKAN ROLE (Client/Asesor hanya melihat
+   project miliknya sendiri)
+
+   Sama seperti mekanisme yang sudah dipasang di database.html
+   — diduplikasi di sini (bukan di-share) karena ini file JS
+   yang berdiri sendiri dan tidak berbagi scope dengan
+   database.html.
+
+   Sumber session yang BENAR adalah sessionStorage["ts_admin_session"]
+   (yang ditulis login.html untuk akun admin/Client/Asesor) —
+   BUKAN localStorage["currentUser"]/["user"] yang sebelumnya
+   dicek di initializeUserRole() (key itu tidak pernah ditulis
+   oleh proses login manapun).
+========================================================== */
+
+function getMonitoringSession() {
+
+    try {
+
+        return (
+            JSON.parse(
+                sessionStorage.getItem("ts_admin_session")
+            ) ||
+            JSON.parse(
+                localStorage.getItem("talentscope_current_user")
+            ) ||
+            {}
+        );
+
+    } catch (error) {
+
+        return {};
+
+    }
+
+}
+
+function normalizeMonitoringValue(value) {
+
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+
+}
+
+function getMonitoringRole() {
+
+    const session = getMonitoringSession();
+
+    return normalizeMonitoringValue(
+        session.role ||
+        session.userRole ||
+        session.roleName ||
+        ""
+    );
+
+}
+
+function isMonitoringAdmin() {
+
+    const role = getMonitoringRole();
+
+    return [
+        "admin",
+        "administrator",
+        "system administrator",
+        "super admin",
+        "superadmin"
+    ].includes(role);
+
+}
+
+function isMonitoringCompanyRestricted() {
+
+    const role = getMonitoringRole();
+
+    if (!role) {
+        return false;
+    }
+
+    return (
+        role.includes("client") ||
+        role.includes("asesor") ||
+        role.includes("assessor")
+    );
+
+}
+
+function getMonitoringUserCompany() {
+
+    const session = getMonitoringSession();
+
+    const candidates = [
+        session.company,
+        session.perusahaan,
+        session.companyName,
+        session.company_name,
+        session.organization,
+        session.clientName,
+        session.client
+    ];
+
+    for (const company of candidates) {
+
+        const normalized =
+            normalizeMonitoringValue(company);
+
+        if (normalized) {
+            return normalized;
+        }
+
+    }
+
+    return "";
+
+}
+
+function getMonitoringProjectCompany(project) {
+
+    if (!project) {
+        return "";
+    }
+
+    const candidates = [
+        project.company,
+        project.perusahaan,
+        project.companyName,
+        project.company_name,
+        project.organization,
+        project.clientName,
+        project.client
+    ];
+
+    for (const company of candidates) {
+
+        const normalized =
+            normalizeMonitoringValue(company);
+
+        if (normalized) {
+            return normalized;
+        }
+
+    }
+
+    return "";
+
+}
+
+function canMonitoringAccessProjectByDirectAssignment(project) {
+
+    if (!project) {
+        return false;
+    }
+
+    const session = getMonitoringSession();
+
+    const sessionProjectId =
+        String(
+            session.projectId ||
+            session.project_id ||
+            ""
+        ).trim();
+
+    if (!sessionProjectId || sessionProjectId === "ALL") {
+        return false;
+    }
+
+    const projectId =
+        String(
+            project.id ||
+            project.projectId ||
+            project.project_id ||
+            ""
+        ).trim();
+
+    if (sessionProjectId === projectId) {
+        return true;
+    }
+
+    const assigned =
+        Array.isArray(session.assignedProjects)
+            ? session.assignedProjects
+            : [];
+
+    return assigned
+        .map(function (value) {
+            return String(value).trim();
+        })
+        .includes(projectId);
+
+}
+
+function canMonitoringAccessProject(project) {
+
+    if (isMonitoringAdmin()) {
+        return true;
+    }
+
+    if (!isMonitoringCompanyRestricted()) {
+        return true;
+    }
+
+    if (canMonitoringAccessProjectByDirectAssignment(project)) {
+        return true;
+    }
+
+    const userCompany =
+        getMonitoringUserCompany();
+
+    if (!userCompany) {
+
+        console.warn(
+            "[MONITORING ACCESS] Client/Asesor tidak memiliki perusahaan maupun projectId yang cocok pada session."
+        );
+
+        return false;
+
+    }
+
+    return (
+        getMonitoringProjectCompany(project) ===
+        userCompany
+    );
+
+}
+
+
+/* ==========================================================
    STATE
 ========================================================== */
 
@@ -111,9 +340,20 @@ async function loadMonitoringProjects() {
         }
 
 
+        /*
+           FILTER AKSES: Client/Asesor cuma melihat project
+           milik perusahaan/projectId mereka sendiri. Admin
+           tetap melihat semua.
+        */
+        const accessibleProjectRows =
+            projectRows.filter(
+                canMonitoringAccessProject
+            );
+
+
         const built = [];
 
-        for (const projectRow of projectRows) {
+        for (const projectRow of accessibleProjectRows) {
 
             const project =
                 buildMonitoringProject(

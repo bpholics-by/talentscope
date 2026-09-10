@@ -49,13 +49,24 @@
 
         if (
             value === "client" ||
-            value === "client user" ||
             value === "client administrator"
         ) {
             return "client";
         }
 
-        if (value === "asesor" || value === "assessor") {
+        /*
+         * PENTING: "Client User" (role yang dipilih di Generate
+         * Credentials) harus dipetakan ke Asesor, bukan Client.
+         * Sebelumnya "client user" ikut masuk ke cabang "client" di atas
+         * sehingga akun Client User mendapat akses & menu yang sama
+         * dengan Client Administrator -- padahal seharusnya dashboard
+         * Asesor yang lebih terbatas.
+         */
+        if (
+            value === "asesor" ||
+            value === "assessor" ||
+            value === "client user"
+        ) {
             return "asesor";
         }
 
@@ -240,6 +251,25 @@
         }
 
         if (access.isAsesor) {
+            /*
+             * Sama seperti Client: cara utama mengetahui project milik
+             * akun "Client User" (login sebagai Asesor) adalah lewat
+             * username yang dibuat di Generate Credentials
+             * (project.access.username), karena generateProjectAccess
+             * tidak pernah mengisi field asesorId/assessorEmail dsb.
+             * Tanpa pengecekan ini, akun Client User tidak akan pernah
+             * melihat project yang di-generate-kan untuknya.
+             */
+            const projectAccessUsername =
+                normalize(project?.access?.username);
+
+            if (
+                projectAccessUsername &&
+                ids.includes(projectAccessUsername)
+            ) {
+                return true;
+            }
+
             return projectAssessorValues(project).some(
                 value => ids.includes(value)
             );

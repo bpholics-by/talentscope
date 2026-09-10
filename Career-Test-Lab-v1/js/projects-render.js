@@ -107,6 +107,77 @@ function formatDate(date) {
 
 
 /* ==========================================================
+   ROLE / PROJECT SCOPING (Client Administrator vs Client User)
+   ==========================================================
+   Session disimpan login.html di sessionStorage
+   "ts_admin_session": { username, role, name, email, projectId }.
+   projectId diisi dari kolom projectId/project_id pada baris
+   user - itulah yang dipakai buat batasi project yang tampil,
+   BUKAN parsing username.
+
+   PENTING: role yang benar2 dibuat "Generate Credentials" cuma
+   ada 2 nilai persis: "Client Administrator" dan "Client User"
+   (lihat loadClientRoles() di bawah). "Client User" itu yang
+   SECARA PERILAKU harus diperlakukan seperti Asesor (dashboard
+   asesor, hanya lihat project sendiri). Tidak ada role bernama
+   "Asesor"/"Assessor" yang benar2 tersimpan di data.
+========================================================== */
+
+function getTalentScopeSessionUser() {
+    try {
+        const raw = sessionStorage.getItem("ts_admin_session");
+        return raw ? JSON.parse(raw) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function getTalentScopeRoleFlags() {
+    const user = getTalentScopeSessionUser();
+    const roleStr = String((user && user.role) || "");
+
+    const isSystemAdmin = /system/i.test(roleStr);
+    const isAsesor =
+        !isSystemAdmin &&
+        (/asesor|assessor/i.test(roleStr) ||
+            (/client/i.test(roleStr) && /user/i.test(roleStr)));
+    const isClient = !isSystemAdmin && !isAsesor && /client/i.test(roleStr);
+
+    return { user, isSystemAdmin, isAsesor, isClient };
+}
+
+// Client Administrator & Client User (Asesor) sama-sama hanya
+// boleh lihat project mereka sendiri, dibatasi lewat projectId
+// pada session (diisi saat "Generate Credentials" -
+// syncAccessToUsersDirectory di bawah).
+function getVisibleProjectsForCurrentUser(projects) {
+    const list = Array.isArray(projects) ? projects : [];
+    const flags = getTalentScopeRoleFlags();
+
+    if (!flags.isAsesor && !flags.isClient) {
+        return list;
+    }
+
+    const scopedProjectId =
+        flags.user && flags.user.projectId != null
+            ? String(flags.user.projectId).trim()
+            : "";
+
+    if (!scopedProjectId || scopedProjectId.toUpperCase() === "ALL") {
+        console.warn(
+            "[PROJECT RENDER] Role " + (flags.user && flags.user.role) +
+            " tidak punya projectId pada session - project disembunyikan semua sampai session diperbaiki."
+        );
+        return [];
+    }
+
+    return list.filter(function (project) {
+        return String(project.id) === scopedProjectId;
+    });
+}
+
+
+/* ==========================================================
    RENDER PROJECTS
 ========================================================== */
 
@@ -118,6 +189,12 @@ function renderProjects(data) {
     if (!table) return;
 
     table.innerHTML = "";
+
+    // FIX: sebelumnya renderProjects menampilkan SEMUA project
+    // ke siapapun yang login - tidak ada filter role/project
+    // sama sekali di file ini. Client Administrator & Client
+    // User (Asesor) sekarang dibatasi ke project mereka sendiri.
+    data = getVisibleProjectsForCurrentUser(data);
 
 
     /* ------------------------------------------------------
@@ -1062,6 +1139,124 @@ document.addEventListener(
     const ROLE_STORAGE_KEY =
         "talentscope_settings_roles";
 
+    /*
+       FIX: kredensial yang dibuat lewat "Generate Credentials"
+       sebelumnya HANYA tersimpan nested di project.access
+       (di dalam blob talentscope_projects). login.html (Admin/
+       Client/Asesor) sudah dimigrasi untuk membaca akun dari
+       tabel `ts_users` di Supabase -- yang datanya berasal dari
+       key localStorage ini, BUKAN dari talentscope_projects.
+       Jadi client yang credential-nya baru di-generate tidak
+       akan pernah bisa login sampai baris user-nya juga ditulis
+       ke sini.
+    */
+    const USERS_STORAGE_KEY =
+        "talentscope_settings_users";
+
+
+    /* ======================================================
+       SYNC GENERATED CREDENTIAL KE USERS DIRECTORY
+       ----------------------------------------------------
+       Menulis/menimpa satu baris akun login di
+       talentscope_settings_users supaya ikut ke-push ke
+       Supabase `ts_users` (lewat js/ts-supabase-sync.js) dan
+       bisa dipakai login oleh Client/Client Administrator.
+    ====================================================== */
+
+    function syncAccessToUsersDirectory(
+        project,
+        role,
+        username,
+        password
+    ) {
+
+        let users = [];
+
+        try {
+
+            users =
+                JSON.parse(
+                    localStorage.getItem(
+                        USERS_STORAGE_KEY
+                    ) || "[]"
+                );
+
+            if (!Array.isArray(users)) {
+                users = [];
+            }
+
+        } catch (error) {
+
+            users = [];
+
+        }
+
+
+        /*
+           Buang entri lama punya project ini (apa pun role-nya
+           saat itu -- supaya kalau role diganti antar generate,
+           tidak ada akun lama yang nyangkut tetap bisa login).
+        */
+        users =
+            users.filter(function (user) {
+
+                return !(
+                    user &&
+                    user.source === "project-access" &&
+                    String(user.projectId) ===
+                        String(project.id)
+                );
+
+            });
+
+
+        users.push({
+
+            id:
+                "ACCESS-" +
+                project.id +
+                "-" +
+                Date.now(),
+
+            username:
+                username,
+
+            email:
+                username,
+
+            password:
+                password,
+
+            role:
+                role.name,
+
+            name:
+                getProjectAccessName(project) +
+                " — " +
+                role.name,
+
+            projectId:
+                project.id,
+
+            status:
+                "active",
+
+            source:
+                "project-access",
+
+            generatedAt:
+                new Date().toISOString()
+
+        });
+
+
+        localStorage.setItem(
+            USERS_STORAGE_KEY,
+            JSON.stringify(users)
+        );
+
+    }
+
 
     /* ======================================================
        LOAD PROJECTS
@@ -1270,6 +1465,48 @@ document.addEventListener(
             "Project"
 
         ).trim();
+
+    }
+
+
+    /* ======================================================
+       TANGGAL PROJECT (untuk username Generate Credentials)
+       ----------------------------------------------------
+       Dipakai supaya format username selalu:
+       namaproject-tanggal.role
+       Sehingga project pemilik sebuah akun bisa langsung
+       dikenali dari username-nya.
+    ====================================================== */
+
+    function getProjectDateSlug(project) {
+
+        const rawDate =
+            (project && (
+                project.start_date ||
+                project.startDate ||
+                project.start ||
+                project.createdAt ||
+                project.date
+            )) || null;
+
+        let parsed =
+            rawDate ? new Date(rawDate) : new Date();
+
+        if (isNaN(parsed.getTime())) {
+            parsed = new Date();
+        }
+
+        const yyyy = parsed.getFullYear();
+
+        const mm =
+            String(parsed.getMonth() + 1)
+                .padStart(2, "0");
+
+        const dd =
+            String(parsed.getDate())
+                .padStart(2, "0");
+
+        return "" + yyyy + mm + dd;
 
     }
 
@@ -1547,14 +1784,26 @@ document.addEventListener(
             );
 
 
+        const dateSlug =
+            getProjectDateSlug(
+                project
+            );
+
+
         const roleSlug =
             getRoleSlug(
                 role.name
             );
 
 
+        /*
+           Format wajib: namaproject-tanggal.role
+           Contoh: asesmenteatra-20260910.clientadmin
+        */
         let username =
             projectName +
+            "-" +
+            dateSlug +
             "." +
             roleSlug;
 
@@ -1645,16 +1894,10 @@ document.addEventListener(
 
     padding:24px;
 
-    background:
-        radial-gradient(
-            circle at 20% 10%,
-            rgba(37,99,235,.18),
-            transparent 35%
-        ),
-        rgba(8,20,45,.68);
+    background:rgba(8,10,18,.72);
 
-    backdrop-filter:blur(9px);
-    -webkit-backdrop-filter:blur(9px);
+    backdrop-filter:blur(7px);
+    -webkit-backdrop-filter:blur(7px);
 
     box-sizing:border-box;
 }
@@ -1678,12 +1921,12 @@ document.addEventListener(
 
     background:#ffffff;
 
-    border:1px solid rgba(255,255,255,.9);
-    border-radius:24px;
+    border:1px solid rgba(15,23,42,.06);
+    border-radius:20px;
 
     box-shadow:
-        0 35px 90px rgba(7,25,55,.30),
-        0 8px 25px rgba(7,25,55,.12);
+        0 40px 100px rgba(9,13,26,.35),
+        0 4px 14px rgba(9,13,26,.10);
 
     padding:0;
 
@@ -1723,6 +1966,12 @@ document.addEventListener(
 
 /* =========================================================
    HEADER
+   Ink navy solid -- bukan gradasi biru-ungu default.
+   Garis brass tipis di tepi bawah jadi satu-satunya aksen
+   warna hangat, ditahan sampai ke kartu kredensial di bawah
+   supaya "brass" konsisten berarti satu hal saja: sesuatu
+   yang baru saja dikeluarkan/diberikan (credential, bukan
+   sekadar dekorasi).
 ========================================================= */
 
 .project-access-header{
@@ -1734,32 +1983,55 @@ document.addEventListener(
 
     gap:20px;
 
-    padding:30px 30px 27px;
+    padding:32px 30px 26px;
 
     background:
         linear-gradient(
-            135deg,
-            #087ff5 0%,
-            #168cf7 45%,
-            #6557ed 100%
+            175deg,
+            #0B1220 0%,
+            #141B2E 100%
         );
 
     color:#ffffff;
+
+    overflow:hidden;
 }
 
 .project-access-header::after{
     content:"";
 
     position:absolute;
-    right:-70px;
-    top:-90px;
+    left:0;
+    right:0;
+    bottom:0;
 
-    width:220px;
-    height:220px;
+    height:2px;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent 0%,
+            #C9A227 45%,
+            #E9CD73 55%,
+            transparent 100%
+        );
+
+    pointer-events:none;
+}
+
+.project-access-header::before{
+    content:"";
+
+    position:absolute;
+    right:-40px;
+    top:-60px;
+
+    width:160px;
+    height:160px;
 
     border-radius:50%;
 
-    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.06);
 
     pointer-events:none;
 }
@@ -1771,12 +2043,12 @@ document.addEventListener(
 .project-access-eyebrow{
     display:block;
 
-    margin-bottom:8px;
+    margin-bottom:10px;
 
-    color:rgba(255,255,255,.82);
+    color:#D4B25A;
 
     font-size:10px;
-    font-weight:800;
+    font-weight:700;
 
     letter-spacing:.16em;
     text-transform:uppercase;
@@ -1787,22 +2059,22 @@ document.addEventListener(
 
     color:#ffffff;
 
-    font-size:26px;
-    line-height:1.2;
+    font-size:25px;
+    line-height:1.22;
 
-    font-weight:800;
-    letter-spacing:-.02em;
+    font-weight:700;
+    letter-spacing:-.015em;
 }
 
 .project-access-subtitle{
-    margin:8px 45px 0 0;
+    margin:9px 45px 0 0;
 
-    color:rgba(255,255,255,.88);
+    color:rgba(255,255,255,.58);
 
     font-size:13px;
     line-height:1.55;
 
-    font-weight:500;
+    font-weight:400;
 }
 
 /* =========================================================
@@ -1815,33 +2087,34 @@ document.addEventListener(
 
     flex:0 0 auto;
 
-    width:42px;
-    height:42px;
+    width:38px;
+    height:38px;
 
-    border:1px solid rgba(255,255,255,.35);
+    border:1px solid rgba(255,255,255,.16);
 
-    border-radius:12px;
+    border-radius:10px;
 
-    background:rgba(255,255,255,.14);
+    background:rgba(255,255,255,.04);
 
-    color:#ffffff;
+    color:rgba(255,255,255,.75);
 
     cursor:pointer;
 
-    font-size:17px;
+    font-size:16px;
+    line-height:1;
 
     transition:
         background .18s ease,
-        transform .18s ease,
+        color .18s ease,
         border-color .18s ease;
 }
 
 .project-access-close:hover{
-    background:rgba(255,255,255,.24);
+    background:rgba(201,162,39,.14);
 
-    border-color:rgba(255,255,255,.55);
+    border-color:rgba(201,162,39,.4);
 
-    transform:translateY(-1px);
+    color:#E9CD73;
 }
 
 /* =========================================================
@@ -1851,21 +2124,13 @@ document.addEventListener(
 .project-access-project{
     margin:26px 30px 20px;
 
-    padding:19px 20px;
+    padding:18px 20px;
 
-    border:1px solid #d8e8ff;
+    border:1px solid #E7E9F0;
 
-    border-radius:16px;
+    border-radius:14px;
 
-    background:
-        linear-gradient(
-            135deg,
-            #eff7ff 0%,
-            #f4f1ff 100%
-        );
-
-    box-shadow:
-        0 5px 18px rgba(30,80,150,.05);
+    background:#F7F8FA;
 }
 
 .project-access-project-label{
@@ -1873,22 +2138,23 @@ document.addEventListener(
 
     margin-bottom:7px;
 
-    color:#6280a5;
+    color:#8A93A6;
 
     font-size:10px;
-    font-weight:800;
+    font-weight:700;
 
     letter-spacing:.13em;
     text-transform:uppercase;
 }
 
 .project-access-project-name{
-    color:#082f63;
+    color:#10182B;
 
     font-size:18px;
     line-height:1.35;
 
-    font-weight:800;
+    font-weight:700;
+    letter-spacing:-.01em;
 
     word-break:break-word;
 }
@@ -1906,7 +2172,7 @@ document.addEventListener(
 
     margin-bottom:8px;
 
-    color:#173b68;
+    color:#10182B;
 
     font-size:13px;
     font-weight:700;
@@ -1920,15 +2186,15 @@ document.addEventListener(
 
     box-sizing:border-box;
 
-    border:1px solid #cddcf0;
+    border:1px solid #E1E4EC;
 
-    border-radius:12px;
+    border-radius:11px;
 
     background:#ffffff;
 
-    padding:0 14px;
+    padding:0 42px 0 14px;
 
-    color:#123b6b;
+    color:#10182B;
 
     font-family:Inter,Arial,sans-serif;
 
@@ -1939,55 +2205,97 @@ document.addEventListener(
 
     transition:
         border-color .18s ease,
-        box-shadow .18s ease,
-        background .18s ease;
+        box-shadow .18s ease;
 }
 
 .project-access-field select{
     cursor:pointer;
 
-    appearance:auto;
+    appearance:none;
+    -webkit-appearance:none;
+
+    background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7' fill='none'%3E%3Cpath d='M1 1L5.5 5.5L10 1' stroke='%235B6478' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+    background-repeat:no-repeat;
+    background-position:right 16px center;
 }
 
 .project-access-field select:hover{
-    border-color:#a9c4e8;
+    border-color:#C7CCD9;
 }
 
 .project-access-field select:focus{
-    border-color:#1685ef;
+    border-color:#C9A227;
 
     box-shadow:
-        0 0 0 4px rgba(22,133,239,.10);
+        0 0 0 4px rgba(201,162,39,.14);
 }
 
 /* =========================================================
-   RESULT CARD
+   RESULT CARD -- "ACCESS TICKET"
+   ----------------------------------------------------------
+   Kartu ini menampilkan kredensial yang baru diberikan ke
+   client, jadi sengaja dibuat terasa seperti tiket/pass resmi
+   yang "disobek" untuk diserahkan -- garis perforasi brass di
+   tepi atas, latar ivory hangat (beda dari kartu project di
+   atas yang netral), supaya mata langsung tahu ini bagian
+   yang harus disalin & dijaga.
 ========================================================= */
 
 .project-access-result{
     display:none;
 
+    position:relative;
+
     margin:4px 30px 0;
 
-    padding:18px;
+    padding:22px 18px 18px;
 
-    border:1px solid #bce9d5;
+    border:1px solid rgba(201,162,39,.38);
+    border-top:none;
 
-    border-radius:17px;
+    border-radius:14px;
 
-    background:
-        linear-gradient(
-            145deg,
-            #effcf6 0%,
-            #f4fbff 100%
-        );
-
-    box-shadow:
-        0 8px 24px rgba(22,120,85,.06);
+    background:#FFFDF6;
 }
 
 .project-access-result.show{
     display:block;
+}
+
+.project-access-result::before{
+    content:"";
+
+    position:absolute;
+    left:0;
+    right:0;
+    top:0;
+
+    height:0;
+
+    border-top:2px dashed rgba(201,162,39,.55);
+
+    border-radius:14px 14px 0 0;
+}
+
+.project-access-result::after{
+    content:"CREDENTIALS";
+
+    position:absolute;
+    top:-9px;
+    right:16px;
+
+    padding:2px 10px;
+
+    background:#FFFDF6;
+
+    color:#A9791A;
+
+    font-size:9px;
+    font-weight:700;
+
+    letter-spacing:.14em;
 }
 
 /* =========================================================
@@ -1995,15 +2303,15 @@ document.addEventListener(
 ========================================================= */
 
 .project-access-result-row{
-    margin-bottom:12px;
+    margin-bottom:10px;
 
-    padding:14px 15px;
+    padding:13px 15px;
 
-    border:1px solid rgba(180,221,205,.78);
+    border:1px solid #F0E4C0;
 
-    border-radius:12px;
+    border-radius:10px;
 
-    background:rgba(255,255,255,.72);
+    background:#ffffff;
 
     box-sizing:border-box;
 }
@@ -2015,24 +2323,26 @@ document.addEventListener(
 .project-access-result-label{
     display:block;
 
-    margin-bottom:7px;
+    margin-bottom:6px;
 
-    color:#648474;
+    color:#A9791A;
 
     font-size:10px;
-    font-weight:800;
+    font-weight:700;
 
     letter-spacing:.13em;
     text-transform:uppercase;
 }
 
 .project-access-result-value{
-    color:#063d2b;
+    color:#10182B;
 
     font-size:15px;
     line-height:1.45;
 
-    font-weight:800;
+    font-weight:700;
+
+    letter-spacing:.01em;
 
     word-break:break-all;
 
@@ -2065,13 +2375,13 @@ document.addEventListener(
 
     padding:0 20px;
 
-    border:1px solid #d1ddeb;
+    border:1px solid #E1E4EC;
 
-    border-radius:12px;
+    border-radius:11px;
 
     background:#ffffff;
 
-    color:#29486f;
+    color:#3A4257;
 
     font-family:Inter,Arial,sans-serif;
 
@@ -2088,41 +2398,38 @@ document.addEventListener(
 }
 
 .project-access-btn:hover{
-    border-color:#b7c8df;
+    border-color:#C7CCD9;
 
-    background:#f8fbff;
+    background:#F7F8FA;
 
     transform:translateY(-1px);
 }
 
 .project-access-btn.primary{
-    border-color:#087ff5;
+    border-color:#0B1220;
 
     background:
         linear-gradient(
-            135deg,
-            #087ff5,
-            #315ee8
+            175deg,
+            #16203A,
+            #0B1220
         );
 
     color:#ffffff;
 
     box-shadow:
-        0 8px 20px rgba(8,127,245,.22);
+        0 10px 22px rgba(11,18,32,.22);
+}
+
+.project-access-btn.primary i{
+    color:#E9CD73;
 }
 
 .project-access-btn.primary:hover{
-    border-color:#087ff5;
-
-    background:
-        linear-gradient(
-            135deg,
-            #0674e5,
-            #294fd8
-        );
+    border-color:#0B1220;
 
     box-shadow:
-        0 10px 25px rgba(8,127,245,.28);
+        0 14px 28px rgba(11,18,32,.30);
 
     transform:translateY(-1px);
 }
@@ -2969,6 +3276,19 @@ existingRole.innerHTML =
                 new Date().toISOString()
 
         };
+
+
+        /*
+           FIX: kredensial ini juga harus tercatat sebagai baris
+           akun login yang sesungguhnya, bukan cuma nested di
+           dalam project -- lihat catatan di syncAccessToUsersDirectory.
+        */
+        syncAccessToUsersDirectory(
+            project,
+            role,
+            username,
+            password
+        );
 
 
         /*

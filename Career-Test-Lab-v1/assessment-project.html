@@ -150,7 +150,7 @@ select{
 .sidebar .brand-title{
     color: white;
 
-    font-size: 27px;
+    font-size: 26px;
     font-weight: 750;
 
     line-height: 1.1;
@@ -3227,11 +3227,56 @@ async function render() {
 
 
         /* =============================================
+           FILTER BY USER ACCESS (projectId)
+        ============================================= */
+
+        let scopedData = data;
+
+        try {
+
+            const rawSession =
+                sessionStorage.getItem(
+                    "ts_admin_session"
+                );
+
+            if (rawSession) {
+
+                const activeUser =
+                    JSON.parse(rawSession);
+
+                const role =
+                    String(activeUser.role || "").trim();
+
+                const isSystemAdmin =
+                    /^system/i.test(role);
+
+                if (!isSystemAdmin && activeUser.projectId) {
+
+                    scopedData =
+                        data.filter(
+                            p => p.id === activeUser.projectId
+                        );
+
+                }
+
+            }
+
+        } catch (scopeError) {
+
+            console.warn(
+                "[ASSESSMENT PROJECT] Gagal baca session untuk filter:",
+                scopeError
+            );
+
+        }
+
+
+        /* =============================================
            FILTER DATA
         ============================================= */
 
         const list =
-            data.filter(
+            scopedData.filter(
                 p => {
 
 
@@ -4899,6 +4944,63 @@ document.addEventListener("DOMContentLoaded", function () {
 
         roleElement.textContent =
             userRole;
+
+    }
+
+
+    /* ==========================================
+       FILTER SIDEBAR MENU BY ROLE
+       (halaman ini punya sidebar statis, jadi
+        difilter manual di sini)
+    ========================================== */
+
+    var isClient =
+        /client/i.test(userRole);
+
+    var isAsesor =
+        /asesor|assessor/i.test(userRole);
+
+    var isAdmin =
+        /administrator/i.test(userRole) &&
+        !/system/i.test(userRole);
+
+    var hideList = [];
+
+    if (isClient) {
+        hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
+    } else if (isAsesor) {
+        hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
+    } else if (isAdmin) {
+        hideList = ["Settings"];
+    }
+
+    if (hideList.length > 0) {
+
+        var sidebarLinks =
+            document.querySelectorAll(
+                ".sidebar .menu a, .sidebar .menu li"
+            );
+
+        sidebarLinks.forEach(function (link) {
+
+            var linkText =
+                link.textContent.trim();
+
+            hideList.forEach(function (menuName) {
+
+                if (linkText.includes(menuName)) {
+
+                    link.style.setProperty(
+                        "display",
+                        "none",
+                        "important"
+                    );
+
+                }
+
+            });
+
+        });
 
     }
 
