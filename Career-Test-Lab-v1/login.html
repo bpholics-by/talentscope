@@ -882,6 +882,70 @@ async function loadParticipantAssessments(
         return [];
     }
 
+        /* =====================================================
+       STEP 0 (REVISED): Baca dari localStorage
+       =====================================================
+       PENTING: Parameter `project` berasal dari query tabel
+       `projects` — tabel itu TIDAK punya field `assessments`
+       (assessment ada di tabel `project_assessments` terpisah).
+       Jadi kita baca dari localStorage yang sudah di-populate
+       oleh ts-supabase-sync.js.
+    ===================================================== */
+    try {
+        const localProjects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+        const localProject = localProjects.find(p => 
+            String(p.id || p.projectId || p.project_id) === String(projectId)
+        );
+        
+        if (localProject) {
+            // Prioritas 1: project.assessments
+            if (Array.isArray(localProject.assessments) && localProject.assessments.length > 0) {
+                console.log("0️⃣ [FAST PATH] Assessment dari localStorage project.assessments:", localProject.assessments.length);
+                return localProject.assessments.map(function(item, index) {
+                    return normalizeAssessment(item, index, "localStorage.project.assessments");
+                }).filter(Boolean);
+            }
+            
+            // Prioritas 2: raw_data.assessments
+            if (localProject.raw_data && Array.isArray(localProject.raw_data.assessments) && localProject.raw_data.assessments.length > 0) {
+                console.log("0️⃣ [FAST PATH] Assessment dari localStorage raw_data.assessments:", localProject.raw_data.assessments.length);
+                return localProject.raw_data.assessments.map(function(item, index) {
+                    return normalizeAssessment(item, index, "localStorage.raw_data.assessments");
+                }).filter(Boolean);
+            }
+        }
+    } catch (e) {
+        console.warn("⚠ Fast path localStorage error:", e);
+    }
+
+    /* =====================================================
+       STEP 0B: Query Supabase project_assessments table
+    ===================================================== */
+    try {
+        const { data: paData, error: paErr } = await supabaseClient
+            .from("project_assessments")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("created_at", { ascending: true });
+        
+        if (!paErr && Array.isArray(paData) && paData.length > 0) {
+            console.log("0️⃣ [SUPABASE] Assessment dari project_assessments:", paData.length);
+            return paData.map(function(item, index) {
+                return normalizeAssessment(item, index, "project_assessments_table");
+            }).filter(Boolean);
+        }
+    } catch (e) {
+        console.warn("⚠ Supabase project_assessments error:", e);
+    }
+    
+    // Kalau project.assessments sudah di-populate di localStorage
+    if (project && Array.isArray(project.assessments) && project.assessments.length > 0) {
+        console.log("0️⃣ [FAST PATH] Assessment dari project.assessments:", project.assessments.length);
+        
+        return project.assessments.map(function(item, index) {
+            return normalizeAssessment(item, index, "project.assessments");
+        }).filter(Boolean);
+    }
 
     console.log("========================================");
     console.log("🔍 MEMULAI PENCARIAN ASSESSMENT");
@@ -1972,22 +2036,17 @@ async function loadParticipantAssessments(
     ) {
 
         const possiblePasswords = [
-
-            participant.password,
-
-            participant.access_code,
-
-            participant.password_text,
-
-            participant.login_password,
-
-            participant.participant_password,
-
-            participant.pass,
-
-            participant.accessCode
-
-        ];
+    participant.password,
+    participant.access_code,
+    // FIX: cek juga di raw_data
+    participant.raw_data && participant.raw_data.password,
+    participant.raw_data && participant.raw_data.access_code,
+    participant.password_text,
+    participant.login_password,
+    participant.participant_password,
+    participant.pass,
+    participant.accessCode
+];
 
 
         console.log(

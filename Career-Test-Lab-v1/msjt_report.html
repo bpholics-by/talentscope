@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSJT Report — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--teal:#0891b2;--teal-dark:#0e7490;--cyan:#06b6d4;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--ok:#16a34a;--warn:#d97706;--danger:#dc2626}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;position:sticky;top:0;z-index:30;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:18px}
+header small{color:#64748b;display:block;font-size:11px;margin-top:2px}
+.wrap{max-width:1200px;margin:auto;padding:22px 20px 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 4px 14px #0f172a06}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+select,input,button{padding:10px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff;font-size:13px}
+button{background:var(--teal);color:#fff;border:0;font-weight:800;cursor:pointer;transition:.15s}
+button:hover{background:var(--teal-dark)}
+button.ghost{background:#f1f5f9;color:#334155}
+button.ghost:hover{background:#e2e8f0}
+button.danger{background:#dc2626}
+button.danger:hover{background:#b91c1c}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar select{min-width:320px;flex:1}
+.badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800}
+.badge-source{background:#cffafe;color:#155e75}
+.badge-local{background:#f1f5f9;color:#475569}
+
+/* HERO */
+.hero{background:linear-gradient(135deg,#0c4a6e 0%,#0891b2 60%,#06b6d4 100%);color:#fff;border-radius:18px;padding:28px 32px;margin-bottom:18px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;width:300px;height:300px;border:1px solid #ffffff15;border-radius:50%;right:-80px;top:-100px}
+.hero:after{content:"";position:absolute;width:400px;height:400px;border:1px solid #ffffff10;border-radius:50%;right:-150px;bottom:-250px}
+.hero-label{font-size:10px;font-weight:900;letter-spacing:2px;color:#a5f3fc;margin-bottom:10px;position:relative;z-index:1}
+.hero-title{font-size:30px;font-weight:900;margin:0 0 6px;position:relative;z-index:1}
+.hero-sub{color:#cffafe;font-size:13px;position:relative;z-index:1;margin:0}
+.overall-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px;position:relative;z-index:1}
+.overall-stat{background:#ffffff12;border:1px solid #ffffff20;border-radius:12px;padding:14px 16px}
+.overall-stat .lbl{font-size:10px;font-weight:800;letter-spacing:.7px;color:#a5f3fc;text-transform:uppercase}
+.overall-stat .val{font-size:24px;font-weight:900;margin-top:6px;color:#fff;font-variant-numeric:tabular-nums}
+.overall-stat .unit{font-size:12px;color:#cffafe;font-weight:600;margin-left:4px}
+
+/* KOMPETENSI BLOCK */
+.comp-block{padding:18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px;transition:.15s}
+.comp-block:hover{border-color:#a5f3fc}
+.comp-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+.comp-name{font-size:15px;font-weight:900;color:#0f172a}
+.comp-label{font-size:11px;color:#64748b;margin-top:3px;font-weight:600}
+.comp-score-wrap{text-align:right;flex-shrink:0}
+.comp-score{font-size:26px;font-weight:900;color:var(--teal);font-variant-numeric:tabular-nums;line-height:1}
+.comp-badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800;margin-top:6px}
+.b-strong{background:#dcfce7;color:#166534}
+.b-adequate{background:#cffafe;color:#155e75}
+.b-developing{background:#fef3c7;color:#92400e}
+.b-review{background:#fee2e2;color:#991b1b}
+
+.comp-bar{height:16px;background:#e2e8f0;border-radius:99px;overflow:hidden;position:relative;margin-bottom:6px}
+.comp-bar i{display:block;height:100%;background:linear-gradient(90deg,#06b6d4,#0891b2);transition:width .8s}
+.comp-detail{display:flex;justify-content:space-between;font-size:11px;color:#64748b;font-weight:700;margin-top:8px;gap:10px;flex-wrap:wrap}
+.comp-detail b{color:#0f172a;font-size:12px}
+
+/* INTERPRETATION BOX */
+.insight{background:#ecfeff;border-left:4px solid var(--teal);border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.75;margin-top:12px;color:#155e75}
+.insight b{color:#0e7490}
+.warning{background:#fef3c7;border-left:4px solid #d97706;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px;color:#78350f}
+.warning b{color:#92400e}
+.success-box{background:#f0fdf4;border-left:4px solid #16a34a;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px;color:#166534}
+.success-box b{color:#166534}
+.danger-box{background:#fef2f2;border-left:4px solid #dc2626;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px;color:#991b1b}
+.danger-box b{color:#991b1b}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#f8fafc;color:#64748b;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+tr:hover td{background:#f8fafc}
+.empty{text-align:center;color:#94a3b8;padding:60px 20px}
+.empty h3{color:#64748b;margin:0 0 8px}
+.chart-container{position:relative;height:360px}
+.disclaimer{margin-top:18px;padding:16px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;font-size:12px;line-height:1.7;color:#78350f}
+.disclaimer b{color:#92400e}
+.stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.stat-line:last-child{border-bottom:0}
+.stat-line span{color:#64748b}
+.stat-line b{color:#0f172a}
+
+.pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800}
+.p-strong{background:#cffafe;color:#155e75}
+.p-mod{background:#dbeafe;color:#1e40af}
+.p-low{background:#fef3c7;color:#92400e}
+
+.section-title{font-size:18px;font-weight:900;margin:0 0 4px;color:#0f172a}
+.section-sub{font-size:12px;color:#64748b;margin:0 0 16px}
+
+@media(max-width:900px){
+  .grid-2,.grid-4,.overall-panel{grid-template-columns:1fr}
+  header{flex-direction:column;align-items:flex-start}
+  .toolbar select{min-width:100%}
+  .comp-detail{flex-direction:column;gap:4px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 MSJT Report</h1>
+    <small>Managerial Situational Judgment Test — Admin Dashboard</small>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="sourceBadge" class="badge badge-local">📦 LocalStorage</span>
+    <button class="ghost" onclick="refreshList()">🔄 Refresh</button>
+    <button class="ghost" onclick="exportAll()">⬇ Export Semua</button>
+    <button class="danger" onclick="clearAll()">🗑 Hapus Semua</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card" style="padding:16px">
+    <div class="toolbar">
+      <select id="resultSelect" onchange="loadResult()">
+        <option value="">— Pilih peserta —</option>
+      </select>
+      <input id="searchInput" placeholder="🔍 Cari nama / ID / project..." oninput="filterList()" style="min-width:240px">
+      <button onclick="exportCurrent()">⬇ Export Hasil Ini</button>
+    </div>
+  </div>
+
+  <div id="reportContainer">
+    <div class="card empty">
+      <h3>Belum ada hasil dipilih</h3>
+      <p>Pilih peserta dari dropdown di atas untuk melihat laporan.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MSJT REPORT VIEWER
+   Filter: result_type = "MSJT"
+========================================================= */
+
+let allResults = [];
+let filteredResults = [];
+let currentResult = null;
+let charts = {};
+let dataSource = "local";
+
+const SUPABASE_TABLE = "sjt_results";
+
+function el(id){ return document.getElementById(id); }
+function fmtDate(iso){
+  if(!iso) return "-";
+  try { return new Date(iso).toLocaleString("id-ID", {day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit"}); }
+  catch(e) { return iso; }
+}
+
+async function loadFromSupabase(){
+  try {
+    let sb = window.supabaseClient || window.supabase || null;
+    if (!sb) return null;
+
+    const { data, error } = await sb
+      .from(SUPABASE_TABLE)
+      .select("*")
+      .eq("result_type", "MSJT")
+      .order("submitted_at", { ascending: false })
+      .limit(500);
+
+    if (error) { console.warn("[MSJT Report] error:", error.message); return null; }
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    return data.map(row => ({
+      version: row.version || 1,
+      resultType: "MSJT",
+      projectId: row.project_id,
+      participantId: row.participant_id,
+      assessmentIndex: row.assessment_index,
+      assessmentCode: row.assessment_code,
+      assessmentName: row.assessment_name,
+      participantName: row.participant_name || "",
+      responses: typeof row.responses === "string" ? JSON.parse(row.responses) : row.responses,
+      scores: typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores,
+      totalItems: row.total_items,
+      answeredItems: row.answered_items,
+      submittedAt: row.submitted_at,
+      _source: "supabase"
+    }));
+  } catch(e) { console.warn("[MSJT Report] Gagal load Supabase:", e); return null; }
+}
+
+function loadFromLocal(){
+  try {
+    return JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+      .filter(x => x.resultType === "MSJT")
+      .map(r => ({ ...r, _source: "local" }));
+  } catch(e) { return []; }
+}
+
+async function refreshList(){
+  el("reportContainer").innerHTML = `
+    <div class="card empty">
+      <div style="width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#0891b2;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px"></div>
+      <p>Memuat data...</p>
+    </div>`;
+
+  try {
+    let results = await loadFromSupabase();
+
+    if(results && results.length > 0){
+      allResults = results;
+      dataSource = "supabase";
+      el("sourceBadge").textContent = "☁ Supabase";
+      el("sourceBadge").className = "badge badge-source";
+    } else {
+      allResults = loadFromLocal();
+      dataSource = "local";
+      el("sourceBadge").textContent = "📦 LocalStorage";
+      el("sourceBadge").className = "badge badge-local";
+    }
+
+    allResults.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+    filteredResults = [...allResults];
+    renderDropdown();
+
+    if(allResults.length === 0){
+      el("reportContainer").innerHTML = `<div class="card empty"><h3>Belum ada hasil MSJT</h3><p>Selesaikan tes terlebih dahulu.</p></div>`;
+    } else {
+      el("reportContainer").innerHTML = `<div class="card empty"><h3>📋 ${allResults.length} hasil tersedia</h3><p>Pilih peserta dari dropdown untuk melihat laporan.</p></div>`;
+    }
+  } catch(err) {
+    console.error("[MSJT Report] Error refresh:", err);
+    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat data</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderDropdown(){
+  const sel = el("resultSelect");
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">— Pilih peserta (' + filteredResults.length + ') —</option>';
+  filteredResults.forEach((r) => {
+    const opt = document.createElement("option");
+    opt.value = allResults.indexOf(r);
+    const date = fmtDate(r.submittedAt);
+    const name = r.participantName || r.participantId || "Unknown";
+    opt.textContent = `${name} • ${r.assessmentName || "MSJT"} • ${date}`;
+    sel.appendChild(opt);
+  });
+  if(currentVal) sel.value = currentVal;
+}
+
+function filterList(){
+  const q = el("searchInput").value.toLowerCase().trim();
+  if(!q){ filteredResults = [...allResults]; }
+  else {
+    filteredResults = allResults.filter(r =>
+      String(r.participantId || "").toLowerCase().includes(q) ||
+      String(r.participantName || "").toLowerCase().includes(q) ||
+      String(r.projectId || "").toLowerCase().includes(q)
+    );
+  }
+  renderDropdown();
+}
+
+function loadResult(){
+  const idx = el("resultSelect").value;
+  if(idx === ""){ el("reportContainer").innerHTML = `<div class="card empty">Pilih peserta untuk melihat laporan.</div>`; currentResult = null; return; }
+  currentResult = allResults[Number(idx)];
+  renderReport(currentResult);
+}
+
+/* =========================================================
+   RENDER REPORT
+========================================================= */
+function renderReport(r){
+  const scores = r.scores || {};
+
+  // Urutkan 8 kompetensi berdasarkan normalized desc
+  const compKeys = Object.keys(scores);
+  const sorted = compKeys
+    .map(k => ({ key: k, ...scores[k] }))
+    .sort((a, b) => b.normalized - a.normalized);
+
+  const dominant = sorted[0];
+  const weakest = sorted[sorted.length - 1];
+
+  // Klasifikasi
+  function clsNormalized(v){
+    if(v >= 70) return "Kuat";
+    if(v >= 55) return "Cukup";
+    if(v >= 40) return "Perlu Penguatan";
+    return "Perlu Perhatian Serius";
+  }
+  function clsClass(v){
+    if(v >= 70) return "b-strong";
+    if(v >= 55) return "b-adequate";
+    if(v >= 40) return "b-developing";
+    return "b-review";
+  }
+
+  // Render 8 kompetensi
+  const compHTML = sorted.map(comp => `
+    <div class="comp-block">
+      <div class="comp-head">
+        <div>
+          <div class="comp-name">${comp.label}</div>
+          <div class="comp-label">Net Score: ${comp.netScore > 0 ? '+' : ''}${comp.netScore.toFixed(1)}</div>
+        </div>
+        <div class="comp-score-wrap">
+          <div class="comp-score">${comp.normalized.toFixed(1)}</div>
+          <span class="comp-badge ${clsClass(comp.normalized)}">${clsNormalized(comp.normalized)}</span>
+        </div>
+      </div>
+      <div class="comp-bar"><i style="width:${Math.max(0, Math.min(100, comp.normalized))}%"></i></div>
+      <div class="comp-detail">
+        <span>MOST: <b>${comp.most}</b> (${comp.mostPct.toFixed(1)}%)</span>
+        <span>LEAST: <b>${comp.least}</b> (${comp.leastPct.toFixed(1)}%)</span>
+        <span>Net: <b>${comp.netScore > 0 ? '+' : ''}${comp.netScore.toFixed(1)}</b></span>
+      </div>
+    </div>
+  `).join("");
+
+  // Bangun interpretasi
+  const interpretationHTML = buildInterpretation(scores, dominant, weakest, clsNormalized);
+
+  // Detail jawaban
+  const responses = r.responses || {};
+  const responsesHTML = Object.keys(responses).sort().map(itemId => {
+    const resp = responses[itemId];
+    return `
+      <tr>
+        <td><b>${itemId}</b></td>
+        <td><span class="pill p-strong">${resp.most || "-"}</span></td>
+        <td><span class="pill p-low">${resp.least || "-"}</span></td>
+      </tr>
+    `;
+  }).join("");
+
+  el("reportContainer").innerHTML = `
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
+      <h2 class="hero-title">MSJT — Managerial Competency Profile</h2>
+      <p class="hero-sub">
+        ${r.participantName || r.participantId} • ${fmtDate(r.submittedAt)} •
+        Managerial Situational Judgment Test
+      </p>
+      <div class="overall-panel">
+        <div class="overall-stat"><div class="lbl">Total Item</div><div class="val">${r.totalItems || 32}</div></div>
+        <div class="overall-stat"><div class="lbl">Terjawab</div><div class="val">${r.answeredItems || 0}<span class="unit">/ ${r.totalItems || 32}</span></div></div>
+        <div class="overall-stat"><div class="lbl">Kompetensi Dominan</div><div class="val" style="font-size:14px;line-height:1.3">${dominant.label}</div></div>
+        <div class="overall-stat"><div class="lbl">Skor Dominan</div><div class="val">${dominant.normalized.toFixed(1)}</div></div>
+      </div>
+    </div>
+
+    <!-- RINGKASAN -->
+    <div class="card">
+      <h3 class="section-title">📌 Profil 8 Kompetensi Manajerial</h3>
+      <p class="section-sub">
+        Profil kompetensi berdasarkan 32 item MSJT. Skor bersifat <b>ipsatif</b> —
+        total skor setiap individu selalu sama (64 = 32 MOST + 32 LEAST).
+        Interpretasi dilakukan dengan membandingkan antar-kompetensi, bukan skor absolut.
+      </p>
+      ${compHTML}
+    </div>
+
+    <!-- VISUALISASI -->
+    <div class="card">
+      <h3 class="section-title">🕸 Radar 8 Kompetensi</h3>
+      <p class="section-sub">Visualisasi profil kompetensi manajerial. Semakin melebar ke luar, semakin dominan.</p>
+      <div class="chart-container"><canvas id="radarChart"></canvas></div>
+    </div>
+
+    <!-- INTERPRETASI -->
+    <div class="card">
+      <h3 class="section-title">🧠 Interpretasi</h3>
+      ${interpretationHTML}
+    </div>
+
+    <!-- DETAIL JAWABAN -->
+    <div class="card">
+      <h3 class="section-title">📄 Detail Jawaban per Item</h3>
+      <p class="section-sub">MOST = paling menggambarkan; LEAST = paling tidak menggambarkan.</p>
+      <div style="overflow:auto;max-height:500px;margin-top:12px">
+        <table>
+          <thead><tr><th>Item</th><th>MOST</th><th>LEAST</th></tr></thead>
+          <tbody>${responsesHTML}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="disclaimer">
+      <b>Disclaimer:</b> Hasil ini merupakan indikator kecenderungan kompetensi manajerial dalam konteks tugas terstruktur,
+      <b>bukan diagnosis klinis</b>. Interpretasi bersifat ipsatif (perbandingan internal antar-kompetensi).
+      Untuk keputusan seleksi/pengembangan, diperlukan konfirmasi melalui metode asesmen lain.
+    </div>
+  `;
+
+  requestAnimationFrame(() => renderRadar(scores, sorted));
+}
+
+/* =========================================================
+   INTERPRETASI NARATIF
+========================================================= */
+function buildInterpretation(scores, dominant, weakest, clsNormalized){
+  const domScore = dominant.normalized;
+  const weakScore = weakest.normalized;
+  const gap = domScore - weakScore;
+
+  // Narasi per kompetensi dominan
+  const narratives = {
+    "PO":  "Kandidat cenderung kuat dalam <b>Planning & Organizing</b> — mampu merumuskan tujuan, menetapkan prioritas, dan menata sumber daya secara terstruktur. Ini adalah fondasi eksekusi yang andal pada peran manajerial dengan banyak pekerjaan paralel.",
+    "ST":  "Kandidat cenderung kuat dalam <b>Strategic Thinking</b> — mampu melihat pola, dinamika lingkungan, dan implikasi jangka panjang. Cocok untuk peran yang menuntut visi ke depan dan adaptasi strategi.",
+    "DM":  "Kandidat cenderung kuat dalam <b>Decision Making</b> — nyaman mengambil keputusan dengan mempertimbangkan data, konsekuensi, ketidakpastian, dan risiko. Cocok pada peran dengan keputusan cepat dan kompleks.",
+    "CB":  "Kandidat cenderung kuat dalam <b>Mindful of Cost & Efficiency</b> — sensitif terhadap optimalisasi biaya, sumber daya, dan manfaat. Cocok pada peran dengan target efisiensi dan anggaran ketat.",
+    "CTL": "Kandidat cenderung kuat dalam <b>Controlling</b> — mampu memantau hasil terhadap standar dan mengambil tindakan korektif. Cocok pada peran yang menuntut monitoring dan kualitas konsisten.",
+    "CR":  "Kandidat cenderung kuat dalam <b>Conflict Resolution</b> — mampu menangani perbedaan secara adil dan konstruktif. Cocok pada peran yang sering menghadapi dinamika antar-individu atau antar-unit.",
+    "PM":  "Kandidat cenderung kuat dalam <b>People Management / Coaching</b> — mampu memberi umpan balik dan mengembangkan kapasitas orang lain. Cocok pada peran yang menuntut pembinaan dan pengembangan tim.",
+    "BA":  "Kandidat cenderung kuat dalam <b>Business Acumen</b> — memahami implikasi keputusan terhadap pelanggan, pasar, dan profitabilitas. Cocok pada peran yang menuntut orientasi bisnis dan keberlanjutan."
+  };
+
+  const weakNarratives = {
+    "PO":  "Kandidat relatif kurang kuat dalam <b>Planning & Organizing</b>. Pada situasi dengan banyak pekerjaan paralel dan tenggat berdekatan, kandidat mungkin perlu dukungan struktur kerja yang lebih eksplisit.",
+    "ST":  "Kandidat relatif kurang kuat dalam <b>Strategic Thinking</b>. Pada situasi yang menuntut visi jangka panjang, kandidat mungkin perlu waktu untuk melihat implikasi strategis.",
+    "DM":  "Kandidat relatif kurang kuat dalam <b>Decision Making</b>. Pada situasi bertekanan waktu, kandidat mungkin perlu dukungan kerangka keputusan atau data yang lebih lengkap.",
+    "CB":  "Kandidat relatif kurang kuat dalam <b>Mindful of Cost & Efficiency</b>. Pada situasi dengan anggaran ketat, kandidat mungkin perlu dukungan analisis biaya-manfaat.",
+    "CTL": "Kandidat relatif kurang kuat dalam <b>Controlling</b>. Pada situasi yang menuntut pemantauan ketat, kandidat mungkin perlu sistem monitoring yang lebih terstruktur.",
+    "CR":  "Kandidat relatif kurang kuat dalam <b>Conflict Resolution</b>. Pada situasi konflik antar-individu, kandidat mungkin perlu dukungan mediasi atau kerangka penyelesaian.",
+    "PM":  "Kandidat relatif kurang kuat dalam <b>People Management / Coaching</b>. Pada situasi yang menuntut pembinaan intensif, kandidat mungkin perlu dukungan metode coaching.",
+    "BA":  "Kandidat relatif kurang kuat dalam <b>Business Acumen</b>. Pada situasi yang menuntut orientasi bisnis, kandidat mungkin perlu dukungan konteks pasar dan pelanggan."
+  };
+
+  // Kategorisasi kekuatan
+  const sortedArr = Object.keys(scores).map(k => ({ key: k, ...scores[k] })).sort((a,b) => b.normalized - a.normalized);
+  const top3 = sortedArr.slice(0, 3);
+  const bottom3 = sortedArr.slice(-3).reverse();
+
+  const strengthsHTML = top3.map(c => 
+    `<li><b>${c.label} (${c.normalized.toFixed(1)} — ${clsNormalized(c.normalized)})</b></li>`
+  ).join("");
+
+  const weaksHTML = bottom3.map(c => 
+    `<li><b>${c.label} (${c.normalized.toFixed(1)} — ${clsNormalized(c.normalized)})</b></li>`
+  ).join("");
+
+  return `
+    <div class="insight">
+      <b>Profil Dominan: ${dominant.label}</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        ${narratives[dominant.key] || ""}
+        Skor ${dominant.label} (<b>${domScore.toFixed(1)}</b>) menunjukkan kecenderungan ini sebagai yang paling kuat,
+        dengan jarak <b>${gap.toFixed(1)} poin</b> dari kompetensi terendah (${weakest.label}, ${weakScore.toFixed(1)}).
+      </p>
+    </div>
+
+    <div class="warning">
+      <b>Area Pengembangan: ${weakest.label}</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        ${weakNarratives[weakest.key] || ""}
+      </p>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
+      <div class="success-box">
+        <b>✓ 3 Kompetensi Terkuat</b>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.9">${strengthsHTML}</ul>
+      </div>
+      <div class="warning">
+        <b>⚠ 3 Kompetensi Terlemah</b>
+        <ul style="margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.9">${weaksHTML}</ul>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:16px;background:#f0fdfa;border-left-color:#0d9488">
+      <b>💡 Rekomendasi Pengembangan</b>
+      <ul style="margin:8px 0 0;padding-left:20px;font-size:13px;line-height:1.9">
+        <li>Fokuskan pengembangan pada <b>${weakest.label}</b> melalui pelatihan terarah, mentoring, atau penugasan khusus.</li>
+        <li>Manfaatkan kekuatan <b>${dominant.label}</b> sebagai leverage untuk mengangkat area lain.</li>
+        <li>Bandingkan hasil ini dengan asesmen lain (VAP, PAPI, DISC) untuk konvergensi bukti.</li>
+        <li>Untuk keputusan seleksi/promosi, gunakan <b>multiple hurdle</b> — jangan jadikan MSJT sebagai satu-satunya dasar.</li>
+      </ul>
+    </div>
+  `;
+}
+
+/* =========================================================
+   RADAR CHART (8 KOMPETENSI)
+========================================================= */
+function renderRadar(scores, sorted){
+  if(charts.radar) charts.radar.destroy();
+  const ctx = el("radarChart");
+  if(!ctx) return;
+
+  const labels = [
+    "Planning\n& Organizing",
+    "Strategic\nThinking",
+    "Decision\nMaking",
+    "Cost &\nEfficiency",
+    "Controlling",
+    "Conflict\nResolution",
+    "People\nManagement",
+    "Business\nAcumen"
+  ];
+
+  // Urutan sesuai COMPETENCIES keys
+  const keyOrder = ["PO", "ST", "DM", "CB", "CTL", "CR", "PM", "BA"];
+  const dataValues = keyOrder.map(k => {
+    const c = scores[k];
+    return c ? Math.max(0, Math.min(100, c.normalized)) : 0;
+  });
+
+  charts.radar = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Profil Kandidat",
+          data: dataValues,
+          borderColor: "#0891b2",
+          backgroundColor: "rgba(8,145,178,.18)",
+          pointBackgroundColor: "#0891b2",
+          pointBorderColor: "#fff",
+          pointBorderWidth: 2,
+          pointRadius: 6
+        },
+        {
+          label: "Benchmark 50",
+          data: [50, 50, 50, 50, 50, 50, 50, 50],
+          borderColor: "#94a3b8",
+          backgroundColor: "rgba(148,163,184,.08)",
+          borderDash: [4, 4],
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom", labels: { font: { size: 11 }, padding: 14 } },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ": " + context.parsed.r.toFixed(1);
+            }
+          }
+        }
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            stepSize: 25,
+            font: { size: 10 },
+            backdropColor: "rgba(255,255,255,.7)"
+          },
+          pointLabels: {
+            font: { size: 11, weight: "600" },
+            color: "#334155"
+          },
+          grid: { color: "#e2e8f0" },
+          angleLines: { color: "#e2e8f0" }
+        }
+      }
+    }
+  });
+}
+
+/* =========================================================
+   EXPORT
+========================================================= */
+function exportCurrent(){
+  if(!currentResult) return alert("Pilih hasil dulu.");
+  const blob = new Blob([JSON.stringify(currentResult, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `MSJT_${currentResult.participantId}_${currentResult.assessmentIndex}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAll(){
+  if(!allResults.length) return alert("Belum ada data.");
+  const blob = new Blob([JSON.stringify(allResults, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `MSJT_all_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAll(){
+  if(!confirm("Hapus SEMUA hasil MSJT dari localStorage? (Data Supabase TIDAK terhapus)")) return;
+  const kept = JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+    .filter(x => x.resultType !== "MSJT");
+  localStorage.setItem("talent_scope_results", JSON.stringify(kept));
+  refreshList();
+}
+
+refreshList();
+console.log("[MSJT Report Viewer] Ready.");
+</script>
+
+</body>
+</html>

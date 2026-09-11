@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+    <script src="js/ts-supabase-sync.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/participant-activity.js"></script>
+    <script>
+        if (typeof ParticipantActivity !== "undefined") {
+            ParticipantActivity.trackPageEntry("Tes Managerial Situational Judgment Test (MSJT)");
+            ParticipantActivity.trackTabSwitch("Tes Managerial Situational Judgment Test (MSJT)");
+        }
+    </script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSJT — Managerial Situational Judgment Test</title>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--blue2:#1d4ed8;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--teal:#0891b2}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}.hidden{display:none!important}
+header{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:20}
+.back{color:#334155;text-decoration:none;font-weight:750;font-size:14px;display:flex;align-items:center;gap:8px}.back:hover{color:var(--blue)}
+.timer-wrap{text-align:right}.timer-wrap small{display:block;color:#94a3b8;font-size:9px;font-weight:800;letter-spacing:1.5px}.timer{font-weight:900;font-size:19px;color:var(--teal);font-variant-numeric:tabular-nums}
+main{max-width:1120px;margin:auto;padding:30px 20px 55px}
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:42px 44px;background:linear-gradient(135deg,#0c4a6e 0%,#0891b2 52%,#06b6d4 100%);color:#fff;box-shadow:0 18px 45px #0f172a20}
+.hero:before,.hero:after{content:"";position:absolute;border:1px solid #ffffff22;border-radius:50%}.hero:before{width:260px;height:260px;right:-60px;top:-130px}.hero:after{width:330px;height:330px;right:110px;bottom:-275px}
+.pill{display:inline-flex;border:1px solid #ffffff35;background:#ffffff14;border-radius:999px;padding:7px 12px;font-size:10px;font-weight:850;letter-spacing:1.8px;position:relative;z-index:1}
+.hero h1{font-size:46px;line-height:1;margin:19px 0 10px;font-weight:950;letter-spacing:-1.5px;position:relative;z-index:1}
+.hero p{max-width:720px;line-height:1.65;color:#cffafe;margin:0;position:relative;z-index:1}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.meta{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 5px 20px #0f172a08}
+.meta .k{font-size:10px;font-weight:850;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.meta .icon-box{width:30px;height:30px;border-radius:10px;background:#e0f7fa;color:var(--teal);display:grid;place-items:center;flex:0 0 30px}
+.meta .icon-box svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.meta .v{font-size:16px;font-weight:850;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prep{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:24px;padding:27px;box-shadow:0 8px 28px #0f172a08}
+.prep-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.eyebrow{font-size:10px;font-weight:900;letter-spacing:1.7px;color:var(--teal)}
+.prep h2{margin:6px 0 6px;font-size:24px}.prep-head p{margin:0;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:9px;flex-wrap:wrap}.stat{min-width:105px;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}.stat strong{display:block;font-size:18px}.stat span{font-size:10px;color:var(--muted);font-weight:750}
+.steps{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:22px}
+.step{display:flex;gap:13px;padding:16px;border:1px solid var(--line);background:#f0fdfe;border-radius:16px}.step-no{width:30px;height:30px;border-radius:10px;background:#e0f7fa;color:var(--teal);display:grid;place-items:center;font-size:12px;font-weight:900;flex:0 0 30px}
+.step b{font-size:13px}.step p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+.confirm{margin-top:19px;padding:16px;border-radius:15px;background:#f8fafc;border:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}.confirm input{margin-top:3px;width:17px;height:17px;accent-color:var(--teal)}.confirm label{margin:0;font-size:13px;font-weight:700;color:#334155;cursor:pointer}
+.start-row{margin-top:16px;display:flex;justify-content:flex-end}.btn{border:0;border-radius:12px;padding:13px 19px;font-weight:850;cursor:pointer}.primary{background:var(--teal);color:#fff}.primary:hover{background:#0e7490}.primary:disabled{background:#cbd5e1;color:#94a3b8;cursor:not-allowed}
+.security{margin-top:13px;text-align:center;color:#64748b;font-size:11px;display:flex;justify-content:center;align-items:center;gap:8px}
+.shield{width:22px;height:22px;border-radius:7px;background:#e0f7fa;color:var(--teal);display:grid;place-items:center;flex:0 0 22px}
+.shield svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.test{max-width:900px;margin:auto}
+.test-head{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px}
+.progress-wrap{margin-top:14px}
+.progress-bar{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}
+.progress-bar i{display:block;height:100%;background:linear-gradient(90deg,#0891b2,#06b6d4);transition:width .3s}
+.q-num{font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+.q-title{font-weight:900;font-size:17px}
+.session-time{text-align:right}.session-time small{display:block;font-size:9px;color:#94a3b8}.session-time strong{font-size:21px;color:#334155;font-variant-numeric:tabular-nums}
+
+.scenario-box{margin-top:16px;background:#f0fdfe;border:1px solid #a5f3fc;border-radius:18px;padding:22px}
+.scenario-label{font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--teal);margin-bottom:8px}
+.scenario-text{font-size:15px;line-height:1.7;color:#1e293b}
+
+.options{margin-top:18px;display:grid;gap:12px}
+.option{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;transition:.15s}
+.option:hover{border-color:#06b6d4}
+.option-letter{width:34px;height:34px;border-radius:10px;background:#f1f5f9;color:#334155;display:grid;place-items:center;font-weight:900;font-size:14px;flex:0 0 34px}
+.option-text{font-size:14px;line-height:1.65;color:#1e293b;flex:1;margin-top:6px}
+.option-actions{display:flex;gap:6px;flex-direction:column;flex:0 0 130px}
+.option-btn{background:#f1f5f9;border:2px solid transparent;color:#475569;padding:8px 12px;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer;letter-spacing:.5px;transition:.15s}
+.option-btn:hover{background:#e2e8f0}
+.option-btn.most.active{background:#0891b2;color:#fff}
+.option-btn.most.active:hover{background:#0e7490}
+.option-btn.least.active{background:#f59e0b;color:#fff}
+.option-btn.least.active:hover{background:#d97706}
+
+.nav-row{margin-top:24px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.nav-btn{background:#fff;border:1px solid var(--line);color:#334155;padding:12px 20px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.nav-btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.nav-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+.nav-btn.primary:hover{background:#0e7490}
+.nav-btn:disabled{opacity:.4;cursor:not-allowed}
+.nav-hint{font-size:12px;color:#64748b;text-align:center;margin-top:10px}
+
+.break{max-width:600px;margin:70px auto;text-align:center}.break .card{padding:45px}.check{font-size:52px;color:#16a34a}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+
+@media(max-width:750px){
+  header{padding:0 15px}.meta-grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}
+  .prep-head{display:block}.stats{margin-top:16px}.hero{padding:30px}.hero h1{font-size:38px}
+  .test-head{flex-direction:column;gap:10px;align-items:flex-start}
+  .option{flex-direction:column}.option-actions{flex-direction:row;flex:1;width:100%}
+  .option-actions .option-btn{flex:1}
+  .nav-row{flex-direction:column-reverse}.nav-btn{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="#" onclick="backToDashboard(event)">← Kembali ke Dashboard</a>
+  <div class="timer-wrap"><small>TOTAL ASSESSMENT</small><div id="globalTimer" class="timer">30:00</div></div>
+</header>
+<main>
+
+<section id="intro">
+  <div class="hero">
+    <span class="pill">TALENTSCOPE ENTERPRISE • ASSESSMENT</span>
+    <h1>MSJT</h1>
+    <p>Managerial Situational Judgment Test — Master Form A (32 Item)</p>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.2 3.1-5 7-5s6.3 1.8 7 5"></path></svg></span>Peserta</div><div class="v" id="participantName">-</div></div>
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"></rect><path d="M8 6V4h8v2M3 10h18"></path></svg></span>Proyek</div><div class="v" id="projectName">-</div></div>
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>Tanggal</div><div class="v" id="assessmentDate">-</div></div>
+  </div>
+
+  <div class="prep">
+    <div class="prep-head">
+      <div>
+        <div class="eyebrow">PERSIAPAN TES</div>
+        <h2>Siap untuk memulai assessment?</h2>
+        <p>Bayangkan Anda berada dalam setiap situasi sebagai manajer yang bertanggung jawab. Pilih berdasarkan kecenderungan nyata Anda.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>32</strong><span>Item</span></div>
+        <div class="stat"><strong>30</strong><span>Menit</span></div>
+        <div class="stat"><strong>M/L</strong><span>Format</span></div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step"><div class="step-no">01</div><div><b>Pilih MOST & LEAST</b><p>Pilih SATU MOST (paling menggambarkan) dan SATU LEAST (paling tidak menggambarkan).</p></div></div>
+      <div class="step"><div class="step-no">02</div><div><b>MOST ≠ LEAST</b><p>Pilihan MOST dan LEAST tidak boleh berada pada alternatif yang sama.</p></div></div>
+      <div class="step"><div class="step-no">03</div><div><b>Jawab sesuai kecenderungan</b><p>Pilih berdasarkan kecenderungan nyata, bukan jawaban yang paling ideal.</p></div></div>
+      <div class="step"><div class="step-no">04</div><div><b>Jangan memuat ulang halaman</b><p>Biarkan halaman tetap terbuka sampai seluruh assessment selesai.</p></div></div>
+    </div>
+
+    <div class="confirm"><input id="confirmRead" type="checkbox" onchange="toggleStart()"><label for="confirmRead">Saya telah membaca dan memahami seluruh petunjuk tes</label></div>
+    <div class="start-row"><button id="startBtn" class="btn primary" onclick="begin()" disabled>Kerjakan Tes →</button></div>
+    <div class="security"><span class="shield"><svg viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.3c0 4.4-2.7 7.8-7 9.2-4.3-1.4-7-4.8-7-9.2V6l7-2.5Z"></path><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg></span><b>Jawaban Anda tersimpan otomatis selama pengerjaan.</b></div>
+  </div>
+</section>
+
+<section id="test" class="hidden test">
+  <div class="test-head">
+    <div>
+      <div class="q-num" id="qNum">ITEM 01 / 32</div>
+      <div class="q-title" id="qTitle">Situasi 01</div>
+    </div>
+    <div class="session-time">
+      <small>SISA WAKTU</small>
+      <strong id="sessionTimer">30:00</strong>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><i id="progressFill" style="width:0%"></i></div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#94a3b8">
+      <span id="progressLabel">Item 1 dari 32</span>
+      <span id="answeredLabel">Terjawab: 0 / 32</span>
+    </div>
+  </div>
+
+  <div class="scenario-box">
+    <div class="scenario-label">SITUASI</div>
+    <div class="scenario-text" id="scenarioText"></div>
+  </div>
+
+  <div class="options" id="optionsContainer"></div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn" onclick="prevItem()">← Sebelumnya</button>
+    <button class="nav-btn primary" id="nextBtn" onclick="nextItem()">Selanjutnya →</button>
+  </div>
+  <div class="nav-hint" id="navHint"></div>
+</section>
+
+<section id="finish" class="hidden break">
+  <div class="card">
+    <div class="check">✓</div>
+    <h2>Tes Selesai</h2>
+    <p id="finishMessage">Jawaban Anda telah berhasil disimpan. Sedang mengalihkan...</p>
+  </div>
+</section>
+
+</main>
+<script>
+/* =========================================================
+   MSJT — Managerial Situational Judgment Test
+   Master Form A — 32 Item | 30 Menit
+   8 Kompetensi: P&O, ST, DM, C&B, CTL, CR, PM, BA
+========================================================= */
+
+const TEST_MODE = false;
+
+const CFG = {
+    totalSeconds: TEST_MODE ? 60 : 1800,
+};
+
+/* Mapping kode → label kompetensi */
+const COMPETENCIES = {
+    PO:  "Planning & Organizing",
+    ST:  "Strategic Thinking",
+    DM:  "Decision Making",
+    CB:  "Mindful of Cost & Efficiency",
+    CTL: "Controlling",
+    CR:  "Conflict Resolution",
+    PM:  "People Management / Coaching",
+    BA:  "Business Acumen"
+};
+
+/* =========================================================
+   ITEM BANK — 32 Items
+   Struktur: { id, scenario, options: [{text, competency}] }
+========================================================= */
+const ITEMS = [
+  {
+    id: "MGT-01",
+    scenario: "Unit Anda menerima peningkatan target yang signifikan, sementara jumlah personel dan waktu yang tersedia relatif sama. Anda perlu menentukan langkah awal.",
+    options: [
+      { text: "Menyusun ulang prioritas pekerjaan berdasarkan urgensi dan kontribusi terhadap target utama.", competency: "PO" },
+      { text: "Menganalisis kebutuhan sumber daya tambahan dan menyusun justifikasi untuk pengajuan ke manajemen.", competency: "CB" },
+      { text: "Mengidentifikasi tugas-tugas yang dapat didelegasikan atau dialihkan kepada anggota sesuai kapasitasnya.", competency: "PM" },
+      { text: "Mengevaluasi kembali target dan menetapkan tahapan pencapaian yang lebih realistis.", competency: "ST" }
+    ]
+  },
+  {
+    id: "MGT-02",
+    scenario: "Kebutuhan pelanggan mulai berubah secara bertahap, dan dampaknya terhadap unit belum sepenuhnya terlihat.",
+    options: [
+      { text: "Mengajak tim berdiskusi mengenai perubahan yang mereka amati dalam interaksi dengan pelanggan.", competency: "PM" },
+      { text: "Menganalisis tren perubahan dan dampaknya terhadap strategi unit dalam jangka menengah.", competency: "ST" },
+      { text: "Mengumpulkan data tambahan dari berbagai sumber sebelum menentukan respons unit.", competency: "DM" },
+      { text: "Memetakan dampak perubahan terhadap posisi kompetitif organisasi di pasar.", competency: "BA" }
+    ]
+  },
+  {
+    id: "MGT-03",
+    scenario: "Sebuah proses kerja memakan waktu panjang karena masih manual. Ada usulan sistem baru yang lebih cepat tetapi membutuhkan investasi dan pelatihan.",
+    options: [
+      { text: "Membandingkan biaya investasi dengan penghematan waktu, biaya operasional, dan manfaat yang diperkirakan.", competency: "CB" },
+      { text: "Meminta tim mengidentifikasi tahapan paling memakan waktu untuk perbaikan tanpa sistem baru.", competency: "PO" },
+      { text: "Menghitung potensi peningkatan produktivitas dan dampaknya terhadap kualitas sebelum memutuskan.", competency: "DM" },
+      { text: "Menganalisis dampak sistem baru terhadap biaya operasional dan profitabilitas jangka panjang.", competency: "BA" }
+    ]
+  },
+  {
+    id: "MGT-04",
+    scenario: "Pencapaian salah satu bagian unit berada jauh di bawah target dan mulai memengaruhi hasil keseluruhan.",
+    options: [
+      { text: "Membandingkan pencapaian aktual dengan target untuk mengidentifikasi penyimpangan terbesar.", competency: "CTL" },
+      { text: "Melakukan intervensi cepat pada area yang paling bermasalah untuk menghentikan penurunan.", competency: "CTL" },
+      { text: "Menelusuri faktor-faktor penyebab penyimpangan sebelum menentukan tindakan korektif.", competency: "DM" },
+      { text: "Meminta bagian yang bermasalah menyusun rencana perbaikan dengan indikator yang jelas.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-05",
+    scenario: "Dua anggota tim memiliki perbedaan pandangan yang mulai mengganggu kelancaran pekerjaan. Keduanya yakin pendekatan mereka yang paling tepat.",
+    options: [
+      { text: "Menggali kepentingan dan alasan di balik pendekatan masing-masing pihak.", competency: "CR" },
+      { text: "Memfasilitasi pencarian titik temu yang tetap memungkinkan pekerjaan mencapai tujuan.", competency: "CR" },
+      { text: "Menentukan pendekatan yang menurut Anda paling sesuai agar pekerjaan segera berjalan.", competency: "DM" },
+      { text: "Mengarahkan mereka untuk mempertimbangkan dampak perbedaan terhadap tujuan bersama.", competency: "CR" }
+    ]
+  },
+  {
+    id: "MGT-06",
+    scenario: "Anda harus mengambil keputusan dalam waktu dekat, tetapi beberapa informasi penting belum tersedia.",
+    options: [
+      { text: "Mengidentifikasi informasi yang paling kritis dan membuat keputusan berdasarkan informasi tersebut.", competency: "DM" },
+      { text: "Membandingkan beberapa alternatif berdasarkan manfaat dan risiko yang teridentifikasi.", competency: "DM" },
+      { text: "Mempertimbangkan risiko penundaan dibandingkan risiko keputusan yang diambil sekarang.", competency: "DM" },
+      { text: "Menganalisis konsekuensi jangka pendek dan jangka panjang dari setiap alternatif yang tersedia.", competency: "ST" }
+    ]
+  },
+  {
+    id: "MGT-07",
+    scenario: "Organisasi mendapat peluang kerja sama yang berpotensi meningkatkan pendapatan, tetapi membutuhkan sumber daya tambahan.",
+    options: [
+      { text: "Menganalisis kontribusi peluang terhadap pendapatan, margin, dan posisi pasar organisasi.", competency: "BA" },
+      { text: "Mengidentifikasi kemampuan dan kapasitas yang diperlukan jika peluang tersebut diterima.", competency: "PO" },
+      { text: "Membandingkan potensi keuntungan dengan biaya, risiko, dan konsekuensi jangka panjang.", competency: "CB" },
+      { text: "Meminta anggota yang akan terlibat memberikan pandangan mengenai kesiapan mereka.", competency: "PM" }
+    ]
+  },
+  {
+    id: "MGT-08",
+    scenario: "Tim Anda sudah cukup berpengalaman dan mampu menyelesaikan pekerjaan rutin dengan kualitas baik tanpa banyak arahan.",
+    options: [
+      { text: "Memberikan keleluasaan dalam cara kerja selama tujuan dan batas tanggung jawab jelas.", competency: "PM" },
+      { text: "Memastikan perkembangan pekerjaan tetap diketahui melalui titik pemantauan yang disepakati.", competency: "CTL" },
+      { text: "Mendorong anggota mengambil tanggung jawab yang lebih besar dan mengembangkan kapasitasnya.", competency: "PM" },
+      { text: "Mengarahkan tim untuk mempertimbangkan kebutuhan organisasi yang lebih luas dalam menentukan prioritas.", competency: "ST" }
+    ]
+  },
+  {
+    id: "MGT-09",
+    scenario: "Manajemen mengubah prioritas unit karena kebutuhan organisasi yang mendesak. Beberapa pekerjaan harus disesuaikan.",
+    options: [
+      { text: "Menyusun ulang urutan pekerjaan berdasarkan urgensi, dampak, dan keterbatasan waktu.", competency: "PO" },
+      { text: "Menganalisis konsekuensi perubahan prioritas terhadap target unit secara keseluruhan.", competency: "ST" },
+      { text: "Menentukan pekerjaan yang dapat ditunda dan mengalokasikan ulang sumber daya.", competency: "PO" },
+      { text: "Memastikan perubahan tidak mengganggu komitmen yang telah diberikan kepada pihak lain.", competency: "CR" }
+    ]
+  },
+  {
+    id: "MGT-10",
+    scenario: "Dua unit membutuhkan sumber daya yang sama dan masing-masing menganggap kebutuhannya lebih penting.",
+    options: [
+      { text: "Meminta kedua pihak menjelaskan kebutuhan dan alasan yang mendasari permintaan mereka.", competency: "CR" },
+      { text: "Membandingkan kebutuhan kedua unit berdasarkan dampaknya terhadap tujuan organisasi.", competency: "BA" },
+      { text: "Mencari alternatif penggunaan sumber daya yang dapat mengakomodasi kedua pihak.", competency: "CR" },
+      { text: "Menetapkan prioritas berdasarkan urgensi dan dampak strategis masing-masing kebutuhan.", competency: "DM" }
+    ]
+  },
+  {
+    id: "MGT-11",
+    scenario: "Organisasi mengumumkan perubahan arah yang akan memengaruhi cara unit bekerja dalam beberapa tahun ke depan.",
+    options: [
+      { text: "Mengidentifikasi kemampuan dan kompetensi yang perlu dikembangkan unit untuk menghadapi perubahan.", competency: "PO" },
+      { text: "Menganalisis berbagai skenario implikasi perubahan terhadap unit dalam jangka panjang.", competency: "ST" },
+      { text: "Menunggu keputusan dan pedoman final sebelum melakukan penyesuaian besar.", competency: "CTL" },
+      { text: "Mengkaji implikasi perubahan terhadap kebutuhan pelanggan dan posisi organisasi di pasar.", competency: "BA" }
+    ]
+  },
+  {
+    id: "MGT-12",
+    scenario: "Anggaran unit tahun ini lebih terbatas dibandingkan sebelumnya, sementara beberapa program yang berjalan memiliki manfaat berbeda.",
+    options: [
+      { text: "Mengurutkan program berdasarkan kontribusi terhadap tujuan utama dan menyesuaikan alokasi.", competency: "PO" },
+      { text: "Membandingkan biaya setiap program dengan manfaat dan konsekuensi jika dikurangi.", competency: "CB" },
+      { text: "Mempertahankan program yang berjalan sambil mencari efisiensi di area lain.", competency: "CB" },
+      { text: "Mendiskusikan ulang prioritas dengan pemangku kepentingan terkait.", competency: "BA" }
+    ]
+  },
+  {
+    id: "MGT-13",
+    scenario: "Unit diminta mengendalikan biaya operasional tanpa menurunkan kualitas hasil secara signifikan.",
+    options: [
+      { text: "Mengidentifikasi aktivitas dengan penggunaan sumber daya terbesar dan menilai kontribusinya.", competency: "PO" },
+      { text: "Membandingkan alternatif penghematan berdasarkan dampaknya terhadap kualitas dan biaya.", competency: "CB" },
+      { text: "Mengkaji apakah pola kebutuhan pelanggan memungkinkan perubahan cara kerja yang lebih efisien.", competency: "BA" },
+      { text: "Menetapkan area pengeluaran yang perlu dikurangi berdasarkan prioritas unit.", competency: "CB" }
+    ]
+  },
+  {
+    id: "MGT-14",
+    scenario: "Anggota tim menunjukkan tingkat kemampuan dan kesiapan yang berbeda dalam menghadapi tuntutan pekerjaan baru.",
+    options: [
+      { text: "Menyesuaikan bentuk dukungan dan arahan dengan kebutuhan dan kesiapan masing-masing anggota.", competency: "PM" },
+      { text: "Memberikan tanggung jawab lebih besar kepada anggota yang telah siap untuk mengembangkan kapasitasnya.", competency: "PM" },
+      { text: "Memberikan umpan balik spesifik dan pendampingan kepada anggota yang masih mengalami kesulitan.", competency: "PM" },
+      { text: "Menetapkan standar hasil yang sama sambil memonitor perkembangan setiap anggota.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-15",
+    scenario: "Beberapa pekerjaan tidak lagi mengikuti prosedur yang ditetapkan dan mulai menimbulkan ketidakkonsistenan hasil.",
+    options: [
+      { text: "Mengidentifikasi pola penyimpangan dan bagian proses yang paling sering bermasalah.", competency: "CTL" },
+      { text: "Mengingatkan pihak terkait mengenai standar yang telah ditetapkan dan meminta perbaikan.", competency: "CTL" },
+      { text: "Menelusuri penyebab mengapa prosedur tidak dijalankan sebagaimana mestinya.", competency: "CTL" },
+      { text: "Mengevaluasi apakah prosedur tersebut masih sesuai dengan kondisi pekerjaan saat ini.", competency: "ST" }
+    ]
+  },
+  {
+    id: "MGT-16",
+    scenario: "Anda perlu menentukan pilihan yang dapat memberikan manfaat besar tetapi juga memiliki risiko signifikan.",
+    options: [
+      { text: "Menilai beberapa skenario hasil yang mungkin terjadi sebelum menentukan pilihan.", competency: "DM" },
+      { text: "Mengumpulkan pandangan dari pihak yang memiliki informasi relevan terhadap keputusan.", competency: "DM" },
+      { text: "Menentukan batas risiko yang masih dapat diterima dan memilih berdasarkan batas tersebut.", competency: "DM" },
+      { text: "Mempertimbangkan dampak keputusan terhadap arah organisasi dalam jangka panjang.", competency: "ST" }
+    ]
+  },
+  {
+    id: "MGT-17",
+    scenario: "Organisasi berencana mengubah model kerja yang akan memengaruhi proses, kebutuhan kemampuan, dan cara unit mencapai hasil.",
+    options: [
+      { text: "Mengidentifikasi implikasi perubahan terhadap kebutuhan unit dalam jangka panjang.", competency: "ST" },
+      { text: "Membantu anggota memahami perubahan dan mempersiapkan kemampuan yang diperlukan.", competency: "PM" },
+      { text: "Menilai dampak perubahan terhadap biaya, produktivitas, dan keberlanjutan operasi.", competency: "CB" },
+      { text: "Membuka ruang diskusi agar berbagai pihak dapat menyampaikan kekhawatiran dan perspektif.", competency: "CR" }
+    ]
+  },
+  {
+    id: "MGT-18",
+    scenario: "Beberapa pekerjaan penting harus diselesaikan dalam periode yang sama, sementara kapasitas unit terbatas.",
+    options: [
+      { text: "Mengelompokkan pekerjaan berdasarkan urgensi, dampak, dan ketergantungan antar-aktivitas.", competency: "PO" },
+      { text: "Menentukan pekerjaan yang membutuhkan keterlibatan anggota lain dengan tetap menjaga akuntabilitas.", competency: "PM" },
+      { text: "Menetapkan keputusan mengenai pekerjaan yang didahulukan berdasarkan konsekuensi masing-masing.", competency: "DM" },
+      { text: "Memantau perkembangan pekerjaan utama agar perubahan kondisi dapat segera direspons.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-19",
+    scenario: "Seorang anggota menunjukkan penurunan kinerja selama beberapa periode dan mulai memengaruhi hasil pekerjaannya.",
+    options: [
+      { text: "Membicarakan perubahan kinerja secara langsung untuk memahami faktor yang memengaruhinya.", competency: "PM" },
+      { text: "Membandingkan hasil aktual dengan standar yang disepakati untuk menentukan area perbaikan.", competency: "CTL" },
+      { text: "Memberikan kesempatan kepada anggota menjelaskan hambatan sebelum menentukan tindakan.", competency: "PM" },
+      { text: "Menetapkan langkah perbaikan yang jelas dan memonitor perkembangannya pada periode berikutnya.", competency: "PM" }
+    ]
+  },
+  {
+    id: "MGT-20",
+    scenario: "Organisasi mempertimbangkan investasi teknologi baru yang berpotensi meningkatkan produktivitas tetapi membutuhkan biaya besar.",
+    options: [
+      { text: "Menganalisis kesesuaian teknologi dengan kebutuhan dan strategi bisnis organisasi.", competency: "BA" },
+      { text: "Membandingkan investasi dengan alternatif penggunaan sumber daya lainnya.", competency: "CB" },
+      { text: "Memperkirakan manfaat finansial dan operasional serta risiko yang mungkin timbul.", competency: "CB" },
+      { text: "Mengidentifikasi kesiapan unit dan dampaknya terhadap struktur biaya operasional.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-21",
+    scenario: "Dua pihak memiliki kepentingan yang berbeda dalam sebuah keputusan dan belum menemukan kesepakatan.",
+    options: [
+      { text: "Memfasilitasi pembahasan mengenai kepentingan masing-masing sebelum mencari penyelesaian.", competency: "CR" },
+      { text: "Mengidentifikasi konsekuensi setiap alternatif terhadap keseluruhan organisasi.", competency: "DM" },
+      { text: "Mencari solusi yang memungkinkan kedua pihak tetap memenuhi kepentingan utamanya.", competency: "CR" },
+      { text: "Menentukan keputusan berdasarkan prioritas organisasi jika kesepakatan tidak tercapai.", competency: "DM" }
+    ]
+  },
+  {
+    id: "MGT-22",
+    scenario: "Unit menerima dua penawaran vendor: satu lebih murah, yang lain lebih mahal dengan dukungan layanan lebih luas.",
+    options: [
+      { text: "Membandingkan total biaya, kualitas layanan, risiko, dan manfaat dari masing-masing alternatif.", competency: "CB" },
+      { text: "Memilih penawaran yang paling sesuai dengan standar kebutuhan unit dan anggaran.", competency: "PO" },
+      { text: "Menentukan kriteria keputusan terlebih dahulu, kemudian membandingkan vendor berdasarkan kriteria tersebut.", competency: "DM" },
+      { text: "Meminta informasi lebih lanjut mengenai rekam jejak dan stabilitas finansial vendor.", competency: "BA" }
+    ]
+  },
+  {
+    id: "MGT-23",
+    scenario: "Hasil unit menunjukkan perbedaan pencapaian yang cukup besar antar-periode, meskipun kondisi pekerjaan relatif serupa.",
+    options: [
+      { text: "Mengidentifikasi pola perbedaan pencapaian dan faktor yang mungkin menjelaskannya.", competency: "CTL" },
+      { text: "Mengevaluasi apakah perubahan tersebut berdampak terhadap efisiensi dan hasil bisnis.", competency: "BA" },
+      { text: "Meninjau kembali prioritas dan cara kerja pada periode dengan hasil berbeda.", competency: "PO" },
+      { text: "Menetapkan indikator pemantauan yang lebih konsisten untuk mendeteksi perubahan sejak awal.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-24",
+    scenario: "Masalah operasional muncul dan memerlukan tindakan cepat. Informasi yang tersedia cukup untuk memahami masalah utama, tetapi belum lengkap.",
+    options: [
+      { text: "Menentukan tindakan awal berdasarkan informasi paling relevan yang tersedia.", competency: "DM" },
+      { text: "Meminta pihak terkait memberikan informasi tambahan sebelum mengambil tindakan.", competency: "DM" },
+      { text: "Membandingkan konsekuensi penanganan segera versus penundaan.", competency: "DM" },
+      { text: "Memilih tindakan yang memungkinkan penyesuaian jika informasi baru muncul.", competency: "DM" }
+    ]
+  },
+  {
+    id: "MGT-25",
+    scenario: "Unit perlu menyiapkan anggota tim agar mampu menangani tanggung jawab yang lebih kompleks di masa mendatang.",
+    options: [
+      { text: "Mengidentifikasi kesiapan dan kebutuhan pengembangan masing-masing individu.", competency: "PM" },
+      { text: "Memberikan pengalaman kerja yang lebih menantang kepada anggota yang menunjukkan potensi.", competency: "PM" },
+      { text: "Mendiskusikan tujuan pengembangan dengan anggota dan menyepakati area yang ditingkatkan.", competency: "PM" },
+      { text: "Memantau perkembangan melalui hasil kerja dan indikator perilaku yang ditetapkan.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-26",
+    scenario: "Manajemen meminta unit mencari cara menurunkan biaya proses, tetapi kualitas layanan kepada pelanggan harus tetap terjaga.",
+    options: [
+      { text: "Membandingkan potensi penghematan dengan dampaknya terhadap pengalaman pelanggan.", competency: "CB" },
+      { text: "Mengidentifikasi bagian proses yang dapat disederhanakan tanpa mengurangi nilai bagi pelanggan.", competency: "CB" },
+      { text: "Menguji beberapa alternatif efisiensi sebelum menentukan perubahan yang diterapkan.", competency: "DM" },
+      { text: "Menganalisis dampak perubahan terhadap kepuasan pelanggan dan profitabilitas.", competency: "BA" }
+    ]
+  },
+  {
+    id: "MGT-27",
+    scenario: "Volume pekerjaan meningkat tajam dan beberapa tenggat waktu berdekatan. Jika semua pekerjaan diperlakukan sama, sebagian target berisiko tidak tercapai.",
+    options: [
+      { text: "Menyusun ulang prioritas pekerjaan berdasarkan tenggat waktu dan dampak.", competency: "PO" },
+      { text: "Menentukan pekerjaan yang dapat dialihkan dengan mempertimbangkan kapasitas anggota.", competency: "PM" },
+      { text: "Menetapkan batas waktu dan hasil yang harus dicapai untuk setiap pekerjaan utama.", competency: "CTL" },
+      { text: "Memastikan sumber daya digunakan pada pekerjaan yang memberikan kontribusi terbesar.", competency: "CB" }
+    ]
+  },
+  {
+    id: "MGT-28",
+    scenario: "Organisasi mempertimbangkan ekspansi ke pasar baru. Dampak terhadap unit Anda belum sepenuhnya jelas.",
+    options: [
+      { text: "Menganalisis dampak perubahan pasar terhadap strategi unit dalam beberapa tahun mendatang.", competency: "ST" },
+      { text: "Mengidentifikasi informasi yang diperlukan untuk menentukan keputusan awal.", competency: "DM" },
+      { text: "Mengevaluasi peluang dan risiko bisnis dari ekspansi tersebut.", competency: "BA" },
+      { text: "Menyusun rencana penyesuaian unit dengan arah ekspansi yang ditetapkan.", competency: "PO" }
+    ]
+  },
+  {
+    id: "MGT-29",
+    scenario: "Perselisihan antara dua pihak telah berlangsung cukup lama dan mulai mengganggu koordinasi serta hasil kerja.",
+    options: [
+      { text: "Memahami akar masalah dan kepentingan yang membuat perselisihan terus berlangsung.", competency: "CR" },
+      { text: "Memfasilitasi penyepakatan langkah penyelesaian yang dapat dijalankan bersama.", competency: "CR" },
+      { text: "Menetapkan batas perilaku kerja yang harus dipatuhi agar pekerjaan tidak terus terganggu.", competency: "CTL" },
+      { text: "Mengarahkan pihak yang terlibat untuk mempertimbangkan dampak terhadap tujuan bersama.", competency: "CR" }
+    ]
+  },
+  {
+    id: "MGT-30",
+    scenario: "Program unit sedang berjalan. Hasil sementara menunjukkan beberapa indikator belum mencapai tingkat yang diharapkan.",
+    options: [
+      { text: "Membandingkan hasil sementara dengan indikator keberhasilan yang telah ditetapkan.", competency: "CTL" },
+      { text: "Mengidentifikasi bagian program yang mungkin perlu disesuaikan berdasarkan hasil sementara.", competency: "CTL" },
+      { text: "Memeriksa apakah penggunaan sumber daya masih sesuai dengan hasil yang diperoleh.", competency: "CB" },
+      { text: "Menentukan tindakan korektif jika penyimpangan diperkirakan akan berlanjut.", competency: "CTL" }
+    ]
+  },
+  {
+    id: "MGT-31",
+    scenario: "Salah satu aktivitas rutin menggunakan sumber daya cukup besar, tetapi kontribusinya terhadap hasil akhir belum terlihat jelas.",
+    options: [
+      { text: "Mengidentifikasi bagian aktivitas yang memberikan nilai dan yang dapat dikurangi atau disederhanakan.", competency: "CB" },
+      { text: "Menghitung potensi penghematan dan membandingkannya dengan risiko penurunan kualitas.", competency: "CB" },
+      { text: "Mempertahankan aktivitas sampai tersedia bukti yang cukup bahwa pengurangan tidak mengganggu hasil.", competency: "CTL" },
+      { text: "Mencari alternatif proses yang dapat mengurangi penggunaan sumber daya tanpa menghilangkan manfaat utama.", competency: "CB" }
+    ]
+  },
+  {
+    id: "MGT-32",
+    scenario: "Organisasi mempertimbangkan sistem baru yang berpotensi meningkatkan efisiensi, tetapi membutuhkan biaya besar dan dampak jangka panjangnya belum pasti. Beberapa unit lebih siap dibandingkan yang lain.",
+    options: [
+      { text: "Menilai konsekuensi berbagai alternatif, termasuk risiko penundaan versus implementasi segera.", competency: "DM" },
+      { text: "Mengidentifikasi unit yang paling siap dan memetakan kondisi penerapan yang perlu diperhatikan.", competency: "PO" },
+      { text: "Membandingkan potensi manfaat dengan biaya, risiko operasional, dan dampak terhadap keberlanjutan.", competency: "CB" },
+      { text: "Memetakan kesiapan sumber daya, tahapan penerapan, dan kebutuhan koordinasi antar-unit.", competency: "PO" }
+    ]
+  }
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+let participant = {name:"", id:"", project:"", date:""},
+    currentIndex = 0,
+    totalRemaining = CFG.totalSeconds,
+    sessionTimer = null,
+    assessmentStarted = false,
+    heartbeatTimer = null;
+
+const responses = {};
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function el(id){ return document.getElementById(id); }
+function fmt(sec){ sec = Math.max(0, Math.ceil(sec)); return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0"); }
+
+/* =========================================================
+   IDENTITY & CONTEXT
+========================================================= */
+function getAssessmentIdentity(){
+  const params = new URLSearchParams(location.search);
+  let session = {};
+  try { session = JSON.parse(sessionStorage.getItem("ts_participant_session") || "{}"); } catch(e) {}
+  const projectId = String(params.get("projectId") || params.get("project") || session.projectId || session.project_id || "").trim();
+  const participantId = String(params.get("participantId") || params.get("participant") || session.participantId || session.employeeId || session.id || "").trim();
+  return {projectId, participantId};
+}
+function getAssessmentDisplayName(){
+  const params = new URLSearchParams(location.search);
+  const ctx = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
+  return String(params.get("assessmentName") || params.get("testName") || ctx.assessmentName || ctx.assessment_name || ctx.testName || ctx.test_name || ctx.assessmentTitle || ctx.testTitle || "MSJT").trim() || "MSJT";
+}
+function getAssessmentSequenceLabel(){
+  try{
+    const ids = getAssessmentIdentity();
+    const params = new URLSearchParams(location.search);
+    const assessmentIndex = Number(params.get("assessmentIndex") || 0);
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return "";
+    const project = projects.find(pr => String(pr?.id || pr?.projectId || pr?.project_id || "").trim() === ids.projectId);
+    if(!project) return "";
+    const list = Array.isArray(project.assessments) ? project.assessments : (Array.isArray(project.assessmentPackage) ? project.assessmentPackage : (Array.isArray(project.packages) ? project.packages : []));
+    if(list.length > 0){ return " — Tes " + (assessmentIndex + 1) + " dari " + list.length; }
+    return "";
+  }catch(e){ return ""; }
+}
+function packageCodeOf(item){ if(!item || typeof item !== "object") return ""; return String(item.code || item.assessmentCode || item.assessment_code || item.id || item.assessmentId || item.testId || "").trim(); }
+function packageNameOf(item){ if(typeof item === "string") return item.trim(); if(!item || typeof item !== "object") return ""; return String(item.name || item.title || item.assessmentName || item.assessment_name || item.testName || item.label || item.code || "").trim(); }
+function resolveAssessmentRoute(code, name){
+  const c = String(code || "").toLowerCase();
+  const n = String(name || "").toLowerCase();
+  if(c.includes("disc") || n.includes("disc")) return "disc_test.html";
+  if(c.includes("papi") || n.includes("papi") || n.includes("kostick")) return "papi_kostick_test.html";
+  if(c.includes("vap") || n.includes("vap") || n.includes("visual") || n.includes("performance") || n.includes("sustained attention") || n.includes("speed")) return "speedtest.html";
+  if(c.includes("lsjt") || n.includes("lsjt") || n.includes("leadership") || n.includes("situational judgment test")) return "sjt_leadership.html";
+  if(c.includes("msjt") || n.includes("msjt") || n.includes("managerial")) return "msjt_managerial.html";
+  return "";
+}
+function goToNextOrDashboard(){
+  const ids = getAssessmentIdentity();
+  const params = new URLSearchParams(location.search);
+  const currentIndex = Number(params.get("assessmentIndex") || 0);
+  const next = currentIndex + 1;
+  let packs = [];
+  try{
+    const ps = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
+    const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
+    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
+  }catch(e){ packs = []; }
+  sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+  if(next >= packs.length){ location.href = "participant-dashboard.html?completed=true"; return; }
+  const nextPkg = packs[next];
+  const nextCode = packageCodeOf(nextPkg);
+  const nextName = packageNameOf(nextPkg) || "Assessment";
+  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
+  if(nextRoute){
+    location.href = `${nextRoute}?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }else{
+    location.href = `assessment.html?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }
+}
+function syncAssessmentActivity(activity, historyType){
+  const ids = getAssessmentIdentity();
+  if(!ids.projectId || !ids.participantId) return;
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return;
+    const now = new Date().toISOString();
+    let changed = false;
+    projects.forEach(project=>{
+      const pid = String(project?.id || project?.projectId || project?.project_id || "").trim();
+      if(pid !== ids.projectId) return;
+      const participants = Array.isArray(project.participants) ? project.participants : [];
+      participants.forEach(p=>{
+        const id = String(p?.id || p?.participantId || p?.employeeId || p?.employee_id || "").trim();
+        if(id !== ids.participantId) return;
+        const testName = getAssessmentDisplayName();
+        p.currentActivity = activity; p.activity = activity; p.currentTest = testName;
+        p.testActivity = activity; p.lastActivity = activity; p.activityUpdatedAt = now;
+        p.lastSeenAt = now; p.lastSeen = now; p.isLoggedIn = true;
+        p.status = "Online"; p.onlineStatus = "Online";
+        if(historyType){
+          if(!Array.isArray(p.activityHistory)) p.activityHistory = [];
+          p.activityHistory.push({type:historyType, activity:activity, testName:testName, assessmentName:testName, projectId:ids.projectId, participantId:ids.participantId, description:activity, timestamp:now, time:now});
+        }
+        changed = true;
+      });
+    });
+    if(changed){ localStorage.setItem("talentscope_projects", JSON.stringify(projects)); }
+  }catch(e){ console.warn("Assessment activity sync gagal:", e); }
+}
+
+/* =========================================================
+   AUTO LOGOUT
+========================================================= */
+let assessmentLogoutRecorded = false;
+function recordAssessmentLogout(reason){
+  if(assessmentLogoutRecorded) return;
+  const internalNavigation = sessionStorage.getItem("ts_internal_assessment_navigation");
+  if(internalNavigation === "true"){ sessionStorage.removeItem("ts_internal_assessment_navigation"); return; }
+  assessmentLogoutRecorded = true;
+  const ids = getAssessmentIdentity();
+  if(!ids.projectId || !ids.participantId) return;
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return;
+    const now = new Date().toISOString();
+    const testName = getAssessmentDisplayName();
+    const activity = "Logout ke Portal Peserta";
+    projects.forEach(project=>{
+      const projectId = String(project?.id || project?.projectId || project?.project_id || "").trim();
+      if(projectId !== ids.projectId) return;
+      const participants = Array.isArray(project.participants) ? project.participants : [];
+      participants.forEach(participant=>{
+        const participantId = String(participant?.id || participant?.participantId || participant?.employeeId || participant?.employee_id || "").trim();
+        if(participantId !== ids.participantId) return;
+        participant.logoutTime = now; participant.loggedOutAt = now; participant.logoutAt = now; participant.timeLogout = now;
+        participant.isLoggedIn = false; participant.status = "Offline"; participant.onlineStatus = "Offline";
+        participant.currentActivity = activity; participant.activity = activity;
+        participant.lastActivity = activity; participant.activityUpdatedAt = now;
+        if(!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+        participant.activityHistory.push({type:"logout", activity:activity, title:activity, action:"Logout", reason:reason||"tab-close", test:testName, testName:testName, assessmentName:testName, assessmentCode:"MSJT", timestamp:now, time:now});
+      });
+    });
+    localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+  }catch(error){ console.warn("[MSJT] Gagal mencatat auto logout:", error); }
+}
+window.addEventListener("pagehide", function(){ recordAssessmentLogout("pagehide"); });
+window.addEventListener("beforeunload", function(){ recordAssessmentLogout("beforeunload"); });
+
+function markAssessmentStarted(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")" + getAssessmentSequenceLabel(), "test-start"); }
+function markAssessmentFinished(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Tes selesai (" + name + ")" + getAssessmentSequenceLabel(), "test-complete"); }
+
+function getContext(){
+  const params = new URLSearchParams(location.search);
+  const participantId = String(params.get("participantId") || params.get("id") || "").trim();
+  const projectId = String(params.get("projectId") || "").trim();
+  const context = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
+  let storedContext = {};
+  try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
+  let participantName = "", projectName = "", participantObject = null, projectObject = null;
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(Array.isArray(projects)){
+      projectObject = projects.find(function(project){
+        const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
+        return currentProjectId === projectId;
+      });
+      if(projectObject){
+        projectName = String(projectObject.name || projectObject.projectName || projectObject.project_name || projectObject.title || "").trim();
+        const participants = Array.isArray(projectObject.participants) ? projectObject.participants : [];
+        participantObject = participants.find(function(participant){
+          const currentParticipantId = String(participant.id || participant.participantId || participant.employeeId || participant.employee_id || "").trim();
+          return currentParticipantId === participantId;
+        });
+        if(participantObject){
+          participantName = String(participantObject.name || participantObject.fullName || participantObject.full_name || participantObject.participantName || "").trim();
+        }
+      }
+    }
+  }catch(error){ console.warn("Gagal ambil data peserta/project:", error); }
+  if(!participantName){
+    const participantObj = context.participant || context.candidate || context.user || storedContext.participant || storedContext.candidate || storedContext.user || {};
+    participantName = String(params.get("participantName") || params.get("name") || context.participantName || context.participant_name || context.candidateName || participantObj.name || participantObj.fullName || storedContext.participantName || storedContext.name || "").trim();
+  }
+  if(!projectName){
+    const projectObj = context.project || storedContext.project || {};
+    projectName = String(params.get("projectName") || params.get("project") || context.projectName || context.project_name || context.projectTitle || (typeof projectObj === "string" ? projectObj : (projectObj.name || projectObj.projectName || projectObj.title || "")) || storedContext.projectName || "").trim();
+  }
+  return {id: participantId, name: participantName, project: projectName, projectId: projectId, participant: participantObject, projectData: projectObject};
+}
+
+function init(){
+  const c = getContext();
+  participant.name = c.name; participant.id = c.id; participant.project = c.project;
+  participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
+  el("participantName").textContent = participant.name || "-";
+  el("projectName").textContent = participant.project || "-";
+  el("assessmentDate").textContent = participant.date || "-";
+}
+function toggleStart(){ el("startBtn").disabled = !el("confirmRead").checked; }
+function backToDashboard(e){
+  e.preventDefault();
+  if(confirm("Kembali ke Dashboard? Progress assessment yang belum selesai dapat terhenti.")){
+    sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+    if(document.referrer){ history.back(); } else { location.href = "/dashboard"; }
+  }
+}
+
+/* =========================================================
+   TEST FLOW
+========================================================= */
+function heartbeat(){
+  if(!assessmentStarted || totalRemaining <= 0) return;
+  syncAssessmentActivity("Sedang mengerjakan tes (" + getAssessmentDisplayName() + ")" + getAssessmentSequenceLabel(), null);
+}
+
+function begin(){
+  if(!el("confirmRead").checked) return;
+  assessmentStarted = true;
+  el("intro").classList.add("hidden");
+  el("test").classList.remove("hidden");
+  markAssessmentStarted();
+  clearInterval(heartbeatTimer);
+  heartbeatTimer = setInterval(heartbeat, 5000);
+  startTimer();
+  currentIndex = 0;
+  renderCurrentItem();
+}
+
+function startTimer(){
+  totalRemaining = CFG.totalSeconds;
+  updateTimer();
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(()=>{
+    totalRemaining--;
+    updateTimer();
+    if(totalRemaining <= 0) finishAssessment();
+  }, 1000);
+}
+
+function updateTimer(){
+  el("globalTimer").textContent = fmt(totalRemaining);
+  el("sessionTimer").textContent = fmt(totalRemaining);
+}
+
+function renderCurrentItem(){
+  const item = ITEMS[currentIndex];
+  el("qNum").textContent = "ITEM " + String(currentIndex + 1).padStart(2, "0") + " / 32";
+  el("qTitle").textContent = "Situasi " + String(currentIndex + 1).padStart(2, "0");
+  el("scenarioText").textContent = item.scenario;
+
+  const pct = ((currentIndex + 1) / ITEMS.length) * 100;
+  el("progressFill").style.width = pct + "%";
+  el("progressLabel").textContent = "Item " + (currentIndex + 1) + " dari " + ITEMS.length;
+  const answeredCount = Object.keys(responses).length;
+  el("answeredLabel").textContent = "Terjawab: " + answeredCount + " / " + ITEMS.length;
+
+  const resp = responses[item.id] || { most: null, least: null };
+  const letters = ["A", "B", "C", "D"];
+  const optionsHTML = item.options.map((opt, i) => {
+    const letter = letters[i];
+    const isMost = resp.most === letter;
+    const isLeast = resp.least === letter;
+    return `
+      <div class="option">
+        <div class="option-letter">${letter}</div>
+        <div class="option-text">${opt.text}</div>
+        <div class="option-actions">
+          <button class="option-btn most ${isMost ? 'active' : ''}" onclick="selectMost('${letter}')">MOST ↑</button>
+          <button class="option-btn least ${isLeast ? 'active' : ''}" onclick="selectLeast('${letter}')">LEAST ↓</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+  el("optionsContainer").innerHTML = optionsHTML;
+
+  el("prevBtn").disabled = currentIndex === 0;
+  const isLast = currentIndex === ITEMS.length - 1;
+  el("nextBtn").textContent = isLast ? "Selesai ✓" : "Selanjutnya →";
+  el("nextBtn").className = "nav-btn " + (isLast ? "primary" : "");
+
+  if(!resp.most || !resp.least){
+    el("navHint").textContent = "⚠ Anda belum memilih MOST dan LEAST untuk item ini.";
+    el("navHint").style.color = "#d97706";
+  } else {
+    el("navHint").textContent = "✓ Jawaban tersimpan otomatis.";
+    el("navHint").style.color = "#16a34a";
+  }
+
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+function selectMost(letter){
+  const item = ITEMS[currentIndex];
+  if(!responses[item.id]) responses[item.id] = { most: null, least: null };
+  if(responses[item.id].least === letter) responses[item.id].least = null;
+  responses[item.id].most = letter;
+  renderCurrentItem();
+  saveDraft();
+}
+
+function selectLeast(letter){
+  const item = ITEMS[currentIndex];
+  if(!responses[item.id]) responses[item.id] = { most: null, least: null };
+  if(responses[item.id].most === letter) responses[item.id].most = null;
+  responses[item.id].least = letter;
+  renderCurrentItem();
+  saveDraft();
+}
+
+function prevItem(){
+  if(currentIndex > 0){ currentIndex--; renderCurrentItem(); }
+}
+function nextItem(){
+  const item = ITEMS[currentIndex];
+  const resp = responses[item.id] || {};
+  if(!resp.most || !resp.least){
+    alert("Pilih MOST dan LEAST untuk item ini sebelum melanjutkan.");
+    return;
+  }
+  if(currentIndex < ITEMS.length - 1){
+    currentIndex++;
+    renderCurrentItem();
+  } else {
+    const unanswered = ITEMS.filter(it => {
+      const r = responses[it.id] || {};
+      return !r.most || !r.least;
+    });
+    if(unanswered.length > 0){
+      const list = unanswered.slice(0, 3).map(it => it.id).join(", ");
+      const konfirmasi = confirm(`Masih ada ${unanswered.length} item yang belum dijawab (${list}${unanswered.length > 3 ? ", ..." : ""}). Yakin ingin menyelesaikan tes?`);
+      if(!konfirmasi) return;
+    }
+    finishAssessment();
+  }
+}
+
+function saveDraft(){
+  try{
+    const ids = getAssessmentIdentity();
+    if(ids.projectId && ids.participantId){
+      const key = `msjt_draft_${ids.projectId}_${ids.participantId}`;
+      localStorage.setItem(key, JSON.stringify({
+        responses: responses,
+        currentIndex: currentIndex,
+        savedAt: new Date().toISOString()
+      }));
+    }
+  }catch(e){}
+}
+
+/* =========================================================
+   SCORING — Ipsatif (8 kompetensi)
+========================================================= */
+function calcScores(){
+  const counts = {};
+  Object.keys(COMPETENCIES).forEach(key => {
+    counts[key] = { most: 0, least: 0 };
+  });
+
+  ITEMS.forEach(item => {
+    const resp = responses[item.id];
+    if(!resp) return;
+    const letters = ["A", "B", "C", "D"];
+    const mostIdx = letters.indexOf(resp.most);
+    const leastIdx = letters.indexOf(resp.least);
+    if(mostIdx >= 0) counts[item.options[mostIdx].competency].most++;
+    if(leastIdx >= 0) counts[item.options[leastIdx].competency].least++;
+  });
+
+  const total = ITEMS.length;
+  const result = {};
+  Object.keys(COMPETENCIES).forEach(key => {
+    const most = counts[key].most;
+    const least = counts[key].least;
+    const mostPct = (most / total) * 100;
+    const leastPct = (least / total) * 100;
+    const netScore = mostPct - leastPct;
+    const normalized = Math.max(0, Math.min(100, 50 + netScore / 2));
+    result[key] = {
+      label: COMPETENCIES[key],
+      most: most,
+      least: least,
+      mostPct: mostPct,
+      leastPct: leastPct,
+      netScore: netScore,
+      normalized: normalized
+    };
+  });
+
+  return result;
+}
+
+/* =========================================================
+   FINISH ASSESSMENT
+========================================================= */
+async function finishAssessment(){
+  clearInterval(sessionTimer);
+  clearInterval(heartbeatTimer);
+  assessmentStarted = false;
+
+  markAssessmentFinished();
+
+  const scores = calcScores();
+
+  const ids = getAssessmentIdentity();
+  const params = new URLSearchParams(location.search);
+  const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
+  const assessmentCodeStr = String(params.get("assessmentCode") || "MSJT").trim();
+  const assessmentNameStr = getAssessmentDisplayName();
+
+  let msjtResult = null;
+
+  try{
+    if(ids.projectId && ids.participantId){
+      const submittedAt = new Date().toISOString();
+      msjtResult = {
+        version: 1,
+        resultType: "MSJT",
+        projectId: ids.projectId,
+        participantId: ids.participantId,
+        participantName: participant.name || "",
+        assessmentIndex: assessmentIndexNum,
+        assessmentCode: assessmentCodeStr,
+        assessmentName: assessmentNameStr,
+        responses: responses,
+        scores: scores,
+        totalItems: ITEMS.length,
+        answeredItems: Object.keys(responses).length,
+        submittedAt
+      };
+      localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
+      let allResults = [];
+      try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
+      if(!Array.isArray(allResults)) allResults = [];
+      allResults = allResults.filter(item => !(
+        String(item?.projectId || "") === ids.projectId &&
+        String(item?.participantId || "") === ids.participantId &&
+        String(item?.assessmentIndex ?? "") === String(assessmentIndexNum) &&
+        String(item?.assessmentCode || "").toUpperCase() === "MSJT"
+      ));
+      allResults.push(msjtResult);
+      localStorage.setItem("talent_scope_results", JSON.stringify(allResults));
+      console.log("[MSJT] Hasil tersimpan ke localStorage");
+    }
+  }catch(err){ console.error("[MSJT] Gagal simpan localStorage:", err); }
+
+  if(msjtResult){
+    try{
+      const sb = window.supabaseClient || window.supabase;
+      if(sb && typeof sb.from === "function"){
+        const { error } = await sb
+          .from("sjt_results")
+          .upsert({
+            project_id: ids.projectId,
+            participant_id: ids.participantId,
+            assessment_index: assessmentIndexNum,
+            assessment_code: assessmentCodeStr,
+            assessment_name: assessmentNameStr,
+            participant_name: participant.name || "",
+            result_type: "MSJT",
+            responses: responses,
+            scores: scores,
+            total_items: ITEMS.length,
+            answered_items: Object.keys(responses).length,
+            submitted_at: msjtResult.submittedAt
+          }, {
+            onConflict: "project_id,participant_id,assessment_index,assessment_code"
+          });
+
+        if(error){
+          console.error("[MSJT] Supabase upsert error:", error);
+        } else {
+          console.log("[MSJT] ✓ Hasil tersinkron ke Supabase (sjt_results)");
+        }
+      }
+    }catch(err){ console.error("[MSJT] Gagal sync Supabase:", err); }
+  }
+
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(Array.isArray(projects)){
+      const now = new Date().toISOString();
+      projects.forEach(project=>{
+        const projectId = String(project.id || project.projectId || project.project_id || "").trim();
+        if(projectId !== ids.projectId) return;
+        const participants = Array.isArray(project.participants) ? project.participants : [];
+        participants.forEach(p=>{
+          const participantId = String(p.id || p.participantId || p.employeeId || p.employee_id || "").trim();
+          if(participantId !== ids.participantId) return;
+          p.currentAssessmentIndex = assessmentIndexNum;
+          p.currentAssessmentCode = assessmentCodeStr;
+          p.currentTest = assessmentNameStr;
+          p.testActivity = "Tes selesai (" + assessmentNameStr + ")" + getAssessmentSequenceLabel();
+          p.currentActivity = p.testActivity;
+          p.activity = p.testActivity;
+          p.lastActivity = p.testActivity;
+          p.activityUpdatedAt = now;
+          if(!Array.isArray(p.assessmentProgress)) p.assessmentProgress = [];
+          let progressItem = p.assessmentProgress.find(function(item){ return Number(item.assessmentIndex) === assessmentIndexNum; });
+          if(!progressItem){
+            progressItem = {assessmentIndex: assessmentIndexNum, assessmentCode: assessmentCodeStr, assessmentName: assessmentNameStr};
+            p.assessmentProgress.push(progressItem);
+          }
+          progressItem.status = "Completed";
+          progressItem.completedAt = now;
+          const assessmentList = Array.isArray(project.assessments) ? project.assessments : (Array.isArray(project.assessmentPackage) ? project.assessmentPackage : []);
+          const totalAssessment = assessmentList.length;
+          const completedAssessment = p.assessmentProgress.filter(function(item){ return String(item.status || "").toLowerCase() === "completed"; }).length;
+          p.assessmentStatus = (totalAssessment > 0 && completedAssessment >= totalAssessment) ? "Completed" : "In Progress";
+        });
+      });
+      localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+    }
+  }catch(error){ console.error("Gagal update progress:", error); }
+
+  try{
+    localStorage.removeItem(`msjt_draft_${ids.projectId}_${ids.participantId}`);
+  }catch(e){}
+
+  el("test").classList.add("hidden");
+  el("finish").classList.remove("hidden");
+  window.scrollTo({top: 0, behavior: "smooth"});
+  console.log("[MSJT] Assessment berhasil diselesaikan");
+
+  setTimeout(goToNextOrDashboard, 1500);
+}
+
+init();
+console.log("[MSJT] Ready. Total items:", ITEMS.length);
+</script>
+</body>
+</html>

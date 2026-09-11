@@ -2,628 +2,399 @@
 <html lang="id">
 <head>
 <script src="js/ts-supabase-sync.js"></script>
-<!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/data-service.js"></script>
 <script src="js/participant-activity.js"></script>
 <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Petunjuk Asesmen — TalentScope</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        
-        body { 
-            /* Background gradasi biru premium dengan efek kedalaman */
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
-            background-attachment: fixed;
-            color: #333; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            padding: 20px;
-        }
-
-        .container { 
-            /* Gradasi biru muda premium yang lembut dan elegan */
-            background: linear-gradient(135deg, #ffffff 0%, #f0f6ff 100%); 
-            width: 100%; 
-            max-width: 700px; 
-            padding: 40px; 
-            border-radius: 16px; 
-            /* Efek bayangan dan border tipis bernuansa biru */
-            box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.4), 0 0 20px rgba(59, 130, 246, 0.15); 
-            border: 1px solid rgba(191, 219, 254, 0.6);
-        }
-
-        .meta-info { 
-            /* Kotak informasi dengan warna biru muda solid yang elegan */
-            background: #e0f2fe; 
-            border: 1px solid #bae6fd;
-            padding: 15px 18px; 
-            border-radius: 10px; 
-            margin-bottom: 25px; 
-            font-size: 13px; 
-            color: #0369a1; 
-            font-weight: 500;
-            display: flex; 
-            justify-content: space-between; 
-        }
-
-        .header { 
-            border-bottom: 1px solid #f1f5f9; 
-            padding-bottom: 20px; 
-            margin-bottom: 25px; 
-        }
-
-        .header h1 { 
-            font-size: 24px; 
-            color: #0f172a; 
-            margin-bottom: 8px; 
-            font-weight: 700;
-        }
-
-        .header p { 
-            color: #64748b; 
-            font-size: 14px; 
-        }
-
-        
-        .instructions { 
-            margin-bottom: 30px; 
-            line-height: 1.7; 
-            color: #475569; 
-            font-size: 14px;
-        }
-
-        .instructions h3 { 
-            margin-bottom: 12px; 
-            color: #1e293b; 
-            font-size: 15px; 
-            font-weight: 600;
-        }
-
-        .instructions ul { 
-            padding-left: 20px; 
-        }
-
-        .instructions li { 
-            margin-bottom: 10px; 
-        }
-
-        .btn-start { 
-            display: flex; 
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%; 
-            padding: 15px; 
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            color: #ffffff; 
-            text-align: center; 
-            font-weight: 600; 
-            border: none; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            transition: all 0.3s ease; 
-            font-size: 15px; 
-            text-decoration: none; 
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-        }
-
-        .btn-start:hover:not(:disabled) { 
-            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .btn-start:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .btn-start:disabled {
-            cursor: not-allowed;
-            opacity: 0.75;
-        }
-
-        .btn-start .btn-spinner {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.45);
-            border-top-color: #fff;
-            animation: btn-spin 0.7s linear infinite;
-            display: none;
-            flex: 0 0 auto;
-        }
-
-        .btn-start.loading .btn-spinner {
-            display: inline-block;
-        }
-
-        @keyframes btn-spin {
-            to { transform: rotate(360deg); }
-        }
-                </style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petunjuk Asesmen — TalentScope</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
+body{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#2563eb 100%);background-attachment:fixed;color:#333;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+.container{background:linear-gradient(135deg,#ffffff 0%,#f0f6ff 100%);width:100%;max-width:700px;padding:40px;border-radius:16px;box-shadow:0 20px 40px -15px rgba(15,23,42,0.4),0 0 20px rgba(59,130,246,0.15);border:1px solid rgba(191,219,254,0.6)}
+.meta-info{background:#e0f2fe;border:1px solid #bae6fd;padding:15px 18px;border-radius:10px;margin-bottom:25px;font-size:13px;color:#0369a1;font-weight:500;display:flex;justify-content:space-between}
+.header{border-bottom:1px solid #f1f5f9;padding-bottom:20px;margin-bottom:25px}
+.header h1{font-size:24px;color:#0f172a;margin-bottom:8px;font-weight:700}
+.header p{color:#64748b;font-size:14px}
+.instructions{margin-bottom:30px;line-height:1.7;color:#475569;font-size:14px}
+.instructions h3{margin-bottom:12px;color:#1e293b;font-size:15px;font-weight:600}
+.instructions ul{padding-left:20px}
+.instructions li{margin-bottom:10px}
+.btn-start{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);color:#ffffff;text-align:center;font-weight:600;border:none;border-radius:10px;cursor:pointer;transition:all 0.3s ease;font-size:15px;text-decoration:none;box-shadow:0 4px 12px rgba(37,99,235,0.3)}
+.btn-start:hover:not(:disabled){background:linear-gradient(135deg,#1d4ed8 0%,#1e40af 100%);box-shadow:0 6px 16px rgba(37,99,235,0.4);transform:translateY(-1px)}
+.btn-start:active:not(:disabled){transform:translateY(0)}
+.btn-start:disabled{cursor:not-allowed;opacity:0.75}
+.btn-start .btn-spinner{width:15px;height:15px;border-radius:50%;border:2px solid rgba(255,255,255,0.45);border-top-color:#fff;animation:btn-spin 0.7s linear infinite;display:none;flex:0 0 auto}
+.btn-start.loading .btn-spinner{display:inline-block}
+@keyframes btn-spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1 id="assessment-title">Petunjuk Pengerjaan Asesmen</h1>
-            <p>Harap baca petunjuk dengan teliti sebelum memulai tes.</p>
-        </div>
-
-        <div class="meta-info">
-    <span id="info-project">Project: -</span>
-    <span id="info-participant">Peserta: -</span>
-</div>
-
-        <div class="instructions">
-            <h3>Ketentuan Umum:</h3>
-            <ul>
-                <li>Pastikan koneksi internet Anda stabil selama proses pengerjaan berlangsung.</li>
-                <li>Jawablah setiap pertanyaan atau pernyataan sesuai dengan kondisi diri Anda yang sebenarnya.</li>
-                <li>Tidak ada jawaban benar atau salah, kejujuran adalah kunci utama.</li>
-                <li>Waktu tes berjalan otomatis setelah Anda menekan tombol "Mulai Tes" di bawah ini.</li>
-            </ul>
-        </div>
-
-        <!-- Tombol untuk menuju ke paket asesmen masing-masing -->
-        <button id="btnMulaiUjian" class="btn-start">
-            <span class="btn-spinner" aria-hidden="true"></span>
-            <span class="btn-label">Mulai Tes Sekarang</span>
-        </button>
+<div class="container">
+    <div class="header">
+        <h1 id="assessment-title">Petunjuk Pengerjaan Asesmen</h1>
+        <p>Harap baca petunjuk dengan teliti sebelum memulai tes.</p>
     </div>
 
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
+    <div class="meta-info">
+        <span id="info-project">Project: -</span>
+        <span id="info-participant">Peserta: -</span>
+    </div>
 
-        // Canonical parameters are projectId / participantId / assessmentIndex.
-        // Keep project / participant / step as backward-compatible aliases.
-        const projectId =
-            urlParams.get('projectId') ||
-            urlParams.get('project') ||
-            '';
+    <div class="instructions">
+        <h3>Ketentuan Umum:</h3>
+        <ul>
+            <li>Pastikan koneksi internet Anda stabil selama proses pengerjaan berlangsung.</li>
+            <li>Jawablah setiap pertanyaan atau pernyataan sesuai dengan kondisi diri Anda yang sebenarnya.</li>
+            <li>Tidak ada jawaban benar atau salah, kejujuran adalah kunci utama.</li>
+            <li>Waktu tes berjalan otomatis setelah Anda menekan tombol "Mulai Tes" di bawah ini.</li>
+        </ul>
+    </div>
 
-        const participantId =
-            urlParams.get('participantId') ||
-            urlParams.get('participant') ||
-            '';
+    <button id="btnMulaiUjian" class="btn-start">
+        <span class="btn-spinner" aria-hidden="true"></span>
+        <span class="btn-label">Mulai Tes Sekarang</span>
+    </button>
+</div>
 
-        let currentStep = parseInt(
-            urlParams.get('assessmentIndex') ??
-            urlParams.get('step') ??
-            '0',
-            10
-        );
+<script>
+(function () {
+    "use strict";
 
-        // URL tes sebenarnya yang sudah dihitung dengan benar oleh
-        // dashboard (lewat getAssessmentRoute). Ini prioritas utama,
-        // supaya halaman ini tidak perlu menebak ulang dari nama paket.
-        const nextTestUrlParam =
-            (urlParams.get('nextTestUrl') || '').trim();
+    /* =========================================================
+       PARSE URL PARAMETERS
+    ========================================================= */
+    var urlParams = new URLSearchParams(window.location.search);
 
-        // Context assessment dari dashboard adalah sumber paling spesifik.
-        // Jangan biarkan cache participant lama seperti "Assessment 1"
-        // menimpa assessment aktual dari project_assessments.
-        const requestedAssessmentName =
-            (urlParams.get('assessmentName') || '').trim();
+    var projectId =
+        urlParams.get('projectId') ||
+        urlParams.get('project') ||
+        '';
 
-        const requestedAssessmentCode =
-            (urlParams.get('assessmentCode') || '').trim();
+    var participantId =
+        urlParams.get('participantId') ||
+        urlParams.get('participant') ||
+        '';
 
-        function isUuidLike(value) {
-            return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+    var currentStep = parseInt(
+        urlParams.get('assessmentIndex') ??
+        urlParams.get('step') ??
+        '0',
+        10
+    );
+
+    if (isNaN(currentStep)) currentStep = 0;
+
+    // Prioritas utama: URL tes yang sudah dihitung dashboard
+    var nextTestUrlParam =
+        (urlParams.get('nextTestUrl') || '').trim();
+
+    var requestedAssessmentName =
+        (urlParams.get('assessmentName') || '').trim();
+
+    var requestedAssessmentCode =
+        (urlParams.get('assessmentCode') || '').trim();
+
+    /* =========================================================
+       HELPERS
+    ========================================================= */
+    function isUuidLike(value) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || '').trim());
+    }
+
+    function getAssessmentDisplayName(item) {
+        if (typeof item === 'string') return item.trim();
+        if (!item || typeof item !== 'object') return '';
+        return String(
+            item.assessment_name ||
+            item.assessmentName ||
+            item.name ||
+            item.title ||
+            item.testName ||
+            item.label ||
+            item.assessment_code ||
+            item.assessmentCode ||
+            item.code ||
+            ''
+        ).trim();
+    }
+
+    function getAssessmentRoutingCode(item) {
+        if (typeof item === 'string') return item.trim();
+        if (!item || typeof item !== 'object') return '';
+        var candidate = String(
+            item.assessment_code ||
+            item.assessmentCode ||
+            item.code ||
+            item.assessment_type ||
+            item.type ||
+            ''
+        ).trim();
+        return isUuidLike(candidate) ? '' : candidate;
+    }
+
+    /* =========================================================
+       VALIDATE IDENTITY
+    ========================================================= */
+    if (!projectId || !participantId) {
+        console.error('IDENTITAS ASSESSMENT TIDAK VALID:', {
+            projectId: projectId,
+            participantId: participantId,
+            url: window.location.href
+        });
+    }
+
+    /* =========================================================
+       TRACK PAGE ENTRY
+    ========================================================= */
+    if (typeof ParticipantActivity !== "undefined") {
+        try {
+            ParticipantActivity.trackPageEntry("Petunjuk Umum");
+            ParticipantActivity.trackTabSwitch("Petunjuk Umum");
+        } catch (e) {
+            console.warn("ParticipantActivity error:", e);
         }
+    }
 
-        function getAssessmentDisplayName(item) {
-            if (typeof item === 'string') return item.trim();
-            if (!item || typeof item !== 'object') return '';
-            return String(
-                item.assessment_name ||
-                item.assessmentName ||
-                item.name ||
-                item.title ||
-                item.testName ||
-                item.label ||
-                item.assessment_code ||
-                item.assessmentCode ||
-                item.code ||
-                ''
-            ).trim();
-        }
+    /* =========================================================
+       LOAD PROJECT & PARTICIPANT INFO
+    ========================================================= */
+    var currentProjectPackages = [];
 
-        function getAssessmentRoutingCode(item) {
-            if (typeof item === 'string') return item.trim();
-            if (!item || typeof item !== 'object') return '';
-            var candidate = String(
-                item.assessment_code ||
-                item.assessmentCode ||
-                item.code ||
-                item.assessment_type ||
-                item.type ||
-                ''
-            ).trim();
-            return isUuidLike(candidate) ? '' : candidate;
-        }
+    try {
+        var projectsData = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
 
-        if (!projectId || !participantId) {
-            console.error('IDENTITAS ASSESSMENT TIDAK VALID:', {
-                projectId,
-                participantId,
-                url: window.location.href
+        var currentProj = projectsData.find(function (p) {
+            return String(p.id || p.projectId || p.project_id || "") === String(projectId);
+        });
+
+        if (currentProj) {
+            var projectName =
+                currentProj.name ||
+                currentProj.projectName ||
+                currentProj.project_name ||
+                currentProj.title ||
+                "Assessment Package";
+
+            document.getElementById("info-project").innerText = "Project: " + projectName;
+
+            var participants = Array.isArray(currentProj.participants) ? currentProj.participants : [];
+
+            var currentParticipant = participants.find(function (participant) {
+                var pid = String(
+                    participant.id ||
+                    participant.participantId ||
+                    participant.participant_id ||
+                    participant.employeeId ||
+                    participant.employee_id ||
+                    ""
+                ).trim();
+                return pid === String(participantId).trim();
             });
-        }
 
-        // Catat "masuk ke halaman Petunjuk Umum" + pantau switch tab.
-        // Dilakukan lewat shared tracker supaya activity ini juga
-        // tersinkron ke Supabase (participants.raw_data), bukan
-        // cuma tersimpan di localStorage peserta.
-        if (
-            typeof ParticipantActivity !== "undefined"
-        ) {
+            if (currentParticipant) {
+                var participantName =
+                    currentParticipant.name ||
+                    currentParticipant.fullName ||
+                    currentParticipant.participantName ||
+                    currentParticipant.username ||
+                    "Participant";
 
-            ParticipantActivity.trackPageEntry(
-                "Petunjuk Umum"
-            );
-
-            ParticipantActivity.trackTabSwitch(
-                "Petunjuk Umum"
-            );
-
-        }
-
-           let currentProjectPackages = [];
-
-try {
-
-    const projectsData =
-        JSON.parse(
-            localStorage.getItem(
-                "talentscope_projects"
-            ) || "[]"
-        );
-
-
-    const currentProj =
-        projectsData.find(
-            function (p) {
-
-                return (
-                    String(
-                        p.id ||
-                        p.projectId ||
-                        p.project_id ||
-                        ""
-                    ) === String(projectId)
-                );
+                document.getElementById("info-participant").innerText = "Peserta: " + participantName;
+            } else {
+                document.getElementById("info-participant").innerText = "Peserta: -";
             }
-        );
 
+            /* =================================================
+               LOAD ASSESSMENT PACKAGE
+            ================================================= */
+            if (Array.isArray(currentProj.assessments) && currentProj.assessments.length > 0) {
+                currentProjectPackages = currentProj.assessments;
+            } else if (Array.isArray(currentProj.assessmentPackage) && currentProj.assessmentPackage.length > 0) {
+                currentProjectPackages = currentProj.assessmentPackage;
+            } else if (currentParticipant && Array.isArray(currentParticipant.assessments) && currentParticipant.assessments.length > 0) {
+                currentProjectPackages = currentParticipant.assessments;
+            } else if (Array.isArray(currentProj.packages) && currentProj.packages.length > 0) {
+                currentProjectPackages = currentProj.packages;
+            }
 
-    if (currentProj) {
+            /* =================================================
+               OVERRIDE WITH URL CONTEXT (explicit from dashboard)
+            ================================================= */
+            if (requestedAssessmentName) {
+                var explicitItem = currentProjectPackages[currentStep] || {};
+                if (typeof explicitItem === 'string') explicitItem = { name: explicitItem };
+                currentProjectPackages[currentStep] = Object.assign({}, explicitItem, {
+                    assessment_name: requestedAssessmentName,
+                    assessment_code: requestedAssessmentCode || getAssessmentRoutingCode(explicitItem)
+                });
+            }
 
-        /* =========================================
-           PROJECT NAME
-        ========================================= */
-        const projectName =
-            currentProj.name ||
-            currentProj.projectName ||
-            currentProj.project_name ||
-            currentProj.title ||
-            "Assessment Package";
+            var displayAssessmentName = requestedAssessmentName ||
+                getAssessmentDisplayName(currentProjectPackages[currentStep]) ||
+                'Assessment';
 
-
-        
-        document.getElementById(
-            "info-project"
-        ).innerText =
-            "Project: " +
-            projectName;
-
-
-        /* =========================================
-           FIND CURRENT PARTICIPANT
-        ========================================= */
-        const participants =
-            Array.isArray(
-                currentProj.participants
-            )
-                ? currentProj.participants
-                : [];
-
-
-        const currentParticipant =
-            participants.find(
-                function (participant) {
-
-                    const pid =
-                        String(
-                            participant.id ||
-                            participant.participantId ||
-                            participant.participant_id ||
-                            participant.employeeId ||
-                            participant.employee_id ||
-                            ""
-                        ).trim();
-
-
-                    return (
-                        pid ===
-                        String(participantId).trim()
-                    );
-                }
-            );
-
-
-        /* =========================================
-           PARTICIPANT NAME
-        ========================================= */
-        if (currentParticipant) {
-
-            const participantName =
-                currentParticipant.name ||
-                currentParticipant.fullName ||
-                currentParticipant.participantName ||
-                currentParticipant.username ||
-                "Participant";
-
-
-            document.getElementById(
-                "info-participant"
-            ).innerText =
-                "Peserta: " +
-                participantName;
+            var titleElement = document.getElementById('assessment-title');
+            if (titleElement) {
+                titleElement.textContent = 'Petunjuk Pengerjaan ' + displayAssessmentName;
+            }
 
         } else {
-
-            document.getElementById(
-                "info-participant"
-            ).innerText =
-                "Peserta: -";
+            console.warn("Project tidak ditemukan:", projectId);
+            document.getElementById("info-project").innerText = "Project: Tidak ditemukan";
+            document.getElementById("info-participant").innerText = "Peserta: -";
         }
 
-
-        /* =========================================
-           LOAD ASSESSMENT PACKAGE
-
-           PRIORITAS:
-           1. project.assessments (project_assessments Supabase)
-           2. assessmentPackage proyek
-           3. assessments peserta (legacy)
-           4. packages lama
-
-           Ini penting karena raw_data peserta bisa masih menyimpan
-           "Assessment 1" dari versi lama.
-        ========================================= */
-        if (
-            Array.isArray(currentProj.assessments) &&
-            currentProj.assessments.length > 0
-        ) {
-            currentProjectPackages = currentProj.assessments;
-
-        } else if (
-            Array.isArray(currentProj.assessmentPackage) &&
-            currentProj.assessmentPackage.length > 0
-        ) {
-            currentProjectPackages = currentProj.assessmentPackage;
-
-        } else if (
-            currentParticipant &&
-            Array.isArray(currentParticipant.assessments) &&
-            currentParticipant.assessments.length > 0
-        ) {
-            currentProjectPackages = currentParticipant.assessments;
-
-        } else if (
-            Array.isArray(currentProj.packages) &&
-            currentProj.packages.length > 0
-        ) {
-            currentProjectPackages = currentProj.packages;
-        }
-
-        // Jika dashboard mengirim context eksplisit, context tersebut
-        // selalu menang atas cache lokal.
-        if (requestedAssessmentName) {
-            var explicitItem = currentProjectPackages[currentStep] || {};
-            if (typeof explicitItem === 'string') explicitItem = { name: explicitItem };
-            currentProjectPackages[currentStep] = Object.assign({}, explicitItem, {
-                assessment_name: requestedAssessmentName,
-                assessment_code: requestedAssessmentCode || getAssessmentRoutingCode(explicitItem)
-            });
-        }
-
-        var displayAssessmentName = requestedAssessmentName ||
-            getAssessmentDisplayName(currentProjectPackages[currentStep]) ||
-            'Assessment';
-
-        var titleElement = document.getElementById('assessment-title');
-        if (titleElement) {
-            titleElement.textContent = 'Petunjuk Pengerjaan ' + displayAssessmentName;
-        }
-
-
-
-    } else {
-
-        console.warn(
-            "Project tidak ditemukan:",
-            projectId
-        );
-
-        document.getElementById(
-            "info-project"
-        ).innerText =
-            "Project: Tidak ditemukan";
-
-        document.getElementById(
-            "info-participant"
-        ).innerText =
-            "Peserta: -";
+    } catch (e) {
+        console.error("Gagal memuat detail proyek:", e);
     }
 
+    /* =========================================================
+       GET SELECTED ASSESSMENT NAME
+    ========================================================= */
+    function getSelectedAssessmentName() {
+        if (requestedAssessmentName) return requestedAssessmentName;
 
-} catch (e) {
-
-    console.error(
-        "Gagal memuat detail proyek:",
-        e
-    );
-}
-
-
-/* =========================================
-   GET SELECTED ASSESSMENT NAME
-========================================= */
-function getSelectedAssessmentName() {
-
-    if (requestedAssessmentName) {
-        return requestedAssessmentName;
-    }
-
-    const item =
-        currentProjectPackages.length > 0
+        var item = currentProjectPackages.length > 0
             ? currentProjectPackages[currentStep]
             : null;
 
-    return getAssessmentDisplayName(item) || "Assessment";
-}
-
-                // Aksi ketika tombol "Mulai Tes Sekarang" diklik
-        document.getElementById('btnMulaiUjian').addEventListener('click', function() {
-
-    let targetTestUrl = "disc_test.html"; // fallback tes pertama
-
-    if (!projectId || !participantId) {
-        alert('Identitas project atau peserta tidak valid. Silakan login ulang.');
-        window.location.href = 'login.html';
-        return;
+        return getAssessmentDisplayName(item) || "Assessment";
     }
 
-    const btnMulaiUjian = document.getElementById('btnMulaiUjian');
-    if (btnMulaiUjian) {
-        btnMulaiUjian.disabled = true;
-        btnMulaiUjian.classList.add('loading');
-    }
+    /* =========================================================
+       CLICK HANDLER — MULAI TES SEKARANG
+    ========================================================= */
+    document.getElementById('btnMulaiUjian').addEventListener('click', function () {
 
-    const activePkg =
-        currentProjectPackages.length > 0
+        var targetTestUrl = "disc_test.html"; // fallback
+
+        if (!projectId || !participantId) {
+            alert('Identitas project atau peserta tidak valid. Silakan login ulang.');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        var btnMulaiUjian = document.getElementById('btnMulaiUjian');
+        if (btnMulaiUjian) {
+            btnMulaiUjian.disabled = true;
+            btnMulaiUjian.classList.add('loading');
+        }
+
+        var activePkg = currentProjectPackages.length > 0
             ? currentProjectPackages[currentStep]
             : null;
 
-    const packageName =
-        requestedAssessmentName ||
-        getAssessmentDisplayName(activePkg) ||
-        "Assessment";
+        var packageName = requestedAssessmentName ||
+            getAssessmentDisplayName(activePkg) ||
+            "Assessment";
 
-    const assessmentName =
-        String(packageName).trim();
+        var assessmentName = String(packageName).trim();
 
-    const assessmentCode =
-        String(
+        var assessmentCode = String(
             requestedAssessmentCode ||
             getAssessmentRoutingCode(activePkg) ||
             ""
         ).trim();
 
-    // Perbarui judul juga jika halaman dibuka dari cache lama.
-    const liveTitle = document.getElementById('assessment-title');
-    if (liveTitle) {
-        liveTitle.textContent = 'Petunjuk Pengerjaan ' + assessmentName;
-    }
-
-    if (nextTestUrlParam) {
-
-        // Dashboard sudah menghitung tes tujuan yang benar
-        // (berdasarkan kode + nama assessment) — pakai ini,
-        // jangan tebak ulang dari nama paket.
-        targetTestUrl = nextTestUrlParam;
-
-    } else {
-
-        const codeLower = assessmentCode.toLowerCase();
-        const pkgLower = assessmentName.toLowerCase();
-
-        // Fallback (dipakai hanya kalau halaman ini dibuka tanpa
-        // parameter nextTestUrl, misalnya diakses langsung).
-        // Cek code DAN name, supaya assessment dengan nama generik
-        // (mis. "Personality Assessment") tapi code jelas (mis. "PAPI")
-        // tetap terdeteksi dengan benar.
-        // Cek VAP terlebih dahulu. Nama assessment dari project_assessments
-        // adalah sumber canonical dan tidak boleh kalah oleh field/cache legacy.
-        if (codeLower.includes("vap") || pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("speed")) {
-            targetTestUrl = "speedtest.html";
-        } else if (codeLower.includes("papi") || pkgLower.includes("papi") || pkgLower.includes("kostick")) {
-            targetTestUrl = "papi_kostick_test.html";
-        } else if (codeLower.includes("disc") || pkgLower.includes("disc")) {
-            targetTestUrl = "disc_test.html";
-        } else {
-            console.warn(
-                "Tipe assessment tidak dikenali dari code/nama paket, memakai fallback disc_test.html:",
-                assessmentCode,
-                assessmentName
-            );
-            targetTestUrl = "disc_test.html";
+        // Update title jika halaman dibuka dari cache lama
+        var liveTitle = document.getElementById('assessment-title');
+        if (liveTitle) {
+            liveTitle.textContent = 'Petunjuk Pengerjaan ' + assessmentName;
         }
-    }
 
-    /*
-       Simpan assessment yang benar ke participant.
-       Ini menjadi sumber activity untuk halaman monitoring.
-       Ditulis ke localStorage (kompatibilitas lama) DAN
-       disinkronkan ke Supabase lewat shared tracker.
-    */
-    if (typeof ParticipantActivity !== "undefined") {
+        /* ============================================
+           RESOLVE TARGET TEST URL
+           Prioritas 1: nextTestUrl dari dashboard
+           Prioritas 2: fallback berdasarkan code/name
+        ============================================ */
+        if (nextTestUrlParam) {
+            targetTestUrl = nextTestUrlParam;
+        } else {
+            var codeLower = assessmentCode.toLowerCase();
+            var pkgLower = assessmentName.toLowerCase();
 
-        var startActivityLabel =
-            "Online - Mengerjakan tes (" +
-            assessmentName +
-            ")";
-
-        ParticipantActivity.recordActivity({
-
-            type: "test-start",
-
-            label: startActivityLabel,
-
-            description:
-                "Peserta mulai mengerjakan " +
-                assessmentName +
-                ".",
-
-            patch: {
-                currentTest: assessmentName,
-                currentAssessmentIndex: Number(currentStep),
-                currentAssessmentCode: assessmentCode
-            },
-
-            extra: {
-                action: "Start Assessment",
-                test: assessmentName,
-                testName: assessmentName,
-                assessmentName: assessmentName,
-                assessmentCode: assessmentCode,
-                assessmentIndex: Number(currentStep),
-                projectId: String(projectId),
-                participantId: String(participantId)
+            // Match CODE dulu
+            if (codeLower.includes("lsjt") || codeLower.includes("leadership")) {
+                targetTestUrl = "sjt_leadership.html";
+            } else if (codeLower.includes("msjt") || codeLower.includes("managerial")) {
+                targetTestUrl = "msjt_managerial.html";
+            } else if (codeLower.includes("vap") || codeLower.includes("visual") || codeLower.includes("performance")) {
+                targetTestUrl = "speedtest.html";
+            } else if (codeLower.includes("papi") || codeLower.includes("kostick")) {
+                targetTestUrl = "papi_kostick_test.html";
+            } else if (codeLower.includes("disc")) {
+                targetTestUrl = "disc_test.html";
             }
+            // Match NAME
+            else if (pkgLower.includes("lsjt") || pkgLower.includes("leadership")) {
+                targetTestUrl = "sjt_leadership.html";
+            } else if (pkgLower.includes("msjt") || pkgLower.includes("managerial")) {
+                targetTestUrl = "msjt_managerial.html";
+            } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("work performance") || pkgLower.includes("sustained attention")) {
+                targetTestUrl = "speedtest.html";
+            } else if (pkgLower.includes("papi") || pkgLower.includes("kostick")) {
+                targetTestUrl = "papi_kostick_test.html";
+            } else if (pkgLower.includes("disc")) {
+                targetTestUrl = "disc_test.html";
+            }
+            // Fallback
+            else {
+                console.warn("Tipe assessment tidak dikenali:", assessmentCode, assessmentName);
+                targetTestUrl = "disc_test.html";
+            }
+        }
 
-        });
+        /* ============================================
+           RECORD ACTIVITY (non-blocking)
+        ============================================ */
+        try {
+            if (typeof ParticipantActivity !== "undefined") {
+                var startActivityLabel = "Online - Mengerjakan tes (" + assessmentName + ")";
 
-    }
+                ParticipantActivity.recordActivity({
+                    type: "test-start",
+                    label: startActivityLabel,
+                    description: "Peserta mulai mengerjakan " + assessmentName + ".",
+                    patch: {
+                        currentTest: assessmentName,
+                        currentAssessmentIndex: Number(currentStep),
+                        currentAssessmentCode: assessmentCode
+                    },
+                    extra: {
+                        action: "Start Assessment",
+                        test: assessmentName,
+                        testName: assessmentName,
+                        assessmentName: assessmentName,
+                        assessmentCode: assessmentCode,
+                        assessmentIndex: Number(currentStep),
+                        projectId: String(projectId),
+                        participantId: String(participantId)
+                    }
+                });
+            }
+        } catch (activityErr) {
+            console.warn("[START] Activity record gagal (tidak fatal):", activityErr);
+        }
 
-    // Kirim context lengkap ke halaman tes.
-    window.location.href =
-        `${targetTestUrl}?projectId=${encodeURIComponent(projectId)}` +
-        `&participantId=${encodeURIComponent(participantId)}` +
-        `&assessmentIndex=${encodeURIComponent(currentStep)}` +
-        `&assessmentName=${encodeURIComponent(assessmentName)}` +
-        `&assessmentCode=${encodeURIComponent(assessmentCode)}`;
+        /* ============================================
+           NAVIGATE TO TEST
+        ============================================ */
+        console.log("[ASSESSMENT.HTML] Navigating to:", targetTestUrl);
 
-});</script>
+        window.location.href =
+            targetTestUrl +
+            '?projectId=' + encodeURIComponent(projectId) +
+            '&participantId=' + encodeURIComponent(participantId) +
+            '&assessmentIndex=' + encodeURIComponent(currentStep) +
+            '&assessmentName=' + encodeURIComponent(assessmentName) +
+            '&assessmentCode=' + encodeURIComponent(assessmentCode);
+    });
+
+})();
+</script>
 </body>
 </html>

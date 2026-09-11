@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+    <script src="js/ts-supabase-sync.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data-service.js"></script>
+    <script src="js/participant-activity.js"></script>
+    <script>
+        if (typeof ParticipantActivity !== "undefined") {
+            ParticipantActivity.trackPageEntry("Tes Leadership Situational Judgment Test (LSJT)");
+            ParticipantActivity.trackTabSwitch("Tes Leadership Situational Judgment Test (LSJT)");
+        }
+    </script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSJT — Leadership Situational Judgment Test</title>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--blue2:#1d4ed8;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input{font:inherit}.hidden{display:none!important}
+header{height:72px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:20}
+.back{color:#334155;text-decoration:none;font-weight:750;font-size:14px;display:flex;align-items:center;gap:8px}.back:hover{color:var(--blue)}
+.timer-wrap{text-align:right}.timer-wrap small{display:block;color:#94a3b8;font-size:9px;font-weight:800;letter-spacing:1.5px}.timer{font-weight:900;font-size:19px;color:var(--blue);font-variant-numeric:tabular-nums}
+main{max-width:1120px;margin:auto;padding:30px 20px 55px}
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:42px 44px;background:linear-gradient(135deg,#172554 0%,#4c1d95 52%,#7c3aed 100%);color:#fff;box-shadow:0 18px 45px #0f172a20}
+.hero:before,.hero:after{content:"";position:absolute;border:1px solid #ffffff22;border-radius:50%}.hero:before{width:260px;height:260px;right:-60px;top:-130px}.hero:after{width:330px;height:330px;right:110px;bottom:-275px}
+.pill{display:inline-flex;border:1px solid #ffffff35;background:#ffffff14;border-radius:999px;padding:7px 12px;font-size:10px;font-weight:850;letter-spacing:1.8px;position:relative;z-index:1}
+.hero h1{font-size:46px;line-height:1;margin:19px 0 10px;font-weight:950;letter-spacing:-1.5px;position:relative;z-index:1}
+.hero p{max-width:720px;line-height:1.65;color:#e9d5ff;margin:0;position:relative;z-index:1}
+.meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.meta{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 5px 20px #0f172a08}
+.meta .k{font-size:10px;font-weight:850;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.meta .icon-box{width:30px;height:30px;border-radius:10px;background:#f3e8ff;color:#7c3aed;display:grid;place-items:center;flex:0 0 30px}
+.meta .icon-box svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.meta .v{font-size:16px;font-weight:850;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prep{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:24px;padding:27px;box-shadow:0 8px 28px #0f172a08}
+.prep-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.eyebrow{font-size:10px;font-weight:900;letter-spacing:1.7px;color:var(--purple)}
+.prep h2{margin:6px 0 6px;font-size:24px}.prep-head p{margin:0;color:var(--muted);font-size:13px}
+.stats{display:flex;gap:9px;flex-wrap:wrap}.stat{min-width:105px;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px}.stat strong{display:block;font-size:18px}.stat span{font-size:10px;color:var(--muted);font-weight:750}
+.steps{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:22px}
+.step{display:flex;gap:13px;padding:16px;border:1px solid var(--line);background:#faf5ff;border-radius:16px}.step-no{width:30px;height:30px;border-radius:10px;background:#f3e8ff;color:var(--purple);display:grid;place-items:center;font-size:12px;font-weight:900;flex:0 0 30px}
+.step b{font-size:13px}.step p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.55}
+.confirm{margin-top:19px;padding:16px;border-radius:15px;background:#f8fafc;border:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}.confirm input{margin-top:3px;width:17px;height:17px;accent-color:var(--purple)}.confirm label{margin:0;font-size:13px;font-weight:700;color:#334155;cursor:pointer}
+.start-row{margin-top:16px;display:flex;justify-content:flex-end}.btn{border:0;border-radius:12px;padding:13px 19px;font-weight:850;cursor:pointer}.primary{background:var(--purple);color:#fff}.primary:hover{background:#6d28d9}.primary:disabled{background:#cbd5e1;color:#94a3b8;cursor:not-allowed}
+.security{margin-top:13px;text-align:center;color:#64748b;font-size:11px;display:flex;justify-content:center;align-items:center;gap:8px}
+.shield{width:22px;height:22px;border-radius:7px;background:#f3e8ff;color:var(--purple);display:grid;place-items:center;flex:0 0 22px}
+.shield svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* TEST AREA */
+.test{max-width:900px;margin:auto}
+.test-head{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px}
+.progress-wrap{margin-top:14px}
+.progress-bar{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin-top:8px}
+.progress-bar i{display:block;height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7);transition:width .3s}
+.q-num{font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--purple);margin-bottom:4px}
+.q-title{font-weight:900;font-size:17px}
+.q-counter{font-size:12px;color:#64748b;font-weight:700}
+.session-time{text-align:right}.session-time small{display:block;font-size:9px;color:#94a3b8}.session-time strong{font-size:21px;color:#334155;font-variant-numeric:tabular-nums}
+
+.scenario-box{margin-top:16px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:18px;padding:22px}
+.scenario-label{font-size:10px;font-weight:900;letter-spacing:1.5px;color:var(--purple);margin-bottom:8px}
+.scenario-text{font-size:15px;line-height:1.7;color:#1e293b}
+
+.options{margin-top:18px;display:grid;gap:12px}
+.option{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;transition:.15s}
+.option:hover{border-color:#a855f7}
+.option-letter{width:34px;height:34px;border-radius:10px;background:#f1f5f9;color:#334155;display:grid;place-items:center;font-weight:900;font-size:14px;flex:0 0 34px}
+.option-text{font-size:14px;line-height:1.65;color:#1e293b;flex:1;margin-top:6px}
+.option-actions{display:flex;gap:6px;flex-direction:column;flex:0 0 130px}
+.option-btn{background:#f1f5f9;border:2px solid transparent;color:#475569;padding:8px 12px;border-radius:10px;font-weight:800;font-size:11px;cursor:pointer;letter-spacing:.5px;transition:.15s}
+.option-btn:hover{background:#e2e8f0}
+.option-btn.most.active{background:#7c3aed;color:#fff}
+.option-btn.most.active:hover{background:#6d28d9}
+.option-btn.least.active{background:#f59e0b;color:#fff}
+.option-btn.least.active:hover{background:#d97706}
+
+.nav-row{margin-top:24px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.nav-btn{background:#fff;border:1px solid var(--line);color:#334155;padding:12px 20px;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.nav-btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.nav-btn.primary{background:var(--purple);color:#fff;border-color:var(--purple)}
+.nav-btn.primary:hover{background:#6d28d9}
+.nav-btn:disabled{opacity:.4;cursor:not-allowed}
+.nav-hint{font-size:12px;color:#64748b;text-align:center;margin-top:10px}
+
+.break{max-width:600px;margin:70px auto;text-align:center}.break .card{padding:45px}.check{font-size:52px;color:#16a34a}.card,.result-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px}
+
+@media(max-width:750px){
+  header{padding:0 15px}.meta-grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}
+  .prep-head{display:block}.stats{margin-top:16px}.hero{padding:30px}.hero h1{font-size:38px}
+  .test-head{flex-direction:column;gap:10px;align-items:flex-start}
+  .option{flex-direction:column}.option-actions{flex-direction:row;flex:1;width:100%}
+  .option-actions .option-btn{flex:1}
+  .nav-row{flex-direction:column-reverse}.nav-btn{width:100%;justify-content:center}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="#" onclick="backToDashboard(event)">← Kembali ke Dashboard</a>
+  <div class="timer-wrap"><small>TOTAL ASSESSMENT</small><div id="globalTimer" class="timer">30:00</div></div>
+</header>
+<main>
+
+<!-- INTRO -->
+<section id="intro">
+  <div class="hero">
+    <span class="pill">TALENTSCOPE ENTERPRISE • ASSESSMENT</span>
+    <h1>LSJT</h1>
+    <p>Leadership Situational Judgment Test — Master Form A (28 Item)</p>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.2 3.1-5 7-5s6.3 1.8 7 5"></path></svg></span>Peserta</div><div class="v" id="participantName">-</div></div>
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="14" rx="2"></rect><path d="M8 6V4h8v2M3 10h18"></path></svg></span>Proyek</div><div class="v" id="projectName">-</div></div>
+    <div class="meta"><div class="k"><span class="icon-box"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>Tanggal</div><div class="v" id="assessmentDate">-</div></div>
+  </div>
+
+  <div class="prep">
+    <div class="prep-head">
+      <div>
+        <div class="eyebrow">PERSIAPAN TES</div>
+        <h2>Siap untuk memulai assessment?</h2>
+        <p>Bayangkan Anda berada dalam setiap situasi sebagai pemimpin yang bertanggung jawab. Pilih berdasarkan kecenderungan nyata Anda.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><strong>28</strong><span>Item</span></div>
+        <div class="stat"><strong>30</strong><span>Menit</span></div>
+        <div class="stat"><strong>M/L</strong><span>Format</span></div>
+      </div>
+    </div>
+
+    <div class="steps">
+      <div class="step"><div class="step-no">01</div><div><b>Pilih MOST & LEAST</b><p>Untuk setiap situasi, pilih SATU MOST (paling menggambarkan) dan SATU LEAST (paling tidak menggambarkan).</p></div></div>
+      <div class="step"><div class="step-no">02</div><div><b>MOST ≠ LEAST</b><p>Pilihan MOST dan LEAST tidak boleh berada pada alternatif yang sama.</p></div></div>
+      <div class="step"><div class="step-no">03</div><div><b>Jawab sesuai kecenderungan</b><p>Pilih berdasarkan kecenderungan nyata Anda, bukan jawaban yang menurut Anda paling ideal.</p></div></div>
+      <div class="step"><div class="step-no">04</div><div><b>Jangan memuat ulang halaman</b><p>Biarkan halaman tetap terbuka sampai seluruh assessment selesai.</p></div></div>
+    </div>
+
+    <div class="confirm"><input id="confirmRead" type="checkbox" onchange="toggleStart()"><label for="confirmRead">Saya telah membaca dan memahami seluruh petunjuk tes</label></div>
+    <div class="start-row"><button id="startBtn" class="btn primary" onclick="begin()" disabled>Kerjakan Tes →</button></div>
+    <div class="security"><span class="shield"><svg viewBox="0 0 24 24"><path d="M12 3.5 19 6v5.3c0 4.4-2.7 7.8-7 9.2-4.3-1.4-7-4.8-7-9.2V6l7-2.5Z"></path><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg></span><b>Jawaban Anda tersimpan otomatis selama pengerjaan.</b></div>
+  </div>
+</section>
+
+<!-- TEST -->
+<section id="test" class="hidden test">
+  <div class="test-head">
+    <div>
+      <div class="q-num" id="qNum">ITEM 01 / 28</div>
+      <div class="q-title" id="qTitle">Keputusan di Bawah Tekanan Waktu</div>
+    </div>
+    <div class="session-time">
+      <small>SISA WAKTU</small>
+      <strong id="sessionTimer">30:00</strong>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><i id="progressFill" style="width:0%"></i></div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11px;color:#94a3b8">
+      <span id="progressLabel">Item 1 dari 28</span>
+      <span id="answeredLabel">Terjawab: 0 / 28</span>
+    </div>
+  </div>
+
+  <div class="scenario-box">
+    <div class="scenario-label">SITUASI</div>
+    <div class="scenario-text" id="scenarioText"></div>
+  </div>
+
+  <div class="options" id="optionsContainer"></div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn" onclick="prevItem()">← Sebelumnya</button>
+    <button class="nav-btn primary" id="nextBtn" onclick="nextItem()">Selanjutnya →</button>
+  </div>
+  <div class="nav-hint" id="navHint"></div>
+</section>
+
+<!-- FINISH -->
+<section id="finish" class="hidden break">
+  <div class="card">
+    <div class="check">✓</div>
+    <h2>Tes Selesai</h2>
+    <p id="finishMessage">Jawaban Anda telah berhasil disimpan. Sedang mengalihkan...</p>
+  </div>
+</section>
+
+</main>
+<script>
+/* =========================================================
+   LSJT — Leadership Situational Judgment Test
+   Master Form A — 28 Item | 30 Menit
+========================================================= */
+
+const TEST_MODE = false; // false = 30 menit (production)
+
+const CFG = {
+    totalSeconds: TEST_MODE ? 60 : 1800,
+    // 30 menit = 1800 detik
+};
+
+const STYLES = {
+    OTORITER: "Otoriter",
+    DEMOKRATIS: "Demokratis",
+    LAISSEZ_FAIRE: "Laissez-Faire",
+    SITUASIONAL: "Situasional"
+};
+
+/* =========================================================
+   ITEM BANK — 28 Items dengan mapping konstruk
+   Format: { id, title, scenario, options: [{text, style}] }
+========================================================= */
+const ITEMS = [
+  {
+    id: "LSJT-01",
+    title: "Keputusan di Bawah Tekanan Waktu",
+    scenario: "Anda dan tim harus menyelesaikan keputusan penting dalam waktu yang sangat terbatas. Beberapa anggota memiliki pandangan berbeda, dan tenggat waktu tidak dapat ditunda.",
+    options: [
+      { text: "Mengambil keputusan sendiri berdasarkan informasi yang tersedia dan meminta tim menjalankannya segera.", style: "OTORITER" },
+      { text: "Mengumpulkan tim untuk membahas pilihan secara singkat, kemudian mengambil keputusan berdasarkan masukan yang diperoleh.", style: "DEMOKRATIS" },
+      { text: "Meminta setiap anggota menuliskan rekomendasi mereka dan memilih opsi yang paling banyak didukung sebelum mengambil keputusan.", style: "LAISSEZ_FAIRE" },
+      { text: "Menentukan bahwa keputusan akan diambil setelah setiap anggota menyampaikan pandangannya, meskipun itu berarti sedikit melampaui tenggat.", style: "SITUASIONAL" }
+    ]
+  },
+  {
+    id: "LSJT-02",
+    title: "Anggota Baru dengan Kemampuan Dasar Baik",
+    scenario: "Seorang anggota baru memiliki pengetahuan dan keterampilan dasar yang baik untuk pekerjaannya, tetapi belum terbiasa dengan prosedur dan dinamika tim.",
+    options: [
+      { text: "Memberikan panduan langkah demi langkah pada awalnya dan secara bertahap mengurangi arahan seiring dengan peningkatan kemampuannya.", style: "SITUASIONAL" },
+      { text: "Menugaskan anggota senior untuk mendampinginya dan hanya terlibat jika ada masalah signifikan.", style: "DEMOKRATIS" },
+      { text: "Mengajaknya berdiskusi secara teratur mengenai kemajuan dan hambatan yang dihadapinya, serta memberikan umpan balik.", style: "OTORITER" },
+      { text: "Memberikan tanggung jawab penuh sejak awal agar ia cepat belajar dari pengalaman langsung.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-03",
+    title: "Anggota Berpengalaman dan Konsisten",
+    scenario: "Seorang anggota tim telah bekerja di posisinya selama bertahun-tahun dengan hasil yang konsisten dan dapat diandalkan.",
+    options: [
+      { text: "Memberikan keleluasaan penuh dalam menentukan cara kerja dan hanya meminta laporan pada titik-titik tertentu.", style: "LAISSEZ_FAIRE" },
+      { text: "Mengurangi pemantauan rutin tetapi tetap melakukan pemeriksaan berkala untuk memastikan kualitas.", style: "SITUASIONAL" },
+      { text: "Mengajaknya berdiskusi mengenai pengembangan peran atau tanggung jawab baru yang sesuai dengan kemampuannya.", style: "DEMOKRATIS" },
+      { text: "Mempertahankan prosedur yang sama untuk semua anggota agar standar tetap konsisten.", style: "OTORITER" }
+    ]
+  },
+  {
+    id: "LSJT-04",
+    title: "Target Jauh di Bawah Ekspektasi",
+    scenario: "Pencapaian tim Anda selama dua bulan terakhir berada jauh di bawah target. Beberapa anggota menyebutkan beban kerja yang meningkat sebagai penyebabnya.",
+    options: [
+      { text: "Menganalisis ulang target dan sumber daya, kemudian menetapkan penyesuaian yang diperlukan tanpa mengurangi akuntabilitas.", style: "SITUASIONAL" },
+      { text: "Meminta anggota secara individu menyusun rencana perbaikan dan menyampaikannya kepada Anda.", style: "LAISSEZ_FAIRE" },
+      { text: "Mengadakan pertemuan tim untuk mendiskusikan penyebab dan menyusun strategi perbaikan bersama.", style: "DEMOKRATIS" },
+      { text: "Menetapkan langkah-langkah korektif spesifik dan jadwal pemantauan yang lebih ketat hingga target kembali tercapai.", style: "OTORITER" }
+    ]
+  },
+  {
+    id: "LSJT-05",
+    title: "Konflik yang Mengganggu Koordinasi",
+    scenario: "Dua anggota yang perannya saling terkait mengalami perselisihan yang mulai memengaruhi koordinasi dan hasil kerja tim.",
+    options: [
+      { text: "Mengajak keduanya bertemu untuk mendiskusikan perbedaan dan mencari solusi yang dapat diterima bersama.", style: "DEMOKRATIS" },
+      { text: "Mengambil alih koordinasi antara keduanya untuk sementara waktu agar pekerjaan tetap berjalan.", style: "OTORITER" },
+      { text: "Mengingatkan keduanya tentang tanggung jawab masing-masing dan meminta mereka menyelesaikan perbedaan secara profesional.", style: "SITUASIONAL" },
+      { text: "Mendelegasikan penyelesaian konflik kepada atasan langsung mereka atau pihak ketiga yang netral.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-06",
+    title: "Gangguan Operasional Mendadak",
+    scenario: "Sebuah gangguan operasional terjadi dan memerlukan keputusan segera. Beberapa anggota tim tersedia, tetapi informasi yang ada terbatas.",
+    options: [
+      { text: "Mengambil keputusan sendiri berdasarkan penilaian terhadap informasi yang tersedia.", style: "OTORITER" },
+      { text: "Mengumpulkan masukan singkat dari anggota yang tersedia sebelum memutuskan.", style: "DEMOKRATIS" },
+      { text: "Meminta anggota yang paling berpengalaman di bidang tersebut untuk merekomendasikan tindakan.", style: "SITUASIONAL" },
+      { text: "Menentukan bahwa keputusan ditunda sebentar hingga informasi tambahan dapat dikumpulkan.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-07",
+    title: "Usulan Inovasi dari Anggota Tim",
+    scenario: "Seorang anggota mengusulkan pendekatan baru yang berpotensi meningkatkan efisiensi secara signifikan, tetapi risikonya belum sepenuhnya terukur.",
+    options: [
+      { text: "Mengizinkan anggota tersebut mengembangkan usulannya dalam skala kecil dengan batasan dan indikator yang jelas.", style: "SITUASIONAL" },
+      { text: "Membahas usulan tersebut dalam rapat tim sebelum memutuskan apakah akan diuji coba.", style: "DEMOKRATIS" },
+      { text: "Menentukan sendiri bahwa usulan tersebut layak diuji coba berdasarkan penilaian risiko yang Anda lakukan.", style: "OTORITER" },
+      { text: "Meminta anggota tersebut menyusun analisis risiko lengkap sebelum Anda memberikan persetujuan.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-08",
+    title: "Tim yang Terbukti Mandiri",
+    scenario: "Sebagian besar anggota tim telah menunjukkan kemampuan bekerja secara mandiri dengan kualitas hasil yang konsisten.",
+    options: [
+      { text: "Memberikan kepercayaan lebih besar dan mengurangi keterlibatan langsung dalam pekerjaan rutin.", style: "SITUASIONAL" },
+      { text: "Mempertahankan mekanisme pelaporan dan pemantauan yang sama untuk semua pekerjaan.", style: "OTORITER" },
+      { text: "Mengadakan pertemuan berkala untuk membahas perkembangan dan tantangan yang dihadapi tim.", style: "DEMOKRATIS" },
+      { text: "Mendelegasikan tanggung jawab pengambilan keputusan operasional sepenuhnya kepada tim.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-09",
+    title: "Perubahan Prioritas dari Manajemen",
+    scenario: "Manajemen mengumumkan perubahan prioritas yang signifikan di tengah periode berjalan, dan beberapa pekerjaan yang sedang berjalan harus dihentikan.",
+    options: [
+      { text: "Menentukan sendiri pekerjaan mana yang dihentikan dan mana yang dilanjutkan berdasarkan penilaian Anda.", style: "OTORITER" },
+      { text: "Mengadakan pertemuan tim untuk mendiskusikan perubahan dan menyusun rencana penyesuaian bersama.", style: "DEMOKRATIS" },
+      { text: "Meminta setiap anggota menilai dampak perubahan terhadap pekerjaan mereka dan menyampaikan rekomendasi.", style: "LAISSEZ_FAIRE" },
+      { text: "Menetapkan ulang prioritas berdasarkan urgensi dan dampak, kemudian mengomunikasikannya dengan jelas kepada tim.", style: "SITUASIONAL" }
+    ]
+  },
+  {
+    id: "LSJT-10",
+    title: "Anggota Berpengalaman Menolak Keputusan",
+    scenario: "Seorang anggota yang berpengalaman dan dihormati menyampaikan keberatan terhadap keputusan yang baru saja Anda tetapkan.",
+    options: [
+      { text: "Mendengarkan alasan keberatannya dan mempertimbangkan apakah keputusan perlu ditinjau ulang.", style: "SITUASIONAL" },
+      { text: "Menjelaskan dasar keputusan dan meminta anggota tersebut menjalankannya meskipun ada perbedaan pendapat.", style: "OTORITER" },
+      { text: "Mengajak anggota tersebut mendiskusikan alternatif dan kemungkinan modifikasi keputusan.", style: "DEMOKRATIS" },
+      { text: "Memintanya menuliskan keberatan secara tertulis beserta alternatif yang diusulkan untuk dipertimbangkan.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-11",
+    title: "Proyek Baru Tanpa Prosedur Baku",
+    scenario: "Tim Anda menerima proyek baru yang belum pernah dikerjakan sebelumnya, sehingga belum ada prosedur standar yang dapat diikuti.",
+    options: [
+      { text: "Menyusun kerangka kerja awal dan memberikan arahan yang cukup jelas untuk memulai.", style: "SITUASIONAL" },
+      { text: "Mengumpulkan tim untuk mengeksplorasi berbagai pendekatan sebelum menentukan langkah.", style: "DEMOKRATIS" },
+      { text: "Memberikan kebebasan kepada tim untuk mengembangkan metode pelaksanaan sesuai kreativitas mereka.", style: "LAISSEZ_FAIRE" },
+      { text: "Menugaskan satu atau dua anggota yang paling senior untuk menyusun rencana awal bagi tim.", style: "OTORITER" }
+    ]
+  },
+  {
+    id: "LSJT-12",
+    title: "Anggota Berkinerja Sangat Tinggi",
+    scenario: "Seorang anggota konsisten mencapai hasil di atas target dan menunjukkan kapasitas untuk tanggung jawab yang lebih besar.",
+    options: [
+      { text: "Memberikan proyek atau tanggung jawab tambahan yang lebih menantang sebagai bentuk pengembangan.", style: "SITUASIONAL" },
+      { text: "Mengajaknya berdiskusi mengenai minat pengembangan dan jalur karier yang diinginkan.", style: "DEMOKRATIS" },
+      { text: "Memberikan keleluasaan penuh dalam menentukan cara mencapai target yang telah ditetapkan.", style: "LAISSEZ_FAIRE" },
+      { text: "Menyesuaikan targetnya menjadi lebih tinggi dan mengaitkannya dengan insentif atau penghargaan.", style: "OTORITER" }
+    ]
+  },
+  {
+    id: "LSJT-13",
+    title: "Peningkatan Target yang Signifikan",
+    scenario: "Unit Anda menerima peningkatan target yang cukup besar, sementara sumber daya yang tersedia relatif tidak berubah.",
+    options: [
+      { text: "Menganalisis kesenjangan antara target dan kapasitas, lalu menentukan strategi pencapaian.", style: "SITUASIONAL" },
+      { text: "Mengadakan pertemuan untuk membahas strategi dan membagi target secara merata sesuai kapasitas anggota.", style: "DEMOKRATIS" },
+      { text: "Menetapkan target yang lebih tinggi kepada masing-masing anggota dan meminta mereka menyesuaikan cara kerja.", style: "OTORITER" },
+      { text: "Memberikan kebebasan kepada tim untuk menentukan sendiri cara mencapai target yang ditetapkan.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-14",
+    title: "Delegasi Tanggung Jawab Penting",
+    scenario: "Anda perlu mendelegasikan tanggung jawab penting kepada anggota yang kompeten untuk mengembangkan kapasitasnya.",
+    options: [
+      { text: "Menjelaskan hasil yang diharapkan, memberikan kewenangan penuh, dan meminta laporan pada titik-titik tertentu.", style: "SITUASIONAL" },
+      { text: "Mendiskusikan batasan kewenangan dan tingkat dukungan yang akan diberikan sebelum delegasi dilakukan.", style: "OTORITER" },
+      { text: "Memberikan tanggung jawab penuh dan membiarkan anggota menentukan seluruh aspek pelaksanaan.", style: "LAISSEZ_FAIRE" },
+      { text: "Menentukan secara spesifik apa yang boleh dan tidak boleh dilakukan dalam tanggung jawab yang didelegasikan.", style: "DEMOKRATIS" }
+    ]
+  },
+  {
+    id: "LSJT-15",
+    title: "Penurunan Motivasi Tim",
+    scenario: "Beberapa anggota tim menunjukkan penurunan motivasi dan antusiasme setelah beberapa bulan menghadapi tekanan pekerjaan yang tinggi.",
+    options: [
+      { text: "Mengadakan pertemuan individual untuk memahami penyebab dan mencari solusi bersama.", style: "DEMOKRATIS" },
+      { text: "Menegaskan kembali target dan standar kinerja yang tetap harus dipenuhi.", style: "OTORITER" },
+      { text: "Memberikan lebih banyak kelonggaran dan fleksibilitas dalam cara kerja untuk mengurangi tekanan.", style: "SITUASIONAL" },
+      { text: "Mendelegasikan penyusunan strategi peningkatan motivasi kepada salah satu anggota senior.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-16",
+    title: "Pekerjaan dengan Risiko Tinggi",
+    scenario: "Sebuah pekerjaan memiliki risiko signifikan jika terjadi kesalahan, tetapi penting untuk diselesaikan tepat waktu.",
+    options: [
+      { text: "Menetapkan prosedur yang jelas dan melakukan pemantauan lebih ketat pada titik-titik kritis.", style: "OTORITER" },
+      { text: "Memilih anggota yang paling kompeten dan memberikan kepercayaan penuh dalam pelaksanaannya.", style: "LAISSEZ_FAIRE" },
+      { text: "Mengadakan diskusi risiko dengan tim untuk mengidentifikasi potensi masalah dan mitigasinya.", style: "DEMOKRATIS" },
+      { text: "Melibatkan diri secara langsung dalam koordinasi dan pengambilan keputusan selama proses berlangsung.", style: "SITUASIONAL" }
+    ]
+  },
+  {
+    id: "LSJT-17",
+    title: "Implementasi Sistem Kerja Baru",
+    scenario: "Organisasi menerapkan sistem dan prosedur kerja baru. Sebagian anggota sudah siap, tetapi sebagian lainnya mengalami kesulitan adaptasi.",
+    options: [
+      { text: "Menyesuaikan pendekatan Anda: memberikan dukungan lebih kepada anggota yang kesulitan dan keleluasaan lebih kepada yang sudah siap.", style: "SITUASIONAL" },
+      { text: "Memberikan pelatihan dan waktu adaptasi yang sama kepada semua anggota untuk memastikan standar yang konsisten.", style: "OTORITER" },
+      { text: "Meminta anggota yang sudah menguasai untuk membantu anggota yang masih kesulitan.", style: "DEMOKRATIS" },
+      { text: "Memastikan semua anggota mengikuti prosedur yang ditetapkan dengan jadwal yang sama.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-18",
+    title: "Konflik Prioritas Antar-Pihak",
+    scenario: "Dua pihak atau unit lain meminta tim Anda memprioritaskan pekerjaan mereka masing-masing dalam waktu yang bersamaan.",
+    options: [
+      { text: "Menentukan prioritas sendiri berdasarkan kepentingan organisasi secara keseluruhan.", style: "OTORITER" },
+      { text: "Mengumpulkan informasi dari kedua pihak dan memutuskan berdasarkan pertimbangan yang objektif.", style: "SITUASIONAL" },
+      { text: "Memfasilitasi diskusi antara kedua pihak untuk mencapai kesepakatan bersama.", style: "DEMOKRATIS" },
+      { text: "Menyesuaikan alokasi sumber daya sehingga kedua pekerjaan dapat diproses secara paralel.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-19",
+    title: "Kegagalan Anggota dalam Pekerjaan Penting",
+    scenario: "Seorang anggota gagal menyelesaikan pekerjaan penting yang dipercayakan kepadanya, dan hal ini berdampak pada hasil tim.",
+    options: [
+      { text: "Membahas kegagalan secara langsung, mengidentifikasi penyebab, dan menyusun rencana perbaikan.", style: "DEMOKRATIS" },
+      { text: "Memberikan arahan yang lebih rinci untuk pekerjaan berikutnya dan melakukan pemantauan lebih ketat.", style: "SITUASIONAL" },
+      { text: "Memberikan kesempatan kepada anggota tersebut untuk menjelaskan dan mengusulkan rencana perbaikannya sendiri.", style: "LAISSEZ_FAIRE" },
+      { text: "Mengevaluasi kembali kesesuaian penugasan dan menyesuaikan tanggung jawab jika diperlukan.", style: "OTORITER" }
+    ]
+  },
+  {
+    id: "LSJT-20",
+    title: "Kinerja Tercapai tetapi Perilaku Bermasalah",
+    scenario: "Seorang anggota mencapai target kinerja, tetapi perilakunya sering mengganggu kerja sama tim dan hubungan dengan anggota lain.",
+    options: [
+      { text: "Mempertemukan anggota tersebut dengan tim untuk mendiskusikan dampak perilakunya secara terbuka.", style: "DEMOKRATIS" },
+      { text: "Memberikan umpan balik langsung secara tertutup mengenai perilaku yang perlu diperbaiki.", style: "OTORITER" },
+      { text: "Menyesuaikan pendekatan pembinaan dengan mempertimbangkan kekuatan kinerja dan area perilaku yang perlu dikembangkan.", style: "SITUASIONAL" },
+      { text: "Memberikan tanggung jawab yang lebih bersifat individual untuk mengurangi interaksi yang mengganggu.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-21",
+    title: "Keputusan Strategis dengan Informasi Tidak Pasti",
+    scenario: "Organisasi perlu mengambil keputusan strategis yang berdampak jangka panjang, tetapi informasi yang tersedia masih terbatas dan tidak pasti.",
+    options: [
+      { text: "Mengambil keputusan berdasarkan analisis terbaik yang dapat dilakukan dengan informasi yang ada.", style: "SITUASIONAL" },
+      { text: "Membentuk tim kecil untuk mengumpulkan informasi tambahan sebelum keputusan dibuat.", style: "LAISSEZ_FAIRE" },
+      { text: "Mengundang berbagai pihak untuk memberikan perspektif sebelum menentukan arah.", style: "DEMOKRATIS" },
+      { text: "Menentukan bahwa keputusan akan dibuat setelah informasi lebih lengkap tersedia, meskipun itu berarti menunda.", style: "OTORITER" }
+    ]
+  },
+  {
+    id: "LSJT-22",
+    title: "Anggota yang Mampu Bekerja Tanpa Supervisi",
+    scenario: "Seorang anggota telah menunjukkan kemampuan bekerja secara mandiri dengan kualitas yang sangat baik tanpa perlu supervisi rutin.",
+    options: [
+      { text: "Memberikan kewenangan penuh dalam area tanggung jawabnya dan mengurangi pengawasan secara signifikan.", style: "SITUASIONAL" },
+      { text: "Mempertahankan pertemuan rutin untuk memantau perkembangan dan memberikan umpan balik.", style: "OTORITER" },
+      { text: "Memberikan proyek khusus yang memanfaatkan kemampuannya dan mengembangkan kapasitasnya lebih lanjut.", style: "DEMOKRATIS" },
+      { text: "Meminta anggota tersebut mengambil peran mentor bagi anggota yang lebih junior.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-23",
+    title: "Anggota Berpotensi tetapi Belum Konsisten",
+    scenario: "Seorang anggota memiliki potensi besar, tetapi pengambilan keputusannya masih belum konsisten dan terkadang kurang tepat.",
+    options: [
+      { text: "Memberikan proyek yang lebih menantang dengan dukungan dan pemantauan yang lebih dekat untuk mengembangkan kemampuannya.", style: "SITUASIONAL" },
+      { text: "Mendiskusikan pola pengambilan keputusannya, mengidentifikasi area perbaikan, dan menyepakati langkah pengembangan.", style: "DEMOKRATIS" },
+      { text: "Memberikan tanggung jawab yang sama seperti anggota lain dan membiarkannya belajar dari pengalaman.", style: "OTORITER" },
+      { text: "Menunda pemberian tanggung jawab yang lebih besar sampai konsistensinya meningkat.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-24",
+    title: "Tekanan dari Atasan untuk Keputusan Cepat",
+    scenario: "Pimpinan Anda meminta keputusan segera mengenai suatu masalah yang masih memiliki beberapa alternatif, dan waktu sangat terbatas.",
+    options: [
+      { text: "Memberikan keputusan sendiri berdasarkan informasi yang tersedia untuk memenuhi permintaan pimpinan.", style: "OTORITER" },
+      { text: "Meminta waktu singkat untuk berkonsultasi dengan pihak terkait sebelum memberikan keputusan.", style: "DEMOKRATIS" },
+      { text: "Menyampaikan beberapa alternatif beserta rekomendasi Anda kepada pimpinan untuk diputuskan.", style: "SITUASIONAL" },
+      { text: "Menyerahkan keputusan sepenuhnya kepada pimpinan dengan menyampaikan informasi yang ada.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-25",
+    title: "Tim dengan Tingkat Pengalaman Beragam",
+    scenario: "Tim Anda terdiri dari anggota dengan tingkat pengalaman yang sangat bervariasi, dari yang baru bergabung hingga yang sangat senior.",
+    options: [
+      { text: "Menyesuaikan pendekatan, arahan, dan dukungan berdasarkan tingkat kemampuan dan kesiapan masing-masing anggota.", style: "SITUASIONAL" },
+      { text: "Memberikan tanggung jawab yang sama kepada semua anggota dengan standar yang sama untuk memastikan konsistensi.", style: "OTORITER" },
+      { text: "Mengelompokkan anggota berdasarkan tingkat pengalaman dan memberikan penugasan yang sesuai dengan kapasitasnya.", style: "DEMOKRATIS" },
+      { text: "Memasangkan anggota junior dengan anggota senior untuk mempercepat pembelajaran dan memastikan kualitas.", style: "LAISSEZ_FAIRE" }
+    ]
+  },
+  {
+    id: "LSJT-26",
+    title: "Masalah Berulang yang Belum Terselesaikan",
+    scenario: "Masalah operasional yang sama muncul berulang kali meskipun sudah beberapa kali dilakukan perbaikan.",
+    options: [
+      { text: "Membentuk tim kecil untuk menganalisis akar masalah secara mendalam dan mengusulkan solusi jangka panjang.", style: "DEMOKRATIS" },
+      { text: "Menetapkan prosedur yang lebih ketat dan memastikan kepatuhan terhadap prosedur tersebut.", style: "OTORITER" },
+      { text: "Memberikan kepercayaan kepada anggota yang menangani pekerjaan untuk mencari solusi yang menurut mereka paling tepat.", style: "LAISSEZ_FAIRE" },
+      { text: "Mengadakan pertemuan khusus untuk mendiskusikan pola masalah dan mencari solusi bersama.", style: "SITUASIONAL" }
+    ]
+  },
+  {
+    id: "LSJT-27",
+    title: "Krisis yang Berdampak pada Pelanggan",
+    scenario: "Terjadi gangguan besar yang berpotensi berdampak negatif pada pelanggan jika tidak segera ditangani.",
+    options: [
+      { text: "Mengambil alih koordinasi langsung dan memberikan arahan yang jelas kepada tim.", style: "OTORITER" },
+      { text: "Mengumpulkan tim untuk membahas situasi dan menentukan respons bersama.", style: "DEMOKRATIS" },
+      { text: "Mendelegasikan penanganan kepada anggota yang paling kompeten di bidang tersebut.", style: "LAISSEZ_FAIRE" },
+      { text: "Menghubungi pelanggan terlebih dahulu untuk memberikan informasi, kemudian menentukan langkah penanganan.", style: "SITUASIONAL" }
+    ]
+  },
+  {
+    id: "LSJT-28",
+    title: "Tim yang Mulai Matang",
+    scenario: "Tim Anda, yang sebelumnya membutuhkan banyak arahan, kini menunjukkan kemampuan yang lebih baik dan mulai mampu bekerja lebih mandiri.",
+    options: [
+      { text: "Mengurangi arahan secara bertahap dan memberikan lebih banyak kewenangan kepada tim.", style: "SITUASIONAL" },
+      { text: "Mempertahankan tingkat arahan yang sama untuk menjaga konsistensi hasil.", style: "OTORITER" },
+      { text: "Mengajak tim mendiskusikan perubahan pola kerja dan pembagian tanggung jawab.", style: "DEMOKRATIS" },
+      { text: "Mempertahankan pemantauan yang sama tetapi memberikan lebih banyak kebebasan dalam cara kerja.", style: "LAISSEZ_FAIRE" }
+    ]
+  }
+];
+
+/* =========================================================
+   STATE
+========================================================= */
+let participant = {name:"", id:"", project:"", date:""},
+    currentIndex = 0,
+    totalRemaining = CFG.totalSeconds,
+    sessionTimer = null,
+    assessmentStarted = false,
+    heartbeatTimer = null;
+
+const responses = {}; // { itemId: { most: "A"/"B"/..., least: "A"/... } }
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function el(id){ return document.getElementById(id); }
+function fmt(sec){ sec = Math.max(0, Math.ceil(sec)); return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0"); }
+
+/* =========================================================
+   IDENTITY & CONTEXT (sama seperti VAP)
+========================================================= */
+function getAssessmentIdentity(){
+  const params = new URLSearchParams(location.search);
+  let session = {};
+  try { session = JSON.parse(sessionStorage.getItem("ts_participant_session") || "{}"); } catch(e) {}
+  const projectId = String(params.get("projectId") || params.get("project") || session.projectId || session.project_id || "").trim();
+  const participantId = String(params.get("participantId") || params.get("participant") || session.participantId || session.employeeId || session.id || "").trim();
+  return {projectId, participantId};
+}
+function getAssessmentDisplayName(){
+  const params = new URLSearchParams(location.search);
+  const ctx = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
+  return String(params.get("assessmentName") || params.get("testName") || ctx.assessmentName || ctx.assessment_name || ctx.testName || ctx.test_name || ctx.assessmentTitle || ctx.testTitle || "LSJT").trim() || "LSJT";
+}
+function getAssessmentSequenceLabel(){
+  try{
+    const ids = getAssessmentIdentity();
+    const params = new URLSearchParams(location.search);
+    const assessmentIndex = Number(params.get("assessmentIndex") || 0);
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return "";
+    const project = projects.find(pr => String(pr?.id || pr?.projectId || pr?.project_id || "").trim() === ids.projectId);
+    if(!project) return "";
+    const list = Array.isArray(project.assessments) ? project.assessments : (Array.isArray(project.assessmentPackage) ? project.assessmentPackage : (Array.isArray(project.packages) ? project.packages : []));
+    if(list.length > 0){ return " — Tes " + (assessmentIndex + 1) + " dari " + list.length; }
+    return "";
+  }catch(e){ return ""; }
+}
+function packageCodeOf(item){ if(!item || typeof item !== "object") return ""; return String(item.code || item.assessmentCode || item.assessment_code || item.id || item.assessmentId || item.testId || "").trim(); }
+function packageNameOf(item){ if(typeof item === "string") return item.trim(); if(!item || typeof item !== "object") return ""; return String(item.name || item.title || item.assessmentName || item.assessment_name || item.testName || item.label || item.code || "").trim(); }
+function resolveAssessmentRoute(code, name){
+  const c = String(code || "").toLowerCase();
+  const n = String(name || "").toLowerCase();
+  if(c.includes("disc") || n.includes("disc")) return "disc_test.html";
+  if(c.includes("papi") || n.includes("papi") || n.includes("kostick")) return "papi_kostick_test.html";
+  if(c.includes("vap") || n.includes("vap") || n.includes("visual") || n.includes("performance") || n.includes("sustained attention") || n.includes("speed")) return "speedtest.html";
+  if(c.includes("lsjt") || n.includes("lsjt") || n.includes("leadership") || n.includes("situational")) return "sjt_leadership.html";
+  return "";
+}
+function goToNextOrDashboard(){
+  const ids = getAssessmentIdentity();
+  const params = new URLSearchParams(location.search);
+  const currentIndex = Number(params.get("assessmentIndex") || 0);
+  const next = currentIndex + 1;
+  let packs = [];
+  try{
+    const ps = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
+    const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
+    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
+  }catch(e){ packs = []; }
+  sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+  if(next >= packs.length){ location.href = "participant-dashboard.html?completed=true"; return; }
+  const nextPkg = packs[next];
+  const nextCode = packageCodeOf(nextPkg);
+  const nextName = packageNameOf(nextPkg) || "Assessment";
+  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
+  if(nextRoute){
+    location.href = `${nextRoute}?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }else{
+    location.href = `assessment.html?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }
+}
+function syncAssessmentActivity(activity, historyType){
+  const ids = getAssessmentIdentity();
+  if(!ids.projectId || !ids.participantId) return;
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return;
+    const now = new Date().toISOString();
+    let changed = false;
+    projects.forEach(project=>{
+      const pid = String(project?.id || project?.projectId || project?.project_id || "").trim();
+      if(pid !== ids.projectId) return;
+      const participants = Array.isArray(project.participants) ? project.participants : [];
+      participants.forEach(p=>{
+        const id = String(p?.id || p?.participantId || p?.employeeId || p?.employee_id || "").trim();
+        if(id !== ids.participantId) return;
+        const testName = getAssessmentDisplayName();
+        p.currentActivity = activity; p.activity = activity; p.currentTest = testName;
+        p.testActivity = activity; p.lastActivity = activity; p.activityUpdatedAt = now;
+        p.lastSeenAt = now; p.lastSeen = now; p.isLoggedIn = true;
+        p.status = "Online"; p.onlineStatus = "Online";
+        if(historyType){
+          if(!Array.isArray(p.activityHistory)) p.activityHistory = [];
+          p.activityHistory.push({type:historyType, activity:activity, testName:testName, assessmentName:testName, projectId:ids.projectId, participantId:ids.participantId, description:activity, timestamp:now, time:now});
+        }
+        changed = true;
+      });
+    });
+    if(changed){ localStorage.setItem("talentscope_projects", JSON.stringify(projects)); }
+  }catch(e){ console.warn("Assessment activity sync gagal:", e); }
+}
+
+/* =========================================================
+   AUTO LOGOUT (sama seperti VAP)
+========================================================= */
+let assessmentLogoutRecorded = false;
+function recordAssessmentLogout(reason){
+  if(assessmentLogoutRecorded) return;
+  const internalNavigation = sessionStorage.getItem("ts_internal_assessment_navigation");
+  if(internalNavigation === "true"){ sessionStorage.removeItem("ts_internal_assessment_navigation"); return; }
+  assessmentLogoutRecorded = true;
+  const ids = getAssessmentIdentity();
+  if(!ids.projectId || !ids.participantId) return;
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(!Array.isArray(projects)) return;
+    const now = new Date().toISOString();
+    const testName = getAssessmentDisplayName();
+    const activity = "Logout ke Portal Peserta";
+    projects.forEach(project=>{
+      const projectId = String(project?.id || project?.projectId || project?.project_id || "").trim();
+      if(projectId !== ids.projectId) return;
+      const participants = Array.isArray(project.participants) ? project.participants : [];
+      participants.forEach(participant=>{
+        const participantId = String(participant?.id || participant?.participantId || participant?.employeeId || participant?.employee_id || "").trim();
+        if(participantId !== ids.participantId) return;
+        participant.logoutTime = now; participant.loggedOutAt = now; participant.logoutAt = now; participant.timeLogout = now;
+        participant.isLoggedIn = false; participant.status = "Offline"; participant.onlineStatus = "Offline";
+        participant.currentActivity = activity; participant.activity = activity;
+        participant.lastActivity = activity; participant.activityUpdatedAt = now;
+        if(!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+        participant.activityHistory.push({type:"logout", activity:activity, title:activity, action:"Logout", reason:reason||"tab-close", test:testName, testName:testName, assessmentName:testName, assessmentCode:"LSJT", timestamp:now, time:now});
+      });
+    });
+    localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+  }catch(error){ console.warn("[LSJT] Gagal mencatat auto logout:", error); }
+}
+window.addEventListener("pagehide", function(){ recordAssessmentLogout("pagehide"); });
+window.addEventListener("beforeunload", function(){ recordAssessmentLogout("beforeunload"); });
+
+function markAssessmentStarted(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")" + getAssessmentSequenceLabel(), "test-start"); }
+function markAssessmentFinished(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Tes selesai (" + name + ")" + getAssessmentSequenceLabel(), "test-complete"); }
+
+function getContext(){
+  const params = new URLSearchParams(location.search);
+  const participantId = String(params.get("participantId") || params.get("id") || "").trim();
+  const projectId = String(params.get("projectId") || "").trim();
+  const context = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
+  let storedContext = {};
+  try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
+  let participantName = "", projectName = "", participantObject = null, projectObject = null;
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(Array.isArray(projects)){
+      projectObject = projects.find(function(project){
+        const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
+        return currentProjectId === projectId;
+      });
+      if(projectObject){
+        projectName = String(projectObject.name || projectObject.projectName || projectObject.project_name || projectObject.title || "").trim();
+        const participants = Array.isArray(projectObject.participants) ? projectObject.participants : [];
+        participantObject = participants.find(function(participant){
+          const currentParticipantId = String(participant.id || participant.participantId || participant.employeeId || participant.employee_id || "").trim();
+          return currentParticipantId === participantId;
+        });
+        if(participantObject){
+          participantName = String(participantObject.name || participantObject.fullName || participantObject.full_name || participantObject.participantName || "").trim();
+        }
+      }
+    }
+  }catch(error){ console.warn("Gagal ambil data peserta/project:", error); }
+  if(!participantName){
+    const participantObj = context.participant || context.candidate || context.user || storedContext.participant || storedContext.candidate || storedContext.user || {};
+    participantName = String(params.get("participantName") || params.get("name") || context.participantName || context.participant_name || context.candidateName || participantObj.name || participantObj.fullName || storedContext.participantName || storedContext.name || "").trim();
+  }
+  if(!projectName){
+    const projectObj = context.project || storedContext.project || {};
+    projectName = String(params.get("projectName") || params.get("project") || context.projectName || context.project_name || context.projectTitle || (typeof projectObj === "string" ? projectObj : (projectObj.name || projectObj.projectName || projectObj.title || "")) || storedContext.projectName || "").trim();
+  }
+  return {id: participantId, name: participantName, project: projectName, projectId: projectId, participant: participantObject, projectData: projectObject};
+}
+
+function init(){
+  const c = getContext();
+  participant.name = c.name; participant.id = c.id; participant.project = c.project;
+  participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
+  el("participantName").textContent = participant.name || "-";
+  el("projectName").textContent = participant.project || "-";
+  el("assessmentDate").textContent = participant.date || "-";
+}
+function toggleStart(){ el("startBtn").disabled = !el("confirmRead").checked; }
+function backToDashboard(e){
+  e.preventDefault();
+  if(confirm("Kembali ke Dashboard? Progress assessment yang belum selesai dapat terhenti.")){
+    sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+    if(document.referrer){ history.back(); } else { location.href = "/dashboard"; }
+  }
+}
+
+/* =========================================================
+   TEST FLOW
+========================================================= */
+function heartbeat(){
+  if(!assessmentStarted || totalRemaining <= 0) return;
+  syncAssessmentActivity("Sedang mengerjakan tes (" + getAssessmentDisplayName() + ")" + getAssessmentSequenceLabel(), null);
+}
+
+function begin(){
+  if(!el("confirmRead").checked) return;
+  assessmentStarted = true;
+  el("intro").classList.add("hidden");
+  el("test").classList.remove("hidden");
+  markAssessmentStarted();
+  clearInterval(heartbeatTimer);
+  heartbeatTimer = setInterval(heartbeat, 5000);
+  startTimer();
+  currentIndex = 0;
+  renderCurrentItem();
+}
+
+function startTimer(){
+  totalRemaining = CFG.totalSeconds;
+  updateTimer();
+  clearInterval(sessionTimer);
+  sessionTimer = setInterval(()=>{
+    totalRemaining--;
+    updateTimer();
+    if(totalRemaining <= 0) finishAssessment();
+  }, 1000);
+}
+
+function updateTimer(){
+  el("globalTimer").textContent = fmt(totalRemaining);
+  el("sessionTimer").textContent = fmt(totalRemaining);
+}
+
+function renderCurrentItem(){
+  const item = ITEMS[currentIndex];
+  el("qNum").textContent = "ITEM " + String(currentIndex + 1).padStart(2, "0") + " / 28";
+  el("qTitle").textContent = "Situasi " + String(currentIndex + 1).padStart(2, "0");   // ← NETRAL
+  el("scenarioText").textContent = item.scenario;
+  
+
+  // Progress
+  const pct = ((currentIndex + 1) / ITEMS.length) * 100;
+  el("progressFill").style.width = pct + "%";
+  el("progressLabel").textContent = "Item " + (currentIndex + 1) + " dari " + ITEMS.length;
+  const answeredCount = Object.keys(responses).length;
+  el("answeredLabel").textContent = "Terjawab: " + answeredCount + " / " + ITEMS.length;
+
+  // Options
+  const resp = responses[item.id] || { most: null, least: null };
+  const letters = ["A", "B", "C", "D"];
+  const optionsHTML = item.options.map((opt, i) => {
+    const letter = letters[i];
+    const isMost = resp.most === letter;
+    const isLeast = resp.least === letter;
+    return `
+      <div class="option">
+        <div class="option-letter">${letter}</div>
+        <div class="option-text">${opt.text}</div>
+        <div class="option-actions">
+          <button class="option-btn most ${isMost ? 'active' : ''}" onclick="selectMost('${letter}')">MOST ↑</button>
+          <button class="option-btn least ${isLeast ? 'active' : ''}" onclick="selectLeast('${letter}')">LEAST ↓</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+  el("optionsContainer").innerHTML = optionsHTML;
+
+  // Nav buttons
+  el("prevBtn").disabled = currentIndex === 0;
+  const isLast = currentIndex === ITEMS.length - 1;
+  el("nextBtn").textContent = isLast ? "Selesai ✓" : "Selanjutnya →";
+  el("nextBtn").className = "nav-btn " + (isLast ? "primary" : "");
+
+  // Nav hint
+  if(!resp.most || !resp.least){
+    el("navHint").textContent = "⚠ Anda belum memilih MOST dan LEAST untuk item ini.";
+    el("navHint").style.color = "#d97706";
+  } else {
+    el("navHint").textContent = "✓ Jawaban tersimpan otomatis.";
+    el("navHint").style.color = "#16a34a";
+  }
+
+  window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+function selectMost(letter){
+  const item = ITEMS[currentIndex];
+  if(!responses[item.id]) responses[item.id] = { most: null, least: null };
+  // Jika letter yang sama sudah jadi LEAST, hapus dulu
+  if(responses[item.id].least === letter) responses[item.id].least = null;
+  responses[item.id].most = letter;
+  renderCurrentItem();
+  saveDraft();
+}
+
+function selectLeast(letter){
+  const item = ITEMS[currentIndex];
+  if(!responses[item.id]) responses[item.id] = { most: null, least: null };
+  if(responses[item.id].most === letter) responses[item.id].most = null;
+  responses[item.id].least = letter;
+  renderCurrentItem();
+  saveDraft();
+}
+
+function prevItem(){
+  if(currentIndex > 0){ currentIndex--; renderCurrentItem(); }
+}
+function nextItem(){
+  const item = ITEMS[currentIndex];
+  const resp = responses[item.id] || {};
+  if(!resp.most || !resp.least){
+    alert("Pilih MOST dan LEAST untuk item ini sebelum melanjutkan.");
+    return;
+  }
+  if(currentIndex < ITEMS.length - 1){
+    currentIndex++;
+    renderCurrentItem();
+  } else {
+    // Item terakhir — cek semua sudah dijawab
+    const unanswered = ITEMS.filter(it => {
+      const r = responses[it.id] || {};
+      return !r.most || !r.least;
+    });
+    if(unanswered.length > 0){
+      const list = unanswered.slice(0, 3).map(it => it.id).join(", ");
+      const konfirmasi = confirm(`Masih ada ${unanswered.length} item yang belum dijawab (${list}${unanswered.length > 3 ? ", ..." : ""}). Yakin ingin menyelesaikan tes?`);
+      if(!konfirmasi) return;
+    }
+    finishAssessment();
+  }
+}
+
+function saveDraft(){
+  try{
+    const ids = getAssessmentIdentity();
+    if(ids.projectId && ids.participantId){
+      const key = `lsjt_draft_${ids.projectId}_${ids.participantId}`;
+      localStorage.setItem(key, JSON.stringify({
+        responses: responses,
+        currentIndex: currentIndex,
+        savedAt: new Date().toISOString()
+      }));
+    }
+  }catch(e){}
+}
+
+/* =========================================================
+   SCORING — Ipsatif (4 dimensi)
+========================================================= */
+function calcScores(){
+  const counts = {
+    OTORITER: { most: 0, least: 0 },
+    DEMOKRATIS: { most: 0, least: 0 },
+    LAISSEZ_FAIRE: { most: 0, least: 0 },
+    SITUASIONAL: { most: 0, least: 0 }
+  };
+
+  ITEMS.forEach(item => {
+    const resp = responses[item.id];
+    if(!resp) return;
+    const letters = ["A", "B", "C", "D"];
+    const mostIdx = letters.indexOf(resp.most);
+    const leastIdx = letters.indexOf(resp.least);
+    if(mostIdx >= 0) counts[item.options[mostIdx].style].most++;
+    if(leastIdx >= 0) counts[item.options[leastIdx].style].least++;
+  });
+
+  // Total skor ipsatif = 28 MOST + 28 LEAST = 56
+  // Skor bersih per gaya = MOST - LEAST (range -28 sampai +28)
+  // Konversi ke skala 0-100: (most_frac * 100) - (least_frac * 100) + 50
+  const total = ITEMS.length;
+  const result = {};
+  Object.keys(STYLES).forEach(key => {
+    const style = STYLES[key];
+    const most = counts[key].most;
+    const least = counts[key].least;
+    const mostPct = (most / total) * 100;
+    const leastPct = (least / total) * 100;
+    const netScore = mostPct - leastPct; // range -100 sampai +100
+    const normalized = Math.max(0, Math.min(100, 50 + netScore / 2)); // 0-100
+    result[key] = {
+      style: style,
+      most: most,
+      least: least,
+      mostPct: mostPct,
+      leastPct: leastPct,
+      netScore: netScore,
+      normalized: normalized
+    };
+  });
+
+  return result;
+}
+
+/* =========================================================
+   FINISH ASSESSMENT
+========================================================= */
+async function finishAssessment(){
+  clearInterval(sessionTimer);
+  clearInterval(heartbeatTimer);
+  assessmentStarted = false;
+
+  markAssessmentFinished();
+
+  const scores = calcScores();
+
+  const ids = getAssessmentIdentity();
+  const params = new URLSearchParams(location.search);
+  const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
+  const assessmentCodeStr = String(params.get("assessmentCode") || "LSJT").trim();
+  const assessmentNameStr = getAssessmentDisplayName();
+
+  let lsjtResult = null;
+
+  /* ---- Simpan ke localStorage ---- */
+  try{
+    if(ids.projectId && ids.participantId){
+      const submittedAt = new Date().toISOString();
+      lsjtResult = {
+        version: 1,
+        resultType: "LSJT",
+        projectId: ids.projectId,
+        participantId: ids.participantId,
+        participantName: participant.name || "",
+        assessmentIndex: assessmentIndexNum,
+        assessmentCode: assessmentCodeStr,
+        assessmentName: assessmentNameStr,
+        responses: responses,
+        scores: scores,
+        totalItems: ITEMS.length,
+        answeredItems: Object.keys(responses).length,
+        submittedAt
+      };
+      localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(lsjtResult));
+      let allResults = [];
+      try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
+      if(!Array.isArray(allResults)) allResults = [];
+      allResults = allResults.filter(item => !(
+        String(item?.projectId || "") === ids.projectId &&
+        String(item?.participantId || "") === ids.participantId &&
+        String(item?.assessmentIndex ?? "") === String(assessmentIndexNum) &&
+        String(item?.assessmentCode || "").toUpperCase() === "LSJT"
+      ));
+      allResults.push(lsjtResult);
+      localStorage.setItem("talent_scope_results", JSON.stringify(allResults));
+      console.log("[LSJT] Hasil tersimpan ke localStorage");
+    }
+  }catch(err){ console.error("[LSJT] Gagal simpan localStorage:", err); }
+
+  /* ---- Simpan ke Supabase ---- */
+  if(lsjtResult){
+    try{
+      const sb = window.supabaseClient || window.supabase;
+      if(sb && typeof sb.from === "function"){
+        const { error } = await sb
+          .from("sjt_results")
+          .upsert({
+            project_id: ids.projectId,
+            participant_id: ids.participantId,
+            assessment_index: assessmentIndexNum,
+            assessment_code: assessmentCodeStr,
+            assessment_name: assessmentNameStr,
+            participant_name: participant.name || "",
+            result_type: "LSJT",
+            responses: responses,
+            scores: scores,
+            total_items: ITEMS.length,
+            answered_items: Object.keys(responses).length,
+            submitted_at: lsjtResult.submittedAt
+          }, {
+            onConflict: "project_id,participant_id,assessment_index,assessment_code"
+          });
+
+        if(error){
+          console.error("[LSJT] Supabase upsert error:", error);
+        } else {
+          console.log("[LSJT] ✓ Hasil tersinkron ke Supabase (sjt_results)");
+        }
+      } else {
+        console.warn("[LSJT] Supabase client tidak tersedia");
+      }
+    }catch(err){ console.error("[LSJT] Gagal sync Supabase:", err); }
+  }
+
+  /* ---- Update participant progress ---- */
+  try{
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if(Array.isArray(projects)){
+      const now = new Date().toISOString();
+      projects.forEach(project=>{
+        const projectId = String(project.id || project.projectId || project.project_id || "").trim();
+        if(projectId !== ids.projectId) return;
+        const participants = Array.isArray(project.participants) ? project.participants : [];
+        participants.forEach(p=>{
+          const participantId = String(p.id || p.participantId || p.employeeId || p.employee_id || "").trim();
+          if(participantId !== ids.participantId) return;
+          p.currentAssessmentIndex = assessmentIndexNum;
+          p.currentAssessmentCode = assessmentCodeStr;
+          p.currentTest = assessmentNameStr;
+          p.testActivity = "Tes selesai (" + assessmentNameStr + ")" + getAssessmentSequenceLabel();
+          p.currentActivity = p.testActivity;
+          p.activity = p.testActivity;
+          p.lastActivity = p.testActivity;
+          p.activityUpdatedAt = now;
+          if(!Array.isArray(p.assessmentProgress)) p.assessmentProgress = [];
+          let progressItem = p.assessmentProgress.find(function(item){ return Number(item.assessmentIndex) === assessmentIndexNum; });
+          if(!progressItem){
+            progressItem = {assessmentIndex: assessmentIndexNum, assessmentCode: assessmentCodeStr, assessmentName: assessmentNameStr};
+            p.assessmentProgress.push(progressItem);
+          }
+          progressItem.status = "Completed";
+          progressItem.completedAt = now;
+          const assessmentList = Array.isArray(project.assessments) ? project.assessments : (Array.isArray(project.assessmentPackage) ? project.assessmentPackage : []);
+          const totalAssessment = assessmentList.length;
+          const completedAssessment = p.assessmentProgress.filter(function(item){ return String(item.status || "").toLowerCase() === "completed"; }).length;
+          p.assessmentStatus = (totalAssessment > 0 && completedAssessment >= totalAssessment) ? "Completed" : "In Progress";
+        });
+      });
+      localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+    }
+  }catch(error){ console.error("Gagal update progress:", error); }
+
+  /* ---- Clear draft ---- */
+  try{
+    localStorage.removeItem(`lsjt_draft_${ids.projectId}_${ids.participantId}`);
+  }catch(e){}
+
+  /* ---- Show finish ---- */
+  el("test").classList.add("hidden");
+  el("finish").classList.remove("hidden");
+  window.scrollTo({top: 0, behavior: "smooth"});
+  console.log("[LSJT] Assessment berhasil diselesaikan");
+
+  setTimeout(goToNextOrDashboard, 1500);
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+init();
+console.log("[LSJT] Ready. Total items:", ITEMS.length);
+</script>
+</body>
+</html>

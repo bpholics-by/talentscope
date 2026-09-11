@@ -1750,15 +1750,57 @@ function getProjectPurposeForParticipant(item, projects) {
             const next = { ...item };
             let itemChanged = false;
 
-            operationalFields.forEach(field => {
-                if (projectParticipant[field] !== undefined && projectParticipant[field] !== null) {
-                    if (JSON.stringify(next[field]) !== JSON.stringify(projectParticipant[field])) {
-                        next[field] = projectParticipant[field];
-                        itemChanged = true;
-                    }
-                }
-            });
-
+            /* ==========================================================
+   FIX: Merge activityHistory, jangan overwrite
+   Data dari project bisa saja lebih pendek dari data
+   existing di localStorage. Kalau langsung overwrite,
+   riwayat lama hilang.
+   ========================================================== */
+operationalFields.forEach(field => {
+    if (field === 'activityHistory' || field === 'history') {
+        // MERGE, bukan overwrite
+        const existingHistory = Array.isArray(next[field]) ? next[field] : [];
+        const incomingHistory = Array.isArray(projectParticipant[field]) ? projectParticipant[field] : [];
+        
+        if (incomingHistory.length === 0) return;
+        
+        // Union by unique key (type + timestamp)
+        const seenKeys = new Set();
+        const merged = [];
+        
+        // Prioritas: existing dulu, baru incoming
+        existingHistory.concat(incomingHistory).forEach(function (item) {
+            if (!item) return;
+            const key = JSON.stringify([
+                item.type,
+                item.activity || item.description,
+                item.timestamp || item.time
+            ]);
+            if (seenKeys.has(key)) return;
+            seenKeys.add(key);
+            merged.push(item);
+        });
+        
+        // Sort terbaru duluan
+        merged.sort(function (a, b) {
+            return new Date(b.timestamp || b.time || 0) - 
+                   new Date(a.timestamp || a.time || 0);
+        });
+        
+        if (JSON.stringify(next[field]) !== JSON.stringify(merged)) {
+            next[field] = merged;
+            itemChanged = true;
+        }
+    } else {
+        // Field biasa: overwrite seperti biasa
+        if (projectParticipant[field] !== undefined && projectParticipant[field] !== null) {
+            if (JSON.stringify(next[field]) !== JSON.stringify(projectParticipant[field])) {
+                next[field] = projectParticipant[field];
+                itemChanged = true;
+            }
+        }
+    }
+});
             // Alias penting untuk database lama.
             if (projectParticipant.status !== undefined &&
                 projectParticipant.status !== null &&
@@ -1913,28 +1955,91 @@ parsedData = parsedData.filter(function (participant) {
 
 });
 
-        rawDatabaseParticipants = parsedData.map((item, index) => {
-            const projectId = item.projectId || item.idProject || 'P001';
+        /* ==========================================================
+   AMBIL DAFTAR PROJECT UNTUK CARI TANGGAL
+   ========================================================== */
+let projectListForDates = [];
+try {
+    projectListForDates = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    if (!Array.isArray(projectListForDates)) projectListForDates = [];
+} catch (e) {
+    projectListForDates = [];
+}
 
-            return {
-                ...item,
-                id: item.id || index,
-                nama: item.nama || item.fullName || item.name || '-',
-                namaProject: item.namaProject || item.projectName || '-',
-                projectId: projectId,
-                projectCode:
-                    getProjectCodeById(projectId) ||
-                    item.projectCode ||
-                    item.project_code ||
-                    projectId,
-                tanggal: pickField(
-                    item,
-                    ['tanggal', 'date', 'assessmentDate', 'assessment_date', 'tanggalAsesmen', 'tanggal_assessment'],
-                    '-'
-                ),
-                perusahaan: item.perusahaan || item.company || '-'
-            };
+/* Helper: cari project berdasarkan projectId peserta */
+function findProjectForDates(pid) {
+    if (!pid) return null;
+    return projectListForDates.find(function (p) {
+        return String(
+            p.id || p.projectId || p.project_id || ""
+        ).trim() === String(pid).trim();
+    }) || null;
+}
+
+/* Helper: format tanggal dengan rapi */
+function formatAssessmentDate(rawDate) {
+    if (!rawDate) return "-";
+    try {
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return String(rawDate);
+        return d.toLocaleDateString("id-ID", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
         });
+    } catch (e) {
+        return String(rawDate);
+    }
+}
+
+rawDatabaseParticipants = parsedData.map((item, index) => {
+    const projectId = item.projectId || item.idProject || item.project_id || 'P001';
+
+    /* Cari project untuk ambil tanggal */
+    const relatedProject = findProjectForDates(projectId);
+
+    /* Prioritas tanggal:
+       1. Field di participant (tanggal, assessmentDate, dll)
+       2. project.start_date
+       3. project.startDate
+       4. project.start
+       5. project.created_at
+       6. "-"
+    */
+    let tanggalValue = pickField(
+        item,
+        ['tanggal', 'date', 'assessmentDate', 'assessment_date', 'tanggalAsesmen', 'tanggal_assessment'],
+        ''
+    );
+
+    if (!tanggalValue || tanggalValue === '-') {
+        if (relatedProject) {
+            tanggalValue =
+                relatedProject.start_date ||
+                relatedProject.startDate ||
+                relatedProject.start ||
+                relatedProject.created_at ||
+                relatedProject.createdAt ||
+                '';
+        }
+    }
+
+    return {
+        ...item,
+        id: item.id || index,
+        nama: item.nama || item.fullName || item.name || '-',
+        namaProject: item.namaProject || item.projectName || '-',
+        projectId: projectId,
+        projectCode:
+            getProjectCodeById(projectId) ||
+            item.projectCode ||
+            item.project_code ||
+            projectId,
+        /* FIX: baca dari project kalau participant tidak punya */
+        tanggal: tanggalValue ? formatAssessmentDate(tanggalValue) : '-',
+        perusahaan: item.perusahaan || item.company || '-'
+    };
+});
 
         const query = (searchQuery || '').toLowerCase().trim();
         const filteredData = rawDatabaseParticipants.filter(item => {
@@ -2104,27 +2209,67 @@ parsedData = parsedData.filter(function (participant) {
         detailParticipant.status ||
         'Not Started';
 
-    const loginTime =
-        detailParticipant.loginTime ||
-        detailParticipant.loggedInAt ||
-        detailParticipant.loginAt ||
-        detailParticipant.lastLoginAt ||
-        detailParticipant.login_time ||
-        detailParticipant.logged_in_at ||
-        detailParticipant.login_at ||
-        detailParticipant.last_login_at ||
-        '';
+    /* ==========================================================
+   FIX: Ambil waktu login/logout dari activityHistory
+   Karena field `loginTime`/`logoutTime` di participant bisa
+   stale (tidak ter-update), sedangkan `activityHistory`
+   selalu up-to-date.
+   ========================================================== */
+function getLatestActivityTime(history, keywords) {
+    if (!Array.isArray(history)) return '';
+    
+    // Filter event yang cocok dengan keywords
+    const matches = history.filter(function (h) {
+        if (!h) return false;
+        const text = String(
+            h.type || '' + ' ' + (h.activity || '') + ' ' + (h.description || '')
+        ).toLowerCase();
+        return keywords.some(function (kw) {
+            return text.includes(kw.toLowerCase());
+        });
+    });
+    
+    if (matches.length === 0) return '';
+    
+    // Sort descending by timestamp, ambil yang terbaru
+    matches.sort(function (a, b) {
+        return new Date(b.timestamp || b.time || 0) - 
+               new Date(a.timestamp || a.time || 0);
+    });
+    
+    return matches[0].timestamp || matches[0].time || '';
+}
 
-    const logoutTime =
-        detailParticipant.logoutTime ||
-        detailParticipant.loggedOutAt ||
-        detailParticipant.logoutAt ||
-        detailParticipant.lastLogoutAt ||
-        detailParticipant.logout_time ||
-        detailParticipant.logged_out_at ||
-        detailParticipant.logout_at ||
-        detailParticipant.last_logout_at ||
-        '';
+// History dari participant
+const activityHistory =
+    detailParticipant.activityHistory ||
+    detailParticipant.activity_history ||
+    [];
+
+/* Prioritas: activityHistory > field langsung */
+const loginTimeFromHistory = getLatestActivityTime(
+    activityHistory,
+    ['login', 'masuk ke', 'page-enter', 'online']
+);
+
+const logoutTimeFromHistory = getLatestActivityTime(
+    activityHistory,
+    ['logout', 'keluar', 'sesi berakhir', 'offline', 'tab-hidden']
+);
+
+const loginTime = loginTimeFromHistory || 
+    detailParticipant.loginTime ||
+    detailParticipant.loggedInAt ||
+    detailParticipant.loginAt ||
+    detailParticipant.lastLoginAt ||
+    '';
+
+const logoutTime = logoutTimeFromHistory ||
+    detailParticipant.logoutTime ||
+    detailParticipant.loggedOutAt ||
+    detailParticipant.logoutAt ||
+    detailParticipant.lastLogoutAt ||
+    '';
 
     function formatNiceDate(isoStr) {
         if (!isoStr) return '-';

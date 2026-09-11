@@ -6,389 +6,101 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TalentScope — Participant Portal</title>
 <style>
-/* =====================================================
-   ASSESSMENT PACKAGE CARD
-===================================================== */
+.assessment-package-grid{grid-template-columns: minmax(0, 1fr) !important}
+.assessment-package-card{width:100%}
+.assessment-package-card .card-top{display:flex;align-items:center;gap:20px}
+.assessment-package-card .icon{width:126px;height:145px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:24px;background:linear-gradient(145deg,#0b3d78,#1267d8);color:#fff;font-size:42px;font-weight:900;letter-spacing:-2px;box-shadow:0 12px 25px rgba(10,65,145,.22)}
+.assessment-package-card .package-heading{flex:1}
+.assessment-package-card .package-heading h3{margin:0}
+.assessment-package-card .package-heading .code{margin-top:7px;color:#6f8298}
 
-.assessment-package-grid{
-    grid-template-columns: minmax(0, 1fr) !important;
-}
+.package-tests{margin-top:24px;padding-top:20px;border-top:1px solid #e8eef5}
+.package-tests-label{font-size:12px;font-weight:800;color:#6c8097;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.package-test-list{display:flex;flex-direction:column;gap:8px}
+.package-test-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e7edf4;border-radius:12px;background:#f8fbff}
+.package-test-number{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#e8f1ff;color:#1767c9;font-size:11px;font-weight:800;flex:none}
+.package-test-name{flex:1;color:#263f5b;font-size:13px;font-weight:700}
+.package-test-check{color:#00a96e;font-weight:900;font-size:16px}
+.package-test-empty{padding:14px;border-radius:12px;background:#f8fafc;color:#7a8da3;font-size:12px}
 
-.assessment-package-card{
-    width:100%;
-}
-
-.assessment-package-card .card-top{
-    display:flex;
-    align-items:center;
-    gap:20px;
-}
-
-.assessment-package-card .icon{
-    width:126px;
-    height:145px;
-    flex:none;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:24px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #0b3d78,
-            #1267d8
-        );
-
-    color:#fff;
-
-    font-size:42px;
-    font-weight:900;
-    letter-spacing:-2px;
-
-    box-shadow:
-        0 12px 25px rgba(10,65,145,.22);
-}
-
-.assessment-package-card .package-heading{
-    flex:1;
-}
-
-.assessment-package-card .package-heading h3{
-    margin:0;
-}
-
-.assessment-package-card .package-heading .code{
-    margin-top:7px;
-    color:#6f8298;
-}
-
-
-/* =====================================================
-   DAFTAR TES DALAM PACKAGE
-===================================================== */
-
-.package-tests{
-    margin-top:24px;
-    padding-top:20px;
-    border-top:1px solid #e8eef5;
-}
-
-.package-tests-label{
-    font-size:12px;
-    font-weight:800;
-    color:#6c8097;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    margin-bottom:10px;
-}
-
-.package-test-list{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-}
-
-.package-test-item{
-    display:flex;
-    align-items:center;
-    gap:12px;
-
-    padding:12px 14px;
-
-    border:1px solid #e7edf4;
-    border-radius:12px;
-
-    background:#f8fbff;
-}
-
-.package-test-number{
-    width:26px;
-    height:26px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:8px;
-
-    background:#e8f1ff;
-    color:#1767c9;
-
-    font-size:11px;
-    font-weight:800;
-
-    flex:none;
-}
-
-.package-test-name{
-    flex:1;
-
-    color:#263f5b;
-    font-size:13px;
-    font-weight:700;
-}
-
-.package-test-check{
-    color:#00a96e;
-    font-weight:900;
-    font-size:16px;
-}
-
-.package-test-empty{
-    padding:14px;
-
-    border-radius:12px;
-
-    background:#f8fafc;
-
-    color:#7a8da3;
-
-    font-size:12px;
-}
-
-  /* Container 3 Stat Cards */
-  .summary {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-    gap: 20px !important;
-    margin-bottom: 30px !important;
-  }
-
-  /* Base Style untuk Setiap Card */
-  .summary .stat {
-    border-radius: 14px !important;
-    padding: 22px 24px !important;
-    color: #ffffff !important;
-    border: none !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 16px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-    transition: transform 0.2s ease !important;
-  }
-
-  .summary .stat:hover {
-    transform: translateY(-2px) !important;
-  }
-
-  /* Typography Warna Putih Clean */
-  .summary .stat .stat-label,
-  .summary .stat .stat-value,
-  .summary .stat .stat-desc {
-    color: #ffffff !important;
-  }
-
-  .summary .stat .stat-label {
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    opacity: 0.95 !important;
-  }
-
-  .summary .stat .stat-value {
-    font-size: 2.25rem !important;
-    font-weight: 700 !important;
-    line-height: 1.1 !important;
-    margin: 4px 0 !important;
-  }
-
-  .summary .stat .stat-desc {
-    font-size: 0.75rem !important;
-    opacity: 0.85 !important;
-  }
-
-  /* Style Box Icon Transparan Melengkung Sesuai Gambar Admin */
-  .summary .stat .stat-icon {
-    width: 48px !important;
-    height: 48px !important;
-    background: rgba(255, 255, 255, 0.22) !important;
-    border-radius: 12px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 1.25rem !important;
-    color: #ffffff !important;
-    flex-shrink: 0 !important;
-  }
-
-  /* ---------------------------------------------------
-     WARNA KARTU PERSIS GAMBAR DASHBOARD ADMIN
-  --------------------------------------------------- */
-  
-  /* 1. Total Assessment -> Hijau (Active Assessment Admin) */
-  .summary .stat:nth-child(1) {
-    background: #00a96e !important; /* Hijau Emerald Solid-Vibrant */
-    background: linear-gradient(135deg, #00b87c 0%, #009661 100%) !important;
-  }
-
-  /* 2. Not Started -> Oranye (Completed Admin) */
-  .summary .stat:nth-child(2) {
-    background: #ff8c00 !important; /* Oranye Bright Solid */
-    background: linear-gradient(135deg, #ff9f1c 0%, #e67e00 100%) !important;
-  }
-
-  /* 3. Completed -> Ungu (Average Score Admin) */
-  .summary .stat:nth-child(3) {
-    background: #8b5cf6 !important; /* Ungu Modern Solid */
-    background: linear-gradient(135deg, #9353d3 0%, #7828c8 100%) !important;
-  }
-
+.summary{display:grid !important;grid-template-columns:repeat(auto-fit,minmax(220px,1fr)) !important;gap:20px !important;margin:32px 0 30px 0 !important}
+.summary .stat{border-radius:14px !important;padding:22px 24px !important;color:#ffffff !important;border:none !important;display:flex !important;align-items:center !important;gap:16px !important;box-shadow:0 4px 12px rgba(0,0,0,0.05) !important;transition:transform 0.2s ease !important}
+.summary .stat:hover{transform:translateY(-2px) !important}
+.summary .stat .stat-label,.summary .stat .stat-value,.summary .stat .stat-desc{color:#ffffff !important}
+.summary .stat .stat-label{font-size:0.85rem !important;font-weight:600 !important;opacity:0.95 !important}
+.summary .stat .stat-value{font-size:2.25rem !important;font-weight:700 !important;line-height:1.1 !important;margin:4px 0 !important}
+.summary .stat .stat-desc{font-size:0.75rem !important;opacity:0.85 !important}
+.summary .stat .stat-icon{width:48px !important;height:48px !important;background:rgba(255,255,255,0.22) !important;border-radius:12px !important;display:flex !important;align-items:center !important;justify-content:center !important;font-size:1.25rem !important;color:#ffffff !important;flex-shrink:0 !important}
+.summary .stat:nth-child(1){background:linear-gradient(135deg,#00b87c 0%,#009661 100%) !important}
+.summary .stat:nth-child(2){background:linear-gradient(135deg,#ff9f1c 0%,#e67e00 100%) !important}
+.summary .stat:nth-child(3){background:linear-gradient(135deg,#9353d3 0%,#7828c8 100%) !important}
 
 *{box-sizing:border-box}
-:root{
-  --blue:#1167ea;
-  --blue2:#0758d7;
-  --blue3:#2d8cff;
-  --navy:#10234b;
-  --muted:#6c7ea3;
-  --line:#e6ecf5;
-  --bg:#f7faff;
-  --white:#fff;
-  --shadow:0 10px 30px rgba(31,70,130,.10);
-}
+:root{--blue:#1167ea;--blue2:#0758d7;--blue3:#2d8cff;--navy:#10234b;--muted:#6c7ea3;--line:#e6ecf5;--bg:#f7faff;--white:#fff;--shadow:0 10px 30px rgba(31,70,130,.10)}
 html{scroll-behavior:smooth}
-body{
-  margin:0;background:var(--bg);color:var(--navy);
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-}
+body{margin:0;background:var(--bg);color:var(--navy);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
 button{font:inherit}
 a{text-decoration:none;color:inherit}
 .app{min-height:100vh;display:flex}
-.sidebar{
-  position:fixed;inset:0 auto 0 0;width:267px;z-index:30;
-  color:#fff;overflow:hidden;
-  background:
-    radial-gradient(circle at 75% 75%,rgba(63,154,255,.28),transparent 26%),
-    radial-gradient(circle at 25% 90%,rgba(20,93,225,.35),transparent 35%),
-    linear-gradient(180deg,#0758d7 0%,#0b67e7 48%,#0755cc 100%);
-}
-.sidebar:before{
-  content:"";position:absolute;width:360px;height:220px;left:-70px;bottom:60px;
-  border-radius:50%;border:1px solid rgba(255,255,255,.12);
-  transform:rotate(-12deg);box-shadow:0 0 0 35px rgba(255,255,255,.035),0 0 0 70px rgba(255,255,255,.025);
-}
+.sidebar{position:fixed;inset:0 auto 0 0;width:267px;z-index:30;color:#fff;overflow:hidden;background:radial-gradient(circle at 75% 75%,rgba(63,154,255,.28),transparent 26%),radial-gradient(circle at 25% 90%,rgba(20,93,225,.35),transparent 35%),linear-gradient(180deg,#0758d7 0%,#0b67e7 48%,#0755cc 100%)}
+.sidebar:before{content:"";position:absolute;width:360px;height:220px;left:-70px;bottom:60px;border-radius:50%;border:1px solid rgba(255,255,255,.12);transform:rotate(-12deg);box-shadow:0 0 0 35px rgba(255,255,255,.035),0 0 0 70px rgba(255,255,255,.025)}
 .side-inner{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:25px 20px}
 .side-brand{display:flex;align-items:center;gap:12px;padding:0 12px 30px}
-.side-logo{
-  width:46px;height:46px;border-radius:11px;background:#fff;color:#1267e9;
-  display:grid;place-items:center;font-size:19px;font-weight:950;box-shadow:0 8px 18px rgba(0,0,0,.10)
-}
+.side-logo{width:46px;height:46px;border-radius:11px;background:#fff;color:#1267e9;display:grid;place-items:center;font-size:19px;font-weight:950;box-shadow:0 8px 18px rgba(0,0,0,.10)}
 .side-brand strong{font-size:20px;line-height:1.1;letter-spacing:-.4px}
 .side-brand span{display:block;font-size:12px;margin-top:3px;color:rgba(255,255,255,.86)}
 .side-nav{display:grid;gap:8px}
-.side-link{
-  height:56px;border-radius:13px;display:flex;align-items:center;gap:15px;
-  padding:0 17px;color:rgba(255,255,255,.96);font-size:15px;font-weight:750;
-}
+.side-link{height:56px;border-radius:13px;display:flex;align-items:center;gap:15px;padding:0 17px;color:rgba(255,255,255,.96);font-size:15px;font-weight:750}
 .side-link:hover{background:rgba(255,255,255,.12)}
 .side-link.active{background:linear-gradient(90deg,rgba(53,145,255,.92),rgba(37,118,244,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .side-icon{width:22px;text-align:center;font-size:21px;line-height:1}
-.help-card{
-  margin-top:auto;border:1px solid rgba(255,255,255,.28);border-radius:15px;
-  padding:19px;background:rgba(255,255,255,.045);backdrop-filter:blur(4px)
-}
-.help-icon{
-  width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.13);
-  display:grid;place-items:center;font-size:21px;margin-bottom:14px
-}
+.help-card{margin-top:auto;border:1px solid rgba(255,255,255,.28);border-radius:15px;padding:19px;background:rgba(255,255,255,.045);backdrop-filter:blur(4px)}
+.help-icon{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.13);display:grid;place-items:center;font-size:21px;margin-bottom:14px}
 .help-card h3{margin:0 0 8px;font-size:15px}
 .help-card p{margin:0;color:rgba(255,255,255,.86);font-size:12px;line-height:1.6}
-.support-btn{
-  margin-top:15px;width:100%;height:42px;border:0;border-radius:9px;
-  background:#fff;color:#1267e9;font-weight:850;cursor:pointer
-}
+.support-btn{margin-top:15px;width:100%;height:42px;border:0;border-radius:9px;background:#fff;color:#1267e9;font-weight:850;cursor:pointer}
 .main-wrap{margin-left:267px;width:calc(100% - 267px);min-width:0}
-.topbar{
-  height:88px;background:#fff;border-bottom:1px solid #e8edf5;
-  display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:20
-}
+.topbar{height:88px;background:#fff;border-bottom:1px solid #e8edf5;display:flex;align-items:center;justify-content:space-between;padding:0 34px;position:sticky;top:0;z-index:20}
 .user{display:flex;align-items:center;gap:13px}
-.avatar{
-  width:43px;height:43px;border-radius:50%;background:#e8f2ff;color:#1267e9;
-  display:grid;place-items:center;font-weight:900;border:1px solid #d8e8ff
-}
+.avatar{width:43px;height:43px;border-radius:50%;background:#e8f2ff;color:#1267e9;display:grid;place-items:center;font-weight:900;border:1px solid #d8e8ff}
 .user-meta{min-width:150px}.name{font-size:14px;font-weight:850}.email{font-size:11px;color:#7c8ba8;margin-top:2px}
-.logout{
-  height:45px;border:0;border-radius:10px;padding:0 20px;background:linear-gradient(135deg,#176df1,#075bd9);
-  color:#fff;font-weight:850;cursor:pointer;box-shadow:0 7px 16px rgba(16,103,233,.18)
-}
-.action,.logout{
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .15s ease,box-shadow .15s ease,opacity .15s ease;
-}
-.action:hover:not(:disabled),.logout:hover:not(:disabled){
-  transform:translateY(-1px);box-shadow:0 10px 22px rgba(15,106,233,.28);
-}
-.action:active:not(:disabled),.logout:active:not(:disabled){transform:translateY(0);}
-.action:disabled,.logout:disabled{cursor:not-allowed;opacity:.75;}
-.btn-spinner{
-  width:14px;height:14px;border-radius:50%;flex:0 0 auto;
-  border:2px solid rgba(255,255,255,.45);border-top-color:#fff;
-  animation:btn-spin .7s linear infinite;display:none;
-}
-.action.loading .btn-spinner,.logout.loading .btn-spinner{display:inline-block;}
-.action.loading .btn-label,.logout.loading .btn-label{opacity:.85;}
-@keyframes btn-spin{to{transform:rotate(360deg);}}
+.logout{height:45px;border:0;border-radius:10px;padding:0 20px;background:linear-gradient(135deg,#176df1,#075bd9);color:#fff;font-weight:850;cursor:pointer;box-shadow:0 7px 16px rgba(16,103,233,.18)}
+.action,.logout{display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s ease,box-shadow .15s ease,opacity .15s ease}
+.action:hover:not(:disabled),.logout:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 22px rgba(15,106,233,.28)}
+.action:active:not(:disabled),.logout:active:not(:disabled){transform:translateY(0)}
+.action:disabled,.logout:disabled{cursor:not-allowed;opacity:.75}
+.btn-spinner{width:14px;height:14px;border-radius:50%;flex:0 0 auto;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;animation:btn-spin .7s linear infinite;display:none}
+.action.loading .btn-spinner,.logout.loading .btn-spinner{display:inline-block}
+.action.loading .btn-label,.logout.loading .btn-label{opacity:.85}
+@keyframes btn-spin{to{transform:rotate(360deg)}}
 .page{max-width:1160px;margin:0 auto;padding:26px 28px 24px}
 .breadcrumb{font-size:12px;color:#8291ad;margin:3px 0 18px}
-.hero{
-  position:relative;overflow:hidden;min-height:314px;border-radius:20px;
-  background:linear-gradient(110deg,#146cf1 0%,#1674ef 45%,#2d8cf5 100%);
-  box-shadow:0 12px 28px rgba(22,104,232,.18);color:#fff;padding:32px 38px;
-  display:flex;align-items:center;justify-content:space-between;gap:20px
-}
-.hero:before{
-  content:"";position:absolute;right:-120px;bottom:-180px;width:650px;height:420px;
-  border-radius:50%;border:1px solid rgba(255,255,255,.10);
-  box-shadow:0 0 0 60px rgba(255,255,255,.035),0 0 0 120px rgba(255,255,255,.02)
-}
-.hero:after{
-  content:"";position:absolute;right:35px;top:24px;width:88px;height:65px;
-  background-image:radial-gradient(rgba(255,255,255,.55) 2px,transparent 2px);
-  background-size:19px 19px;opacity:.6
-}
+.hero{position:relative;overflow:hidden;min-height:314px;border-radius:20px;background:linear-gradient(110deg,#146cf1 0%,#1674ef 45%,#2d8cf5 100%);box-shadow:0 12px 28px rgba(22,104,232,.18);color:#fff;padding:32px 38px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.hero:before{content:"";position:absolute;right:-120px;bottom:-180px;width:650px;height:420px;border-radius:50%;border:1px solid rgba(255,255,255,.10);box-shadow:0 0 0 60px rgba(255,255,255,.035),0 0 0 120px rgba(255,255,255,.02)}
+.hero:after{content:"";position:absolute;right:35px;top:24px;width:88px;height:65px;background-image:radial-gradient(rgba(255,255,255,.55) 2px,transparent 2px);background-size:19px 19px;opacity:.6}
 .hero-copy{position:relative;z-index:3;max-width:650px;align-self:flex-start;padding-top:2px}
 .hero-small{font-size:17px;font-weight:550;margin-bottom:13px}
 .hero h1{font-size:41px;line-height:1.08;margin:0;font-weight:900;letter-spacing:-1.2px}
 .hero p{font-size:17px;line-height:1.6;margin:17px 0 0;max-width:620px;color:rgba(255,255,255,.96);font-weight:520}
 .hero-bottom{display:flex;align-items:center;gap:20px;margin-top:31px}
-.hero-mini{
-  display:flex;align-items:center;gap:12px;padding-right:22px;border-right:1px solid rgba(255,255,255,.4)
-}
+.hero-mini{display:flex;align-items:center;gap:12px;padding-right:22px;border-right:1px solid rgba(255,255,255,.4)}
 .hero-mini:last-child{border-right:0}
-.mini-icon{
-  width:49px;height:49px;border-radius:11px;background:rgba(255,255,255,.20);
-  display:grid;place-items:center;font-size:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)
-}
+.mini-icon{width:49px;height:49px;border-radius:11px;background:rgba(255,255,255,.20);display:grid;place-items:center;font-size:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
 .mini-label{font-size:12px;color:rgba(255,255,255,.88);margin-bottom:4px}
 .mini-value{font-size:15px;font-weight:850}
 .hero-art{position:absolute;z-index:2;right:34px;bottom:-1px;width:395px;height:285px}
-.hero-art .clipboard{
-  position:absolute;right:150px;top:15px;width:136px;height:208px;border-radius:9px 9px 16px 16px;
-  background:linear-gradient(180deg,#fff,#edf5ff);box-shadow:13px 17px 0 rgba(0,67,180,.28),0 12px 30px rgba(0,49,150,.22);
-  transform:rotate(5deg);border:1px solid rgba(255,255,255,.65)
-}
+.hero-art .clipboard{position:absolute;right:150px;top:15px;width:136px;height:208px;border-radius:9px 9px 16px 16px;background:linear-gradient(180deg,#fff,#edf5ff);box-shadow:13px 17px 0 rgba(0,67,180,.28),0 12px 30px rgba(0,49,150,.22);transform:rotate(5deg);border:1px solid rgba(255,255,255,.65)}
 .clip-top{position:absolute;left:38px;top:-13px;width:60px;height:31px;border-radius:9px;background:#2d83f4;box-shadow:inset 0 -3px 0 rgba(0,50,150,.16)}
 .clip-line{height:12px;margin:24px 18px 0 18px;border-radius:3px;background:#d6e6fb}
 .clip-check{display:flex;align-items:center;gap:7px;margin:14px 17px 0}
 .clip-check i{width:18px;height:18px;border-radius:4px;background:#1672ee;position:relative}
 .clip-check i:after{content:"✓";position:absolute;color:#fff;font-size:12px;left:4px;top:0}
 .clip-check span{height:7px;width:60px;background:#c6d9f2;border-radius:4px}
-.target{
-  position:absolute;left:30px;bottom:38px;width:103px;height:103px;border-radius:50%;
-  background:radial-gradient(circle,#fff 0 16%,#4ea0ff 17% 30%,#fff 31% 42%,#1b75eb 43% 58%,#0c5ed7 59% 100%);
-  box-shadow:0 10px 22px rgba(0,45,150,.28);transform:rotate(-8deg)
-}
+.target{position:absolute;left:30px;bottom:38px;width:103px;height:103px;border-radius:50%;background:radial-gradient(circle,#fff 0 16%,#4ea0ff 17% 30%,#fff 31% 42%,#1b75eb 43% 58%,#0c5ed7 59% 100%);box-shadow:0 10px 22px rgba(0,45,150,.28);transform:rotate(-8deg)}
 .target:after{content:"";position:absolute;width:82px;height:13px;right:-46px;top:46px;border-radius:10px;background:#1d70e8;transform:rotate(-23deg);box-shadow:0 4px 0 rgba(0,45,150,.18)}
 .trophy{position:absolute;right:14px;bottom:24px;font-size:98px;filter:drop-shadow(10px 10px 4px rgba(0,55,160,.22));transform:rotate(-4deg)}
 .spark{position:absolute;font-size:30px;color:#fff;opacity:.9}.spark.s1{right:275px;top:58px}.spark.s2{right:65px;top:92px;font-size:22px}.spark.s3{right:188px;bottom:112px;font-size:24px}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin:31px 0}
-.stat{
-  height:145px;background:#fff;border:1px solid #e8edf5;border-radius:17px;box-shadow:var(--shadow);
-  padding:26px 25px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden
-}
+.stat{height:145px;background:#fff;border:1px solid #e8edf5;border-radius:17px;box-shadow:var(--shadow);padding:26px 25px;display:flex;align-items:center;gap:20px;position:relative;overflow:hidden}
 .stat:after{content:"↗";position:absolute;right:21px;bottom:20px;color:#dce7fa;font-size:37px;font-weight:300}
 .stat-icon{width:75px;height:75px;border-radius:18px;display:grid;place-items:center;font-size:31px;flex:none}
 .stat:nth-child(1) .stat-icon{background:#e6f0ff;color:#146cf1}
@@ -396,100 +108,19 @@ a{text-decoration:none;color:inherit}
 .stat:nth-child(3) .stat-icon{background:#def5e7;color:#16a25b}
 .stat-label{font-size:14px;color:#68799d;font-weight:650}.stat-value{font-size:30px;font-weight:900;margin-top:6px}
 .stat-desc{font-size:12px;color:#7f8dab;margin-top:7px}
-.section-box{
-  background:#fff;border:1px solid #e6edf6;border-radius:18px;box-shadow:var(--shadow);
-  padding:27px 28px 28px
-}
+.section-box{background:#fff;border:1px solid #e6edf6;border-radius:18px;box-shadow:var(--shadow);padding:27px 28px 28px}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .section-title-wrap{display:flex;align-items:center;gap:11px}.section-dot{width:22px;height:22px;border-radius:50%;background:#dceaff;position:relative}.section-dot:after{content:"";position:absolute;width:9px;height:9px;left:6.5px;top:6.5px;border-radius:50%;background:#176cf0}
 .section-title{font-size:19px;font-weight:900;margin:0}.view-all{font-size:13px;font-weight:850;color:#0d64e6}
 .grid{display:block}
-.card{
-  background:#fff;border:1px solid #dfe8f5;border-top:3px solid #1670ef;border-radius:16px;
-  padding:20px 22px;box-shadow:0 8px 20px rgba(20,75,150,.07);max-width:670px
-}
+.card{background:#fff;border:1px solid #dfe8f5;border-top:3px solid #1670ef;border-radius:16px;padding:20px 22px;box-shadow:0 8px 20px rgba(20,75,150,.07);max-width:670px}
 .card:hover{box-shadow:0 13px 28px rgba(20,75,150,.11)}
-.card-top{
-    display:flex;
-    gap:20px;
-    align-items:center;
-}
-
-/* Hilangkan kotak kosong lama */
-.card-top:before{
-    display:none;
-}
-
-/* Area teks assessment */
-.card-top > div:first-child{
-    order:2;
-    flex:1;
-}
-
-/* Logo TS TalentScope */
-.card-top .icon{
-    order:1;
-
-    width:126px;
-    height:145px;
-
-    flex:none;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    position:relative;
-
-    border-radius:24px;
-
-    background:
-        linear-gradient(
-            145deg,
-            #0b3d78,
-            #1267d8
-        );
-
-    color:#ffffff;
-
-    font-size:42px;
-    font-weight:900;
-
-    letter-spacing:-2px;
-
-    box-shadow:
-        0 12px 25px
-        rgba(10, 65, 145, .22);
-
-    overflow:hidden;
-}
-
-/* Efek cahaya premium */
-.card-top .icon::before{
-    content:"";
-
-    position:absolute;
-
-    width:150px;
-    height:150px;
-
-    border-radius:50%;
-
-    background:
-        radial-gradient(
-            circle,
-            rgba(255,255,255,.18),
-            transparent 65%
-        );
-
-    top:-75px;
-    right:-65px;
-}
-
-/* Pastikan tulisan TS di atas efek */
-.card-top .icon{
-    isolation:isolate;
-}
+.card-top{display:flex;gap:20px;align-items:center}
+.card-top:before{display:none}
+.card-top > div:first-child{order:2;flex:1}
+.card-top .icon{order:1;width:126px;height:145px;flex:none;display:flex;align-items:center;justify-content:center;position:relative;border-radius:24px;background:linear-gradient(145deg,#0b3d78,#1267d8);color:#ffffff;font-size:42px;font-weight:900;letter-spacing:-2px;box-shadow:0 12px 25px rgba(10,65,145,.22);overflow:hidden}
+.card-top .icon::before{content:"";position:absolute;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 65%);top:-75px;right:-65px}
+.card-top .icon{isolation:isolate}
 .card h3{margin:0;font-size:18px;line-height:1.3}.code{font-size:13px;color:#6e82a8;margin-top:7px}
 .card-info{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:18px 0 16px;padding:14px 0;border-top:1px solid #e6edf5;border-bottom:1px solid #e6edf5}
 .info-label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:#33466d;font-weight:850}.info-value{font-size:14px;font-weight:850;margin-top:7px;color:#172a50}
@@ -500,84 +131,19 @@ a{text-decoration:none;color:inherit}
 .empty-icon{width:55px;height:55px;border-radius:15px;background:#eaf3ff;color:#1267e9;display:grid;place-items:center;margin:0 auto 12px;font-weight:900}
 .footer{display:flex;justify-content:space-between;align-items:center;padding:19px 8px 0;margin-top:15px;border-top:1px solid #e5ebf4;color:#7889aa;font-size:12px}
 .footer-links{display:flex;gap:35px;color:#1267e9;font-weight:700}
-@media(max-width: 820px){
-  .sidebar{
-    transform: translateX(-100%);
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    width: 280px !important;
-  }
-  .sidebar.open{
-    transform: translateX(0);
-  }
-  
-  /* Styling Brand Tampil Rapi, Tidak Bold, dan Elegan */
-  .side-brand{
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: flex-start !important;
-    gap: 12px !important;
-    padding: 10px 4px 25px 4px !important;
-  }
-  .side-brand .brand-text{
-    display: flex !important;
-    flex-direction: column !important;
-    text-align: left !important;
-  }
-  .side-brand .brand-title{
-    font-size: 15px !important;
-    font-weight: 600 !important; /* Semi-bold proporsional */
-    color: #ffffff !important;
-    line-height: 1.2 !important;
-  }
-  .side-brand .brand-subtitle{
-    font-size: 11px !important;
-    font-weight: 400 !important; /* Regular, tidak bold */
-    color: rgba(255, 255, 255, 0.75) !important;
-    letter-spacing: 0.3px !important;
-    margin-top: 2px !important;
-  }
-
-  /* Perbaikan Menu Link & Help Card */
-  .side-link{
-    justify-content: flex-start !important;
-    padding: 12px 16px !important;
-    gap: 12px !important;
-  }
-  .side-link span:not(.side-icon){
-    display: inline-block !important;
-    font-weight: 400 !important;
-  }
-  .help-card{
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    text-align: left !important;
-    padding: 16px !important;
-    margin-top: auto !important;
-  }
-  .help-card h3, .help-card p{
-    position: static !important;
-    transform: none !important;
-    margin: 4px 0 !important;
-    width: 100% !important;
-    text-align: left !important;
-  }
-  .help-card p {
-    font-weight: 400 !important;
-    font-size: 12px !important;
-    opacity: 0.85;
-  }
-  .help-card .support-btn{
-    position: static !important;
-    transform: none !important;
-    margin: 12px 0 4px 0 !important;
-    display: block !important;
-    width: 100% !important;
-    text-align: center !important;
-    font-weight: 500 !important;
-  }
-
+@media(max-width:820px){
+  .sidebar{transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);width:280px !important}
+  .sidebar.open{transform:translateX(0)}
+  .side-brand{display:flex !important;flex-direction:row !important;align-items:center !important;justify-content:flex-start !important;gap:12px !important;padding:10px 4px 25px 4px !important}
+  .side-brand .brand-text{display:flex !important;flex-direction:column !important;text-align:left !important}
+  .side-brand .brand-title{font-size:15px !important;font-weight:600 !important;color:#ffffff !important;line-height:1.2 !important}
+  .side-brand .brand-subtitle{font-size:11px !important;font-weight:400 !important;color:rgba(255,255,255,0.75) !important;letter-spacing:0.3px !important;margin-top:2px !important}
+  .side-link{justify-content:flex-start !important;padding:12px 16px !important;gap:12px !important}
+  .side-link span:not(.side-icon){display:inline-block !important;font-weight:400 !important}
+  .help-card{display:flex !important;flex-direction:column !important;align-items:flex-start !important;text-align:left !important;padding:16px !important;margin-top:auto !important}
+  .help-card h3,.help-card p{position:static !important;transform:none !important;margin:4px 0 !important;width:100% !important;text-align:left !important}
+  .help-card p{font-weight:400 !important;font-size:12px !important;opacity:0.85}
+  .help-card .support-btn{position:static !important;transform:none !important;margin:12px 0 4px 0 !important;display:block !important;width:100% !important;text-align:center !important;font-weight:500 !important}
   .main-wrap{margin-left:0 !important;width:100% !important}
   .topbar{padding:0 18px}
   .user-meta{display:none}
@@ -586,87 +152,25 @@ a{text-decoration:none;color:inherit}
   .hero{min-height:420px}.hero h1{font-size:34px}.hero p{font-size:14px}.hero-art{right:-95px;bottom:0;opacity:.22}.hero-bottom{gap:12px}.hero-mini{padding-right:12px}.mini-icon{width:42px;height:42px}.mini-value{font-size:13px}
   .topbar{height:72px}.page{padding:20px 14px}.summary{gap:14px}.stat{height:125px;padding:20px}.stat-icon{width:60px;height:60px}.section-head{align-items:flex-start}.card-top{align-items:flex-start}.card-top:before{width:88px;height:110px}.card-info{grid-template-columns:1fr}.footer{display:block}.footer-links{margin-top:10px}
 }
-/* =====================================================
-   HAMBURGER MENU & MOBILE DRAWER STYLING
-===================================================== */
-.menu-btn {
-  display: none; /* Default tersembunyi di desktop */
-  width: 42px;
-  height: 42px;
-  border: 1px solid #e8edf5;
-  border-radius: 12px;
-  background: #f8fbff;
-  color: #1267e9;
-  font-size: 20px;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(18, 103, 233, 0.08);
-}
-.menu-btn:hover {
-  background: #1267e9;
-  color: #fff;
-}
-
-/* Overlay Gelap di Belakang Sidebar saat Aktif di Mobile */
-.sidebar-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(16, 35, 75, 0.5);
-  backdrop-filter: blur(4px);
-  z-index: 25;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.sidebar-overlay.active {
-  display: block;
-  opacity: 1;
-}
-
-/* Penyesuaian Sidebar untuk Responsif Hamburger */
-@media (max-width: 820px) {
-  .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    width: 280px !important; /* Lebar optimal laci menu */
-    box-shadow: 20px 0 50px rgba(0,0,0,0.15);
-  }
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  /* Tampilkan kembali teks dan elemen di dalam sidebar saat laci dibuka */
-  .sidebar .side-brand>div:not(.side-logo), 
-  .sidebar .side-link span:not(.side-icon), 
-  .sidebar .help-card {
-    display: flex !important;
-  }
-  .sidebar .side-brand {
-    justify-content: flex-start !important;
-    padding: 0 12px 30px !important;
-  }
-  .sidebar .side-link {
-    justify-content: flex-start !important;
-    padding: 0 17px !important;
-  }
-  
-  .menu-btn {
-    display: flex; /* Munculkan tombol hamburger di layar kecil/mobile */
-  }
-  .main-wrap {
-    margin-left: 0 !important;
-    width: 100% !important;
-  }
+.menu-btn{display:none;width:42px;height:42px;border:1px solid #e8edf5;border-radius:12px;background:#f8fbff;color:#1267e9;font-size:20px;cursor:pointer;align-items:center;justify-content:center;transition:all 0.2s ease;box-shadow:0 4px 12px rgba(18,103,233,0.08)}
+.menu-btn:hover{background:#1267e9;color:#fff}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(16,35,75,0.5);backdrop-filter:blur(4px);z-index:25;opacity:0;transition:opacity 0.3s ease}
+.sidebar-overlay.active{display:block;opacity:1}
+@media (max-width:820px){
+  .sidebar{transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);width:280px !important;box-shadow:20px 0 50px rgba(0,0,0,0.15)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar .side-brand>div:not(.side-logo),.sidebar .side-link span:not(.side-icon),.sidebar .help-card{display:flex !important}
+  .sidebar .side-brand{justify-content:flex-start !important;padding:0 12px 30px !important}
+  .sidebar .side-link{justify-content:flex-start !important;padding:0 17px !important}
+  .menu-btn{display:flex}
+  .main-wrap{margin-left:0 !important;width:100% !important}
 }
 </style>
 </head>
 <body>
 <div class="app">
-<!-- Tambahkan overlay ini agar sidebar bisa ditutup saat area luar diklik di mode mobile -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- Tambahkan ID id="sidebarDrawer" pada tag aside -->
 <aside class="sidebar" id="sidebarDrawer">
   <div class="side-inner">
     <div class="side-brand">
@@ -693,12 +197,8 @@ a{text-decoration:none;color:inherit}
 
 <div class="main-wrap">
 <header class="topbar">
-  <!-- Bungkus bagian kiri topbar agar tombol hamburger dan info user sejajar -->
   <div style="display: flex; align-items: center; gap: 14px;">
-    <!-- Tombol Hamburger Menu -->
-    <button class="menu-btn" id="menuBtn" type="button" aria-label="Toggle Menu">
-      ☰
-    </button>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Toggle Menu">☰</button>
     <div class="user">
       <div class="avatar" id="avatar">A</div>
       <div class="user-meta">
@@ -720,7 +220,7 @@ a{text-decoration:none;color:inherit}
     <div class="hero-copy">
       <div class="hero-small">Hello,</div>
       <h1><span id="heroName">Participant</span> 👋</h1>
-      <p>Welcome back! You’re one step closer to unlocking<br class="desktop-break"> your best potential. Keep going and do your best!</p>
+      <p>Welcome back! You're one step closer to unlocking<br class="desktop-break"> your best potential. Keep going and do your best!</p>
       <div class="hero-bottom">
         <div class="hero-mini">
           <div class="mini-icon">▣</div>
@@ -761,304 +261,107 @@ a{text-decoration:none;color:inherit}
 
 <script>
 /* =========================================================
-   TALENTSCOPE PARTICIPANT DASHBOARD
-   FULL FIX – SESSION COMPATIBLE VERSION
+   TALENTSCOPE PARTICIPANT DASHBOARD — FULL FIX v2
+   - Routing LSJT/MSJT/VAP/DISC/PAPI
+   - Tombol tidak stuck (try/catch)
+   - Heartbeat 15s (bukan 5s) untuk hindari deadlock
+   - Fallback katalog untuk assessment_name NULL
 ========================================================= */
 (function () {
     "use strict";
 
-    /* =====================================================
-       DATE & TIME
-    ===================================================== */
-    function updateClock() {
-        var d = new Date();
+    /* ===== ROUTE MAP: dipakai oleh click handler ===== */
+    function getAssessmentRoute(code, name) {
+        var c = String(code || "").toLowerCase();
+        var n = String(name || "").toLowerCase();
 
-        var dateEl = document.getElementById("todayDate");
-        var timeEl = document.getElementById("currentTime");
+        // Cek CODE dulu
+        if (c.includes("lsjt") || c.includes("leadership")) return "sjt_leadership.html";
+        if (c.includes("msjt") || c.includes("managerial")) return "msjt_managerial.html";
+        if (c.includes("vap") || c.includes("visual") || c.includes("performance")) return "speedtest.html";
+        if (c.includes("papi") || c.includes("kostick")) return "papi_kostick_test.html";
+        if (c.includes("disc")) return "disc_test.html";
 
-        if (dateEl) {
-            dateEl.textContent = new Intl.DateTimeFormat(
-                "en-US",
-                {
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric"
-                }
-            ).format(d);
-        }
+        // Fallback cek NAME
+        if (n.includes("lsjt") || n.includes("leadership") || n.includes("leadership situational")) return "sjt_leadership.html";
+        if (n.includes("msjt") || n.includes("managerial") || n.includes("managerial situational")) return "msjt_managerial.html";
+        if (n.includes("vap") || n.includes("visual attention") || n.includes("work performance") || n.includes("sustained attention") || n.includes("speed test")) return "speedtest.html";
+        if (n.includes("papi") || n.includes("kostick")) return "papi_kostick_test.html";
+        if (n.includes("disc")) return "disc_test.html";
 
-        if (timeEl) {
-            timeEl.textContent = new Intl.DateTimeFormat(
-                "en-US",
-                {
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true
-                }
-            ).format(d);
-        }
+        console.warn("[ASSESSMENT ROUTE] Tidak ada match:", {code: code, name: name});
+        return "disc_test.html";
     }
 
+    function updateClock() {
+        var d = new Date();
+        var dateEl = document.getElementById("todayDate");
+        var timeEl = document.getElementById("currentTime");
+        if (dateEl) dateEl.textContent = new Intl.DateTimeFormat("en-US",{day:"numeric",month:"long",year:"numeric"}).format(d);
+        if (timeEl) timeEl.textContent = new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",hour12:true}).format(d);
+    }
     updateClock();
     setInterval(updateClock, 30000);
 
-
-    /* =====================================================
-       GLOBAL NAVIGATION FLAG
-    ===================================================== */
     window.__tsParticipantInternalNavigation = false;
 
-
-    /* =====================================================
-       STORAGE HELPERS
-    ===================================================== */
     function readJSON(key, fallback) {
         try {
             var raw = localStorage.getItem(key);
-
-            if (!raw) {
-                return fallback;
-            }
-
+            if (!raw) return fallback;
             var parsed = JSON.parse(raw);
-
             return parsed;
         } catch (error) {
-            console.warn(
-                "TalentScope readJSON error:",
-                key,
-                error
-            );
-
+            console.warn("readJSON error:", key, error);
             return fallback;
         }
     }
-
-
     function writeJSON(key, data) {
-        try {
-            localStorage.setItem(
-                key,
-                JSON.stringify(data)
-            );
-
-            return true;
-
-        } catch (error) {
-
-            console.error(
-                "TalentScope writeJSON error:",
-                key,
-                error
-            );
-
-            return false;
-        }
+        try { localStorage.setItem(key, JSON.stringify(data)); return true; }
+        catch (error) { console.error("writeJSON error:", key, error); return false; }
     }
+    function normalize(v){ return String(v == null ? "" : v).trim(); }
+    function normalizeEmail(v){ return String(v == null ? "" : v).trim().toLowerCase(); }
 
-
-    /* =====================================================
-       NORMALIZE ID
-    ===================================================== */
-    function normalize(value) {
-        return String(
-            value == null ? "" : value
-        ).trim();
-    }
-
-
-    function normalizeEmail(value) {
-        return String(
-            value == null ? "" : value
-        )
-        .trim()
-        .toLowerCase();
-    }
-
-
-    /* =====================================================
-       LOAD PARTICIPANT SESSION
-    ===================================================== */
-    var rawSession =
-        sessionStorage.getItem(
-            "ts_participant_session"
-        );
-
-    if (!rawSession) {
-        window.location.href = "login.html";
-        return;
-    }
-
+    var rawSession = sessionStorage.getItem("ts_participant_session");
+    if (!rawSession) { window.location.href = "login.html"; return; }
 
     var s;
+    try { s = JSON.parse(rawSession); }
+    catch (error) { sessionStorage.removeItem("ts_participant_session"); window.location.href = "login.html"; return; }
 
-    try {
-        s = JSON.parse(rawSession);
+    if (!s || typeof s !== "object") { sessionStorage.removeItem("ts_participant_session"); window.location.href = "login.html"; return; }
 
-    } catch (error) {
-
-        sessionStorage.removeItem(
-            "ts_participant_session"
-        );
-
-        window.location.href = "login.html";
-
-        return;
-    }
-
-
-    if (!s || typeof s !== "object") {
-
-        sessionStorage.removeItem(
-            "ts_participant_session"
-        );
-
-        window.location.href = "login.html";
-
-        return;
-    }
-
-
-    /* =====================================================
-       SESSION ID
-    ===================================================== */
-    var activeSessionId =
-        normalize(s.activeSessionId);
-
+    var activeSessionId = normalize(s.activeSessionId);
     if (!activeSessionId) {
-
-        activeSessionId =
-            "TS-" +
-            Date.now() +
-            "-" +
-            Math.random()
-                .toString(36)
-                .slice(2, 10);
-
-        s.activeSessionId =
-            activeSessionId;
-
-        try {
-
-            sessionStorage.setItem(
-                "ts_participant_session",
-                JSON.stringify(s)
-            );
-
-        } catch (error) {}
+        activeSessionId = "TS-" + Date.now() + "-" + Math.random().toString(36).slice(2,10);
+        s.activeSessionId = activeSessionId;
+        try { sessionStorage.setItem("ts_participant_session", JSON.stringify(s)); } catch (error) {}
     }
 
+    var sessionProjectId = normalize(s.projectId || s.project_id);
+    var sessionParticipantId = normalize(s.participantId || s.participant_id || s.employeeId || s.employee_id || s.id);
+    var sessionEmail = normalizeEmail(s.email || s.emailAddress || s.email_address);
 
-    /* =====================================================
-       SESSION IDENTITY
-    ===================================================== */
-    var sessionProjectId =
-        normalize(
-            s.projectId ||
-            s.project_id
-        );
-
-    var sessionParticipantId =
-        normalize(
-            s.participantId ||
-            s.participant_id ||
-            s.employeeId ||
-            s.employee_id ||
-            s.id
-        );
-
-    var sessionEmail =
-        normalizeEmail(
-            s.email ||
-            s.emailAddress ||
-            s.email_address
-        );
-
-
-    /* =====================================================
-       VALIDATE SESSION
-    ===================================================== */
     if (!sessionProjectId) {
-
-        console.error(
-            "TalentScope: Project ID missing in session.",
-            s
-        );
-
-        alert(
-            "Session project tidak ditemukan. Silakan login kembali."
-        );
-
-        sessionStorage.removeItem(
-            "ts_participant_session"
-        );
-
-        window.location.href =
-            "login.html";
-
+        console.error("Project ID missing in session.", s);
+        alert("Session project tidak ditemukan. Silakan login kembali.");
+        sessionStorage.removeItem("ts_participant_session");
+        window.location.href = "login.html";
+        return;
+    }
+    if (!sessionParticipantId && !sessionEmail) {
+        console.error("Participant identity missing.", s);
+        alert("Identitas peserta tidak ditemukan. Silakan login kembali.");
+        sessionStorage.removeItem("ts_participant_session");
+        window.location.href = "login.html";
         return;
     }
 
-
-    if (
-        !sessionParticipantId &&
-        !sessionEmail
-    ) {
-
-        console.error(
-            "TalentScope: Participant identity missing.",
-            s
-        );
-
-        alert(
-            "Identitas peserta tidak ditemukan. Silakan login kembali."
-        );
-
-        sessionStorage.removeItem(
-            "ts_participant_session"
-        );
-
-        window.location.href =
-            "login.html";
-
-        return;
-    }
-
-
-    /* =====================================================
-       ASSESSMENT HELPERS
-
-       FIX (assessment name/routing bug):
-       - assessment_id (dan item.id pada baris project_assessments)
-         adalah UUID, BUKAN kode/nama assessment. UUID tidak boleh
-         lagi dipakai sebagai fallback code.
-       - assessment_name dari project_assessments adalah nama
-         canonical dan sekarang diprioritaskan di ATAS field
-         generic seperti .name / .title, supaya value placeholder
-         generik ("Assessment") tidak menang lebih dulu.
-       - isGenericAssessmentLabel() melewati value yang memang
-         cuma placeholder generik ("Assessment", "Assessment 1",
-         dst) walaupun value itu ada di field yang lebih diprioritaskan,
-         supaya tetap lanjut mencari nama yang benar-benar spesifik
-         (mis. "VAP Test") di field berikutnya.
-    ===================================================== */
     function isGenericAssessmentLabel(value) {
-
-        var v =
-            normalize(value)
-            .toLowerCase();
-
-        if (!v) {
-            return true;
-        }
-
-        /* buang angka trailing: "assessment 1" -> "assessment" */
-        var stripped =
-            v.replace(
-                /\s*#?\d+\s*$/,
-                ""
-            ).trim();
-
+        var v = normalize(value).toLowerCase();
+        if (!v) return true;
+        var stripped = v.replace(/\s*#?\d+\s*$/, "").trim();
         return (
             stripped === "assessment" ||
             stripped === "assessment package" ||
@@ -1068,56 +371,30 @@ a{text-decoration:none;color:inherit}
         );
     }
 
-
     function assessmentCodeOf(item) {
-
-        if (typeof item === "string") {
-            return item
-                .trim()
-                .toUpperCase();
-        }
-
-        if (!item || typeof item !== "object") {
-            return "";
-        }
-
-        /*
-           PENTING: item.id / item.assessment_id SENGAJA TIDAK
-           dipakai di sini karena keduanya UUID (primary key),
-           bukan kode assessment (mis. "VAP", "DISC").
-        */
-        return normalize(
+        if (typeof item === "string") return item.trim().toUpperCase();
+        if (!item || typeof item !== "object") return "";
+        var code = normalize(
             item.code ||
-            item.assessmentCode ||
             item.assessment_code ||
-            item.name
+            item.assessmentCode ||
+            ""
         ).toUpperCase();
+        // Kalau code generik, extract dari name
+        if (!code || isGenericAssessmentLabel(code)) {
+            var n = String(item.assessment_name || item.assessmentName || item.name || "").toLowerCase();
+            if (n.includes("leadership")) return "LSJT";
+            if (n.includes("managerial")) return "MSJT";
+            if (n.includes("vap") || n.includes("work performance")) return "VAP";
+            if (n.includes("disc")) return "DISC";
+            if (n.includes("papi")) return "PAPI";
+        }
+        return code;
     }
 
-
     function assessmentNameOf(item) {
-
-        if (typeof item === "string") {
-            return item.trim();
-        }
-
-        if (!item || typeof item !== "object") {
-            return "Assessment";
-        }
-
-        /*
-           PRIORITAS (sesuai permintaan):
-           1. assessment.assessment_name  (canonical, dari project_assessments)
-           2. assessment.assessmentName
-           3. assessment.name
-           4. assessment.title
-           5. fallback lainnya
-
-           Setiap kandidat yang cuma placeholder generik
-           ("Assessment", "Assessment 1", dst) dilewati dulu,
-           baru dipakai kalau memang tidak ada kandidat lain
-           yang lebih spesifik.
-        */
+        if (typeof item === "string") return item.trim();
+        if (!item || typeof item !== "object") return "Assessment";
         var candidates = [
             item.assessment_name,
             item.assessmentName,
@@ -1125,2637 +402,610 @@ a{text-decoration:none;color:inherit}
             item.title,
             item.testName,
             item.label,
-            item.code
+            item.code,
+            item.assessment_code
         ];
-
         var firstNonEmpty = "";
-
-        for (
-            var i = 0;
-            i < candidates.length;
-            i++
-        ) {
-
-            var candidate =
-                normalize(
-                    candidates[i]
-                );
-
-            if (!candidate) {
-                continue;
-            }
-
-            if (!firstNonEmpty) {
-                firstNonEmpty = candidate;
-            }
-
-            if (
-                !isGenericAssessmentLabel(
-                    candidate
-                )
-            ) {
-                return candidate;
-            }
+        for (var i = 0; i < candidates.length; i++) {
+            var candidate = normalize(candidates[i]);
+            if (!candidate) continue;
+            if (!firstNonEmpty) firstNonEmpty = candidate;
+            if (!isGenericAssessmentLabel(candidate)) return candidate;
         }
-
-        return (
-            firstNonEmpty ||
-            "Assessment"
-        );
+        return firstNonEmpty || "Assessment";
     }
 
+    var projects = readJSON("talentscope_projects", []);
+    if (!Array.isArray(projects)) projects = [];
 
-    /* =====================================================
-       LOAD PROJECTS
-    ===================================================== */
-    var projects =
-        readJSON(
-            "talentscope_projects",
-            []
-        );
-
-    if (!Array.isArray(projects)) {
-        projects = [];
-    }
-
-
-    /* =====================================================
-       SESSION ASSESSMENTS
-
-       PRIORITY:
-       1. s.assessments
-       2. s.assessmentPackage
-       3. s.assignedAssessments
-       4. empty
-    ===================================================== */
     var sessionAssessments = [];
+    if (Array.isArray(s.assessments)) sessionAssessments = s.assessments;
+    else if (Array.isArray(s.assessmentPackage)) sessionAssessments = s.assessmentPackage;
+    else if (Array.isArray(s.assignedAssessments)) sessionAssessments = s.assignedAssessments;
 
-    if (Array.isArray(s.assessments)) {
+    var currentProject = projects.find(function (project) {
+        return normalize(project.id || project.projectId || project.project_id) === sessionProjectId;
+    }) || null;
 
-        sessionAssessments =
-            s.assessments;
-
-    } else if (
-        Array.isArray(
-            s.assessmentPackage
-        )
-    ) {
-
-        sessionAssessments =
-            s.assessmentPackage;
-
-    } else if (
-        Array.isArray(
-            s.assignedAssessments
-        )
-    ) {
-
-        sessionAssessments =
-            s.assignedAssessments;
-    }
-
-
-    console.log(
-        "TalentScope Session:",
-        s
-    );
-
-    console.log(
-        "TalentScope Session Assessments:",
-        sessionAssessments
-    );
-
-
-    /* =====================================================
-       FIND OR CREATE CURRENT PROJECT
-
-       IMPORTANT:
-       Project selalu berdasarkan projectId dari session.
-       Tidak pernah fallback ke project pertama.
-    ===================================================== */
-    var currentProject =
-        projects.find(function (project) {
-
-            return (
-                normalize(
-                    project.id ||
-                    project.projectId ||
-                    project.project_id
-                ) === sessionProjectId
-            );
-
-        }) || null;
-
-
-    /* =====================================================
-       CREATE PROJECT IF MISSING
-    ===================================================== */
     if (!currentProject) {
-
         currentProject = {
-
-            id:
-                sessionProjectId,
-
-            projectId:
-                sessionProjectId,
-
-            name:
-                s.projectName ||
-                s.project_name ||
-                "Assessment Package",
-
-            projectName:
-                s.projectName ||
-                s.project_name ||
-                "Assessment Package",
-
-            assessments:
-                sessionAssessments,
-
-            assessmentPackage:
-                sessionAssessments,
-
+            id: sessionProjectId,
+            projectId: sessionProjectId,
+            name: s.projectName || s.project_name || "Assessment Package",
+            projectName: s.projectName || s.project_name || "Assessment Package",
+            assessments: sessionAssessments,
+            assessmentPackage: sessionAssessments,
             participants: []
         };
-
-        projects.push(
-            currentProject
-        );
+        projects.push(currentProject);
     }
 
-
-    /* =====================================================
-       SNAPSHOT CANONICAL ASSESSMENT DATA
-
-       FIX (root cause utama nama/rute assessment salah):
-       currentProject.assessments di titik ini masih berisi
-       data ASLI hasil sinkronisasi Supabase
-       (ts-supabase-sync.js -> tabel project_assessments,
-       lengkap dengan assessment_name yang benar, mis. "VAP Test").
-
-       Diambil SEKARANG (sebelum block "SYNC SESSION DATA TO
-       PARTICIPANT" di bawah), karena block itu SEBELUMNYA
-       langsung menimpa currentProject.assessments dengan
-       sessionAssessments (data dari sessionStorage saat login)
-       yang ternyata generik/tidak lengkap -> itulah sumber
-       "Assessment 1" dan salah routing ke DISC.
-    ===================================================== */
-    var canonicalProjectAssessments =
-        Array.isArray(
-            currentProject.assessments
-        ) ?
-        currentProject.assessments.slice() :
-        [];
-
-    console.log(
-        "[ASSESSMENT FLOW] Canonical project_assessments (dari Supabase sync):",
-        canonicalProjectAssessments
-    );
+    var canonicalProjectAssessments = Array.isArray(currentProject.assessments) ? currentProject.assessments.slice() : [];
 
     var canonicalAssessmentById = {};
-
-    canonicalProjectAssessments.forEach(
-        function (row, idx) {
-
-            var key =
-                normalize(
-                    row && (
-                        row.assessment_id ||
-                        row.assessmentId ||
-                        row.id
-                    )
-                ).toLowerCase();
-
-            if (key) {
-                canonicalAssessmentById[key] = row;
-            }
-
-            /* fallback pairing berdasarkan posisi/urutan */
-            canonicalAssessmentById["__index_" + idx] = row;
-        }
-    );
-
+    canonicalProjectAssessments.forEach(function (row, idx) {
+        var key = normalize(row && (row.assessment_id || row.assessmentId || row.id)).toLowerCase();
+        if (key) canonicalAssessmentById[key] = row;
+        canonicalAssessmentById["__index_" + idx] = row;
+    });
 
     function mergeWithCanonicalAssessment(sessionItem, index) {
-
-        if (typeof sessionItem === "string") {
-            sessionItem = { name: sessionItem };
-        }
-
-        if (!sessionItem || typeof sessionItem !== "object") {
-            sessionItem = {};
-        }
-
-        var key =
-            normalize(
-                sessionItem.assessment_id ||
-                sessionItem.assessmentId ||
-                sessionItem.id
-            ).toLowerCase();
-
-        var canonical =
-            (key && canonicalAssessmentById[key]) ||
-            canonicalAssessmentById["__index_" + index] ||
-            null;
-
-        if (!canonical) {
-            return sessionItem;
-        }
-
-        /*
-           Merge: field dari canonical (project_assessments,
-           mis. assessment_name, assessment_id, schedule_date)
-           MENANG di atas field sessionItem yang sama.
-           Field lain milik sessionItem (mis. status pengerjaan)
-           tetap dipertahankan.
-        */
+        if (typeof sessionItem === "string") sessionItem = { name: sessionItem };
+        if (!sessionItem || typeof sessionItem !== "object") sessionItem = {};
+        var key = normalize(sessionItem.assessment_id || sessionItem.assessmentId || sessionItem.id).toLowerCase();
+        var canonical = (key && canonicalAssessmentById[key]) || canonicalAssessmentById["__index_" + index] || null;
+        if (!canonical) return sessionItem;
         var merged = {};
-
-        for (var k in sessionItem) {
-            if (
-                Object.prototype.hasOwnProperty.call(
-                    sessionItem,
-                    k
-                )
-            ) {
-                merged[k] = sessionItem[k];
-            }
-        }
-
-        for (var k2 in canonical) {
-            if (
-                Object.prototype.hasOwnProperty.call(
-                    canonical,
-                    k2
-                )
-            ) {
-                merged[k2] = canonical[k2];
-            }
-        }
-
+        for (var k in sessionItem) if (Object.prototype.hasOwnProperty.call(sessionItem, k)) merged[k] = sessionItem[k];
+        for (var k2 in canonical) if (Object.prototype.hasOwnProperty.call(canonical, k2)) merged[k2] = canonical[k2];
         return merged;
     }
 
+    if (!Array.isArray(currentProject.participants)) currentProject.participants = [];
 
-    /* =====================================================
-       FIND PARTICIPANT
-    ===================================================== */
-    if (
-        !Array.isArray(
-            currentProject.participants
-        )
-    ) {
-        currentProject.participants = [];
-    }
+    var currentParticipant = currentProject.participants.find(function (participant) {
+        var pid = normalize(participant.id || participant.participantId || participant.participant_id || participant.employeeId || participant.employee_id);
+        var em = normalizeEmail(participant.email || participant.emailAddress || participant.email_address);
+        if (sessionParticipantId && pid === sessionParticipantId) return true;
+        if (sessionEmail && em === sessionEmail) return true;
+        return false;
+    }) || null;
 
-
-    var currentParticipant =
-        currentProject.participants.find(
-            function (participant) {
-
-                var participantId =
-                    normalize(
-                        participant.id ||
-                        participant.participantId ||
-                        participant.participant_id ||
-                        participant.employeeId ||
-                        participant.employee_id
-                    );
-
-                var participantEmail =
-                    normalizeEmail(
-                        participant.email ||
-                        participant.emailAddress ||
-                        participant.email_address
-                    );
-
-
-                if (
-                    sessionParticipantId &&
-                    participantId ===
-                        sessionParticipantId
-                ) {
-                    return true;
-                }
-
-
-                if (
-                    sessionEmail &&
-                    participantEmail ===
-                        sessionEmail
-                ) {
-                    return true;
-                }
-
-
-                return false;
-            }
-        ) || null;
-
-
-    /* =====================================================
-       CREATE PARTICIPANT IF MISSING
-    ===================================================== */
     if (!currentParticipant) {
-
         currentParticipant = {
-
-            id:
-                sessionParticipantId,
-
-            participantId:
-                sessionParticipantId,
-
-            employeeId:
-                sessionParticipantId,
-
-            participantCode:
-                s.participantCode || "",
-
-            name:
-                s.name ||
-                s.fullName ||
-                "Participant",
-
-            fullName:
-                s.name ||
-                s.fullName ||
-                "Participant",
-
-            email:
-                sessionEmail,
-
-            username:
-                s.username || "",
-
-            assessments:
-                sessionAssessments,
-
-            isLoggedIn:
-                false,
-
-            status:
-                "Offline",
-
-            onlineStatus:
-                "Offline",
-
+            id: sessionParticipantId,
+            participantId: sessionParticipantId,
+            employeeId: sessionParticipantId,
+            participantCode: s.participantCode || "",
+            name: s.name || s.fullName || "Participant",
+            fullName: s.name || s.fullName || "Participant",
+            email: sessionEmail,
+            username: s.username || "",
+            assessments: sessionAssessments,
+            isLoggedIn: false,
+            status: "Offline",
+            onlineStatus: "Offline",
             activityHistory: []
         };
-
-        currentProject.participants.push(
-            currentParticipant
-        );
+        currentProject.participants.push(currentParticipant);
     }
 
+    var CATALOG_FALLBACK = {
+        "VAP":  "Work Performance & Sustained Attention Assessment",
+        "LSJT": "Leadership Situational Judgment Test",
+        "MSJT": "Managerial Situational Judgment Test",
+        "DISC": "DISC Personality Assessment",
+        "PAPI": "PAPI Kostick"
+    };
 
-    /* =====================================================
-       IMPORTANT FIX:
-       SYNC SESSION DATA TO PARTICIPANT
-
-       FIX: dulu block ini langsung menimpa
-       currentProject.assessments dengan sessionAssessments
-       mentah, sehingga assessment_name yang benar dari
-       Supabase (canonicalProjectAssessments) hilang dan
-       diganti data generik dari sessionStorage.
-
-       Sekarang di-MERGE: identitas assessment tetap ambil
-       dari canonicalProjectAssessments (assessment_name,
-       assessment_id, schedule_date), field lain dari
-       sessionAssessments tetap dipakai.
-    ===================================================== */
-    if (
-        sessionAssessments.length > 0
-    ) {
-
-        var mergedSessionAssessments =
-            sessionAssessments.map(
-                function (item, idx) {
-                    return mergeWithCanonicalAssessment(
-                        item,
-                        idx
-                    );
-                }
-            );
-
-        console.log(
-            "[ASSESSMENT FLOW] Merge session + canonical assessment data:",
-            {
-                sessionAssessments: sessionAssessments,
-                canonicalProjectAssessments: canonicalProjectAssessments,
-                mergedSessionAssessments: mergedSessionAssessments
+    if (sessionAssessments.length > 0) {
+        var mergedSessionAssessments = sessionAssessments.map(function (item, idx) {
+            var merged = mergeWithCanonicalAssessment(item, idx);
+            var hasValidName = merged.assessment_name && !isGenericAssessmentLabel(merged.assessment_name);
+            if (!hasValidName) {
+                var code = normalize(merged.assessment_code || merged.code || "").toUpperCase();
+                if (CATALOG_FALLBACK[code]) merged.assessment_name = CATALOG_FALLBACK[code];
             }
-        );
+            return merged;
+        });
 
-        currentParticipant.assessments =
-            mergedSessionAssessments;
-
-        /*
-           Project assessments juga sync
-           agar dashboard selalu bisa render.
-        */
-        currentProject.assessments =
-            mergedSessionAssessments;
-
-        currentProject.assessmentPackage =
-            mergedSessionAssessments;
+        currentParticipant.assessments = mergedSessionAssessments;
+        currentProject.assessments = mergedSessionAssessments;
+        currentProject.assessmentPackage = mergedSessionAssessments;
     }
 
+    writeJSON("talentscope_projects", projects);
 
-    /* =====================================================
-       SAVE NORMALIZED PROJECT DATA
-    ===================================================== */
-    writeJSON(
-        "talentscope_projects",
-        projects
-    );
-
-
-    /* =====================================================
-       GET CURRENT ASSESSMENTS
-
-       PRIORITY:
-       Participant assessments
-       Session assessments
-       Project assessments
-    ===================================================== */
     function getCurrentAssessments() {
-
-        if (
-            currentParticipant &&
-            Array.isArray(
-                currentParticipant.assessments
-            ) &&
-            currentParticipant.assessments.length
-        ) {
-            return currentParticipant.assessments;
-        }
-
-
-        if (
-            Array.isArray(
-                sessionAssessments
-            ) &&
-            sessionAssessments.length
-        ) {
-            return sessionAssessments;
-        }
-
-
-        if (
-            currentProject &&
-            Array.isArray(
-                currentProject.assessments
-            )
-        ) {
-            return currentProject.assessments;
-        }
-
-
-        return [];
+    // Prioritas 1: participant.assessments (paling spesifik)
+    if (currentParticipant && Array.isArray(currentParticipant.assessments) && currentParticipant.assessments.length) {
+        console.log("[DASHBOARD] Assessments dari participant:", currentParticipant.assessments.length);
+        return currentParticipant.assessments;
     }
+    
+    // Prioritas 2: session.assessments (dari login.html)
+    if (Array.isArray(sessionAssessments) && sessionAssessments.length) {
+        console.log("[DASHBOARD] Assessments dari session:", sessionAssessments.length);
+        return sessionAssessments;
+    }
+    
+    // Prioritas 3: project.assessments (dari localStorage)
+    if (currentProject && Array.isArray(currentProject.assessments) && currentProject.assessments.length) {
+        console.log("[DASHBOARD] Assessments dari project:", currentProject.assessments.length);
+        return currentProject.assessments;
+    }
+    
+    // Prioritas 4 (NEW): project.raw_data.assessments
+    if (currentProject && currentProject.raw_data && Array.isArray(currentProject.raw_data.assessments) && currentProject.raw_data.assessments.length) {
+        console.log("[DASHBOARD] Assessments dari project.raw_data:", currentProject.raw_data.assessments.length);
+        return currentProject.raw_data.assessments;
+    }
+    
+    console.warn("[DASHBOARD] Tidak ada assessments ditemukan di semua sumber");
+    return [];
+}
+    var activeAssessments = getCurrentAssessments();
 
+    function assessmentStatusOf(project, participant, assessment, index) {
+        var projectId = normalize(project.id || project.projectId || project.project_id);
+        var participantId = normalize(participant.id || participant.participantId || participant.participant_id || participant.employeeId || participant.employee_id || sessionParticipantId);
+        var code = assessmentCodeOf(assessment);
 
-    var activeAssessments =
-        getCurrentAssessments();
-
-
-    /* =====================================================
-       ASSESSMENT STATUS
-    ===================================================== */
-    function assessmentStatusOf(
-        project,
-        participant,
-        assessment,
-        index
-    ) {
-
-        var projectId =
-            normalize(
-                project.id ||
-                project.projectId ||
-                project.project_id
-            );
-
-        var participantId =
-            normalize(
-                participant.id ||
-                participant.participantId ||
-                participant.participant_id ||
-                participant.employeeId ||
-                participant.employee_id ||
-                sessionParticipantId
-            );
-
-        var code =
-            assessmentCodeOf(
-                assessment
-            );
-
-
-        /* ================================================
-           FORMAT 1
-        ================================================ */
-        var standardKey =
-            "assessment_result_" +
-            projectId +
-            "_" +
-            participantId +
-            "_" +
-            index;
-
+        var standardKey = "assessment_result_" + projectId + "_" + participantId + "_" + index;
         try {
-
-            var standardRaw =
-                localStorage.getItem(
-                    standardKey
-                );
-
+            var standardRaw = localStorage.getItem(standardKey);
             if (standardRaw) {
-
-                var standardResult =
-                    JSON.parse(
-                        standardRaw
-                    );
-
-                if (
-                    normalize(
-                        standardResult.projectId
-                    ) === projectId &&
-                    normalize(
-                        standardResult.participantId
-                    ) === participantId &&
-                    String(
-                        standardResult.assessmentIndex
-                    ) === String(index)
-                ) {
-
-                    return "Completed";
-                }
+                var standardResult = JSON.parse(standardRaw);
+                if (normalize(standardResult.projectId) === projectId && normalize(standardResult.participantId) === participantId && String(standardResult.assessmentIndex) === String(index)) return "Completed";
             }
-
         } catch (error) {}
 
-
-        /* ================================================
-           FORMAT 2 V3
-        ================================================ */
-        var v3Key =
-            "assessment_result_v3_" +
-            projectId +
-            "_" +
-            participantId +
-            "_" +
-            index;
-
+        var v3Key = "assessment_result_v3_" + projectId + "_" + participantId + "_" + index;
         try {
-
-            var v3Raw =
-                localStorage.getItem(
-                    v3Key
-                );
-
+            var v3Raw = localStorage.getItem(v3Key);
             if (v3Raw) {
-
-                var v3Result =
-                    JSON.parse(
-                        v3Raw
-                    );
-
-                if (
-                    normalize(
-                        v3Result.projectId
-                    ) === projectId &&
-                    normalize(
-                        v3Result.participantId
-                    ) === participantId &&
-                    String(
-                        v3Result.assessmentIndex
-                    ) === String(index)
-                ) {
-
-                    return "Completed";
-                }
+                var v3Result = JSON.parse(v3Raw);
+                if (normalize(v3Result.projectId) === projectId && normalize(v3Result.participantId) === participantId && String(v3Result.assessmentIndex) === String(index)) return "Completed";
             }
-
         } catch (error) {}
 
-
-        /* ================================================
-           MASTER RESULTS
-        ================================================ */
         try {
-
-            var allResults =
-                readJSON(
-                    "talent_scope_results",
-                    []
-                );
-
-            if (
-                Array.isArray(
-                    allResults
-                )
-            ) {
-
-                var found =
-                    allResults.find(
-                        function (result) {
-
-                            if (!result) {
-                                return false;
-                            }
-
-                            return (
-                                normalize(
-                                    result.projectId
-                                ) === projectId &&
-
-                                normalize(
-                                    result.participantId
-                                ) === participantId &&
-
-                                String(
-                                    result.assessmentIndex
-                                ) === String(index)
-                            );
-                        }
-                    );
-
-
+            var allResults = readJSON("talent_scope_results", []);
+            if (Array.isArray(allResults)) {
+                var found = allResults.find(function (result) {
+                    if (!result) return false;
+                    return normalize(result.projectId) === projectId && normalize(result.participantId) === participantId && String(result.assessmentIndex) === String(index);
+                });
                 if (found) {
-
-                    var status =
-                        normalize(
-                            found.status ||
-                            "Completed"
-                        ).toLowerCase();
-
-
-                    if (
-                        !status ||
-                        status === "completed" ||
-                        status === "complete"
-                    ) {
-
-                        return "Completed";
-                    }
+                    var status = normalize(found.status || "Completed").toLowerCase();
+                    if (!status || status === "completed" || status === "complete") return "Completed";
                 }
             }
-
         } catch (error) {}
 
-
-        /* ================================================
-           PAPI SUBMISSION
-        ================================================ */
-        if (
-            code === "PAPI" ||
-            code.indexOf("PAPI") !== -1
-        ) {
-
-            var submitKey =
-                "ts_papi_" +
-                encodeURIComponent(
-                    projectId
-                ) +
-                "_" +
-                encodeURIComponent(
-                    participantId
-                ) +
-                "_" +
-                encodeURIComponent(
-                    index
-                ) +
-                "_submitted";
-
-
-            if (
-                localStorage.getItem(
-                    submitKey
-                ) === "true"
-            ) {
-
-                return "Completed";
-            }
+        if (code === "PAPI" || code.indexOf("PAPI") !== -1) {
+            var submitKey = "ts_papi_" + encodeURIComponent(projectId) + "_" + encodeURIComponent(participantId) + "_" + encodeURIComponent(index) + "_submitted";
+            if (localStorage.getItem(submitKey) === "true") return "Completed";
         }
-
-
         return "Not Started";
     }
 
-
-    /* =====================================================
-       BUILD ENTRIES
-    ===================================================== */
-    var entries =
-        activeAssessments.map(
-            function (
-                assessment,
-                index
-            ) {
-
-                return {
-
-                    project:
-                        currentProject,
-
-                    participant:
-                        currentParticipant,
-
-                    assessment:
-                        assessment,
-
-                    assessmentIndex:
-                        index,
-
-                    assessmentCode:
-                        assessmentCodeOf(
-                            assessment
-                        ),
-
-                    assessmentName:
-                        assessmentNameOf(
-                            assessment
-                        ),
-
-                    status:
-                        assessmentStatusOf(
-                            currentProject,
-                            currentParticipant,
-                            assessment,
-                            index
-                        )
-                };
-            }
-        );
-
-
-    console.log(
-        "TalentScope Dashboard Entries:",
-        entries
-    );
-
-    entries.forEach(function (entry) {
-
-        console.log(
-            "[ASSESSMENT FLOW] Project assessment (raw):",
-            entry.assessment
-        );
-
-        console.log(
-            "[ASSESSMENT FLOW] Canonical assessment name:",
-            entry.assessmentName
-        );
-
-        console.log(
-            "[ASSESSMENT FLOW] Resolved assessment code:",
-            entry.assessmentCode
-        );
+    var entries = activeAssessments.map(function (assessment, index) {
+        return {
+            project: currentProject,
+            participant: currentParticipant,
+            assessment: assessment,
+            assessmentIndex: index,
+            assessmentCode: assessmentCodeOf(assessment),
+            assessmentName: assessmentNameOf(assessment),
+            status: assessmentStatusOf(currentProject, currentParticipant, assessment, index)
+        };
     });
 
-
-    /* =====================================================
-       DISPLAY USER
-    ===================================================== */
-    function setText(
-        id,
-        value
-    ) {
-
-        var element =
-            document.getElementById(
-                id
-            );
-
-        if (element) {
-            element.textContent =
-                value || "";
-        }
+    function setText(id, value) {
+        var element = document.getElementById(id);
+        if (element) element.textContent = value || "";
     }
 
+    var displayName = s.name || s.fullName || currentParticipant.name || currentParticipant.fullName || "Participant";
+    var displayEmail = sessionEmail || currentParticipant.email || "";
 
-    var displayName =
-        s.name ||
-        s.fullName ||
-        currentParticipant.name ||
-        currentParticipant.fullName ||
-        "Participant";
+    setText("userName", displayName);
+    setText("userEmail", displayEmail);
+    setText("heroName", displayName);
 
+    var avatar = document.getElementById("avatar");
+    if (avatar) avatar.textContent = String(displayName).charAt(0).toUpperCase();
 
-    var displayEmail =
-        sessionEmail ||
-        currentParticipant.email ||
-        "";
-
-
-    setText(
-        "userName",
-        displayName
-    );
-
-    setText(
-        "userEmail",
-        displayEmail
-    );
-
-    setText(
-        "heroName",
-        displayName
-    );
-
-    setText(
-        "heroUserName",
-        displayName
-    );
-
-    setText(
-        "heroParticipantId",
-        sessionParticipantId || "-"
-    );
-
-
-    var avatar =
-        document.getElementById(
-            "avatar"
-        );
-
-    if (avatar) {
-
-        avatar.textContent =
-            String(displayName)
-                .charAt(0)
-                .toUpperCase();
-    }
-
-
-    /* =====================================================
-       RECORD LOGIN
-    ===================================================== */
-    function updateParticipantStatus(
-        callback
-    ) {
-
-        var latestProjects =
-            readJSON(
-                "talentscope_projects",
-                []
-            );
-
-        if (
-            !Array.isArray(
-                latestProjects
-            )
-        ) {
-            return false;
-        }
-
-
+    function updateParticipantStatus(callback) {
+        var latestProjects = readJSON("talentscope_projects", []);
+        if (!Array.isArray(latestProjects)) return false;
         var changed = false;
-
-
-        latestProjects.forEach(
-            function (project) {
-
-                var projectId =
-                    normalize(
-                        project.id ||
-                        project.projectId ||
-                        project.project_id
-                    );
-
-                if (
-                    projectId !==
-                    sessionProjectId
-                ) {
-                    return;
-                }
-
-
-                if (
-                    !Array.isArray(
-                        project.participants
-                    )
-                ) {
-                    project.participants = [];
-                }
-
-
-                project.participants.forEach(
-                    function (
-                        participant
-                    ) {
-
-                        var participantId =
-                            normalize(
-                                participant.id ||
-                                participant.participantId ||
-                                participant.participant_id ||
-                                participant.employeeId ||
-                                participant.employee_id
-                            );
-
-                        var participantEmail =
-                            normalizeEmail(
-                                participant.email ||
-                                participant.emailAddress ||
-                                participant.email_address
-                            );
-
-
-                        var matched =
-                            (
-                                sessionParticipantId &&
-                                participantId ===
-                                sessionParticipantId
-                            ) ||
-
-                            (
-                                sessionEmail &&
-                                participantEmail ===
-                                sessionEmail
-                            );
-
-
-                        if (!matched) {
-                            return;
-                        }
-
-
-                        callback(
-                            participant
-                        );
-
-                        changed = true;
-                    }
-                );
-            }
-        );
-
-
-        if (changed) {
-
-            writeJSON(
-                "talentscope_projects",
-                latestProjects
-            );
-
-            projects =
-                latestProjects;
-        }
-
-
+        latestProjects.forEach(function (project) {
+            var projectId = normalize(project.id || project.projectId || project.project_id);
+            if (projectId !== sessionProjectId) return;
+            if (!Array.isArray(project.participants)) project.participants = [];
+            project.participants.forEach(function (participant) {
+                var participantId = normalize(participant.id || participant.participantId || participant.participant_id || participant.employeeId || participant.employee_id);
+                var participantEmail = normalizeEmail(participant.email || participant.emailAddress || participant.email_address);
+                var matched = (sessionParticipantId && participantId === sessionParticipantId) || (sessionEmail && participantEmail === sessionEmail);
+                if (!matched) return;
+                callback(participant);
+                changed = true;
+            });
+        });
+        if (changed) { writeJSON("talentscope_projects", latestProjects); projects = latestProjects; }
         return changed;
     }
 
-
     function recordParticipantLogin() {
-
-         var now =
-        new Date().toISOString();
-
-    var loginTime =
-        new Date().toISOString();
-
-    var matchedLoginParticipant =
-        null;
-
-    updateParticipantStatus(
-        function (
-            participant
-        ) {
-matchedLoginParticipant =
-    participant;
-                participant.isLoggedIn =
-                    true;
-
-                participant.activeSessionId =
-                    activeSessionId;
-
-                participant.status =
-                    "Online";
-
-                participant.onlineStatus =
-                    "Online";
-
-                participant.loginTime =
-                    loginTime;
-
-                participant.loginAt =
-                    loginTime;
-
-                participant.loggedInAt =
-                    loginTime;
-
-                participant.lastLoginAt =
-                    loginTime;
-
-                // FIX: bersihkan jejak logout dari sesi
-                // sebelumnya. Tanpa ini, "Waktu Log Out" di
-                // Admin tetap menampilkan tanggal lama padahal
-                // peserta sedang online di sesi baru.
-                participant.logoutTime =
-                    null;
-
-                participant.loggedOutAt =
-                    null;
-
-                participant.logoutAt =
-                    null;
-
-                participant.lastLogoutAt =
-                    null;
-
-                participant.lastLogout =
-                    null;
-
-                participant.waktuLogout =
-                    null;
-
-                participant.activity =
-                    "Online";
-
-                participant.currentActivity =
-                    "Online";
-
-                participant.lastActivity =
-                    "Online";
-
-                participant.lastSeen =
-                    now;
-
-                participant.lastSeenAt =
-                    now;
-
-                participant.activityUpdatedAt =
-                    now;
-
-
-                if (
-                    !Array.isArray(
-                        participant.activityHistory
-                    )
-                ) {
-                    participant.activityHistory =
-                        [];
-                }
-
-
-                var exists =
-                    participant.activityHistory.some(
-                        function (
-                            item
-                        ) {
-
-                            return (
-                                item &&
-                                item.type ===
-                                    "login" &&
-                                item.sessionId ===
-                                    activeSessionId
-                            );
-                        }
-                    );
-
-
-                if (!exists) {
-
-                    participant.activityHistory.push({
-
-                        type:
-                            "login",
-
-                        activity:
-                            "Online",
-
-                        description:
-                            "Login ke Participant Portal",
-
-                        timestamp:
-                            loginTime,
-
-                        time:
-                            loginTime,
-
-                        sessionId:
-                            activeSessionId
-                    });
-                }
-            }
-        );
+        var now = new Date().toISOString();
+        var loginTime = now;
+        var matchedLoginParticipant = null;
+        updateParticipantStatus(function (participant) {
+            matchedLoginParticipant = participant;
+            participant.isLoggedIn = true;
+            participant.activeSessionId = activeSessionId;
+            participant.status = "Online";
+            participant.onlineStatus = "Online";
+            participant.loginTime = loginTime;
+            participant.loginAt = loginTime;
+            participant.loggedInAt = loginTime;
+            participant.lastLoginAt = loginTime;
+            participant.logoutTime = null;
+            participant.loggedOutAt = null;
+            participant.logoutAt = null;
+            participant.lastLogoutAt = null;
+            participant.lastLogout = null;
+            participant.waktuLogout = null;
+            participant.activity = "Online";
+            participant.currentActivity = "Online";
+            participant.lastActivity = "Online";
+            participant.lastSeen = now;
+            participant.lastSeenAt = now;
+            participant.activityUpdatedAt = now;
+            if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+            var exists = participant.activityHistory.some(function (item) {
+                return item && item.type === "login" && item.sessionId === activeSessionId;
+            });
+            if (!exists) participant.activityHistory.push({type:"login",activity:"Online",description:"Login ke Participant Portal",timestamp:loginTime,time:loginTime,sessionId:activeSessionId});
+        });
         return matchedLoginParticipant;
     }
+    var loggedInParticipant = recordParticipantLogin();
 
-
-    var loggedInParticipant =
-    recordParticipantLogin();
-
-if (
-    loggedInParticipant &&
-    loggedInParticipant.id &&
-    window.TalentScopeSync &&
-    typeof window.TalentScopeSync.pushParticipantPresenceNow ===
-        "function"
-) {
-
-    window.TalentScopeSync
-        .pushParticipantPresenceNow(
-            loggedInParticipant.id,
-            loggedInParticipant
-        )
-        .then(function (result) {
-
-            console.log(
-                "[LOGIN SYNC] Waktu login berhasil dikirim ke Supabase:",
-                result
-            );
-
-        })
-        .catch(function (error) {
-
-            console.warn(
-                "[LOGIN SYNC] Gagal mengirim waktu login:",
-                error
-            );
-
+    if (loggedInParticipant && loggedInParticipant.id && window.TalentScopeSync && typeof window.TalentScopeSync.pushParticipantPresenceNow === "function") {
+        window.TalentScopeSync.pushParticipantPresenceNow(loggedInParticipant.id, loggedInParticipant).catch(function (error) {
+            console.warn("[LOGIN SYNC] Gagal:", error);
         });
-}
-
-
-    /* =====================================================
-       HEARTBEAT
-    ===================================================== */
-    function updateParticipantHeartbeat() {
-
-        var now =
-            new Date().toISOString();
-
-
-        updateParticipantStatus(
-            function (
-                participant
-            ) {
-
-                /*
-                   Session protection
-                */
-                if (
-                    participant.activeSessionId &&
-                    participant.activeSessionId !==
-                    activeSessionId
-                ) {
-                    return;
-                }
-
-
-                participant.activeSessionId =
-                    activeSessionId;
-
-                participant.isLoggedIn =
-                    true;
-
-                participant.status =
-                    "Online";
-
-                participant.onlineStatus =
-                    "Online";
-
-                participant.lastSeen =
-                    now;
-
-                participant.lastSeenAt =
-                    now;
-
-
-                /*
-                   Jangan timpa status test
-                */
-                var activity =
-                    normalize(
-                        participant.currentActivity ||
-                        participant.activity
-                    );
-
-
-                var isDoingTest =
-                    /^Sedang mengerjakan tes\s*\d*\s*\(/i
-                    .test(activity);
-
-
-                if (!isDoingTest) {
-
-                    participant.activity =
-                        "Online";
-
-                    participant.currentActivity =
-                        "Online";
-
-                    participant.lastActivity =
-                        "Online";
-
-                } else {
-
-                    participant.lastActivity =
-                        activity;
-                }
-
-
-                participant.activityUpdatedAt =
-                    now;
-            }
-        );
     }
 
+    function updateParticipantHeartbeat() {
+        var now = new Date().toISOString();
+        updateParticipantStatus(function (participant) {
+            if (participant.activeSessionId && participant.activeSessionId !== activeSessionId) return;
+            participant.activeSessionId = activeSessionId;
+            participant.isLoggedIn = true;
+            participant.status = "Online";
+            participant.onlineStatus = "Online";
+            participant.lastSeen = now;
+            participant.lastSeenAt = now;
+            var activity = normalize(participant.currentActivity || participant.activity);
+            var isDoingTest = /^Sedang mengerjakan tes\s*\d*\s*\(/i.test(activity);
+            if (!isDoingTest) {
+                participant.activity = "Online";
+                participant.currentActivity = "Online";
+                participant.lastActivity = "Online";
+            } else {
+                participant.lastActivity = activity;
+            }
+            participant.activityUpdatedAt = now;
+        });
+    }
 
     updateParticipantHeartbeat();
+    // HEARTBEAT diperlambat dari 5s ke 15s untuk mengurangi deadlock Supabase
+    var participantHeartbeatTimer = setInterval(updateParticipantHeartbeat, 15000);
 
+    var completedCount = entries.filter(function (entry) {
+        return String(entry.status).toLowerCase() === "completed";
+    }).length;
 
-    var participantHeartbeatTimer =
-        setInterval(
-            updateParticipantHeartbeat,
-            5000
-        );
+    setText("total", entries.length);
+    setText("completed", completedCount);
+    setText("pending", entries.length - completedCount);
 
-
-    /* =====================================================
-       SUMMARY
-    ===================================================== */
-    var completedCount =
-        entries.filter(
-            function (
-                entry
-            ) {
-
-                return (
-                    String(
-                        entry.status
-                    )
-                    .toLowerCase() ===
-                    "completed"
-                );
-            }
-        ).length;
-
-
-    setText(
-        "total",
-        entries.length
-    );
-
-    setText(
-        "completed",
-        completedCount
-    );
-
-    setText(
-        "pending",
-        entries.length -
-        completedCount
-    );
-
-
-    /* =====================================================
-       ESCAPE HTML
-    ===================================================== */
     function esc(value) {
-
-        return String(
-            value == null ?
-            "" :
-            value
-        ).replace(
-            /[&<>"']/g,
-            function (character) {
-
-                return {
-
-                    "&":
-                        "&amp;",
-
-                    "<":
-                        "&lt;",
-
-                    ">":
-                        "&gt;",
-
-                    '"':
-                        "&quot;",
-
-                    "'":
-                        "&#039;"
-
-                }[character];
-            }
-        );
+        return String(value == null ? "" : value).replace(/[&<>"']/g, function (character) {
+            return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[character];
+        });
     }
 
-
-    /* =====================================================
-       RENDER CONTENT
-    ===================================================== */
-    var content =
-        document.getElementById(
-            "content"
-        );
-
-
-    if (!content) {
-        return;
-    }
-
+    var content = document.getElementById("content");
+    if (!content) return;
 
     if (!entries.length) {
-
-        content.innerHTML =
-            '<div class="empty">' +
-
-                '<div class="empty-icon">TS</div>' +
-
-                '<div style="font-weight:850;color:#243d5b;font-size:15px">' +
-                    'Belum ada assessment' +
-                '</div>' +
-
-                '<div style="margin-top:6px;font-size:12px">' +
-                    'Belum ada assessment yang ditugaskan ke akun Anda.' +
-                '</div>' +
-
-            '</div>';
-
+        content.innerHTML = '<div class="empty"><div class="empty-icon">TS</div><div style="font-weight:850;color:#243d5b;font-size:15px">Belum ada assessment</div><div style="margin-top:6px;font-size:12px">Belum ada assessment yang ditugaskan ke akun Anda.</div></div>';
         return;
     }
 
+    var packageName = currentProject.name || currentProject.projectName || currentProject.title || "Assessment Package";
+    var packageStatus = "Not Started";
+    if (completedCount === entries.length) packageStatus = "Completed";
+    else if (completedCount > 0) packageStatus = "In Progress";
 
-    /* =====================================================
-       PACKAGE STATUS
-    ===================================================== */
-    var packageName =
-        currentProject.name ||
-        currentProject.projectName ||
-        currentProject.title ||
-        "Assessment Package";
+    var packageStatusClass = packageStatus === "Completed" ? "done" : (packageStatus === "In Progress" ? "progress" : "");
+    var packageStatusText = packageStatus === "Completed" ? "✓ Completed" : packageStatus;
 
+    var nextEntry = entries.find(function (entry) {
+        return String(entry.status).toLowerCase() !== "completed";
+    });
+    if (!nextEntry) nextEntry = entries[entries.length - 1];
 
-    var packageStatus =
-        "Not Started";
+    var testListHtml = '<div class="package-tests"><div class="package-tests-label">Assessments Included</div><div class="package-test-list">';
+    entries.forEach(function (entry, index) {
+        var completed = String(entry.status).toLowerCase() === "completed";
+        testListHtml += '<div class="package-test-item"><span class="package-test-number">' + (index + 1) + '</span><span class="package-test-name">' + esc(entry.assessmentName) + '</span>' + (completed ? '<span class="package-test-check">✓</span>' : '') + '</div>';
+    });
+    testListHtml += '</div></div>';
 
-
-    if (
-        completedCount ===
-        entries.length
-    ) {
-
-        packageStatus =
-            "Completed";
-
-    } else if (
-        completedCount > 0
-    ) {
-
-        packageStatus =
-            "In Progress";
-    }
-
-
-    var packageStatusClass =
-        packageStatus === "Completed"
-            ? "done"
-            : (
-                packageStatus ===
-                "In Progress"
-                    ? "progress"
-                    : ""
-            );
-
-
-    var packageStatusText =
-        packageStatus === "Completed"
-            ? "✓ Completed"
-            : packageStatus;
-
-
-    /* =====================================================
-       NEXT ASSESSMENT
-    ===================================================== */
-    var nextEntry =
-        entries.find(
-            function (
-                entry
-            ) {
-
-                return (
-                    String(
-                        entry.status
-                    )
-                    .toLowerCase() !==
-                    "completed"
-                );
-            }
-        );
-
-
-    if (!nextEntry) {
-
-        nextEntry =
-            entries[
-                entries.length - 1
-            ];
-    }
-
-
-    /* =====================================================
-       TEST LIST
-    ===================================================== */
-    var testListHtml =
-        '<div class="package-tests">' +
-
-            '<div class="package-tests-label">' +
-                'Assessments Included' +
-            '</div>' +
-
-            '<div class="package-test-list">';
-
-
-    entries.forEach(
-        function (
-            entry,
-            index
-        ) {
-
-            var completed =
-                String(
-                    entry.status
-                )
-                .toLowerCase() ===
-                "completed";
-
-
-            testListHtml +=
-
-                '<div class="package-test-item">' +
-
-                    '<span class="package-test-number">' +
-                        (index + 1) +
-                    '</span>' +
-
-                    '<span class="package-test-name">' +
-                        esc(
-                            entry.assessmentName
-                        ) +
-                    '</span>' +
-
-                    (
-                        completed
-                            ? '<span class="package-test-check">✓</span>'
-                            : ''
-                    ) +
-
-                '</div>';
-        }
-    );
-
-
-    testListHtml +=
-            '</div>' +
-        '</div>';
-
-
-    /* =====================================================
-       RENDER PACKAGE
-    ===================================================== */
     content.innerHTML =
-
         '<div class="grid assessment-package-grid">' +
-
             '<article class="card assessment-package-card">' +
-
                 '<div class="card-top">' +
-
                     '<div class="package-heading">' +
-
                         '<h3>Assessment Package</h3>' +
-
-                        '<div class="code">' +
-                            esc(packageName) +
-                        '</div>' +
-
+                        '<div class="code">' + esc(packageName) + '</div>' +
                     '</div>' +
-
                 '</div>' +
-
-
                 testListHtml +
-
-
                 '<div class="card-info">' +
-
-                    '<div>' +
-
-                        '<div class="info-label">' +
-                            'Status' +
-                        '</div>' +
-
-                        '<div class="info-value">' +
-
-                            '<span class="status-pill ' +
-                                packageStatusClass +
-                            '">' +
-
-                                esc(
-                                    packageStatusText
-                                ) +
-
-                            '</span>' +
-
-                        '</div>' +
-
-                    '</div>' +
-
-
-                    '<div>' +
-
-                        '<div class="info-label">' +
-                            'Total Assessments' +
-                        '</div>' +
-
-                        '<div class="info-value">' +
-                            entries.length +
-                        '</div>' +
-
-                    '</div>' +
-
+                    '<div><div class="info-label">Status</div><div class="info-value"><span class="status-pill ' + packageStatusClass + '">' + esc(packageStatusText) + '</span></div></div>' +
+                    '<div><div class="info-label">Total Assessments</div><div class="info-value">' + entries.length + '</div></div>' +
                 '</div>' +
-
-
-                '<button ' +
-
-                    'class="action" ' +
-
-                    'data-project="' +
-                        esc(
-                            sessionProjectId
-                        ) +
-                    '" ' +
-
-                    'data-participant="' +
-                        esc(
-                            sessionParticipantId
-                        ) +
-                    '" ' +
-
-                    'data-assessment-index="' +
-                        esc(
-                            nextEntry.assessmentIndex
-                        ) +
-                    '" ' +
-
-                    'data-assessment-code="' +
-                        esc(
-                            nextEntry.assessmentCode
-                        ) +
-                    '" ' +
-
-                    'data-assessment-name="' +
-                        esc(
-                            nextEntry.assessmentName
-                        ) +
-                    '" ' +
-
-                    'type="button">' +
-
+                '<button class="action" data-project="' + esc(sessionProjectId) + '" data-participant="' + esc(sessionParticipantId) + '" data-assessment-index="' + esc(nextEntry.assessmentIndex) + '" data-assessment-code="' + esc(nextEntry.assessmentCode) + '" data-assessment-name="' + esc(nextEntry.assessmentName) + '" type="button">' +
                     '<span class="btn-spinner" aria-hidden="true"></span>' +
-
-                    '<span class="btn-label">' +
-
-                    (
-                        packageStatus ===
-                        "Completed"
-
-                            ? "View Result"
-
-                            : "Start Assessment"
-                    ) +
-
-                    '</span>' +
-
+                    '<span class="btn-label">' + (packageStatus === "Completed" ? "View Result" : "Start Assessment") + '</span>' +
                 '</button>' +
-
             '</article>' +
-
         '</div>';
 
+    function recordAssessmentStartActivity(projectId, participantId, assessmentIndex, assessmentCode, assessmentName) {
+        var now = new Date().toISOString();
+        var ordinal = Number.isFinite(Number(assessmentIndex)) ? (Number(assessmentIndex) + 1) : null;
+        var activityText = "Sedang mengerjakan tes" + (ordinal ? " " + ordinal : "") + " (" + assessmentName + ")";
 
-    /* =====================================================
-       RECORD TEST START
-    ===================================================== */
-    function recordAssessmentStartActivity(
-        projectId,
-        participantId,
-        assessmentIndex,
-        assessmentCode,
-        assessmentName
-    ) {
-
-        var now =
-            new Date().toISOString();
-
-
-        // FIX: sertakan nomor urut tes sesuai urutan paket,
-        // bukan cuma nama tes -- assessmentIndex berbasis 0,
-        // jadi ditampilkan +1 supaya "Tes 1", "Tes 2", dst.
-        var ordinal =
-            Number.isFinite(Number(assessmentIndex))
-                ? (Number(assessmentIndex) + 1)
-                : null;
-
-        var activityText =
-            "Sedang mengerjakan tes" +
-            (ordinal ? " " + ordinal : "") +
-            " (" +
-            assessmentName +
-            ")";
-
-
-        updateParticipantStatus(
-            function (
-                participant
-            ) {
-
-                participant.isLoggedIn =
-                    true;
-
-                participant.status =
-                    "Online";
-
-                participant.onlineStatus =
-                    "Online";
-
-                participant.activeSessionId =
-                    activeSessionId;
-
-
-                participant.currentTest =
-                    assessmentName;
-
-                participant.testActivity =
-                    activityText;
-
-                participant.currentAssessmentIndex =
-                    Number(
-                        assessmentIndex
-                    );
-
-                participant.currentAssessmentCode =
-                    assessmentCode;
-
-                participant.currentActivity =
-                    activityText;
-
-                participant.activity =
-                    activityText;
-
-                participant.lastActivity =
-                    activityText;
-
-                participant.activityUpdatedAt =
-                    now;
-
-                participant.lastSeen =
-                    now;
-
-                participant.lastSeenAt =
-                    now;
-
-
-                if (
-                    !Array.isArray(
-                        participant.activityHistory
-                    )
-                ) {
-                    participant.activityHistory =
-                        [];
-                }
-
-
-                participant.activityHistory.push({
-
-                    type:
-                        "test-start",
-
-                    activity:
-                        activityText,
-
-                    title:
-                        activityText,
-
-                    action:
-                        "Start Assessment",
-
-                    test:
-                        assessmentName,
-
-                    testName:
-                        assessmentName,
-
-                    assessmentName:
-                        assessmentName,
-
-                    assessmentCode:
-                        assessmentCode,
-
-                    assessmentIndex:
-                        Number(
-                            assessmentIndex
-                        ),
-
-                    projectId:
-                        projectId,
-
-                    participantId:
-                        participantId,
-
-                    description:
-                        "Peserta mulai mengerjakan " +
-                        assessmentName +
-                        ".",
-
-                    timestamp:
-                        now,
-
-                    time:
-                        now,
-
-                    sessionId:
-                        activeSessionId
-                });
-            }
-        );
+        updateParticipantStatus(function (participant) {
+            participant.isLoggedIn = true;
+            participant.status = "Online";
+            participant.onlineStatus = "Online";
+            participant.activeSessionId = activeSessionId;
+            participant.currentTest = assessmentName;
+            participant.testActivity = activityText;
+            participant.currentAssessmentIndex = Number(assessmentIndex);
+            participant.currentAssessmentCode = assessmentCode;
+            participant.currentActivity = activityText;
+            participant.activity = activityText;
+            participant.lastActivity = activityText;
+            participant.activityUpdatedAt = now;
+            participant.lastSeen = now;
+            participant.lastSeenAt = now;
+            if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+            participant.activityHistory.push({
+                type: "test-start",
+                activity: activityText,
+                title: activityText,
+                action: "Start Assessment",
+                test: assessmentName,
+                testName: assessmentName,
+                assessmentName: assessmentName,
+                assessmentCode: assessmentCode,
+                assessmentIndex: Number(assessmentIndex),
+                projectId: projectId,
+                participantId: participantId,
+                description: "Peserta mulai mengerjakan " + assessmentName + ".",
+                timestamp: now,
+                time: now,
+                sessionId: activeSessionId
+            });
+        });
     }
 
-
-    /* =====================================================
-       ASSESSMENT ROUTING
-    ===================================================== */
-    function getAssessmentRoute(
-        code,
-        name
-    ) {
-
-        var normalizedCode =
-            normalize(code)
-            .toLowerCase();
-
-        var normalizedName =
-            normalize(name)
-            .toLowerCase();
-
-
-        /* DISC */
-        if (
-            normalizedCode.includes("disc") ||
-            normalizedName.includes("disc")
-        ) {
-
-            return "disc_test.html";
-        }
-
-
-        /* PAPI */
-        if (
-            normalizedCode.includes("papi") ||
-            normalizedName.includes("papi") ||
-            normalizedName.includes("kostick")
-        ) {
-
-            return "papi_kostick_test.html";
-        }
-
-
-        /* VAP */
-        if (
-            normalizedCode.includes("vap") ||
-
-            normalizedName.includes("vap") ||
-
-            normalizedName.includes(
-                "visual attention"
-            ) ||
-
-            normalizedName.includes(
-                "work performance"
-            ) ||
-
-            normalizedName.includes(
-                "sustained attention"
-            ) ||
-
-            normalizedName.includes(
-                "speed test"
-            )
-        ) {
-
-            return "speedtest.html";
-        }
-
-
-        return "";
-    }
-
-
-    /* =====================================================
-       START BUTTON
-    ===================================================== */
-    var actionButton =
-        document.querySelector(
-            ".action"
-        );
-
+    var actionButton = document.querySelector(".action");
 
     if (actionButton) {
+        actionButton.addEventListener("click", function () {
 
-        actionButton.addEventListener(
-            "click",
-            function () {
+            // EARLY GUARD: package completed
+            if (packageStatus === "Completed") {
+                alert("Semua assessment telah selesai.");
+                return;
+            }
 
-                /*
-                   Jika semua assessment selesai
-                */
-                if (
-                    packageStatus ===
-                    "Completed"
-                ) {
+            // LOADING STATE
+            actionButton.disabled = true;
+            actionButton.classList.add("loading");
 
-                    alert(
-                        "Semua assessment telah selesai."
-                    );
+            // WRAP SEMUA DALAM TRY/CATCH — supaya kalau error, tombol kembali normal
+            try {
+                var projectId = normalize(actionButton.getAttribute("data-project"));
+                var participantId = normalize(actionButton.getAttribute("data-participant"));
+                var assessmentIndex = actionButton.getAttribute("data-assessment-index");
+                var assessmentCode = actionButton.getAttribute("data-assessment-code") || "";
+                var assessmentName = actionButton.getAttribute("data-assessment-name") || "";
 
+                if (!projectId || !participantId) {
+                    alert("Identitas peserta tidak valid. Silakan login kembali.");
+                    window.location.href = "login.html";
                     return;
                 }
 
-
-                actionButton.disabled = true;
-                actionButton.classList.add("loading");
-
-
-                var projectId =
-                    normalize(
-                        actionButton.getAttribute(
-                            "data-project"
-                        )
-                    );
-
-                var participantId =
-                    normalize(
-                        actionButton.getAttribute(
-                            "data-participant"
-                        )
-                    );
-
-                var assessmentIndex =
-                    actionButton.getAttribute(
-                        "data-assessment-index"
-                    );
-
-                var assessmentCode =
-                    actionButton.getAttribute(
-                        "data-assessment-code"
-                    ) || "";
-
-                var assessmentName =
-                    actionButton.getAttribute(
-                        "data-assessment-name"
-                    ) || "";
-
-
-                if (
-                    !projectId ||
-                    !participantId
-                ) {
-
-                    alert(
-                        "Identitas peserta tidak valid. Silakan login kembali."
-                    );
-
-                    window.location.href =
-                        "login.html";
-
-                    return;
-                }
-
-
-                /*
-                   Record test activity
-                */
-                recordAssessmentStartActivity(
-
-                    projectId,
-
-                    participantId,
-
-                    Number(
-                        assessmentIndex
-                    ),
-
-                    assessmentCode,
-
-                    assessmentName
-                );
-
-
-                /*
-                   Prevent logout on internal navigation
-                */
-                window.__tsParticipantInternalNavigation =
-                    true;
-
-
-                /*
-                   Determine route
-                */
-                var resolvedTestUrl =
-                    getAssessmentRoute(
+                // Activity record — dibungkus try/catch terpisah agar error di sini tidak blokir navigasi
+                try {
+                    recordAssessmentStartActivity(
+                        projectId,
+                        participantId,
+                        Number(assessmentIndex),
                         assessmentCode,
                         assessmentName
                     );
+                } catch (activityErr) {
+                    console.warn("[START] Activity record gagal (tidak fatal):", activityErr);
+                }
 
-                console.log(
-                    "[ASSESSMENT FLOW] Routing assessment:",
-                    {
-                        assessmentCode: assessmentCode,
-                        assessmentName: assessmentName,
-                        resolvedTestUrl: resolvedTestUrl
-                    }
-                );
+                // PREVENT LOGOUT
+                window.__tsParticipantInternalNavigation = true;
 
+                // RESOLVE ROUTE
+                var resolvedTestUrl = getAssessmentRoute(assessmentCode, assessmentName);
 
-                /*
-   Masuk ke Petunjuk Umum terlebih dahulu.
-   URL tes sebenarnya (resolvedTestUrl) diteruskan lewat
-   parameter nextTestUrl, supaya assessment.html tidak perlu
-   menebak ulang dari data project di localStorage yang
-   bisa saja sudah usang/tidak lengkap.
-*/
-var targetTestUrl =
-    "assessment.html";
+                console.log("[ASSESSMENT FLOW] Routing assessment:", {
+                    assessmentCode: assessmentCode,
+                    assessmentName: assessmentName,
+                    resolvedTestUrl: resolvedTestUrl
+                });
 
-
-                /*
-                   Navigate
-                */
+                // NAVIGATE
                 window.location.href =
+                    "assessment.html" +
+                    "?projectId=" + encodeURIComponent(projectId) +
+                    "&participantId=" + encodeURIComponent(participantId) +
+                    "&assessmentIndex=" + encodeURIComponent(assessmentIndex) +
+                    "&assessmentCode=" + encodeURIComponent(assessmentCode) +
+                    "&assessmentName=" + encodeURIComponent(assessmentName) +
+                    "&nextTestUrl=" + encodeURIComponent(resolvedTestUrl);
 
-                    targetTestUrl +
-
-                    "?projectId=" +
-                    encodeURIComponent(
-                        projectId
-                    ) +
-
-                    "&participantId=" +
-                    encodeURIComponent(
-                        participantId
-                    ) +
-
-                    "&assessmentIndex=" +
-                    encodeURIComponent(
-                        assessmentIndex
-                    ) +
-
-                    "&assessmentCode=" +
-                    encodeURIComponent(
-                        assessmentCode
-                    ) +
-
-                    "&assessmentName=" +
-                    encodeURIComponent(
-                        assessmentName
-                    ) +
-
-                    "&nextTestUrl=" +
-                    encodeURIComponent(
-                        resolvedTestUrl
-                    );
+            } catch (navErr) {
+                console.error("[START ASSESSMENT] Error:", navErr);
+                alert("Gagal memulai assessment: " + (navErr.message || navErr));
+                // Reset tombol supaya bisa diklik ulang
+                actionButton.disabled = false;
+                actionButton.classList.remove("loading");
             }
-        );
+        });
     }
 
-
-    /* =====================================================
-       LOGOUT SYSTEM
-    ===================================================== */
-    var logoutRecorded =
-        false;
-
-    var matchedLogoutParticipant =
-        null;
-
+    var logoutRecorded = false;
+    var matchedLogoutParticipant = null;
 
     function recordParticipantLogout() {
+        if (logoutRecorded) return matchedLogoutParticipant;
+        if (window.__tsParticipantInternalNavigation) return null;
+        logoutRecorded = true;
+        try { clearInterval(participantHeartbeatTimer); } catch (error) {}
 
-        if (logoutRecorded) {
-            return matchedLogoutParticipant;
-        }
-
-
-        /*
-           Internal navigation bukan logout
-        */
-        if (
-            window.__tsParticipantInternalNavigation
-        ) {
-            return null;
-        }
-
-
-        logoutRecorded =
-            true;
-
-
-        try {
-
-            clearInterval(
-                participantHeartbeatTimer
-            );
-
-        } catch (error) {}
-
-
-        var logoutTime =
-            new Date().toISOString();
-
-
+        var logoutTime = new Date().toISOString();
         var latestSession = s;
-
-
         try {
-
-            var latestRaw =
-                sessionStorage.getItem(
-                    "ts_participant_session"
-                );
-
-            if (latestRaw) {
-
-                latestSession =
-                    JSON.parse(
-                        latestRaw
-                    );
-            }
-
+            var latestRaw = sessionStorage.getItem("ts_participant_session");
+            if (latestRaw) latestSession = JSON.parse(latestRaw);
         } catch (error) {}
 
-
-        var logoutProjectId =
-            normalize(
-                latestSession.projectId ||
-                latestSession.project_id
-            );
-
-        var logoutParticipantId =
-            normalize(
-                latestSession.participantId ||
-                latestSession.participant_id ||
-                latestSession.employeeId ||
-                latestSession.id
-            );
-
-        var logoutEmail =
-            normalizeEmail(
-                latestSession.email ||
-                latestSession.emailAddress
-            );
-
-        var logoutSessionId =
-            normalize(
-                latestSession.activeSessionId ||
-                activeSessionId
-            );
-
-
-        var latestProjects =
-            readJSON(
-                "talentscope_projects",
-                []
-            );
-
-
-        if (
-            !Array.isArray(
-                latestProjects
-            )
-        ) {
-            return;
-        }
-
-
-        var changed =
-            false;
-
-
-        latestProjects.forEach(
-            function (
-                project
-            ) {
-
-                var projectId =
-                    normalize(
-                        project.id ||
-                        project.projectId ||
-                        project.project_id
-                    );
-
-                if (
-                    projectId !==
-                    logoutProjectId
-                ) {
-                    return;
-                }
-
-
-                if (
-                    !Array.isArray(
-                        project.participants
-                    )
-                ) {
-                    return;
-                }
-
-
-                project.participants.forEach(
-                    function (
-                        participant
-                    ) {
-
-                        var participantId =
-                            normalize(
-                                participant.id ||
-                                participant.participantId ||
-                                participant.employeeId ||
-                                participant.employee_id
-                            );
-
-                        var participantEmail =
-                            normalizeEmail(
-                                participant.email ||
-                                participant.emailAddress
-                            );
-
-
-                        var matched =
-
-                            (
-                                logoutParticipantId &&
-                                participantId ===
-                                logoutParticipantId
-                            )
-
-                            ||
-
-                            (
-                                logoutEmail &&
-                                participantEmail ===
-                                logoutEmail
-                            );
-
-
-                        if (!matched) {
-                            return;
-                        }
-
-
-                        /*
-                           Protect newer session
-                        */
-                        if (
-                            participant.activeSessionId &&
-                            participant.activeSessionId !==
-                            logoutSessionId
-                        ) {
-                            return;
-                        }
-
-
-                        participant.isLoggedIn =
-                            false;
-
-                        participant.status =
-                            "Offline";
-
-                        participant.onlineStatus =
-                            "Offline";
-
-                        participant.logoutTime =
-                            logoutTime;
-
-                        participant.loggedOutAt =
-                            logoutTime;
-
-                        participant.logoutAt =
-                            logoutTime;
-
-                        participant.lastLogoutAt =
-                            logoutTime;
-
-                        participant.activity =
-                            "Offline";
-
-                        participant.currentActivity =
-                            "Offline";
-
-                        participant.lastActivity =
-                            "Offline";
-
-                        participant.currentTest =
-                            "";
-
-                        participant.testActivity =
-                            "";
-
-                        participant.currentAssessmentIndex =
-                            "";
-
-                        participant.currentAssessmentCode =
-                            "";
-
-                        participant.activityUpdatedAt =
-                            logoutTime;
-
-                        participant.lastSeen =
-                            logoutTime;
-
-                        participant.lastSeenAt =
-                            logoutTime;
-
-                        participant.activeSessionId =
-                            "";
-
-
-                        if (
-                            !Array.isArray(
-                                participant.activityHistory
-                            )
-                        ) {
-
-                            participant.activityHistory =
-                                [];
-                        }
-
-
-                        var duplicate =
-                            participant.activityHistory.some(
-                                function (
-                                    item
-                                ) {
-
-                                    return (
-                                        item &&
-                                        item.type ===
-                                            "logout" &&
-                                        item.sessionId ===
-                                            logoutSessionId
-                                    );
-                                }
-                            );
-
-
-                        if (!duplicate) {
-
-                            participant.activityHistory.push({
-
-                                type:
-                                    "logout",
-
-                                activity:
-                                    "Logout dari Portal Peserta",
-
-                                description:
-                                    "Peserta keluar dari Participant Portal.",
-
-                                timestamp:
-                                    logoutTime,
-
-                                time:
-                                    logoutTime,
-
-                                sessionId:
-                                    logoutSessionId
-                            });
-                        }
-
-
-                        changed =
-                            true;
-
-                        matchedLogoutParticipant =
-                            participant;
-                    }
-                );
-            }
-        );
-
-
-        if (changed) {
-
-            writeJSON(
-                "talentscope_projects",
-                latestProjects
-            );
-
-            projects =
-                latestProjects;
-        }
-
+        var logoutProjectId = normalize(latestSession.projectId || latestSession.project_id);
+        var logoutParticipantId = normalize(latestSession.participantId || latestSession.participant_id || latestSession.employeeId || latestSession.id);
+        var logoutEmail = normalizeEmail(latestSession.email || latestSession.emailAddress);
+        var logoutSessionId = normalize(latestSession.activeSessionId || activeSessionId);
+
+        var latestProjects = readJSON("talentscope_projects", []);
+        if (!Array.isArray(latestProjects)) return;
+        var changed = false;
+
+        latestProjects.forEach(function (project) {
+            var projectId = normalize(project.id || project.projectId || project.project_id);
+            if (projectId !== logoutProjectId) return;
+            if (!Array.isArray(project.participants)) return;
+            project.participants.forEach(function (participant) {
+                var participantId = normalize(participant.id || participant.participantId || participant.employeeId || participant.employee_id);
+                var participantEmail = normalizeEmail(participant.email || participant.emailAddress);
+                var matched = (logoutParticipantId && participantId === logoutParticipantId) || (logoutEmail && participantEmail === logoutEmail);
+                if (!matched) return;
+                if (participant.activeSessionId && participant.activeSessionId !== logoutSessionId) return;
+                participant.isLoggedIn = false;
+                participant.status = "Offline";
+                participant.onlineStatus = "Offline";
+                participant.logoutTime = logoutTime;
+                participant.loggedOutAt = logoutTime;
+                participant.logoutAt = logoutTime;
+                participant.lastLogoutAt = logoutTime;
+                participant.activity = "Offline";
+                participant.currentActivity = "Offline";
+                participant.lastActivity = "Offline";
+                participant.currentTest = "";
+                participant.testActivity = "";
+                participant.currentAssessmentIndex = "";
+                participant.currentAssessmentCode = "";
+                participant.activityUpdatedAt = logoutTime;
+                participant.lastSeen = logoutTime;
+                participant.lastSeenAt = logoutTime;
+                participant.activeSessionId = "";
+                if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+                var duplicate = participant.activityHistory.some(function (item) {
+                    return item && item.type === "logout" && item.sessionId === logoutSessionId;
+                });
+                if (!duplicate) participant.activityHistory.push({
+                    type: "logout",
+                    activity: "Logout dari Portal Peserta",
+                    description: "Peserta keluar dari Participant Portal.",
+                    timestamp: logoutTime,
+                    time: logoutTime,
+                    sessionId: logoutSessionId
+                });
+                changed = true;
+                matchedLogoutParticipant = participant;
+            });
+        });
+
+        if (changed) { writeJSON("talentscope_projects", latestProjects); projects = latestProjects; }
         return matchedLogoutParticipant;
     }
 
-
-    /* =====================================================
-       LOGOUT BUTTON
-    ===================================================== */
-    var logoutButton =
-        document.getElementById(
-            "logout"
-        );
-
-
+    var logoutButton = document.getElementById("logout");
     if (logoutButton) {
-
-        logoutButton.addEventListener(
-            "click",
-            async function () {
-
-                logoutButton.disabled = true;
-                logoutButton.classList.add("loading");
-
-
-                window.__tsParticipantInternalNavigation =
-                    false;
-
-
-                var loggedOutParticipant =
-                    recordParticipantLogout();
-
-
-                /*
-                   FIX: sebelumnya langsung window.location.href
-                   dipanggil di sini, TANPA menunggu sync ke
-                   Supabase selesai. Karena sync-nya 2 langkah
-                   berantai (GET raw_data lama -> gabung -> PATCH),
-                   dan halaman keburu berpindah sebelum langkah
-                   kedua sempat jalan, catatan logout SERING tidak
-                   pernah sampai ke Supabase (activity log admin
-                   tidak update) walau sudah benar di localStorage
-                   milik peserta sendiri.
-
-                   Sekarang: tunggu (await) sync-nya betul-betul
-                   selesai dulu -- tapi tetap dibatasi waktu (race
-                   dengan timeout 2.5 detik) supaya kalau koneksi
-                   lambat/mati, peserta tidak ter-stuck selamanya
-                   di halaman ini dan tetap bisa logout secara
-                   lokal.
-                */
-                try {
-
-                    if (
-                        loggedOutParticipant &&
-                        loggedOutParticipant.id &&
-                        window.TalentScopeSync &&
-                        typeof window.TalentScopeSync
-                            .pushParticipantPresenceNow ===
-                            "function"
-                    ) {
-
-                        await Promise.race([
-
-                            window.TalentScopeSync.pushParticipantPresenceNow(
-                                loggedOutParticipant.id,
-                                loggedOutParticipant
-                            ),
-
-                            new Promise(function (resolve) {
-                                setTimeout(resolve, 2500);
-                            })
-
-                        ]);
-                    }
-
-                } catch (error) {
-
-                    console.warn(
-                        "[LOGOUT] Sync ke Supabase gagal, lanjut logout lokal:",
-                        error
-                    );
-
+        logoutButton.addEventListener("click", async function () {
+            logoutButton.disabled = true;
+            logoutButton.classList.add("loading");
+            window.__tsParticipantInternalNavigation = false;
+            var loggedOutParticipant = recordParticipantLogout();
+            try {
+                if (loggedOutParticipant && loggedOutParticipant.id && window.TalentScopeSync && typeof window.TalentScopeSync.pushParticipantPresenceNow === "function") {
+                    await Promise.race([
+                        window.TalentScopeSync.pushParticipantPresenceNow(loggedOutParticipant.id, loggedOutParticipant),
+                        new Promise(function (resolve) { setTimeout(resolve, 2500); })
+                    ]);
                 }
-
-
-                try {
-
-                    sessionStorage.removeItem(
-                        "ts_participant_session"
-                    );
-
-                } catch (error) {}
-
-
-                window.location.href =
-                    "login.html";
-            }
-        );
+            } catch (error) { console.warn("[LOGOUT] Sync gagal:", error); }
+            try { sessionStorage.removeItem("ts_participant_session"); } catch (error) {}
+            window.location.href = "login.html";
+        });
     }
 
+    window.addEventListener("pagehide", function () {
+        if (!window.__tsParticipantInternalNavigation) recordParticipantLogout();
+    });
 
-    /* =====================================================
-       PAGEHIDE
-
-       IMPORTANT:
-       Internal navigation tidak logout.
-    ===================================================== */
-    window.addEventListener(
-        "pagehide",
-        function () {
-
-            if (
-                !window.__tsParticipantInternalNavigation
-            ) {
-
-                recordParticipantLogout();
-            }
-        }
-    );
-
-
-    /* =====================================================
-       HAMBURGER MENU
-    ===================================================== */
     (function () {
-
-        var menuBtn =
-            document.getElementById(
-                "menuBtn"
-            );
-
-        var sidebar =
-            document.getElementById(
-                "sidebarDrawer"
-            );
-
-        var overlay =
-            document.getElementById(
-                "sidebarOverlay"
-            );
-
-
-        function toggleMenu() {
-
-            if (
-                !sidebar ||
-                !overlay
-            ) {
-                return;
-            }
-
-
-            sidebar.classList.toggle(
-                "open"
-            );
-
-            overlay.classList.toggle(
-                "active"
-            );
-        }
-
-
-        function closeMenu() {
-
-            if (
-                !sidebar ||
-                !overlay
-            ) {
-                return;
-            }
-
-
-            sidebar.classList.remove(
-                "open"
-            );
-
-            overlay.classList.remove(
-                "active"
-            );
-        }
-
-
-        if (menuBtn) {
-
-            menuBtn.addEventListener(
-                "click",
-                function (
-                    event
-                ) {
-
-                    event.stopPropagation();
-
-                    toggleMenu();
-                }
-            );
-        }
-
-
-        if (overlay) {
-
-            overlay.addEventListener(
-                "click",
-                closeMenu
-            );
-        }
-
-
-        document
-            .querySelectorAll(
-                ".side-link, .support-btn"
-            )
-            .forEach(
-                function (
-                    element
-                ) {
-
-                    element.addEventListener(
-                        "click",
-                        closeMenu
-                    );
-                }
-            );
-
+        var menuBtn = document.getElementById("menuBtn");
+        var sidebar = document.getElementById("sidebarDrawer");
+        var overlay = document.getElementById("sidebarOverlay");
+        function toggleMenu() { if (!sidebar || !overlay) return; sidebar.classList.toggle("open"); overlay.classList.toggle("active"); }
+        function closeMenu() { if (!sidebar || !overlay) return; sidebar.classList.remove("open"); overlay.classList.remove("active"); }
+        if (menuBtn) menuBtn.addEventListener("click", function (event) { event.stopPropagation(); toggleMenu(); });
+        if (overlay) overlay.addEventListener("click", closeMenu);
+        document.querySelectorAll(".side-link, .support-btn").forEach(function (element) {
+            element.addEventListener("click", closeMenu);
+        });
     })();
 
+    window.addEventListener("storage", function (event) {
+        if (event.key === "talentscope_projects") console.log("Project data updated from another tab.");
+    });
 
-    /* =====================================================
-       STORAGE SYNC
-    ===================================================== */
-    window.addEventListener(
-        "storage",
-        function (
-            event
-        ) {
-
-            if (
-                event.key ===
-                "talentscope_projects"
-            ) {
-
-                console.log(
-                    "TalentScope project data updated from another tab."
-                );
-            }
-        }
-    );
-
-
-    /* =====================================================
-       DEBUG INFO
-    ===================================================== */
-    console.log(
-        "===================================="
-    );
-
-    console.log(
-        "TALENTSCOPE PARTICIPANT DASHBOARD READY"
-    );
-
-    console.log(
-        "Project ID:",
-        sessionProjectId
-    );
-
-    console.log(
-        "Participant ID:",
-        sessionParticipantId
-    );
-
-    console.log(
-        "Email:",
-        sessionEmail
-    );
-
-    console.log(
-        "Assessments:",
-        activeAssessments
-    );
-
-    console.log(
-        "Entries:",
-        entries
-    );
-
-    console.log(
-        "Session ID:",
-        activeSessionId
-    );
-
-    console.log(
-        "===================================="
-    );
+    console.log("=== TALENTSCOPE DASHBOARD READY ===");
+    console.log("Project:", sessionProjectId);
+    console.log("Participant:", sessionParticipantId);
+    console.log("Assessments:", activeAssessments);
+    console.log("Entries:", entries);
+    console.log("==================================");
 
 })();
 </script>

@@ -6202,6 +6202,9 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="js/data-service.js"></script>
 <script src="js/role-permissions.js"></script>
 
+<!-- LSJT CATALOG SEED -->
+<script src="js/lsjt-catalog-seed.js"></script>
+
 
 <!-- PROJECT DETAIL SUPABASE -->
 
@@ -6646,6 +6649,59 @@ function closePublishModal() {
 
 }
 
+/* =========================================================
+   SHOW TOAST — fungsi notifikasi kecil
+   FIX: fungsi ini dipanggil di banyak tempat (publish, cancel,
+   edit assessment) tapi tidak terdefinisi sebelumnya.
+========================================================= */
+function showToast(message, duration) {
+    duration = duration || 3000;
+
+    // Cari elemen toast existing
+    var toast = document.getElementById("toast");
+
+    // Kalau belum ada, buat elemen baru
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast";
+        toast.style.cssText = [
+            "position:fixed",
+            "bottom:24px",
+            "right:24px",
+            "padding:14px 20px",
+            "background:#0f172a",
+            "color:#fff",
+            "border-radius:10px",
+            "font-size:13px",
+            "font-weight:600",
+            "box-shadow:0 10px 30px rgba(0,0,0,.25)",
+            "z-index:999999",
+            "opacity:0",
+            "transform:translateY(20px)",
+            "transition:opacity .25s ease,transform .25s ease",
+            "max-width:340px",
+            "line-height:1.5",
+            "pointer-events:none"
+        ].join(";");
+        document.body.appendChild(toast);
+    }
+
+    // Set text
+    toast.textContent = message;
+
+    // Animasi show
+    requestAnimationFrame(function() {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateY(0)";
+    });
+
+    // Auto-hide
+    clearTimeout(window.__tsToastTimer);
+    window.__tsToastTimer = setTimeout(function() {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(20px)";
+    }, duration);
+}
 
 async function confirmPublishProject() {
 
@@ -7473,10 +7529,33 @@ async function saveAssessmentPackageEditor() {
             if (relation && relation.id) await DataService.deleteProjectAssessment(relation.id);
         }
         if (toAdd.length) {
-            await DataService.createProjectAssessments(toAdd.map(function(assessmentId) {
-                return { project_id: window.project.id, assessment_id: assessmentId };
-            }));
-        }
+
+    // Lookup catalog untuk dapat assessment_name yang benar
+    const catalogById = {};
+    (assessmentPackageEditorState.catalog || []).forEach(function(item) {
+        const id = String(item.id || item.assessment_id || "");
+        if (id) catalogById[id] = item;
+    });
+
+    await DataService.createProjectAssessments(
+        toAdd.map(function(assessmentId) {
+            const catalogItem = catalogById[assessmentId] || {};
+            return {
+                project_id: window.project.id,
+                assessment_id: assessmentId,
+                assessment_name:
+                    catalogItem.assessment_name ||
+                    catalogItem.name ||
+                    catalogItem.assessment_code ||
+                    "",
+                assessment_code:
+                    catalogItem.assessment_code ||
+                    catalogItem.code ||
+                    ""
+            };
+        })
+    );
+}
         const refreshed = await DataService.getProjectAssessments(window.project.id);
         window.project.assessments = Array.isArray(refreshed) ? refreshed : window.project.assessments;
         const assessmentList = document.getElementById("assessmentList");
@@ -7838,6 +7917,107 @@ async function saveEditAssessment() {
 }
 
 </script>
+
+<script>
+/* =========================================================
+   AUTO-SYNC: raw_data.assessments → project_assessments table
+   FIX: Setiap kali project-detail.html load, pastikan
+   project_assessments table di Supabase terisi dari
+   raw_data.assessments. Ini mencegah masalah "assessment
+   hilang di dashboard peserta" karena data tidak sinkron.
+========================================================= */
+(function() {
+    "use strict";
+    
+    async function syncAssessmentsToTable() {
+        try {
+            if (typeof supabaseClient === "undefined") {
+                console.warn("[AUTO-SYNC] Supabase client belum ready");
+                return;
+            }
+            
+            const projectId = new URLSearchParams(location.search).get("id");
+            if (!projectId) return;
+            
+            // 1. Ambil project dari Supabase
+            const { data: project, error: pErr } = await supabaseClient
+                .from("projects")
+                .select("id, raw_data")
+                .eq("id", projectId)
+                .maybeSingle();
+            
+            if (pErr || !project) {
+                console.warn("[AUTO-SYNC] Project tidak ditemukan:", pErr);
+                return;
+            }
+            
+            const rawAssessments = project.raw_data?.assessments;
+            if (!Array.isArray(rawAssessments) || rawAssessments.length === 0) {
+                console.log("[AUTO-SYNC] Tidak ada raw_data.assessments untuk disync");
+                return;
+            }
+            
+            // 2. Cek project_assessments existing
+            const { data: existing, error: eErr } = await supabaseClient
+                .from("project_assessments")
+                .select("assessment_id")
+                .eq("project_id", projectId);
+            
+            if (eErr) {
+                console.warn("[AUTO-SYNC] Error cek existing:", eErr);
+                return;
+            }
+            
+            const existingIds = new Set(
+                (existing || []).map(r => String(r.assessment_id || ""))
+            );
+            
+            // 3. Filter assessment yang belum ada di project_assessments
+            const toInsert = rawAssessments
+                .filter(a => {
+                    const aid = String(a.assessment_id || a.assessmentId || a.id || "");
+                    return aid && !existingIds.has(aid);
+                })
+                .map(a => ({
+                    project_id: projectId,
+                    assessment_id: a.assessment_id || a.assessmentId || a.id,
+                    assessment_name: a.assessment_name || a.name || a.title || ""
+                }));
+            
+            if (toInsert.length === 0) {
+                console.log("[AUTO-SYNC] ✓ Semua assessment sudah tersync ke project_assessments");
+                return;
+            }
+            
+            console.log("[AUTO-SYNC] Insert", toInsert.length, "assessment ke project_assessments");
+            
+            // 4. Insert yang belum ada
+            const { error: insErr } = await supabaseClient
+                .from("project_assessments")
+                .insert(toInsert);
+            
+            if (insErr) {
+                console.error("[AUTO-SYNC] Gagal insert:", insErr);
+            } else {
+                console.log("[AUTO-SYNC] ✓ Berhasil sync", toInsert.length, "assessment");
+            }
+            
+        } catch (err) {
+            console.error("[AUTO-SYNC] Unexpected error:", err);
+        }
+    }
+    
+    // Jalankan setelah DOM + Supabase ready
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(syncAssessmentsToTable, 1500);
+        });
+    } else {
+        setTimeout(syncAssessmentsToTable, 1500);
+    }
+})();
+</script>
+
 </body>
 
 </html>

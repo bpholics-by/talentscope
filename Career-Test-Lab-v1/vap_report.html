@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VAP Report — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--blue2:#1d4ed8;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;--teal:#0891b2}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;position:sticky;top:0;z-index:30;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:18px}
+header small{color:#64748b;display:block;font-size:11px;margin-top:2px}
+.wrap{max-width:1200px;margin:auto;padding:22px 20px 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 4px 14px #0f172a06}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.grid-6{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+select,input,button{padding:10px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff;font-size:13px}
+button{background:#2563eb;color:#fff;border:0;font-weight:800;cursor:pointer;transition:.15s}
+button:hover{background:#1d4ed8}
+button.ghost{background:#f1f5f9;color:#334155}
+button.ghost:hover{background:#e2e8f0}
+button.danger{background:#dc2626}
+button.danger:hover{background:#b91c1c}
+button:disabled{opacity:.5;cursor:not-allowed}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar select{min-width:320px;flex:1}
+.badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800}
+.badge-source{background:#e0e7ff;color:#3730a3}
+.badge-local{background:#f1f5f9;color:#475569}
+
+/* ==== HERO HEADER ==== */
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0891b2 100%);color:#fff;border-radius:18px;padding:28px 32px;margin-bottom:18px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;width:300px;height:300px;border:1px solid #ffffff15;border-radius:50%;right:-80px;top:-100px}
+.hero:after{content:"";position:absolute;width:400px;height:400px;border:1px solid #ffffff10;border-radius:50%;right:-150px;bottom:-250px}
+.hero-label{font-size:10px;font-weight:900;letter-spacing:2px;color:#93c5fd;margin-bottom:10px;position:relative;z-index:1}
+.hero-title{font-size:30px;font-weight:900;margin:0 0 6px;position:relative;z-index:1}
+.hero-sub{color:#cbd5e1;font-size:13px;position:relative;z-index:1;margin:0}
+
+/* ==== OVERALL SCORE PANEL ==== */
+.overall-panel{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-top:20px;position:relative;z-index:1}
+.overall-stat{background:#ffffff12;border:1px solid #ffffff20;border-radius:12px;padding:14px 16px}
+.overall-stat .lbl{font-size:10px;font-weight:800;letter-spacing:.7px;color:#93c5fd;text-transform:uppercase}
+.overall-stat .val{font-size:26px;font-weight:900;margin-top:6px;color:#fff;font-variant-numeric:tabular-nums}
+.overall-stat .unit{font-size:12px;color:#cbd5e1;font-weight:600;margin-left:4px}
+
+/* ==== DIMENSION BAR (FEAST style) ==== */
+.dim-block{padding:16px 0;border-bottom:1px solid var(--line)}
+.dim-block:last-child{border-bottom:0}
+.dim-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:10px}
+.dim-name{font-size:15px;font-weight:850;color:#0f172a}
+.dim-cat{font-size:11px;color:#64748b;margin-top:3px;font-weight:600}
+.dim-score-wrap{text-align:right;flex-shrink:0}
+.dim-score{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.dim-badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800;margin-top:6px}
+
+/* FEAST-like bar: ada marker di atas, track di bawah */
+.dim-bar-track{height:14px;background:#e2e8f0;border-radius:99px;position:relative;overflow:visible;margin-top:14px;margin-bottom:8px}
+.dim-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#0891b2);transition:width .8s ease}
+.dim-bar-marker{position:absolute;top:-6px;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.dim-bar-marker:after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#0f172a}
+.dim-bar-scale{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;font-weight:600;margin-top:6px}
+.dim-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:6px}
+
+/* ==== INTERPRETATION ==== */
+.narrative{background:#f8fafc;border-left:4px solid var(--blue);border-radius:8px;padding:16px 18px;font-size:13px;line-height:1.75;color:#334155;margin-top:12px}
+.narrative b{color:#0f172a}
+.narrative ul{margin:8px 0 0;padding-left:20px}
+.narrative li{margin-bottom:6px}
+.insight{background:#eff6ff;border-left:4px solid #2563eb;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px}
+.insight b{color:#1e40af}
+.warning{background:#fef3c7;border-left:4px solid #d97706;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px}
+.warning b{color:#92400e}
+.success-box{background:#f0fdf4;border-left:4px solid #16a34a;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px}
+.success-box b{color:#166534}
+
+.hex-badge{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;font-size:18px;font-weight:900;flex-shrink:0;position:relative;color:#fff}
+.hex-badge.sangat-kuat{background:linear-gradient(135deg,#16a34a,#22c55e)}
+.hex-badge.kuat{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.hex-badge.cukup{background:linear-gradient(135deg,#7c3aed,#8b5cf6)}
+.hex-badge.perlu-penguatan{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.hex-badge.perlu-perhatian{background:linear-gradient(135deg,#dc2626,#ef4444)}
+
+/* ==== TABS (hanya Teknis & Raw) ==== */
+.tabs{display:flex;gap:4px;border-bottom:2px solid #e2e8f0;margin-bottom:16px;overflow-x:auto}
+.tab{padding:10px 18px;border:0;background:transparent;color:#64748b;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-size:13px;white-space:nowrap}
+.tab:hover{color:#2563eb;background:transparent}
+.tab.active{color:#2563eb;border-bottom-color:#2563eb}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ==== TABLES ==== */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#f8fafc;color:#64748b;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+tr:hover td{background:#f8fafc}
+
+/* ==== MISC ==== */
+.empty{text-align:center;color:#94a3b8;padding:60px 20px}
+.empty h3{color:#64748b;margin:0 0 8px}
+.chart-container{position:relative;height:300px}
+.stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.stat-line:last-child{border-bottom:0}
+.stat-line span{color:#64748b}
+.stat-line b{color:#0f172a;font-variant-numeric:tabular-nums}
+.norm-note{font-size:11px;color:#64748b;line-height:1.6;margin-top:8px;padding:10px 12px;background:#f8fafc;border-radius:8px;border-left:3px solid #cbd5e1}
+.anomaly{margin-top:8px;padding:10px 13px;background:#fffbeb;border-left:4px solid #d97706;border-radius:8px;font-size:12px}
+.anomaly-ok{margin-top:8px;padding:10px 13px;background:#f0fdf4;border-left:4px solid #16a34a;border-radius:8px;font-size:12px}
+.pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800}
+.p-completed{background:#dcfce7;color:#166534}
+.p-progress{background:#fef3c7;color:#92400e}
+.p-bad{background:#fee2e2;color:#991b1b}
+.disclaimer{margin-top:18px;padding:16px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;font-size:12px;line-height:1.7;color:#78350f}
+.disclaimer b{color:#92400e}
+.section-title{font-size:18px;font-weight:900;margin:0 0 4px;color:#0f172a}
+.section-sub{font-size:12px;color:#64748b;margin:0 0 16px}
+.cta-summary{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.cta-box{border-radius:12px;padding:18px;border:1px solid}
+.cta-box h4{margin:0 0 8px;font-size:14px;font-weight:900}
+.cta-box ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.8}
+.cta-box li{margin-bottom:4px}
+.cta-box.green{background:#f0fdf4;border-color:#bbf7d0}
+.cta-box.green h4{color:#166534}
+.cta-box.amber{background:#fffbeb;border-color:#fde68a}
+.cta-box.amber h4{color:#92400e}
+.cta-box.red{background:#fef2f2;border-color:#fecaca}
+.cta-box.red h4{color:#991b1b}
+
+@media(max-width:900px){
+  .grid-2,.grid-3,.grid-6,.overall-panel,.cta-summary{grid-template-columns:1fr}
+  header{flex-direction:column;align-items:flex-start}
+  .toolbar select{min-width:100%}
+  .hero{padding:20px}
+  .hero-title{font-size:22px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 VAP Report</h1>
+    <small>Work Performance &amp; Sustained Attention — Admin Dashboard</small>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="sourceBadge" class="badge badge-local">📦 LocalStorage</span>
+    <button class="ghost" onclick="refreshList()">🔄 Refresh</button>
+    <button class="ghost" onclick="exportAll()">⬇ Export Semua</button>
+    <button class="danger" onclick="clearAll()">🗑 Hapus Semua</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="card" style="padding:16px">
+    <div class="toolbar" style="margin:0">
+      <select id="resultSelect" onchange="loadResult()">
+        <option value="">— Pilih peserta —</option>
+      </select>
+      <input id="searchInput" placeholder="🔍 Cari nama / ID / project..." oninput="filterList()" style="min-width:240px">
+      <button onclick="exportCurrent()">⬇ Export Hasil Ini</button>
+      <button class="ghost" onclick="toggleCompare()" id="compareToggle">📊 Mode Bandingkan</button>
+    </div>
+  </div>
+
+  <div id="reportContainer">
+    <div class="card empty">
+      <h3>Belum ada hasil dipilih</h3>
+      <p>Pilih peserta dari dropdown di atas untuk melihat laporan.</p>
+    </div>
+  </div>
+
+  <div id="compareView" style="display:none">
+    <div class="card">
+      <h3 style="margin-top:0">📊 Perbandingan Antar Peserta</h3>
+      <div style="overflow:auto">
+        <table class="compare-table" id="compareTable"></table>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🕸 Radar Perbandingan (Top 8)</h3>
+      <div class="chart-container"><canvas id="compareRadar"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   VAP REPORT VIEWER v4.0 — FEAST-inspired redesign
+========================================================= */
+
+let allResults = [];
+let filteredResults = [];
+let currentResult = null;
+let compareMode = false;
+let charts = {};
+let dataSource = "local";
+
+const SUPABASE_TABLE = "vap_results";
+
+function el(id){ return document.getElementById(id); }
+function fmtDate(iso){
+  if(!iso) return "-";
+  try {
+    return new Date(iso).toLocaleString("id-ID", {
+      day:"2-digit", month:"short", year:"numeric",
+      hour:"2-digit", minute:"2-digit"
+    });
+  } catch(e) { return iso; }
+}
+function mean(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0; }
+function clamp(x,a=0,b=100){ return Math.max(a,Math.min(b,x)); }
+
+function cls(x){
+  if(x >= 85) return "Sangat Kuat";
+  if(x >= 70) return "Kuat";
+  if(x >= 55) return "Cukup";
+  if(x >= 40) return "Perlu Penguatan";
+  return "Perlu Perhatian Serius";
+}
+function clsClass(x){
+  if(x >= 85) return "b-sangat-kuat";
+  if(x >= 70) return "b-kuat";
+  if(x >= 55) return "b-cukup";
+  if(x >= 40) return "b-perlu-penguatan";
+  return "b-perlu-perhatian";
+}
+function clsHexClass(x){
+  if(x >= 85) return "sangat-kuat";
+  if(x >= 70) return "kuat";
+  if(x >= 55) return "cukup";
+  if(x >= 40) return "perlu-penguatan";
+  return "perlu-perhatian";
+}
+function band(v){
+  if(v >= 80) return "sangat kuat";
+  if(v >= 65) return "baik";
+  if(v >= 50) return "cukup";
+  if(v >= 35) return "perlu penguatan";
+  return "rendah";
+}
+
+/* =========================================================
+   LOAD DATA
+========================================================= */
+async function loadFromSupabase(){
+  try {
+    let sb = window.supabaseClient || window.supabase || null;
+    if (!sb) return null;
+
+    const { data, error } = await sb
+      .from(SUPABASE_TABLE)
+      .select("*")
+      .eq("result_type", "VAP")
+      .order("submitted_at", { ascending: false })
+      .limit(500);
+
+    if (error) { console.warn("[VAP] Supabase error:", error.message); return null; }
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    return data.map(row => ({
+      version: row.version || 2,
+      resultType: "VAP",
+      projectId: row.project_id,
+      participantId: row.participant_id,
+      assessmentIndex: row.assessment_index,
+      assessmentCode: row.assessment_code,
+      assessmentName: row.assessment_name,
+      participantName: row.participant_name || "",
+      scores: typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores,
+      sessions: typeof row.raw_data === "string" ? JSON.parse(row.raw_data) : row.raw_data,
+      submittedAt: row.submitted_at,
+      _source: "supabase"
+    }));
+  } catch(e) { console.warn("[VAP] Gagal load Supabase:", e); return null; }
+}
+
+function loadFromLocal(){
+  try {
+    return JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+      .filter(x => x.resultType === "VAP")
+      .map(r => ({ ...r, _source: "local" }));
+  } catch(e) { return []; }
+}
+
+async function refreshList(){
+  el("reportContainer").innerHTML = "";
+
+  try {
+    let results = await loadFromSupabase();
+
+    if(results && results.length > 0){
+      allResults = results;
+      dataSource = "supabase";
+      el("sourceBadge").textContent = "☁ Supabase";
+      el("sourceBadge").className = "badge badge-source";
+    } else {
+      allResults = loadFromLocal();
+      dataSource = "local";
+      el("sourceBadge").textContent = "📦 LocalStorage";
+      el("sourceBadge").className = "badge badge-local";
+    }
+
+    allResults.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+    filteredResults = [...allResults];
+    renderDropdown();
+    updateCompareTable();
+
+    if(allResults.length === 0){
+      el("reportContainer").innerHTML = `
+        <div class="card empty">
+          <h3>Belum ada hasil VAP</h3>
+          <p>Selesaikan tes VAP terlebih dahulu, lalu refresh halaman ini.</p>
+        </div>
+      `;
+    } else {
+      el("reportContainer").innerHTML = `
+        <div class="card empty">
+          <h3>📋 ${allResults.length} hasil tersedia</h3>
+          <p>Pilih peserta dari dropdown untuk melihat laporan lengkap.</p>
+        </div>
+      `;
+    }
+  } catch(err) {
+    console.error("[VAP] Error refresh:", err);
+    el("reportContainer").innerHTML = `
+      <div class="card empty">
+        <h3>⚠ Gagal memuat data</h3>
+        <p>${err.message || "Unknown error"}</p>
+      </div>
+    `;
+  }
+}
+
+function renderDropdown(){
+  const sel = el("resultSelect");
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">— Pilih peserta (' + filteredResults.length + ') —</option>';
+
+  filteredResults.forEach((r) => {
+    const opt = document.createElement("option");
+    opt.value = allResults.indexOf(r);
+    const date = fmtDate(r.submittedAt);
+    const name = r.participantName || r.participantId || "Unknown";
+    opt.textContent = `${name} • ${r.assessmentName || "VAP"} • ${date}`;
+    sel.appendChild(opt);
+  });
+
+  if(currentVal) sel.value = currentVal;
+}
+
+function filterList(){
+  const q = el("searchInput").value.toLowerCase().trim();
+  if(!q){
+    filteredResults = [...allResults];
+  } else {
+    filteredResults = allResults.filter(r =>
+      String(r.participantId || "").toLowerCase().includes(q) ||
+      String(r.participantName || "").toLowerCase().includes(q) ||
+      String(r.projectId || "").toLowerCase().includes(q)
+    );
+  }
+  renderDropdown();
+}
+
+function loadResult(){
+  const idx = el("resultSelect").value;
+  if(idx === ""){
+    el("reportContainer").innerHTML = `<div class="card empty">Pilih peserta untuk melihat laporan.</div>`;
+    currentResult = null;
+    return;
+  }
+  currentResult = allResults[Number(idx)];
+  renderReport(currentResult);
+}
+
+/* =========================================================
+   RENDER REPORT — FEAST style
+========================================================= */
+function renderReport(r){
+  const d = r.scores;
+  const s1 = d.s1 || {}, s2 = d.s2 || {};
+  const raw = d.raw || {};
+  const overall = mean([d.speed, d.accuracy, d.stability, d.endurance, d.attention, d.vigilance]);
+
+  const dims = [
+    ["Kecepatan Kerja", d.speed, raw.speed, "Tempo pemrosesan & throughput", "speed"],
+    ["Ketelitian Kerja", d.accuracy, raw.accuracy, "Corrected accuracy (bebas guessing)", "accuracy"],
+    ["Stabilitas Kerja", d.stability, raw.stability, "Konsistensi antar-blok", "stability"],
+    ["Endurance", d.endurance, raw.endurance, "Fatigue slope (regresi linear)", "endurance"],
+    ["Kontrol Perhatian", d.attention, raw.attention, "Akurasi visual + omission", "attention"],
+    ["Vigilance", d.vigilance, raw.vigilance, "Kewaspadaan lintas sesi", "vigilance"]
+  ];
+
+  /* ==== DIMENSION BAR FEAST-style ==== */
+  const dimsHTML = dims.map(([name, val, rawVal, desc, key]) => {
+    const clsName = clsHexClass(val);
+    const valPct = clamp(val);
+    return `
+      <div class="dim-block">
+        <div class="dim-head">
+          <div style="display:flex;gap:14px;align-items:center;flex:1">
+            <div class="hex-badge ${clsName}">${val.toFixed(0)}</div>
+            <div>
+              <div class="dim-name">${name}</div>
+              <div class="dim-cat">${desc}</div>
+            </div>
+          </div>
+          <div class="dim-score-wrap">
+            <span class="dim-badge ${clsClass(val)}">${cls(val)}</span>
+          </div>
+        </div>
+        <div class="dim-bar-labels">
+          <span>Rendah</span>
+          <span>Sedang</span>
+          <span>Tinggi</span>
+        </div>
+        <div class="dim-bar-track">
+          <div class="dim-bar-fill" style="width:${valPct}%"></div>
+          <div class="dim-bar-marker" style="left:${valPct}%">${val.toFixed(1)}</div>
+        </div>
+        <div class="dim-bar-scale">
+          <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  /* ==== NARRATIVE per dimensi (lebih dalam) ==== */
+  const narrativeHTML = dims.map(([name, val, rawVal, desc, key]) => {
+    return `
+      <div style="padding:18px 0;border-bottom:1px solid #f1f5f9">
+        <div style="display:flex;gap:12px;align-items:baseline;margin-bottom:10px">
+          <span style="font-size:14px;font-weight:900;color:#0f172a">${name}</span>
+          <span class="dim-badge ${clsClass(val)}" style="font-size:10px">${cls(val)}</span>
+          <span style="margin-left:auto;font-size:20px;font-weight:900;color:#2563eb">${val.toFixed(1)}</span>
+        </div>
+        <div style="font-size:13px;line-height:1.75;color:#334155">
+          ${deepNarrative(name, val, key)}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  /* ==== SUMMARY CTA ==== */
+  const summary = buildSummary(d);
+
+  /* ==== SESSION SUMMARY ==== */
+  const sessionRows = [
+    ["S1 — Numerical", s1],
+    ["S2 — Letter Matching", s2]
+  ].map(([name, s]) => `
+    <tr>
+      <td><b>${name}</b></td>
+      <td>${s.correct || 0}</td>
+      <td>${s.wrong || 0}</td>
+      <td>${s.missed || 0}</td>
+      <td>${(s.rawAccuracy || 0).toFixed(1)}%</td>
+      <td>${(s.correctedAccuracy || 0).toFixed(1)}%</td>
+      <td>${s.medianRT ? (s.medianRT/1000).toFixed(2)+"s" : "-"}</td>
+      <td>${(s.omissionRate || 0).toFixed(1)}%</td>
+    </tr>
+  `).join("");
+
+  const anomalies = detectAnomalies(d);
+  const anomalyHTML = anomalies.length
+    ? anomalies.map(x => `<div class="anomaly">⚠ ${x}</div>`).join("")
+    : `<div class="anomaly-ok">✓ Tidak ditemukan anomali signifikan antar-blok.</div>`;
+
+  /* ==== RENDER ==== */
+  el("reportContainer").innerHTML = `
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
+      <h2 class="hero-title">VAP — Work Performance Profile</h2>
+      <p class="hero-sub">
+        ${r.participantName || r.participantId} • ${fmtDate(r.submittedAt)} • 
+        Work Performance &amp; Sustained Attention Assessment
+      </p>
+      <div class="overall-panel">
+        <div class="overall-stat">
+          <div class="lbl">Overall Score</div>
+          <div class="val">${overall.toFixed(1)}<span class="unit">/ 100</span></div>
+        </div>
+        <div class="overall-stat">
+          <div class="lbl">Total Trials</div>
+          <div class="val">${(s1.trials?.length || 0) + (s2.trials?.length || 0)}</div>
+        </div>
+        <div class="overall-stat">
+          <div class="lbl">Total Correct</div>
+          <div class="val">${(s1.correct || 0) + (s2.correct || 0)}</div>
+        </div>
+        <div class="overall-stat">
+          <div class="lbl">Median RT</div>
+          <div class="val">${d.medianRT ? (d.medianRT/1000).toFixed(2) : "-"}<span class="unit">s</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RINGKASAN PROFIL (KELEBIHAN & KELEMAHAN) -->
+    <div class="card">
+      <h3 class="section-title">📌 Ringkasan Profil</h3>
+      <p class="section-sub">Keunggulan, area perhatian, dan dinamika performa kerja berdasarkan hasil asesmen.</p>
+      ${summary}
+    </div>
+
+    <!-- DIMENSION BARS (FEAST style) -->
+    <div class="card">
+      <h3 class="section-title">📊 Gambaran Umum Pekerjaan</h3>
+      <p class="section-sub">Profil enam dimensi utama dengan skala 0–100. Marker menunjukkan posisi relatif kandidat.</p>
+      <div class="grid-3" style="grid-template-columns:1fr 1fr;gap:14px">
+        ${dimsHTML}
+      </div>
+      <div class="norm-note" style="margin-top:16px">
+        <b>Cara baca:</b> Skor ≥85 Sangat Kuat · 70–84 Kuat · 55–69 Cukup · 40–54 Perlu Penguatan · &lt;40 Perlu Perhatian Serius.
+        Marker (angka di atas bar) menunjukkan posisi skor relatif terhadap skala 0–100.
+      </div>
+    </div>
+
+    <!-- NARASI DIMENSI — lebih dalam -->
+    <div class="card">
+      <h3 class="section-title">🧠 Uraian Per Dimensi</h3>
+      <p class="section-sub">Analisis mendalam per dimensi: apa arti skor, apa implikasinya, dan apa yang perlu diperhatikan.</p>
+      ${narrativeHTML}
+    </div>
+
+    <!-- TREND & RADAR -->
+    <div class="card">
+      <h3 class="section-title">📈 Dinamika Performa</h3>
+      <p class="section-sub">Perubahan performa antar-blok dan profil dimensi.</p>
+      <div class="grid-2" style="margin-top:16px">
+        <div>
+          <h4 style="font-size:14px;margin:0 0 8px;color:#0f172a">Performance Trend</h4>
+          <div class="chart-container" style="height:260px"><canvas id="trendChart"></canvas></div>
+        </div>
+        <div>
+          <h4 style="font-size:14px;margin:0 0 8px;color:#0f172a">Dimension Radar</h4>
+          <div class="chart-container" style="height:260px"><canvas id="radarChart"></canvas></div>
+        </div>
+      </div>
+      ${anomalyHTML}
+    </div>
+
+    <!-- SESSION SUMMARY -->
+    <div class="card">
+      <h3 class="section-title">📊 Session Summary</h3>
+      <div style="overflow:auto;margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th>Session</th><th>Correct</th><th>Wrong</th><th>Missed</th>
+              <th>Raw Acc</th><th>Corrected Acc</th><th>Median RT</th><th>Omission</th>
+            </tr>
+          </thead>
+          <tbody>${sessionRows}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TEKNIS & RAW (tabs) -->
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab(event, 'tab-technical')">🔬 Metrik Teknis</button>
+        <button class="tab" onclick="switchTab(event, 'tab-raw')">📄 Detail Jawaban per Trial</button>
+      </div>
+
+      <div id="tab-technical" class="tab-content active">
+        <div class="grid-2">
+          <div>
+            <h4 style="font-size:14px;margin:0 0 10px;color:#0f172a">Metadata</h4>
+            <div class="stat-line"><span>Project ID</span><b>${r.projectId || "-"}</b></div>
+            <div class="stat-line"><span>Participant ID</span><b>${r.participantId || "-"}</b></div>
+            <div class="stat-line"><span>Nama Peserta</span><b>${r.participantName || "-"}</b></div>
+            <div class="stat-line"><span>Assessment</span><b>${r.assessmentName || "VAP"}</b></div>
+            <div class="stat-line"><span>Submitted</span><b>${fmtDate(r.submittedAt)}</b></div>
+            <div class="stat-line"><span>Version</span><b>v${r.version || 1}</b></div>
+            <div class="stat-line"><span>Data Source</span><b>${r._source === "supabase" ? "☁ Supabase" : "📦 LocalStorage"}</b></div>
+          </div>
+          <div>
+            <h4 style="font-size:14px;margin:0 0 10px;color:#0f172a">Metrik Teknis</h4>
+            <div class="stat-line"><span>Median RT (trimmed)</span><b>${d.medianRT ? (d.medianRT/1000).toFixed(2)+"s" : "-"}</b></div>
+            <div class="stat-line"><span>Average CRPM</span><b>${d.avgCRPM ? d.avgCRPM.toFixed(1) : "-"}</b></div>
+            <div class="stat-line"><span>Fatigue Slope</span><b>${d.fatigueSlope ? d.fatigueSlope.toFixed(3) : "-"}</b></div>
+            <div class="stat-line"><span>SAT Index</span><b>${d.satIndex ? d.satIndex.toFixed(1) : "-"}</b></div>
+            <div class="stat-line"><span>RT Trimmed/Total</span><b>${d.rtTrimmedCount || 0} / ${d.rtRawCount || 0}</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-raw" class="tab-content">
+        <div style="overflow:auto;max-height:500px">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Sesi</th><th>Block</th><th>Stimulus</th>
+                <th>Jawaban</th><th>Kunci</th><th>Status</th><th>RT</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[...(r.sessions?.[1]?.trials || []), ...(r.sessions?.[2]?.trials || [])].map(t => `
+                <tr>
+                  <td>${t.number}</td>
+                  <td>S${t.session}</td>
+                  <td>${t.block}</td>
+                  <td style="font-family:monospace;font-size:12px">${t.stimulus}</td>
+                  <td>${t.timeout ? "—" : t.answer}</td>
+                  <td>${t.answerKey}</td>
+                  <td>
+                    <span class="pill ${t.timeout ? 'p-progress' : (t.correct ? 'p-completed' : 'p-bad')}">
+                      ${t.timeout ? "TIMEOUT" : (t.correct ? "BENAR" : "SALAH")}
+                    </span>
+                  </td>
+                  <td>${t.responseTimeMs ? (t.responseTimeMs/1000).toFixed(2)+"s" : "—"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="disclaimer">
+      <b>Disclaimer &amp; Batasan Interpretasi:</b><br>
+      • Hasil ini merupakan indikator performa kognitif dalam konteks tugas terstruktur, <b>bukan diagnosis klinis</b>.<br>
+      • Skor dinormakan menggunakan distribusi referensi teoretis; norma populasi final menunggu studi validasi.<br>
+      • Untuk keputusan seleksi/penempatan, diperlukan <b>konfirmasi melalui metode asesmen lain</b> (wawancara terstruktur, kerja sampel, atau referensi).
+    </div>
+  `;
+
+  requestAnimationFrame(() => {
+    renderTrendChart(d);
+    renderRadarChart(d);
+  });
+}
+
+/* =========================================================
+   BUILD SUMMARY — kelebihan, kelemahan, dinamika
+========================================================= */
+function buildSummary(d){
+  const dims = [
+    ["Kecepatan Kerja", d.speed],
+    ["Ketelitian Kerja", d.accuracy],
+    ["Stabilitas Kerja", d.stability],
+    ["Endurance", d.endurance],
+    ["Kontrol Perhatian", d.attention],
+    ["Vigilance", d.vigilance]
+  ];
+  const sorted = [...dims].sort((a,b) => b[1] - a[1]);
+
+  const strengths = sorted.filter(x => x[1] >= 70);
+  const adequate = sorted.filter(x => x[1] >= 55 && x[1] < 70);
+  const develop = sorted.filter(x => x[1] >= 40 && x[1] < 55);
+  const risk = sorted.filter(x => x[1] < 40);
+
+  const topStrength = strengths.length ? strengths.slice(0, 3) : sorted.slice(0, 2);
+
+  // KELEBIHAN
+  let strengthHTML = "";
+  if(topStrength.length){
+    strengthHTML = `
+      <div class="cta-box green">
+        <h4>✓ Kelebihan Utama</h4>
+        <ul>
+          ${topStrength.map(([n,v]) => 
+            `<li><b>${n}</b> (${v.toFixed(1)} — ${cls(v)}): ${shortNarrative(n, v)}</li>`
+          ).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
+  // AREA PERHATIAN
+  let focusHTML = "";
+  if(risk.length){
+    focusHTML = `
+      <div class="cta-box red">
+        <h4>⚠ Area yang Perlu Perhatian Serius</h4>
+        <ul>
+          ${risk.map(([n,v]) => 
+            `<li><b>${n}</b> (${v.toFixed(1)} — ${cls(v)}): ${shortNarrative(n, v)}</li>`
+          ).join("")}
+        </ul>
+      </div>
+    `;
+  } else if(develop.length){
+    focusHTML = `
+      <div class="cta-box amber">
+        <h4>⚠ Area yang Perlu Penguatan</h4>
+        <ul>
+          ${develop.slice(0, 3).map(([n,v]) => 
+            `<li><b>${n}</b> (${v.toFixed(1)} — ${cls(v)}): ${shortNarrative(n, v)}</li>`
+          ).join("")}
+        </ul>
+      </div>
+    `;
+  } else if(adequate.length){
+    focusHTML = `
+      <div class="cta-box amber">
+        <h4>👁 Area yang Perlu Dipantau</h4>
+        <ul>
+          ${adequate.slice(0, 3).map(([n,v]) => 
+            `<li><b>${n}</b> (${v.toFixed(1)} — ${cls(v)}): ${shortNarrative(n, v)}</li>`
+          ).join("")}
+        </ul>
+      </div>
+    `;
+  } else {
+    focusHTML = `
+      <div class="cta-box green">
+        <h4>✓ Profil Merata</h4>
+        <p style="font-size:13px;line-height:1.7;margin:8px 0 0">
+          Seluruh dimensi berada pada kategori <b>Kuat</b> atau <b>Sangat Kuat</b>. 
+          Tidak ada area yang memerlukan perhatian khusus.
+        </p>
+      </div>
+    `;
+  }
+
+  // DINAMIKA (Trend)
+  const slopes = d.b1 && d.b2 ? [fatigueSlope(d.b1), fatigueSlope(d.b2)] : [0, 0];
+  const avgSlope = mean(slopes);
+  const dynamika = avgSlope > 1 ? "meningkat" : avgSlope < -1 ? "menurun" : "stabil";
+
+  return `
+    <div class="cta-summary">
+      ${strengthHTML}
+      ${focusHTML}
+    </div>
+    <div class="insight" style="margin-top:16px">
+      <b>📈 Dinamika Performa</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        Sepanjang kedua sesi, performa kandidat cenderung <b>${dynamika}</b> 
+        (slope rata-rata: ${avgSlope.toFixed(2)} per blok). 
+        ${dynamika === "stabil" 
+          ? "Hal ini menunjukkan konsistensi output ketika tugas berlangsung dalam durasi panjang — indikasi endurance yang baik."
+          : dynamika === "menurun"
+            ? "Terdapat indikasi penurunan performa seiring bertambahnya durasi tugas — perlu perhatian pada aspek endurance dan manajemen energi."
+            : "Terdapat indikasi peningkatan performa — kandidat cenderung optimal setelah pemanasan awal."}
+      </p>
+    </div>
+  `;
+}
+
+/* =========================================================
+   NARASI PER DIMENSI (lebih dalam)
+========================================================= */
+function deepNarrative(name, val, key){
+  const b = band(val);
+  const isHigh = b === "sangat kuat" || b === "baik";
+
+  const map = {
+    "Kecepatan Kerja": isHigh
+      ? `<b>Skor ${val.toFixed(1)} menunjukkan tempo pemrosesan yang efisien.</b> Kandidat mampu menyelesaikan soal-soal aritmetika dalam batas waktu yang ketat dengan cepat, sehingga cocok untuk peran yang menuntut throughput tinggi, seperti operasional, produksi, atau pekerjaan dengan volume kerja besar. Median Reaction Time (RT) dan Correct Responses Per Minute (CRPM) menjadi indikator kunci — kandidat menunjukkan keseimbangan antara kecepatan dan ketepatan respons. <b>Implikasi:</b> kandidat kemungkinan besar mampu menjaga ritme kerja di bawah tekanan waktu tanpa mengorbankan kualitas output secara signifikan.`
+      : `<b>Skor ${val.toFixed(1)} menunjukkan tempo pemrosesan yang belum konsisten.</b> Pada tuntutan volume kerja tinggi atau tekanan waktu ketat, kandidat berpotensi membutuhkan waktu lebih panjang untuk menyelesaikan tugas. Hal ini bukan berarti kandidat tidak kompeten, melainkan <b>kecepatan pemrosesan bukan menjadi kekuatan utama</b>. Pada peran yang menuntut throughput tinggi, disarankan ada periode adaptasi atau sistem kerja yang memberi ruang untuk mempertahankan akurasi. <b>Implikasi:</b> hindari penempatan pada peran dengan deadline ketat tanpa dukungan proses yang memadai.`,
+
+    "Ketelitian Kerja": isHigh
+      ? `<b>Skor ${val.toFixed(1)} menunjukkan kontrol kualitas respons yang baik.</b> Kandidat memiliki tingkat akurasi yang tinggi dalam menjawab stimulus, dengan proporsi kesalahan yang minimal. Ini adalah indikator penting untuk peran yang menuntut presisi, seperti quality control, akuntansi, audit, atau posisi administrasi dengan tingkat detail tinggi. <b>Implikasi:</b> kandidat cenderung mampu meminimalkan kesalahan pada tugas rutin, terutama ketika diberi waktu yang memadai.`
+      : `<b>Skor ${val.toFixed(1)} menunjukkan kualitas respons yang masih perlu dipantau.</b> Meski kandidat dapat menyelesaikan tugas, terdapat indikasi bahwa akurasi menurun seiring meningkatnya tempo. <b>Implikasi:</b> pada peran yang menuntut presisi tinggi, disarankan ada mekanisme double-check atau supervisi, terutama pada pekerjaan yang berisiko tinggi jika terjadi kesalahan.`,
+
+    "Stabilitas Kerja": isHigh
+      ? `<b>Skor ${val.toFixed(1)} menunjukkan konsistensi performa yang baik antar-blok.</b> Kandidat mampu mempertahankan tingkat akurasi dan tempo yang relatif stabil dari awal hingga akhir sesi. Ini menunjukkan bahwa fluktuasi performa akibat kelelahan mental atau distraksi relatif terkendali. <b>Implikasi:</b> kandidat cocok untuk pekerjaan yang berlangsung dalam durasi panjang dengan tuntutan konsistensi, seperti shift kerja, monitoring, atau peran dengan repetisi tinggi.`
+      : `<b>Skor ${val.toFixed(1)} menunjukkan fluktuasi performa antar-periode.</b> Kandidat dapat menunjukkan performa yang baik pada awal sesi, namun terdapat indikasi penurunan konsistensi pada periode tertentu. <b>Implikasi:</b> pada pekerjaan dengan durasi panjang dan repetitif, disarankan ada rotasi tugas, istirahat terstruktur, atau pengaturan beban kerja yang mencegah penurunan performa.`,
+
+    "Endurance": isHigh
+      ? `<b>Skor ${val.toFixed(1)} menunjukkan kemampuan mempertahankan performa dari awal hingga akhir.</b> Fatigue slope kandidat relatif datar, yang berarti tidak ada indikasi penurunan signifikan sepanjang sesi. Ini adalah sinyal positif untuk peran dengan tuntutan mental berkelanjutan, seperti operator produksi, customer service jangka panjang, atau pekerjaan shift. <b>Implikasi:</b> kandidat cenderung mampu menjaga output pada jam-jam akhir tanpa penurunan drastis.`
+      : `<b>Skor ${val.toFixed(1)} menunjukkan adanya penurunan retensi performa.</b> Kandidat mungkin mengalami penurunan akurasi atau kecepatan seiring bertambahnya durasi tugas. <b>Implikasi:</b> tugas panjang dan repetitif berpotensi menurunkan efektivitas kerja. Disarankan ada strategi manajemen energi: istirahat terjadwal, rotasi tugas, atau pembagian tugas yang memungkinkan recovery period.`,
+
+    "Kontrol Perhatian": isHigh
+      ? `<b>Skor ${val.toFixed(1)} menunjukkan kemampuan menyaring dan mempertahankan perhatian.</b> Kandidat mampu fokus pada stimulus relevan dan mengabaikan distraksi, dengan tingkat omission (terlewat) yang minimal. Ini penting untuk peran yang menuntut monitoring visual, seperti operator mesin, quality inspector, atau posisi dengan banyak informasi paralel. <b>Implikasi:</b> kandidat cenderung tidak mudah kehilangan fokus pada situasi multitugas.`
+      : `<b>Skor ${val.toFixed(1)} menunjukkan kontrol perhatian yang belum stabil.</b> Terdapat indikasi kandidat dapat melewatkan informasi penting ketika ada banyak stimulus atau distraksi. <b>Implikasi:</b> pada situasi multitugas atau penuh distraksi, disarankan ada mekanisme reminder, checklist, atau pembatasan gangguan agar informasi penting tidak terlewat.`,
+
+    "Vigilance": isHigh
+      ? `<b>Skor ${val.toFixed(1)} menunjukkan kewaspadaan yang cukup terpelihara pada tugas monoton.</b> Kandidat mampu mempertahankan kewaspadaan sepanjang durasi tes, dengan deteksi perubahan stimulus yang konsisten. Ini penting untuk peran dengan tuntutan monitoring jangka panjang, seperti security monitoring, operator sistem, atau posisi dengan tugas pengawasan. <b>Implikasi:</b> kandidat cenderung mampu mempertahankan respons terhadap perubahan stimulus meski tugas monoton.`
+      : `<b>Skor ${val.toFixed(1)} menunjukkan kewaspadaan yang mudah menurun pada aktivitas monoton.</b> Kandidat mungkin mengalami penurunan responsivitas seiring berjalannya waktu pada tugas repetitif. <b>Implikasi:</b> pada peran yang menuntut monitoring jangka panjang, disarankan ada rotasi tugas atau pemberian stimulus variatif agar kewaspadaan tetap terjaga.`
+  };
+
+  return map[name] || "";
+}
+
+/* =========================================================
+   NARASI SINGKAT (untuk CTA box)
+========================================================= */
+function shortNarrative(name, val){
+  const b = band(val);
+  const isHigh = b === "sangat kuat" || b === "baik";
+  const map = {
+    "Kecepatan Kerja": isHigh ? "Tempo pemrosesan efisien; cocok untuk peran dengan throughput tinggi." : "Tempo pemrosesan belum konsisten; perlu dukungan pada tekanan waktu.",
+    "Ketelitian Kerja": isHigh ? "Akurasi tinggi; cocok untuk peran presisi." : "Akurasi perlu dipantau; disarankan mekanisme double-check.",
+    "Stabilitas Kerja": isHigh ? "Konsisten antar-blok; cocok untuk tugas durasi panjang." : "Fluktuasi performa; perlu rotasi tugas atau istirahat terjadwal.",
+    "Endurance": isHigh ? "Mampu mempertahankan output sepanjang sesi." : "Penurunan performa pada durasi panjang; perlu manajemen energi.",
+    "Kontrol Perhatian": isHigh ? "Fokus terjaga; cocok untuk monitoring visual." : "Fokus belum stabil; perlu dukungan pada situasi multitugas.",
+    "Vigilance": isHigh ? "Kewaspadaan terpelihara pada tugas monoton." : "Kewaspadaan menurun pada monoton; perlu variasi stimulus."
+  };
+  return map[name] || "";
+}
+
+/* =========================================================
+   UTILS
+========================================================= */
+function switchTab(event, tabId){
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  event.target.classList.add("active");
+  el(tabId).classList.add("active");
+}
+
+function fatigueSlope(blockData){
+  const n = blockData.length;
+  if(n < 2) return 0;
+  const xs = blockData.map((_, i) => i + 1);
+  const ys = blockData.map(b => b.correctedAccuracy || 0);
+  const mx = mean(xs), my = mean(ys);
+  let num = 0, den = 0;
+  for(let i = 0; i < n; i++){
+    num += (xs[i] - mx) * (ys[i] - my);
+    den += (xs[i] - mx) ** 2;
+  }
+  return den === 0 ? 0 : num / den;
+}
+
+function detectAnomalies(d){
+  const out = [];
+  [[1, d.b1], [2, d.b2]].forEach(([s, b]) => {
+    if(!Array.isArray(b)) return;
+    for(let i = 1; i < b.length; i++){
+      if(b[i].omissionRate >= 30 && b[i].omissionRate - b[i-1].omissionRate >= 15){
+        out.push(`Sesi ${s}, Block ${b[i].block}: lonjakan omission.`);
+      } else if(b[i-1].correctedAccuracy - b[i].correctedAccuracy >= 25){
+        out.push(`Sesi ${s}, Block ${b[i].block}: penurunan akurasi tajam.`);
+      }
+    }
+  });
+  return out;
+}
+
+function destroyChart(key){
+  if(charts[key]){ charts[key].destroy(); delete charts[key]; }
+}
+
+function renderTrendChart(d){
+  destroyChart("trend");
+  const ctx = el("trendChart");
+  if(!ctx) return;
+  const b1 = d.b1 || [], b2 = d.b2 || [];
+  const labels = [...b1.map((_,i)=>`S1-B${i+1}`), ...b2.map((_,i)=>`S2-B${i+1}`)];
+  const acc = [...b1.map(b=>b.correctedAccuracy||0), ...b2.map(b=>b.correctedAccuracy||0)];
+  const crpm = [...b1.map(b=>b.crpm||0), ...b2.map(b=>b.crpm||0)];
+
+  charts.trend = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { label: "Accuracy (%)", data: acc, borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,.1)", tension: 0.3, yAxisID: "y", pointRadius: 4 },
+        { label: "CRPM", data: crpm, borderColor: "#f59e0b", backgroundColor: "rgba(245,158,11,.1)", tension: 0.3, yAxisID: "y1", pointRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom", labels: { font: { size: 10 } } } },
+      scales: {
+        y: { beginAtZero: true, max: 100, position: "left", ticks: { font: { size: 10 } } },
+        y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderRadarChart(d){
+  destroyChart("radar");
+  const ctx = el("radarChart");
+  if(!ctx) return;
+  charts.radar = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: ["Speed", "Accuracy", "Stability", "Endurance", "Attention", "Vigilance"],
+      datasets: [
+        { label: "Skor Peserta", data: [d.speed, d.accuracy, d.stability, d.endurance, d.attention, d.vigilance].map(v => clamp(v)), borderColor: "#2563eb", backgroundColor: "rgba(37,99,235,.18)", pointBackgroundColor: "#2563eb", pointRadius: 5 },
+        { label: "Benchmark 50", data: [50, 50, 50, 50, 50, 50], borderColor: "#94a3b8", backgroundColor: "rgba(148,163,184,.08)", borderDash: [4, 4], pointRadius: 0 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { font: { size: 10 } } } }, scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 25, font: { size: 9 } } } } }
+  });
+}
+
+function toggleCompare(){
+  compareMode = !compareMode;
+  el("compareToggle").textContent = compareMode ? "📄 Mode Single" : "📊 Mode Bandingkan";
+  el("reportContainer").style.display = compareMode ? "none" : "block";
+  el("compareView").style.display = compareMode ? "block" : "none";
+  if(compareMode) updateCompareTable();
+}
+
+function updateCompareTable(){
+  if(!allResults.length){
+    el("compareTable").innerHTML = `<tr><td class="empty">Belum ada data.</td></tr>`;
+    return;
+  }
+  const dims = ["speed","accuracy","stability","endurance","attention","vigilance"];
+  let html = `
+    <thead><tr>
+      <th>Peserta</th><th>Tanggal</th>
+      ${dims.map(d => `<th>${d.charAt(0).toUpperCase()+d.slice(1)}</th>`).join("")}
+      <th>Overall</th>
+    </tr></thead><tbody>
+  `;
+  allResults.forEach(r => {
+    const d = r.scores;
+    const overall = mean(dims.map(k => d[k] || 0));
+    html += `
+      <tr>
+        <td><b>${r.participantName || r.participantId || "-"}</b></td>
+        <td style="font-size:11px;color:#64748b">${fmtDate(r.submittedAt)}</td>
+        ${dims.map(k => { const val = d[k] || 0; return `<td><span class="pill ${clsClass(val)}">${val.toFixed(1)}</span></td>`; }).join("")}
+        <td><b>${overall.toFixed(1)}</b></td>
+      </tr>
+    `;
+  });
+  html += `</tbody>`;
+  el("compareTable").innerHTML = html;
+
+  destroyChart("compare");
+  const ctx = el("compareRadar");
+  if(!ctx) return;
+  const colors = ["#2563eb","#f59e0b","#16a34a","#dc2626","#7c3aed","#0891b2","#be185d","#65a30d"];
+  charts.compare = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: ["Speed","Accuracy","Stability","Endurance","Attention","Vigilance"],
+      datasets: allResults.slice(0, 8).map((r, i) => ({
+        label: r.participantName || r.participantId || `P${i+1}`,
+        data: dims.map(k => clamp(r.scores[k] || 0)),
+        borderColor: colors[i % colors.length],
+        backgroundColor: colors[i % colors.length] + "22",
+        pointBackgroundColor: colors[i % colors.length],
+        pointRadius: 3
+      }))
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom", labels: { font: { size: 10 } } } }, scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 25, font: { size: 9 } } } } }
+  });
+}
+
+function exportCurrent(){
+  if(!currentResult) return alert("Pilih hasil dulu.");
+  const blob = new Blob([JSON.stringify(currentResult, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `VAP_${currentResult.participantId}_${currentResult.assessmentIndex}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAll(){
+  if(!allResults.length) return alert("Belum ada data.");
+  const blob = new Blob([JSON.stringify(allResults, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `VAP_all_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAll(){
+  if(!confirm("Hapus SEMUA hasil VAP dari localStorage? (Data Supabase TIDAK terhapus)")) return;
+  const kept = JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+    .filter(x => x.resultType !== "VAP");
+  localStorage.setItem("talent_scope_results", JSON.stringify(kept));
+  refreshList();
+}
+
+refreshList();
+console.log("[VAP Report Viewer v4.0] Ready.");
+</script>
+
+</body>
+</html>

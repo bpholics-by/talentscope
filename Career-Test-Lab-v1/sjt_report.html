@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LSJT Report — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--purple:#7c3aed;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--ok:#16a34a;--warn:#d97706;--danger:#dc2626}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;position:sticky;top:0;z-index:30;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:18px}
+header small{color:#64748b;display:block;font-size:11px;margin-top:2px}
+.wrap{max-width:1200px;margin:auto;padding:22px 20px 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 4px 14px #0f172a06}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+select,input,button{padding:10px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff;font-size:13px}
+button{background:var(--purple);color:#fff;border:0;font-weight:800;cursor:pointer;transition:.15s}
+button:hover{background:#6d28d9}
+button.ghost{background:#f1f5f9;color:#334155}
+button.ghost:hover{background:#e2e8f0}
+button.danger{background:#dc2626}
+button.danger:hover{background:#b91c1c}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar select{min-width:320px;flex:1}
+.badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800}
+.badge-source{background:#e0e7ff;color:#3730a3}
+.badge-local{background:#f1f5f9;color:#475569}
+.hero{background:linear-gradient(135deg,#0f172a 0%,#4c1d95 60%,#7c3aed 100%);color:#fff;border-radius:18px;padding:28px 32px;margin-bottom:18px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;width:300px;height:300px;border:1px solid #ffffff15;border-radius:50%;right:-80px;top:-100px}
+.hero:after{content:"";position:absolute;width:400px;height:400px;border:1px solid #ffffff10;border-radius:50%;right:-150px;bottom:-250px}
+.hero-label{font-size:10px;font-weight:900;letter-spacing:2px;color:#c4b5fd;margin-bottom:10px;position:relative;z-index:1}
+.hero-title{font-size:30px;font-weight:900;margin:0 0 6px;position:relative;z-index:1}
+.hero-sub{color:#ddd6fe;font-size:13px;position:relative;z-index:1;margin:0}
+.overall-panel{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-top:20px;position:relative;z-index:1}
+.overall-stat{background:#ffffff12;border:1px solid #ffffff20;border-radius:12px;padding:14px 16px}
+.overall-stat .lbl{font-size:10px;font-weight:800;letter-spacing:.7px;color:#c4b5fd;text-transform:uppercase}
+.overall-stat .val{font-size:26px;font-weight:900;margin-top:6px;color:#fff;font-variant-numeric:tabular-nums}
+.overall-stat .unit{font-size:12px;color:#ddd6fe;font-weight:600;margin-left:4px}
+
+.style-block{padding:18px;border-radius:14px;background:#f8fafc;border:1px solid #e2e8f0;margin-bottom:12px}
+.style-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.style-name{font-size:16px;font-weight:900}
+.style-score{font-size:28px;font-weight:900;color:var(--purple);font-variant-numeric:tabular-nums}
+.style-bar{height:16px;background:#e2e8f0;border-radius:99px;overflow:hidden;position:relative;margin-bottom:6px}
+.style-bar i{display:block;height:100%;background:linear-gradient(90deg,#a855f7,#7c3aed);transition:width .8s}
+.style-detail{display:flex;justify-content:space-between;font-size:11px;color:#64748b;font-weight:700;margin-top:8px}
+.style-detail b{color:#0f172a;font-size:13px}
+
+.insight{background:#f3e8ff;border-left:4px solid var(--purple);border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.75;margin-top:12px;color:#4c1d95}
+.insight b{color:#5b21b6}
+
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#f8fafc;color:#64748b;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+.empty{text-align:center;color:#94a3b8;padding:60px 20px}
+.empty h3{color:#64748b;margin:0 0 8px}
+.chart-container{position:relative;height:340px}
+.disclaimer{margin-top:18px;padding:16px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;font-size:12px;line-height:1.7;color:#78350f}
+.disclaimer b{color:#92400e}
+.stat-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.stat-line:last-child{border-bottom:0}
+.stat-line span{color:#64748b}
+.stat-line b{color:#0f172a}
+
+.pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800}
+.p-strong{background:#ede9fe;color:#5b21b6}
+.p-mod{background:#dbeafe;color:#1e40af}
+.p-low{background:#fef3c7;color:#92400e}
+
+@media(max-width:900px){
+  .grid-2,.grid-4,.overall-panel{grid-template-columns:1fr}
+  header{flex-direction:column;align-items:flex-start}
+  .toolbar select{min-width:100%}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 LSJT Report</h1>
+    <small>Leadership Situational Judgment Test — Admin Dashboard</small>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="sourceBadge" class="badge badge-local">📦 LocalStorage</span>
+    <button class="ghost" onclick="refreshList()">🔄 Refresh</button>
+    <button class="ghost" onclick="exportAll()">⬇ Export Semua</button>
+    <button class="danger" onclick="clearAll()">🗑 Hapus Semua</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card" style="padding:16px">
+    <div class="toolbar">
+      <select id="resultSelect" onchange="loadResult()">
+        <option value="">— Pilih peserta —</option>
+      </select>
+      <input id="searchInput" placeholder="🔍 Cari nama / ID / project..." oninput="filterList()" style="min-width:240px">
+      <button onclick="exportCurrent()">⬇ Export Hasil Ini</button>
+    </div>
+  </div>
+
+  <div id="reportContainer">
+    <div class="card empty">
+      <h3>Belum ada hasil dipilih</h3>
+      <p>Pilih peserta dari dropdown di atas untuk melihat laporan.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   LSJT REPORT VIEWER
+========================================================= */
+
+let allResults = [];
+let filteredResults = [];
+let currentResult = null;
+let charts = {};
+let dataSource = "local";
+
+const SUPABASE_TABLE = "sjt_results";
+
+function el(id){ return document.getElementById(id); }
+function fmtDate(iso){
+  if(!iso) return "-";
+  try { return new Date(iso).toLocaleString("id-ID", {day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit"}); }
+  catch(e) { return iso; }
+}
+
+async function loadFromSupabase(){
+  try {
+    let sb = window.supabaseClient || window.supabase || null;
+    if (!sb) return null;
+
+    const { data, error } = await sb
+      .from(SUPABASE_TABLE)
+      .select("*")
+      .eq("result_type", "LSJT")
+      .order("submitted_at", { ascending: false })
+      .limit(500);
+
+    if (error) { console.warn("[LSJT Report] error:", error.message); return null; }
+    if (!Array.isArray(data) || data.length === 0) return null;
+
+    return data.map(row => ({
+      version: row.version || 1,
+      resultType: "LSJT",
+      projectId: row.project_id,
+      participantId: row.participant_id,
+      assessmentIndex: row.assessment_index,
+      assessmentCode: row.assessment_code,
+      assessmentName: row.assessment_name,
+      participantName: row.participant_name || "",
+      responses: typeof row.responses === "string" ? JSON.parse(row.responses) : row.responses,
+      scores: typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores,
+      totalItems: row.total_items,
+      answeredItems: row.answered_items,
+      submittedAt: row.submitted_at,
+      _source: "supabase"
+    }));
+  } catch(e) { console.warn("[LSJT Report] Gagal load Supabase:", e); return null; }
+}
+
+function loadFromLocal(){
+  try {
+    return JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+      .filter(x => x.resultType === "LSJT")
+      .map(r => ({ ...r, _source: "local" }));
+  } catch(e) { return []; }
+}
+
+async function refreshList(){
+  el("reportContainer").innerHTML = `<div class="card empty"><div style="width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#7c3aed;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px"></div><p>Memuat data...</p></div>`;
+
+  try {
+    let results = await loadFromSupabase();
+
+    if(results && results.length > 0){
+      allResults = results;
+      dataSource = "supabase";
+      el("sourceBadge").textContent = "☁ Supabase";
+      el("sourceBadge").className = "badge badge-source";
+    } else {
+      allResults = loadFromLocal();
+      dataSource = "local";
+      el("sourceBadge").textContent = "📦 LocalStorage";
+      el("sourceBadge").className = "badge badge-local";
+    }
+
+    allResults.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+    filteredResults = [...allResults];
+    renderDropdown();
+
+    if(allResults.length === 0){
+      el("reportContainer").innerHTML = `<div class="card empty"><h3>Belum ada hasil LSJT</h3><p>Selesaikan tes terlebih dahulu.</p></div>`;
+    } else {
+      el("reportContainer").innerHTML = `<div class="card empty"><h3>📋 ${allResults.length} hasil tersedia</h3><p>Pilih peserta dari dropdown untuk melihat laporan.</p></div>`;
+    }
+  } catch(err) {
+    console.error("[LSJT Report] Error refresh:", err);
+    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat data</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderDropdown(){
+  const sel = el("resultSelect");
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">— Pilih peserta (' + filteredResults.length + ') —</option>';
+  filteredResults.forEach((r) => {
+    const opt = document.createElement("option");
+    opt.value = allResults.indexOf(r);
+    const date = fmtDate(r.submittedAt);
+    const name = r.participantName || r.participantId || "Unknown";
+    opt.textContent = `${name} • ${r.assessmentName || "LSJT"} • ${date}`;
+    sel.appendChild(opt);
+  });
+  if(currentVal) sel.value = currentVal;
+}
+
+function filterList(){
+  const q = el("searchInput").value.toLowerCase().trim();
+  if(!q){ filteredResults = [...allResults]; }
+  else {
+    filteredResults = allResults.filter(r =>
+      String(r.participantId || "").toLowerCase().includes(q) ||
+      String(r.participantName || "").toLowerCase().includes(q) ||
+      String(r.projectId || "").toLowerCase().includes(q)
+    );
+  }
+  renderDropdown();
+}
+
+function loadResult(){
+  const idx = el("resultSelect").value;
+  if(idx === ""){ el("reportContainer").innerHTML = `<div class="card empty">Pilih peserta untuk melihat laporan.</div>`; currentResult = null; return; }
+  currentResult = allResults[Number(idx)];
+  renderReport(currentResult);
+}
+
+/* =========================================================
+   RENDER REPORT
+========================================================= */
+function renderReport(r){
+  const scores = r.scores;
+  const s = {
+    OTORITER: scores.OTORITER,
+    DEMOKRATIS: scores.DEMOKRATIS,
+    LAISSEZ_FAIRE: scores.LAISSEZ_FAIRE,
+    SITUASIONAL: scores.SITUASIONAL
+  };
+
+  const dims = [
+    { key: "OTORITER", label: "Otoriter", desc: "Kecenderungan memegang kendali, keputusan terpusat, dan menekankan kepatuhan." },
+    { key: "DEMOKRATIS", label: "Demokratis", desc: "Kecenderungan melibatkan anggota, komunikasi dua arah, dan partisipasi dalam keputusan." },
+    { key: "LAISSEZ_FAIRE", label: "Laissez-Faire", desc: "Kecenderungan memberikan otonomi tinggi dan intervensi minimal." },
+    { key: "SITUASIONAL", label: "Situasional", desc: "Kecenderungan menyesuaikan pendekatan berdasarkan kondisi dan kesiapan bawahan." }
+  ];
+
+  // Sort by normalized score
+  const sorted = [...dims].sort((a,b) => s[b.key].normalized - s[a.key].normalized);
+  const dominant = sorted[0];
+  const weakest = sorted[sorted.length - 1];
+
+  const styleRows = dims.map(dim => {
+    const d = s[dim.key];
+    return `
+      <div class="style-block">
+        <div class="style-head">
+          <div>
+            <div class="style-name">${dim.label}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:3px">${dim.desc}</div>
+          </div>
+          <div class="style-score">${d.normalized.toFixed(1)}</div>
+        </div>
+        <div class="style-bar"><i style="width:${d.normalized}%"></i></div>
+        <div class="style-detail">
+          <span>MOST: <b>${d.most}</b> (${d.mostPct.toFixed(1)}%)</span>
+          <span>LEAST: <b>${d.least}</b> (${d.leastPct.toFixed(1)}%)</span>
+          <span>Net: <b>${d.netScore > 0 ? '+' : ''}${d.netScore.toFixed(1)}</b></span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  el("reportContainer").innerHTML = `
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
+      <h2 class="hero-title">LSJT — Leadership Profile</h2>
+      <p class="hero-sub">
+        ${r.participantName || r.participantId} • ${fmtDate(r.submittedAt)} • 
+        Leadership Situational Judgment Test
+      </p>
+      <div class="overall-panel">
+        <div class="overall-stat"><div class="lbl">Total Item</div><div class="val">${r.totalItems || 28}</div></div>
+        <div class="overall-stat"><div class="lbl">Terjawab</div><div class="val">${r.answeredItems || 0}<span class="unit">/ ${r.totalItems || 28}</span></div></div>
+        <div class="overall-stat"><div class="lbl">Gaya Dominan</div><div class="val" style="font-size:16px">${dominant.label}</div></div>
+        <div class="overall-stat"><div class="lbl">Skor Dominan</div><div class="val">${s[dominant.key].normalized.toFixed(1)}</div></div>
+      </div>
+    </div>
+
+    <!-- RINGKASAN -->
+    <div class="card">
+      <h3 style="margin-top:0">📌 Ringkasan Profil Kepemimpinan</h3>
+      <p style="color:#64748b;font-size:13px;margin:6px 0 16px">
+        Profil gaya kepemimpinan berdasarkan 28 item LSJT. Skor bersifat <b>ipsatif</b> — 
+        total skor setiap individu selalu sama (56 = 28 MOST + 28 LEAST). 
+        Interpretasi dilakukan dengan membandingkan antar-gaya, bukan skor absolut.
+      </p>
+      ${styleRows}
+    </div>
+
+    <!-- VISUALISASI -->
+    <div class="card">
+      <h3 style="margin-top:0">🕸 Profil Gaya Kepemimpinan</h3>
+      <div class="chart-container"><canvas id="radarChart"></canvas></div>
+    </div>
+
+    <!-- INTERPRETASI -->
+    <div class="card">
+      <h3 style="margin-top:0">🧠 Interpretasi</h3>
+      ${buildInterpretation(s, dominant, weakest)}
+    </div>
+
+    <!-- DETAIL JAWABAN -->
+    <div class="card">
+      <h3 style="margin-top:0">📄 Detail Jawaban per Item</h3>
+      <div style="overflow:auto;max-height:500px;margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>Judul</th><th>MOST</th><th>Gaya MOST</th><th>LEAST</th><th>Gaya LEAST</th></tr>
+          </thead>
+          <tbody>
+            ${renderDetailTable(r)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="disclaimer">
+      <b>Disclaimer:</b> Hasil ini merupakan indikator kecenderungan gaya kepemimpinan dalam konteks tugas terstruktur, 
+      <b>bukan diagnosis klinis</b>. Interpretasi bersifat ipsatif. Untuk keputusan seleksi/pengembangan, 
+      diperlukan konfirmasi melalui metode asesmen lain.
+    </div>
+  `;
+
+  requestAnimationFrame(() => renderRadar(s));
+}
+
+function renderDetailTable(r){
+  // We need item info — reconstruct from responses
+  // Since we don't have item bank here, we display only keys
+  const responses = r.responses || {};
+  return Object.keys(responses).sort().map(itemId => {
+    const resp = responses[itemId];
+    return `
+      <tr>
+        <td><b>${itemId}</b></td>
+        <td style="font-size:11px;color:#64748b">—</td>
+        <td><span class="pill p-strong">${resp.most || "-"}</span></td>
+        <td>—</td>
+        <td><span class="pill p-low">${resp.least || "-"}</span></td>
+        <td>—</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function buildInterpretation(s, dominant, weakest){
+  const total = 28;
+
+  // Cari gaya dominan dan terendah
+  const domScore = s[dominant.key].normalized;
+  const weakScore = s[weakest.key].normalized;
+  const gap = domScore - weakScore;
+
+  // Narasi per gaya dominan
+  const dominantNarratives = {
+    OTORITER: "Kandidat cenderung mengambil kendali secara langsung, mengambil keputusan cepat, dan mengharapkan kepatuhan tim. Gaya ini efektif dalam situasi krisis, deadline ketat, atau ketika tim membutuhkan arahan yang sangat jelas.",
+    DEMOKRATIS: "Kandidat cenderung melibatkan anggota tim dalam pengambilan keputusan, mendorong komunikasi dua arah, dan membangun partisipasi. Gaya ini efektif untuk membangun komitmen tim dan memanfaatkan beragam perspektif.",
+    LAISSEZ_FAIRE: "Kandidat cenderung memberikan otonomi tinggi dan intervensi minimal kepada tim. Gaya ini efektif untuk tim yang sudah matang dan mandiri, tetapi berisiko pada tim yang membutuhkan arahan.",
+    SITUASIONAL: "Kandidat cenderung menyesuaikan pendekatan kepemimpinan berdasarkan kondisi dan kesiapan bawahan. Gaya ini paling fleksibel dan adaptif terhadap perubahan situasi."
+  };
+
+  const weakestNarratives = {
+    OTORITER: "Kandidat kurang cenderung mengambil kendali secara langsung. Pada situasi krisis yang membutuhkan keputusan cepat, kandidat mungkin perlu mengembangkan ketegasan.",
+    DEMOKRATIS: "Kandidat kurang cenderung melibatkan tim dalam pengambilan keputusan. Pada situasi yang membutuhkan komitmen tim, kandidat mungkin perlu lebih banyak membuka ruang partisipasi.",
+    LAISSEZ_FAIRE: "Kandidat kurang cenderung memberikan otonomi penuh. Pada tim yang sudah matang, kandidat mungkin perlu lebih mempercayai kemampuan tim untuk mandiri.",
+    SITUASIONAL: "Kandidat kurang menyesuaikan pendekatan berdasarkan situasi. Pada kondisi yang berubah-ubah, kandidat mungkin perlu lebih fleksibel menyesuaikan gaya kepemimpinan."
+  };
+
+  return `
+    <div class="insight">
+      <b>Profil Kepemimpinan: ${dominant.label} Dominan</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        ${dominantNarratives[dominant.key]} 
+        Skor ${dominant.label} (${domScore.toFixed(1)}) menunjukkan kecenderungan ini sebagai yang paling kuat 
+        dalam profil kandidat, dengan jarak ${gap.toFixed(1)} poin dari gaya terendah (${weakest.label}, ${weakScore.toFixed(1)}).
+      </p>
+    </div>
+
+    <div class="insight" style="background:#fef3c7;border-left-color:#d97706;color:#78350f">
+      <b>Area Pengembangan: ${weakest.label}</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        ${weakestNarratives[weakest.key]}
+      </p>
+    </div>
+
+    <div class="insight" style="background:#eff6ff;border-left-color:#2563eb;color:#1e3a8a">
+      <b>Implikasi Praktis</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        Profil ini menunjukkan bahwa kandidat memiliki <b>kecenderungan ${dominant.label.toLowerCase()}</b> yang dominan. 
+        Kombinasi ini paling efektif untuk peran yang membutuhkan 
+        ${dominant.key === "OTORITER" ? "pengambilan keputusan cepat, ketegasan, dan arahan yang jelas" :
+          dominant.key === "DEMOKRATIS" ? "kolaborasi, konsensus tim, dan komitmen bersama" :
+          dominant.key === "LAISSEZ_FAIRE" ? "otonomi tim yang sudah matang dan mandiri" :
+          "adaptasi cepat terhadap perubahan situasi dan kesiapan tim"}.
+        Namun, kandidat juga disarankan untuk mengembangkan fleksibilitas dalam menggunakan gaya lain sesuai konteks.
+      </p>
+    </div>
+  `;
+}
+
+function renderRadar(s){
+  if(charts.radar) charts.radar.destroy();
+  const ctx = el("radarChart");
+  if(!ctx) return;
+
+  charts.radar = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: ["Otoriter", "Demokratis", "Laissez-Faire", "Situasional"],
+      datasets: [
+        {
+          label: "Profil Kandidat",
+          data: [s.OTORITER.normalized, s.DEMOKRATIS.normalized, s.LAISSEZ_FAIRE.normalized, s.SITUASIONAL.normalized],
+          borderColor: "#7c3aed",
+          backgroundColor: "rgba(124,58,237,.18)",
+          pointBackgroundColor: "#7c3aed",
+          pointRadius: 6
+        },
+        {
+          label: "Benchmark 50",
+          data: [50, 50, 50, 50],
+          borderColor: "#94a3b8",
+          backgroundColor: "rgba(148,163,184,.08)",
+          borderDash: [4, 4],
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } },
+      scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 25 } } }
+    }
+  });
+}
+
+function exportCurrent(){
+  if(!currentResult) return alert("Pilih hasil dulu.");
+  const blob = new Blob([JSON.stringify(currentResult, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `LSJT_${currentResult.participantId}_${currentResult.assessmentIndex}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportAll(){
+  if(!allResults.length) return alert("Belum ada data.");
+  const blob = new Blob([JSON.stringify(allResults, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `LSJT_all_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAll(){
+  if(!confirm("Hapus SEMUA hasil LSJT dari localStorage? (Data Supabase TIDAK terhapus)")) return;
+  const kept = JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+    .filter(x => x.resultType !== "LSJT");
+  localStorage.setItem("talent_scope_results", JSON.stringify(kept));
+  refreshList();
+}
+
+refreshList();
+console.log("[LSJT Report Viewer] Ready.");
+</script>
+
+</body>
+</html>

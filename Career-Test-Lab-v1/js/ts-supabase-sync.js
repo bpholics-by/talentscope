@@ -432,11 +432,34 @@
 
             merged.participants = participants;
 
-            // Assessment list: pertahankan yang sudah ada di kolom
-            // project (kalau ada), tambahkan/replace dari project_assessments
-            // kalau tabel itu punya baris untuk project ini.
+                        // ============================================
+            // FIX: Assessment list — prioritas + fallback
+            // ============================================
+            // Prioritas 1: project_assessments (tabel relasional)
+            // Prioritas 2: raw_data.assessments (JSONB fallback)
+            // Prioritas 3: assessments di project langsung
+            // Prioritas 4: []
+            // ============================================
             if (assessmentsByProject[pid] && assessmentsByProject[pid].length) {
                 merged.assessments = assessmentsByProject[pid];
+                console.log(
+                    "[TS-Sync] assessments dari project_assessments:",
+                    pid,
+                    merged.assessments.length
+                );
+            } else if (project.raw_data && Array.isArray(project.raw_data.assessments) && project.raw_data.assessments.length) {
+                // FALLBACK: baca dari raw_data.assessments
+                merged.assessments = project.raw_data.assessments;
+                console.log(
+                    "[TS-Sync] assessments dari raw_data.assessments:",
+                    pid,
+                    merged.assessments.length
+                );
+            } else if (Array.isArray(project.assessments) && project.assessments.length) {
+                // FALLBACK: dari project.assessments langsung
+                merged.assessments = project.assessments;
+            } else {
+                merged.assessments = [];
             }
 
             return merged;
