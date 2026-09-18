@@ -1,2504 +1,828 @@
 /* ==========================================================
    TALENTSCOPE - TEST RESULT CONTROLLER
-   FINAL RESULT LOADER
+   FULL FIX VERSION (v5)
    ----------------------------------------------------------
-   Tugas:
-   1. Membaca parameter URL
-   2. Membaca project & participant
-   3. Menentukan assessment
-   4. Mengambil RESULT NYATA dari localStorage
-   5. Menormalisasi format hasil
-   6. Mengarahkan ke DISCAssessment / PAPIKostickAssessment
-
-   CATATAN:
-   - Tidak ada dummy score.
-   - Controller ini tidak menghitung skor DISC/PAPI.
-   - Perhitungan/interpretasi tetap berada di module assessment.
+   Perubahan dari v4:
+   - Tambah fallback CARI BY CODE (DISC/PAPI/VAP/MSJT/LSJT/TPDK)
+     untuk data lama yang tersimpan di index berbeda
+   - Prioritas: UUID → Supabase → by code → by index
+   - Log lebih jelas
 ========================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
     loadTestResult();
 });
 
+/* ==========================================================
+   UUID MAP
+========================================================== */
+const TEST_RESULT_UUID_MAP = {
+    "5976eef2-e7a7-43a6-8e95-90f556f9a257": { name: "Tes Penalaran", code: "TPDK" },
+    "327a8cde-c51c-4524-aae1-4d54402d772a": { name: "Managerial Situational Judgment Test", code: "MSJT" },
+    "e3026a3d-15f7-4189-b25e-8cae12968558": { name: "Leadership Situational Judgment Test", code: "LSJT" },
+    "8b0209ef-1b16-414c-b8c1-cd0e0449e7d7": { name: "Work Performance & Sustained Attention Assessment", code: "VAP" },
+    "6266a366-47c4-4d5c-9f0f-6a2984227ed1": { name: "DISC Personality", code: "DISC" },
+    "d8408a0f-55c0-4fc9-941e-bb6d48292b31": { name: "PAPI Kostick", code: "PAPI" }
+};
 
 /* ==========================================================
    MAIN CONTROLLER
 ========================================================== */
+async function loadTestResult() {
+    // Tunggu sync dari Supabase (max 1.5 detik)
+    await new Promise(function(resolve) {
+        var startTime = Date.now();
+        var maxWaitMs = 1500;
+        var checkInterval = setInterval(function() {
+            var projects = [];
+            try {
+                projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+            } catch (e) {}
 
-/* ==========================================================
-   GENERIC LABEL DETECTOR
-   Sama seperti helper di participant-dashboard.html: dipakai
-   supaya placeholder generik ("Assessment 1", "Assessment",
-   dst) tidak dianggap sebagai nama/kode assessment yang valid.
-========================================================== */
+            var params = new URLSearchParams(window.location.search);
+            var targetPid = params.get("projectId");
+            var found = Array.isArray(projects) && projects.some(function(p) {
+                return String(p.id) === String(targetPid);
+            });
 
-function isGenericAssessmentLabel(value) {
+            if (found) {
+                clearInterval(checkInterval);
+                console.log("[TEST-RESULT] ✅ Project tersedia di localStorage (" + (Date.now() - startTime) + "ms)");
+                resolve();
+            } else if (Date.now() - startTime >= maxWaitMs) {
+                clearInterval(checkInterval);
+                console.warn("[TEST-RESULT] Timeout tunggu sync (" + maxWaitMs + "ms)");
+                resolve();
+            }
+        }, 100);
+    });
 
-    const v =
-        String(value == null ? "" : value)
-        .trim()
-        .toLowerCase();
-
-    if (!v) {
-        return true;
-    }
-
-    const stripped =
-        v.replace(/\s*#?\d+\s*$/, "").trim();
-
-    return (
-        stripped === "assessment" ||
-        stripped === "assessment package" ||
-        stripped === "generic assessment" ||
-        stripped === "test" ||
-        stripped === "untitled"
-    );
-}
-
-
-function loadTestResult() {
-
+    // ======================================================
+    // PARSE URL PARAMS
+    // ======================================================
     const params = new URLSearchParams(window.location.search);
+    const projectId = String(params.get("projectId") || "").trim();
+    const participantId = String(params.get("participantId") || "").trim();
+    const assessmentIndexRaw = params.get("assessmentIndex");
+    const assessmentCodeFromUrl = String(params.get("assessmentCode") || "").trim().toUpperCase();
+    const assessmentIdFromUrl = String(params.get("assessmentId") || "").trim().toLowerCase();
+    const isEmbed = params.get("embed") === "1";
 
-    const projectId =
-        String(params.get("projectId") || "").trim();
-
-    const participantId =
-        String(params.get("participantId") || "").trim();
-
-    const assessmentIndexRaw =
-        params.get("assessmentIndex");
+    console.log("[TEST-RESULT] URL params:", {
+        projectId: projectId,
+        participantId: participantId,
+        assessmentIndex: assessmentIndexRaw,
+        assessmentCode: assessmentCodeFromUrl,
+        assessmentId: assessmentIdFromUrl,
+        embed: isEmbed
+    });
 
     if (!projectId || !participantId) {
-        showResultMessage(
-            "Data project atau peserta tidak ditemukan."
-        );
+        showResultMessage("Data project atau peserta tidak ditemukan.");
         return;
     }
 
-    const index =
-        Number(assessmentIndexRaw);
-
-    if (
-        !Number.isInteger(index) ||
-        index < 0
-    ) {
-        showResultMessage(
-            "Assessment index tidak valid."
-        );
-        return;
+    const index = Number(assessmentIndexRaw);
+    if (!Number.isInteger(index) || index < 0) {
+        if (!assessmentCodeFromUrl && !assessmentIdFromUrl) {
+            showResultMessage("Assessment index tidak valid.");
+            return;
+        }
     }
 
-
-    /* ======================================================
-       LOAD PROJECT
-    ====================================================== */
-
-    const projects =
-        readLocalStorageArray(
-            "talentscope_projects"
-        );
-
-    const project =
-        projects.find(function (item) {
-
-            return String(
-                item?.id ?? ""
-            ) === String(projectId);
-
-        });
+    // ======================================================
+    // LOAD PROJECT dari localStorage
+    // ======================================================
+    const projects = readLocalStorageArray("talentscope_projects");
+    let project = projects.find(function (item) {
+        return String(item && item.id) === String(projectId);
+    });
 
     if (!project) {
-
-        showResultMessage(
-            "Project tidak ditemukan."
-        );
-
+        showResultMessage("Project tidak ditemukan.");
         return;
     }
 
+    // ======================================================
+    // GET ASSESSMENTS — sort by sort_order
+    // ======================================================
+    let projectAssessments = [];
 
-    /* ======================================================
-       FIND PARTICIPANT
-    ====================================================== */
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === "function") {
+            const { data: assessData } = await sb
+                .from("project_assessments")
+                .select("*")
+                .eq("project_id", projectId)
+                .order("sort_order", { ascending: true })
+                .order("created_at", { ascending: true });
 
-    const participants =
-        Array.isArray(project.participants)
-            ? project.participants
-            : [];
+            if (Array.isArray(assessData) && assessData.length > 0) {
+                projectAssessments = assessData;
+                console.log("[TEST-RESULT] Assessments dari Supabase:", assessData.length);
+            }
+        }
+    } catch (e) {
+        console.warn("[TEST-RESULT] Supabase fetch gagal:", e);
+    }
 
-    const participant =
-        participants.find(function (item) {
-
-            return String(
-                item?.id ??
-                item?.participantId ??
-                ""
-            ) === String(participantId);
-
+    if (projectAssessments.length === 0) {
+        projectAssessments = Array.isArray(project.assessments) ? project.assessments.slice() : [];
+        projectAssessments.sort(function(a, b) {
+            return Number(a.sort_order || 999) - Number(b.sort_order || 999);
         });
+    }
+
+    // ======================================================
+    // PILIH ASSESSMENT
+    // PRIORITAS 1: by assessmentId (UUID) dari URL
+    // PRIORITAS 2: by assessmentCode dari URL
+    // PRIORITAS 3: by assessmentIndex dari URL
+    // ======================================================
+    let projectAssessment = null;
+
+    if (assessmentIdFromUrl) {
+        console.log("[TEST-RESULT] Mencari assessment by UUID:", assessmentIdFromUrl);
+        projectAssessment = projectAssessments.find(function (a) {
+            var aId = String(a.assessment_id || a.assessmentId || "").trim().toLowerCase();
+            return aId === assessmentIdFromUrl;
+        });
+        if (projectAssessment) {
+            console.log("[TEST-RESULT] ✅ Match by UUID:", assessmentIdFromUrl);
+        }
+    }
+
+    if (!projectAssessment && assessmentCodeFromUrl) {
+        console.log("[TEST-RESULT] Mencari assessment by code:", assessmentCodeFromUrl);
+        projectAssessment = projectAssessments.find(function (a) {
+            var nameUpper = String(a.assessment_name || a.name || "").toUpperCase();
+            var codeUpper = String(a.assessment_code || a.code || "").toUpperCase();
+            var target = assessmentCodeFromUrl;
+
+            if (codeUpper === target) return true;
+
+            if (target === "DISC" && nameUpper.indexOf("DISC") !== -1) return true;
+            if (target === "PAPI" && (nameUpper.indexOf("PAPI") !== -1 || nameUpper.indexOf("KOSTICK") !== -1)) return true;
+            if (target === "VAP" && (nameUpper.indexOf("VAP") !== -1 || nameUpper.indexOf("WORK PERFORMANCE") !== -1 || nameUpper.indexOf("SUSTAINED") !== -1)) return true;
+            if (target === "MSJT" && (nameUpper.indexOf("MANAGERIAL") !== -1 || nameUpper.indexOf("MSJT") !== -1)) return true;
+            if (target === "LSJT" && (nameUpper.indexOf("LEADERSHIP") !== -1 || nameUpper.indexOf("LSJT") !== -1)) return true;
+            if (target === "TPDK" && (nameUpper.indexOf("TPDK") !== -1 || nameUpper.indexOf("PENALARAN") !== -1)) return true;
+
+            return false;
+        });
+        if (projectAssessment) {
+            console.log("[TEST-RESULT] ✅ Match by code:", assessmentCodeFromUrl);
+        }
+    }
+
+    if (!projectAssessment && Number.isInteger(index) && index >= 0) {
+        projectAssessment = projectAssessments[index];
+        if (projectAssessment) {
+            console.log("[TEST-RESULT] ✅ Match by INDEX:", index);
+        }
+    }
+
+    if (!projectAssessment) {
+        showResultMessage("Assessment tidak ditemukan di project.");
+        return;
+    }
+
+    console.log("[TEST-RESULT] Assessment terpilih:",
+                projectAssessment.assessment_name || projectAssessment.assessment_id);
+
+    // ======================================================
+    // FIND PARTICIPANT
+    // ======================================================
+    const participants = Array.isArray(project.participants) ? project.participants : [];
+    const participant = participants.find(function (item) {
+        return String(item && (item.id || item.participantId)) === String(participantId);
+    });
 
     if (!participant) {
-
-        showResultMessage(
-            "Peserta tidak ditemukan."
-        );
-
+        showResultMessage("Peserta tidak ditemukan.");
         return;
     }
 
+    // ======================================================
+    // PAGE INFORMATION
+    // ======================================================
+    updateElement("participantName",
+        participant.name || participant.fullName || participant.participantName || "-");
+    updateElement("projectName",
+        project.projectName || project.name || project.project || "-");
+    updateElement("assessmentDate", formatTestDate(
+        project.start_date || project.startDate || project.start || project.assessmentDate || "-"
+    ));
 
-    /* ======================================================
-       PAGE INFORMATION
-    ====================================================== */
+    // ======================================================
+    // RESOLVE ASSESSMENT CODE & NAME
+    // ======================================================
+    const assessmentId = String(
+        projectAssessment.assessment_id ||
+        projectAssessment.assessmentId ||
+        ""
+    ).trim().toLowerCase();
 
-    updateElement(
-        "participantName",
-        participant.name ||
-        participant.fullName ||
-        participant.participantName ||
-        "-"
-    );
+    const assessmentNameFromData = String(
+        projectAssessment.assessment_name ||
+        projectAssessment.assessmentName ||
+        projectAssessment.name ||
+        ""
+    ).trim();
 
-    updateElement(
-        "projectName",
-        project.projectName ||
-        project.name ||
-        project.project ||
-        "-"
-    );
+    let assessmentCode = "";
+    let assessmentName = assessmentNameFromData;
 
-    updateElement(
-        "assessmentDate",
-        formatTestDate(
-            project.start_date ||
-            project.startDate ||
-            project.start ||
-            project.assessmentDate ||
-            project.schedule_start ||
-            project.date ||
-            "-"
-        )
-    );
-
-
-    /* ======================================================
-       GET ASSESSMENT
-    ====================================================== */
-
-    const projectAssessments =
-        Array.isArray(project.assessments)
-            ? project.assessments
-            : [];
-
-    const projectAssessment =
-        projectAssessments[index];
-
-    if (
-        projectAssessment === undefined ||
-        projectAssessment === null
-    ) {
-
-        showResultMessage(
-            "Assessment tidak ditemukan di project."
-        );
-
-        return;
+    if (assessmentCodeFromUrl) {
+        assessmentCode = assessmentCodeFromUrl;
     }
 
+    if (!assessmentCode && assessmentName) {
+        const upper = assessmentName.toUpperCase();
+        if (upper.indexOf("DISC") !== -1) assessmentCode = "DISC";
+        else if (upper.indexOf("PAPI") !== -1 || upper.indexOf("KOSTICK") !== -1) assessmentCode = "PAPI";
+        else if (upper.indexOf("VAP") !== -1 || upper.indexOf("WORK PERFORMANCE") !== -1 || upper.indexOf("SUSTAINED") !== -1) assessmentCode = "VAP";
+        else if (upper.indexOf("MANAGERIAL") !== -1 || upper.indexOf("MSJT") !== -1) assessmentCode = "MSJT";
+        else if (upper.indexOf("LEADERSHIP") !== -1 || upper.indexOf("LSJT") !== -1) assessmentCode = "LSJT";
+        else if (upper.indexOf("TPDK") !== -1 || upper.indexOf("PENALARAN") !== -1) assessmentCode = "TPDK";
+    }
 
-    /* ======================================================
-       MASTER ASSESSMENTS
-    ====================================================== */
+    if (!assessmentCode && assessmentId && TEST_RESULT_UUID_MAP[assessmentId]) {
+        assessmentCode = TEST_RESULT_UUID_MAP[assessmentId].code;
+        assessmentName = assessmentName || TEST_RESULT_UUID_MAP[assessmentId].name;
+    }
 
-    const masterAssessments =
-        readLocalStorageArray(
-            "assessments"
-        );
-
-    const assessmentCode =
-        resolveAssessmentCode(
-            projectAssessment,
-            masterAssessments
-        );
+    if (!assessmentCode && assessmentId) {
+        const masterAssessments = readLocalStorageArray("assessments");
+        const master = masterAssessments.find(function (m) {
+            return String(m && m.id || "").toLowerCase() === assessmentId;
+        });
+        if (master) {
+            assessmentCode = String(master.assessment_code || master.code || "").trim().toUpperCase();
+            assessmentName = assessmentName || String(master.assessment_name || master.name || "").trim();
+        }
+    }
 
     if (!assessmentCode) {
-
-        showResultMessage(
-            "Kode assessment tidak ditemukan."
-        );
-
+        showResultMessage("Tidak dapat menentukan tipe assessment.");
         return;
     }
 
-
-    /* ======================================================
-       BUILD ASSESSMENT OBJECT
-    ====================================================== */
-
-    const masterAssessment =
-        masterAssessments.find(function (item) {
-
-            return String(
-                item?.code || ""
-            ).toUpperCase() ===
-            assessmentCode.toUpperCase();
-
-        });
-
-    let assessment =
-        masterAssessment
-            ? { ...masterAssessment }
-            : {};
-
-    if (
-        projectAssessment &&
-        typeof projectAssessment === "object"
-    ) {
-
-        assessment = {
-            ...assessment,
-            ...projectAssessment
-        };
-
+    if (!assessmentName) {
+        assessmentName = assessmentCode + " Assessment";
     }
 
-    if (
-        typeof projectAssessment === "string" &&
-        !assessment.name &&
-        !assessment.title
-    ) {
+    console.log("[TEST-RESULT] FINAL — code:", assessmentCode, "| name:", assessmentName);
 
-        assessment = {
-            ...assessment,
-            name: projectAssessment,
-            code: assessmentCode
-        };
+    // ======================================================
+    // BUILD ASSESSMENT OBJECT
+    // ======================================================
+    const assessment = {
+        ...projectAssessment,
+        code: assessmentCode,
+        name: assessmentName,
+        title: assessmentName
+    };
 
-    }
+    updateElement("testTitle", assessmentName + " Result");
 
-    if (
-        !assessment.name &&
-        !assessment.title &&
-        !assessment.code
-    ) {
+    // ======================================================
+    // IDENTIFY TYPE
+    // ======================================================
+    const isDISC = assessmentCode === "DISC";
+    const isPAPI = assessmentCode === "PAPI";
+    const isVAP = assessmentCode === "VAP";
 
-        assessment = {
-            ...assessment,
-            code: assessmentCode,
-            name: assessmentCode
-        };
+    updateAssessmentHeader(isDISC, isPAPI);
 
-    }
+    // ======================================================
+    // LOAD RESULT
+    // ======================================================
+    const assessIdxToUse = Number.isInteger(index) && index >= 0
+        ? index
+        : projectAssessments.indexOf(projectAssessment);
 
-    /* ======================================================
-       NORMALISASI NAMA & KODE DARI STRUKTUR DATA ASLI
-       (assessment_name / raw_data.name / raw_data.code)
-
-       FIX: sebelumnya blok ini cuma jalan kalau
-       assessment.name/title MASIH KOSONG. Padahal
-       assessment.name/title sering sudah keburu terisi
-       placeholder generik ("Assessment 1", dari data
-       session/legacy) SEBELUM assessment_name (canonical,
-       dari project_assessments) sempat dibaca -- akibatnya
-       placeholder generik itu yang menang dan dipakai
-       sebagai judul & untuk deteksi tipe test (VAP/DISC/PAPI).
-
-       Sekarang: assessment_name (kalau ada isinya dan bukan
-       placeholder generik) SELALU diprioritaskan di atas
-       assessment.name/title yang generik.
-    ====================================================== */
-
-    const canonicalAssessmentName =
-        String(
-            assessment.assessment_name ||
-            assessment?.raw_data?.name ||
-            ""
-        ).trim();
-
-    if (
-        canonicalAssessmentName &&
-        !isGenericAssessmentLabel(canonicalAssessmentName)
-    ) {
-
-        assessment.name = canonicalAssessmentName;
-        assessment.title = canonicalAssessmentName;
-
-    } else if (
-        !assessment.name &&
-        !assessment.title
-    ) {
-
-        assessment.name =
-            canonicalAssessmentName ||
-            "";
-
-    }
-
-    if (
-        !assessment.code ||
-        isGenericAssessmentLabel(assessment.code)
-    ) {
-
-        assessment.code =
-            assessment?.raw_data?.code ||
-            assessment?.raw_data?.assessment_code ||
-            assessment.code ||
-            "";
-
-    }
-
-
-    /* ======================================================
-       TEST TITLE
-    ====================================================== */
-
-    const testName =
-        assessment.name ||
-        assessment.title ||
-        assessment.code ||
-        `Assessment ${index + 1}`;
-
-    updateElement(
-        "testTitle",
-        testName + " Result"
+    let participantResult = await getAssessmentResult(
+        projectId, participantId, assessIdxToUse,
+        assessmentCode, assessmentId,
+        isDISC, isPAPI, isVAP,
+        assessmentIdFromUrl
     );
 
-
-    /* ======================================================
-       IDENTIFY ASSESSMENT
-
-       FIX: deteksi tipe test sekarang juga mengenali frasa
-       nama asli assessment (bukan cuma kode "DISC"/"PAPI"/"VAP"
-       yang sering tidak tersedia), supaya tetap benar walau
-       assessmentCode gagal di-resolve (mis. masih berupa UUID).
-    ====================================================== */
-
-    const codeUpper =
-        assessmentCode.toUpperCase();
-
-    const nameUpper =
-        String(
-            assessment.name ||
-            assessment.title ||
-            ""
-        ).toUpperCase();
-
-    const isDISC =
-        codeUpper.includes("DISC") ||
-        nameUpper.includes("DISC");
-
-    const isPAPI =
-        codeUpper.includes("PAPI") ||
-        nameUpper.includes("PAPI") ||
-        nameUpper.includes("KOSTICK");
-
-    const isVAP =
-        codeUpper.includes("VAP") ||
-        nameUpper.includes("VAP") ||
-        nameUpper.includes("VISUAL ATTENTION") ||
-        nameUpper.includes("WORK PERFORMANCE") ||
-        nameUpper.includes("SUSTAINED ATTENTION") ||
-        nameUpper.includes("SPEED TEST");
-
-
-    /* ======================================================
-       HEADER
-    ====================================================== */
-
-    updateAssessmentHeader(
-        isDISC,
-        isPAPI
-    );
-
-
-    /* ======================================================
-        LOAD REAL RESULT (MAPPING DISC ANSWERS)
-   ====================================================== */
-
-    /* ======================================================
-        LOAD REAL RESULT (MAPPING DISC ANSWERS)
-   ====================================================== */
-
-    let participantResult =
-        getAssessmentResult(
-            projectId,
-            participantId,
-            index,
-            assessmentCode,
-            isDISC,
-            isPAPI,
-            project,
-            participant,
-            isVAP
-        );
-
-    // Hapus seluruh blok dummy statis/fallback di sini!
-    // Gantikan cukup dengan validasi ini:
     if (!participantResult) {
-        showResultMessage(
-            "Hasil assessment untuk peserta ini belum tersedia atau belum disubmit."
-        );
+        showResultMessage("Hasil assessment untuk peserta ini belum tersedia atau belum disubmit.");
         return;
     }
 
-    /* ======================================================
-       RENDER CONTAINER
-    ====================================================== */
-
-    const resultContainer =
-        document.getElementById(
-            "resultContent"
-        );
-
+    // ======================================================
+    // RENDER CONTAINER
+    // ======================================================
+    const resultContainer = document.getElementById("resultContent");
     if (!resultContainer) {
-
-        console.error(
-            "Element #resultContent tidak ditemukan."
-        );
-
+        console.error("Element #resultContent tidak ditemukan.");
         return;
     }
 
-
-    /* ======================================================
-        DISC
-   ====================================================== */
-
+    // ======================================================
+    // RENDER BY TYPE
+    // ======================================================
     if (isDISC) {
-
-        if (
-            typeof DISCAssessment !==
-            "undefined"
-        ) {
-
-            // Jangan pernah menyuntikkan dummy score.
-            // Module DISC harus menerima hasil nyata dari participantResult.
-            const result =
-                DISCAssessment.calculate(
-                    participantResult
-                );
-
-            DISCAssessment.render(
-                resultContainer,
-                result,
-                assessment
-            );
-
+        if (typeof DISCAssessment !== "undefined") {
+            const result = DISCAssessment.calculate(participantResult);
+            DISCAssessment.render(resultContainer, result, assessment);
         } else {
-
-            showResultMessage(
-                "Module DISC belum dimuat. Pastikan disc.js dipasang sebelum test-result.js."
-            );
-
+            showResultMessage("Module DISC belum dimuat.");
         }
-
         return;
     }
-
-    /* ======================================================
-        PAPI KOSTICK
-    ====================================================== */
 
     if (isPAPI) {
-        console.log("DEBUG PAPI - Assessment:", assessment);
-        console.log("DEBUG PAPI - Participant Result:", participantResult);
-
-        const renderer = window.renderTestResult || (typeof renderTestResult === 'function' ? renderTestResult : null);
-        
+        const renderer = window.renderTestResult ||
+                        (typeof renderTestResult === "function" ? renderTestResult : null);
         if (renderer) {
-            // Pastikan parameter dikirim dengan benar (sesuai yang diminta papikostick.js)
             renderer(assessment, participantResult);
-            return;
         } else {
-            showResultMessage(
-                "Module PAPI Kostick belum dimuat. Pastikan papikostick.js dipasang sebelum test-result.js."
-            );
-            return;
+            showResultMessage("Module PAPI Kostick belum dimuat.");
         }
-    }
-
-    /* ======================================================
-        VAP (WORK PERFORMANCE & SUSTAINED ATTENTION)
-    ====================================================== */
-
-    if (isVAP) {
-
-        if (
-            typeof VAPAssessment !==
-            "undefined"
-        ) {
-
-            const result =
-                VAPAssessment.calculate(
-                    participantResult
-                );
-
-            VAPAssessment.render(
-                resultContainer,
-                result,
-                assessment
-            );
-
-        } else {
-
-            showResultMessage(
-                "Module VAP belum dimuat. Pastikan vap.js dipasang sebelum test-result.js."
-            );
-
-        }
-
         return;
     }
 
-    /* ======================================================
-       GENERIC FALLBACK
-    ====================================================== */
+    if (isVAP) {
+        if (typeof VAPAssessment !== "undefined") {
+            const result = VAPAssessment.calculate(participantResult);
+            VAPAssessment.render(resultContainer, result, assessment);
+        } else {
+            showResultMessage("Module VAP belum dimuat.");
+        }
+        return;
+    }
 
-    if (
-        typeof renderTestResult ===
-        "function"
-    ) {
-
-        renderTestResult(
-            assessment,
-            participantResult
-        );
-
+    if (typeof renderTestResult === "function") {
+        renderTestResult(assessment, participantResult);
     } else {
-
-        showResultMessage(
-            `Renderer untuk assessment "${assessmentCode}" belum tersedia.`
-        );
-
+        showResultMessage("Renderer untuk assessment " + assessmentCode + " belum tersedia.");
     }
 }
-
 
 /* ==========================================================
    GET ASSESSMENT RESULT
-   FINAL ROBUST VERSION
-========================================================== */
-
-function getAssessmentResult(
-    projectId,
-    participantId,
-    assessmentIndex,
-    assessmentCode,
-    isDISC,
-    isPAPI,
-    project,
-    participant,
-    isVAP
+   ----------------------------------------------------------
+   Prioritas pencarian:
+   0. By assessmentId (UUID) di localStorage
+   1. Supabase: INDEX + CODE
+   2. Supabase: CODE saja
+   3. Supabase: INDEX saja
+   4. K1-BARU: Cari by CODE (semua key yang mengandung code)
+   5. Cari by INDEX (data lama)
+   6. Array talent_scope_results
+   ========================================================== */
+async function getAssessmentResult(
+    projectId, participantId, assessmentIndex, assessmentCode, assessmentId,
+    isDISC, isPAPI, isVAP, assessmentIdFromUrl
 ) {
+    console.log("==========================================");
+    console.log("Mencari hasil:", {
+        projectId: projectId,
+        participantId: participantId,
+        assessmentIndex: assessmentIndex,
+        assessmentCode: assessmentCode,
+        assessmentId: assessmentId,
+        assessmentIdFromUrl: assessmentIdFromUrl
+    });
 
-    console.log(
-        "=========================================="
-    );
-
-    console.log(
-        "Mencari hasil untuk Participant ID:",
-        participantId
-    );
-
-    console.log(
-        "Project ID:",
-        projectId
-    );
-
-    console.log(
-        "Assessment Index:",
-        assessmentIndex
-    );
-
-    console.log(
-        "Assessment Code:",
-        assessmentCode
-    );
-
-
-    /*
-       ======================================================
-       HELPER
-       ======================================================
-    */
-
-    function tryNormalize(
-        raw,
-        source
-    ) {
-
-        if (!raw) {
-            return null;
-        }
-
-
-        console.log(
-            "RESULT DITEMUKAN DARI:",
-            source,
-            raw
+    function tryNormalize(raw, source) {
+        if (!raw) return null;
+        console.log("RESULT DITEMUKAN DARI:", source);
+        var normalized = normalizeAssessmentResult(
+            raw, projectId, participantId, assessmentIndex,
+            assessmentCode, isDISC, isPAPI, isVAP
         );
-
-
-        var normalized =
-            normalizeAssessmentResult(
-                raw,
-                projectId,
-                participantId,
-                assessmentIndex,
-                assessmentCode,
-                isDISC,
-                isPAPI,
-                isVAP
-            );
-
-
         if (normalized) {
-
-            console.log(
-                "RESULT BERHASIL DINORMALISASI:",
-                normalized
-            );
-
+            console.log("RESULT BERHASIL DINORMALISASI");
             return normalized;
-
         }
-
-
         return null;
-
     }
 
+    // ==========================================================
+    // FALLBACK 0: localStorage by UUID
+    // ==========================================================
+    if (assessmentIdFromUrl) {
+        console.log("[TEST-RESULT] FALLBACK 0: Cari by UUID:", assessmentIdFromUrl);
 
-    /*
-       ======================================================
-       1. DISC RESULT v3 / EXACT ASSESSMENT RESULT
-       ------------------------------------------------------
-       v3 adalah format utama yang ditulis oleh disc_test.html.
-       Harus dibaca sebelum semua format legacy agar hasil terbaru
-       tidak tertutup oleh data lama / talentscope_all_results.
-       ======================================================
-    */
+        var uuidKeys = [
+            "assessment_result_v3_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "assessment_result_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "disc_result_v3_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "disc_result_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "papi_result_v3_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "papi_result_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "vap_result_v3_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "vap_result_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "sjt_result_v3_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "sjt_result_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "tpdk_result_v3_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl,
+            "tpdk_result_" + projectId + "_" + participantId + "_" + assessmentIdFromUrl
+        ];
+
+        for (var uk = 0; uk < uuidKeys.length; uk++) {
+            var uuidRaw = readLocalStorageObject(uuidKeys[uk]);
+            if (uuidRaw) {
+                console.log("[TEST-RESULT] ✅ Data ketemu via UUID:", uuidKeys[uk]);
+                var nUuid = tryNormalize(uuidRaw, uuidKeys[uk]);
+                if (nUuid) return nUuid;
+            }
+        }
+        console.log("[TEST-RESULT] ⚠ Tidak ada data via UUID, lanjut fallback...");
+    }
+
+    // ==========================================================
+    // QUERY SUPABASE
+    // ==========================================================
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === "function") {
+            console.log("[TEST-RESULT] Query Supabase...");
+
+            let supabaseTable = "ts_results";
+            if (isDISC) supabaseTable = "disc_results";
+            else if (isPAPI) supabaseTable = "papi_results";
+            else if (isVAP) supabaseTable = "vap_results";
+            else if (assessmentCode === "MSJT" || assessmentCode === "LSJT") supabaseTable = "sjt_results";
+            else if (assessmentCode === "TPDK") supabaseTable = "tpdk_results";
+
+            console.log("[TEST-RESULT] Query tabel:", supabaseTable);
+
+            const { data, error } = await sb
+                .from(supabaseTable)
+                .select("*")
+                .eq("project_id", projectId)
+                .eq("participant_id", participantId);
+
+            if (error) {
+                console.warn("[TEST-RESULT] Supabase error:", error);
+            } else if (Array.isArray(data) && data.length > 0) {
+                console.log("[TEST-RESULT] Total rows:", data.length);
+
+                const indexStr = String(assessmentIndex);
+                const codeLower = String(assessmentCode || "").toLowerCase();
+                const idLower = String(assessmentId || "").toLowerCase();
+
+                // PRIORITAS 1: INDEX + CODE
+                for (var i = 0; i < data.length; i++) {
+                    var row = data[i];
+                    var rowIndex = String(row.assessment_index);
+                    var rowCode = String(row.assessment_code || "").trim().toLowerCase();
+
+                    if (rowIndex === indexStr) {
+                        var codeMatches =
+                            rowCode === codeLower ||
+                            rowCode === idLower ||
+                            (codeLower && rowCode.indexOf(codeLower) !== -1);
+
+                        if (codeMatches) {
+                            console.log("[TEST-RESULT] ✅ Supabase match INDEX+CODE");
+                            var n1 = tryNormalize(row.data || row, "Supabase (index + code)");
+                            if (n1) return n1;
+                        }
+                    }
+                }
+
+                // PRIORITAS 2: CODE saja
+                for (var j = 0; j < data.length; j++) {
+                    var row2 = data[j];
+                    var rowCode2 = String(row2.assessment_code || "").trim().toLowerCase();
+                    if (rowCode2 === codeLower || rowCode2 === idLower) {
+                        console.log("[TEST-RESULT] ✅ Supabase match CODE");
+                        var n2 = tryNormalize(row2.data || row2, "Supabase (code)");
+                        if (n2) return n2;
+                    }
+                }
+
+                // PRIORITAS 3: INDEX saja
+                for (var k = 0; k < data.length; k++) {
+                    var row3 = data[k];
+                    if (String(row3.assessment_index) === indexStr) {
+                        console.log("[TEST-RESULT] ✅ Supabase match INDEX");
+                        var n3 = tryNormalize(row3.data || row3, "Supabase (index)");
+                        if (n3) return n3;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("[TEST-RESULT] Supabase fetch gagal:", e);
+    }
+
+    // ==========================================================
+    // PROJECT CODE FALLBACK
+    // ==========================================================
+    var projectCodeFallback = null;
+    try {
+        var allProjects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+        var projMatch = allProjects.find(function(p) {
+            return String(p.id) === String(projectId) || String(p.projectId) === String(projectId);
+        });
+        if (projMatch) {
+            projectCodeFallback = String(projMatch.project_code || projMatch.projectCode || "").trim();
+            if (projectCodeFallback) {
+                console.log("[TEST-RESULT] Project code fallback:", projectCodeFallback);
+            }
+        }
+    } catch(e) {}
+
+    // ==========================================================
+    // FALLBACK BARU: CARI BY CODE
+    // ----------------------------------------------------------
+    // Cari SEMUA key localStorage yang mengandung code (disc/papi/vap).
+    // Ini untuk data lama yang tersimpan di index berbeda.
+    // ==========================================================
+    console.log("[TEST-RESULT] FALLBACK: Cari by code:", assessmentCode);
+
+    var allLSKeys = Object.keys(localStorage);
+    var codeLower = String(assessmentCode || "").toLowerCase();
+
+    if (codeLower) {
+        var matchedKeys = allLSKeys.filter(function(k) {
+            var hasProj = k.indexOf(projectId) !== -1;
+            if (!hasProj && projectCodeFallback) {
+                hasProj = k.indexOf(projectCodeFallback) !== -1;
+            }
+            var hasPart = k.indexOf(participantId) !== -1;
+            var lowerKey = k.toLowerCase();
+            var hasCode = lowerKey.indexOf(codeLower) !== -1;
+
+            return hasProj && hasPart && hasCode && k.indexOf("_result") !== -1;
+        });
+
+        console.log("[TEST-RESULT] Kandidat key by code:", matchedKeys);
+
+        for (var mk = 0; mk < matchedKeys.length; mk++) {
+            var mkRaw = readLocalStorageObject(matchedKeys[mk]);
+            if (!mkRaw) continue;
+
+            var dataType = String(
+                mkRaw.resultType || mkRaw.assessmentCode || ""
+            ).toUpperCase();
+
+            if (dataType.indexOf(assessmentCode.toUpperCase()) !== -1) {
+                console.log("[TEST-RESULT] ✅ Data ketemu by code:", matchedKeys[mk]);
+                var nCode = tryNormalize(mkRaw, matchedKeys[mk]);
+                if (nCode) return nCode;
+            }
+        }
+    }
+
+    // ==========================================================
+    // FALLBACK LOCALSTORAGE BY INDEX
+    // ==========================================================
+    console.log("[TEST-RESULT] Fallback ke localStorage by index...");
 
     if (isDISC) {
+        var discKeys = [
+            "disc_result_v3_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            "disc_result_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            "assessment_result_v3_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            projectCodeFallback ? "disc_result_v3_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null,
+            projectCodeFallback ? "assessment_result_v3_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null,
+            "disc_result_v3_" + projectId + "_" + participantId,
+            "disc_result_" + projectId + "_" + participantId,
+            "assessment_result_v3_" + projectId + "_" + participantId,
+            projectCodeFallback ? "disc_result_v3_" + projectCodeFallback + "_" + participantId : null,
+            projectCodeFallback ? "assessment_result_v3_" + projectCodeFallback + "_" + participantId : null
+        ].filter(Boolean);
 
-        var discV3Keys = [
-            "disc_result_v3_" +
-            projectId +
-            "_" +
-            participantId +
-            "_" +
-            assessmentIndex,
-
-            "assessment_result_v3_" +
-            projectId +
-            "_" +
-            participantId +
-            "_" +
-            assessmentIndex
-        ];
-
-        for (var v3 = 0; v3 < discV3Keys.length; v3++) {
-            var v3Key = discV3Keys[v3];
-            var v3Raw = readLocalStorageObject(v3Key);
-
-            if (v3Raw) {
-                var normalizedV3 = tryNormalize(v3Raw, v3Key);
-                if (normalizedV3) {
-                    console.info("DISC v3 RESULT DIPAKAI:", v3Key);
-                    return normalizedV3;
-                }
+        for (var d = 0; d < discKeys.length; d++) {
+            var dRaw = readLocalStorageObject(discKeys[d]);
+            if (dRaw) {
+                console.log("[TEST-RESULT] ✅ DISC data ketemu:", discKeys[d]);
+                var nD = tryNormalize(dRaw, discKeys[d]);
+                if (nD) return nD;
             }
         }
-
-        // Fallback sessionStorage untuk kondisi localStorage dibatasi browser.
-        for (var sv3 = 0; sv3 < discV3Keys.length; sv3++) {
-            var sessionKey = discV3Keys[sv3];
-            try {
-                var sessionRaw = JSON.parse(sessionStorage.getItem(sessionKey) || "null");
-                if (sessionRaw) {
-                    var normalizedSessionV3 = tryNormalize(sessionRaw, "sessionStorage:" + sessionKey);
-                    if (normalizedSessionV3) {
-                        console.info("DISC v3 RESULT DIPAKAI DARI SESSION:", sessionKey);
-                        return normalizedSessionV3;
-                    }
-                }
-            } catch (e) {
-                console.warn("Gagal membaca sessionStorage key:", sessionKey, e);
-            }
-        }
+        console.warn("[TEST-RESULT] ❌ DISC data tidak ketemu");
     }
-
-
-
-    /*
-       ======================================================
-       1b. VAP RESULT v3
-       ------------------------------------------------------
-       Format yang ditulis oleh speedtest.html:
-       assessment_result_v3_{projectId}_{participantId}_{index}
-       ======================================================
-    */
-
-    if (isVAP) {
-
-        var vapV3Key =
-            "assessment_result_v3_" +
-            projectId +
-            "_" +
-            participantId +
-            "_" +
-            assessmentIndex;
-
-        var vapV3Raw = readLocalStorageObject(vapV3Key);
-
-        if (vapV3Raw) {
-            var normalizedVapV3 = tryNormalize(vapV3Raw, vapV3Key);
-            if (normalizedVapV3) {
-                console.info("VAP v3 RESULT DIPAKAI:", vapV3Key);
-                return normalizedVapV3;
-            }
-        }
-
-        try {
-            var vapSessionRaw = JSON.parse(sessionStorage.getItem(vapV3Key) || "null");
-            if (vapSessionRaw) {
-                var normalizedVapSession = tryNormalize(vapSessionRaw, "sessionStorage:" + vapV3Key);
-                if (normalizedVapSession) {
-                    console.info("VAP RESULT DIPAKAI DARI SESSION:", vapV3Key);
-                    return normalizedVapSession;
-                }
-            }
-        } catch (e) {
-            console.warn("Gagal membaca sessionStorage key:", vapV3Key, e);
-        }
-    }
-
-
-
-    /*
-       ======================================================
-       2. CENTRAL RESULT (LEGACY / COMPATIBILITY)
-       talentscope_all_results
-       ------------------------------------------------------
-       Support legacy dan format baru yang memisahkan hasil
-       berdasarkan project + assessmentIndex.
-       ======================================================
-    */
-
-    try {
-
-        var allResultsRaw =
-            localStorage.getItem(
-                "talentscope_all_results"
-            );
-
-        if (allResultsRaw) {
-
-            var allResults =
-                JSON.parse(allResultsRaw);
-
-            var participantResults =
-                allResults &&
-                allResults[participantId];
-
-            if (participantResults) {
-
-                /* ------------------------------------------
-                   FORMAT BARU
-                   participantId.assessments[key] = result
-                ------------------------------------------ */
-                var nestedResults =
-                    participantResults.assessments;
-
-                if (
-                    nestedResults &&
-                    typeof nestedResults === "object"
-                ) {
-
-                    var nestedKeys =
-                        Object.keys(nestedResults);
-
-                    for (
-                        var nr = 0;
-                        nr < nestedKeys.length;
-                        nr++
-                    ) {
-
-                        var nestedKey =
-                            nestedKeys[nr];
-
-                        var nestedResult =
-                            nestedResults[nestedKey];
-
-                        if (
-                            !nestedResult ||
-                            typeof nestedResult !== "object"
-                        ) {
-                            continue;
-                        }
-
-                        var nestedProjectId = String(
-                            nestedResult.projectId ??
-                            nestedResult.projectID ??
-                            nestedResult.project_id ??
-                            ""
-                        ).trim();
-
-                        var nestedAssessmentIndex =
-                            nestedResult.assessmentIndex ??
-                            nestedResult.assessment_index;
-
-                        var nestedCode =
-                            nestedResult.assessmentCode ??
-                            nestedResult.assessment_code;
-
-                        var matchesProject =
-                            !nestedProjectId ||
-                            nestedProjectId === String(projectId).trim();
-
-                        var matchesIndex =
-                            nestedAssessmentIndex === undefined ||
-                            nestedAssessmentIndex === null ||
-                            String(nestedAssessmentIndex) === String(assessmentIndex);
-
-                        var matchesCode =
-                            !nestedCode ||
-                            String(nestedCode).toUpperCase() ===
-                            String(assessmentCode).toUpperCase();
-
-                        if (
-                            matchesProject &&
-                            matchesIndex &&
-                            matchesCode
-                        ) {
-
-                            var normalizedNestedCentral =
-                                tryNormalize(
-                                    nestedResult,
-                                    "talentscope_all_results[" +
-                                    participantId +
-                                    "].assessments[" +
-                                    nestedKey +
-                                    "]"
-                                );
-
-                            if (normalizedNestedCentral) {
-                                return normalizedNestedCentral;
-                            }
-                        }
-                    }
-                }
-
-                /* ------------------------------------------
-                   FORMAT LEGACY
-                   participantId = result
-                   Hanya pakai jika metadata cocok.
-                ------------------------------------------ */
-                var centralProjectId = String(
-                    participantResults.projectId ??
-                    participantResults.projectID ??
-                    participantResults.project_id ??
-                    ""
-                ).trim();
-
-                var centralAssessmentIndex =
-                    participantResults.assessmentIndex ??
-                    participantResults.assessment_index;
-
-                var centralAssessmentCode =
-                    participantResults.assessmentCode ??
-                    participantResults.assessment_code;
-
-                var legacyMatchesProject =
-                    !centralProjectId ||
-                    centralProjectId === String(projectId).trim();
-
-                var legacyMatchesIndex =
-                    centralAssessmentIndex === undefined ||
-                    centralAssessmentIndex === null ||
-                    String(centralAssessmentIndex) === String(assessmentIndex);
-
-                var legacyMatchesCode =
-                    !centralAssessmentCode ||
-                    String(centralAssessmentCode).toUpperCase() ===
-                    String(assessmentCode).toUpperCase();
-
-                if (
-                    legacyMatchesProject &&
-                    legacyMatchesIndex &&
-                    legacyMatchesCode
-                ) {
-
-                    var normalizedCentral =
-                        tryNormalize(
-                            participantResults,
-                            "talentscope_all_results[" +
-                            participantId +
-                            "]"
-                        );
-
-                    if (normalizedCentral) {
-                        return normalizedCentral;
-                    }
-                }
-            }
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Error membaca talentscope_all_results:",
-            error
-        );
-
-    }
-
-
-    /*
-       ======================================================
-       3. EXACT ASSESSMENT RESULT (LEGACY KEY)
-       ======================================================
-    */
-
-    var exactKeys = [
-
-        "assessment_result_" +
-        projectId +
-        "_" +
-        participantId +
-        "_" +
-        assessmentIndex,
-
-        "assessment_result_" +
-        projectId +
-        "_" +
-        participantId
-
-    ];
-
-
-    for (
-        var i = 0;
-        i < exactKeys.length;
-        i++
-    ) {
-
-        var exactKey =
-            exactKeys[i];
-
-
-        var exactRaw =
-            readLocalStorageObject(
-                exactKey
-            );
-
-
-        if (exactRaw) {
-
-            var normalizedExact =
-                tryNormalize(
-                    exactRaw,
-                    exactKey
-                );
-
-
-            if (normalizedExact) {
-
-                return normalizedExact;
-
-            }
-
-        }
-
-    }
-
-
-    /*
-       ======================================================
-       3. DISC RESULT
-       ======================================================
-    */
-if (isDISC) {
-    var discKeys = [
-
-    "disc_result_" +
-    projectId +
-    "_" +
-    participantId +
-    "_" +
-    assessmentIndex,
-
-    "disc_result_" +
-    projectId +
-    "_" +
-    participantId,
-
-    "DISC_result_" +
-    projectId +
-    "_" +
-    participantId +
-    "_" +
-    assessmentIndex,
-
-    "DISC_result_" +
-    projectId +
-    "_" +
-    participantId
-
-];
-
-
-        for (
-            var d = 0;
-            d < discKeys.length;
-            d++
-        ) {
-
-            var discKey =
-                discKeys[d];
-
-
-            var discRaw =
-                readLocalStorageObject(
-                    discKey
-                );
-
-
-            if (!discRaw) {
-
-                continue;
-
-            }
-
-
-            var normalizedDisc =
-                tryNormalize(
-                    discRaw,
-                    discKey
-                );
-
-
-            if (normalizedDisc) {
-
-                return normalizedDisc;
-
-            }
-
-        }
-
-    }
-
-
-    /*
-       ======================================================
-       4. PAPI RESULT
-       ======================================================
-    */
 
     if (isPAPI) {
-
         var papiKeys = [
-            "papi_result_" +
-            projectId +
-            "_" +
-            participantId +
-            "_" +
-            assessmentIndex
-        ];
+            "papi_result_v3_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            "papi_result_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            "assessment_result_v3_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            projectCodeFallback ? "papi_result_v3_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null,
+            projectCodeFallback ? "assessment_result_v3_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null,
+            "papi_result_v3_" + projectId + "_" + participantId,
+            "papi_result_" + projectId + "_" + participantId,
+            "assessment_result_v3_" + projectId + "_" + participantId,
+            projectCodeFallback ? "papi_result_v3_" + projectCodeFallback + "_" + participantId : null,
+            projectCodeFallback ? "assessment_result_v3_" + projectCodeFallback + "_" + participantId : null
+        ].filter(Boolean);
 
-
-        for (
-            var p = 0;
-            p < papiKeys.length;
-            p++
-        ) {
-
-            var papiKey =
-                papiKeys[p];
-
-
-            var papiRaw =
-                readLocalStorageObject(
-                    papiKey
-                );
-
-
-            if (!papiRaw) {
-
-                continue;
-
+        for (var p = 0; p < papiKeys.length; p++) {
+            var papiRaw = readLocalStorageObject(papiKeys[p]);
+            if (papiRaw) {
+                console.log("[TEST-RESULT] ✅ PAPI data ketemu:", papiKeys[p]);
+                var nPapi = tryNormalize(papiRaw, papiKeys[p]);
+                if (nPapi) return nPapi;
             }
-
-
-            var rawPapiProject = String(
-                papiRaw.projectId ?? papiRaw.projectID ?? papiRaw.project_id ?? ""
-            ).trim();
-            var rawPapiParticipant = String(
-                papiRaw.participantId ?? papiRaw.participantID ?? papiRaw.participant_id ?? ""
-            ).trim();
-            var rawPapiIndex = papiRaw.assessmentIndex;
-            var rawPapiCode = String(
-                papiRaw.assessmentCode ?? papiRaw.assessment_code ?? ""
-            ).trim().toUpperCase();
-
-            if (
-                rawPapiProject !== String(projectId).trim() ||
-                rawPapiParticipant !== String(participantId).trim() ||
-                String(rawPapiIndex) !== String(assessmentIndex) ||
-                (rawPapiCode && rawPapiCode !== String(assessmentCode).trim().toUpperCase())
-            ) {
-                console.warn("PAPI result ditolak: metadata tidak cocok.", papiKey);
-                continue;
-            }
-
-            var normalizedPapi =
-                tryNormalize(
-                    papiRaw,
-                    papiKey
-                );
-
-
-            if (normalizedPapi) {
-
-                return normalizedPapi;
-
-            }
-
         }
-
+        console.warn("[TEST-RESULT] ❌ PAPI data tidak ketemu");
     }
 
+    if (isVAP) {
+        var vapKeys = [
+            "vap_result_v3_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            "vap_result_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            "assessment_result_v3_" + projectId + "_" + participantId + "_" + assessmentIndex,
+            projectCodeFallback ? "vap_result_v3_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null,
+            projectCodeFallback ? "assessment_result_v3_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null,
+            "vap_result_v3_" + projectId + "_" + participantId,
+            "vap_result_" + projectId + "_" + participantId,
+            "assessment_result_v3_" + projectId + "_" + participantId,
+            projectCodeFallback ? "vap_result_v3_" + projectCodeFallback + "_" + participantId : null,
+            projectCodeFallback ? "assessment_result_v3_" + projectCodeFallback + "_" + participantId : null
+        ].filter(Boolean);
 
-    /*
-       ======================================================
-       5. CENTRAL RESULT ARRAY
-       talent_scope_results
-       ======================================================
-    */
-
-    var resultArray =
-        readLocalStorageArray(
-            "talent_scope_results"
-        );
-
-
-    if (
-        Array.isArray(resultArray) &&
-        resultArray.length
-    ) {
-
-        console.log(
-            "Memeriksa talent_scope_results:",
-            resultArray
-        );
-
-
-        /*
-           Cari berdasarkan:
-
-           projectId
-           participantId
-           assessmentIndex
-        */
-
-        for (
-            var r =
-                resultArray.length - 1;
-            r >= 0;
-            r--
-        ) {
-
-            var item =
-                resultArray[r];
-
-
-            if (!item) {
-
-                continue;
-
+        for (var v = 0; v < vapKeys.length; v++) {
+            var vapRaw = readLocalStorageObject(vapKeys[v]);
+            if (vapRaw) {
+                console.log("[TEST-RESULT] ✅ VAP data ketemu:", vapKeys[v]);
+                var nVap = tryNormalize(vapRaw, vapKeys[v]);
+                if (nVap) return nVap;
             }
-
-
-            var itemProjectId =
-                String(
-                    item.projectId ??
-                    item.projectID ??
-                    item.project_id ??
-                    ""
-                ).trim();
-
-
-            var itemParticipantId =
-                String(
-                    item.participantId ??
-                    item.participantID ??
-                    item.participant_id ??
-                    item.idParticipant ??
-                    ""
-                ).trim();
-
-
-            var itemIndex =
-                item.assessmentIndex ??
-                item.assessment_index;
-
-
-            var sameProject =
-                itemProjectId ===
-                String(projectId).trim();
-
-
-            var sameParticipant =
-                itemParticipantId ===
-                String(participantId).trim();
-
-
-            var sameIndex =
-                itemIndex === undefined ||
-                itemIndex === null ||
-                String(itemIndex) ===
-                String(assessmentIndex);
-
-
-            if (
-                sameProject &&
-                sameParticipant &&
-                sameIndex
-            ) {
-
-                var normalizedArray =
-                    tryNormalize(
-                        item,
-                        "talent_scope_results[" +
-                        r +
-                        "]"
-                    );
-
-
-                if (normalizedArray) {
-
-                    return normalizedArray;
-
-                }
-
-            }
-
         }
-
+        console.warn("[TEST-RESULT] ❌ VAP data tidak ketemu");
     }
 
+    // Generic keys
+    var genericKeys = [
+        "assessment_result_" + projectId + "_" + participantId + "_" + assessmentIndex,
+        projectCodeFallback ? "assessment_result_" + projectCodeFallback + "_" + participantId + "_" + assessmentIndex : null
+    ].filter(Boolean);
 
-    /*
-       ======================================================
-       6. NESTED PARTICIPANT RESULTS
-       ======================================================
-    */
-
-    var nestedCandidates = [
-
-        participant &&
-        participant.assessmentResults,
-
-        participant &&
-        participant.results,
-
-        participant &&
-        participant.assessment_results,
-
-        project &&
-        project.assessmentResults,
-
-        project &&
-        project.results,
-
-        project &&
-        project.assessment_results
-
-    ];
-
-
-    for (
-        var n = 0;
-        n < nestedCandidates.length;
-        n++
-    ) {
-
-        var candidate =
-            nestedCandidates[n];
-
-
-        if (!candidate) {
-
-            continue;
-
+    for (var g = 0; g < genericKeys.length; g++) {
+        var exactRaw = readLocalStorageObject(genericKeys[g]);
+        if (exactRaw) {
+            console.log("[TEST-RESULT] ✅ Generic data ketemu:", genericKeys[g]);
+            var nExact = tryNormalize(exactRaw, genericKeys[g]);
+            if (nExact) return nExact;
         }
-
-
-        var list =
-            Array.isArray(candidate)
-                ? candidate
-                : [candidate];
-
-
-        for (
-            var x = 0;
-            x < list.length;
-            x++
-        ) {
-
-            var nestedItem =
-                list[x];
-
-
-            if (!nestedItem) {
-
-                continue;
-
-            }
-
-
-            var nestedIndex =
-                nestedItem.assessmentIndex ??
-                nestedItem.assessment_index;
-
-
-            var nestedCode =
-                nestedItem.assessmentCode ??
-                nestedItem.assessment_code;
-
-
-            var sameNestedIndex =
-                nestedIndex === undefined ||
-                nestedIndex === null ||
-                String(nestedIndex) ===
-                String(assessmentIndex);
-
-
-            var sameNestedCode =
-                !nestedCode ||
-                String(nestedCode)
-                    .toUpperCase() ===
-                String(assessmentCode)
-                    .toUpperCase();
-
-
-            if (
-                sameNestedIndex &&
-                sameNestedCode
-            ) {
-
-                var normalizedNested =
-                    tryNormalize(
-                        nestedItem,
-                        "nested participant/project result"
-                    );
-
-
-                if (normalizedNested) {
-
-                    return normalizedNested;
-
-                }
-
-            }
-
-        }
-
     }
 
+    // FALLBACK TERAKHIR: talent_scope_results array
+    var resultArray = readLocalStorageArray("talent_scope_results");
+    for (var r = resultArray.length - 1; r >= 0; r--) {
+        var item = resultArray[r];
+        if (!item) continue;
+        var itemProject = String(item.projectId || item.project_id || "").trim();
+        var itemParticipant = String(item.participantId || item.participant_id || "").trim();
+        var itemIndex = item.assessmentIndex !== undefined ? item.assessmentIndex : item.assessment_index;
+        var itemCode = String(item.assessmentCode || item.assessment_code || "").toLowerCase();
 
-    /*
-       ======================================================
-       7. LAST RESORT:
-       SCAN LOCALSTORAGE
-       ======================================================
-    */
+        var indexMatch = String(itemIndex) === String(assessmentIndex);
+        var codeMatch = itemCode === String(assessmentCode).toLowerCase();
 
-    console.log(
-        "Exact result belum ditemukan."
-    );
+        var projectMatch = (itemProject === String(projectId).trim()) ||
+                          (projectCodeFallback && itemProject === String(projectCodeFallback).trim());
 
-    console.log(
-        "Scanning localStorage..."
-    );
-
-
-    for (
-        var k = 0;
-        k < localStorage.length;
-        k++
-    ) {
-
-        var storageKey =
-            localStorage.key(k);
-
-
-        if (!storageKey) {
-
-            continue;
-
+        if (projectMatch &&
+            itemParticipant === String(participantId).trim() &&
+            (indexMatch || codeMatch)) {
+            var nArr = tryNormalize(item, "talent_scope_results[" + r + "]");
+            if (nArr) return nArr;
         }
-
-
-        /*
-           Hanya periksa key yang
-           kemungkinan berhubungan
-           dengan participant/project.
-        */
-
-        var keyLower =
-            storageKey.toLowerCase();
-
-
-        // LAST RESORT tetap harus participant-scoped.
-        // Jangan pernah memilih hasil hanya karena key mengandung projectId;
-        // itu dapat mengambil hasil peserta lain (mis. AA02) untuk AA01.
-        var participantToken =
-            String(participantId).trim().toLowerCase();
-
-        var projectToken =
-            String(projectId).trim().toLowerCase();
-
-        var related =
-            !!participantToken &&
-            !!projectToken &&
-            keyLower.includes(participantToken) &&
-            keyLower.includes(projectToken);
-
-        if (!related) {
-            continue;
-        }
-
-        var scannedRaw =
-            readLocalStorageObject(
-                storageKey
-            );
-
-        if (!scannedRaw) {
-            continue;
-        }
-
-        // Bila object memiliki metadata, metadata WAJIB cocok.
-        var scannedProjectId = String(
-            scannedRaw.projectId ??
-            scannedRaw.projectID ??
-            scannedRaw.project_id ??
-            ""
-        ).trim();
-
-        var scannedParticipantId = String(
-            scannedRaw.participantId ??
-            scannedRaw.participantID ??
-            scannedRaw.participant_id ??
-            scannedRaw.idParticipant ??
-            ""
-        ).trim();
-
-        var scannedIndex =
-            scannedRaw.assessmentIndex ??
-            scannedRaw.assessment_index;
-
-        var scannedCode =
-            scannedRaw.assessmentCode ??
-            scannedRaw.assessment_code;
-
-        if (
-            (scannedProjectId && scannedProjectId !== String(projectId).trim()) ||
-            (scannedParticipantId && scannedParticipantId !== String(participantId).trim()) ||
-            (
-                scannedIndex !== undefined &&
-                scannedIndex !== null &&
-                String(scannedIndex) !== String(assessmentIndex)
-            ) ||
-            (
-                scannedCode &&
-                String(scannedCode).toUpperCase() !==
-                String(assessmentCode).toUpperCase()
-            )
-        ) {
-            console.warn(
-                "SKIP localStorage scan: metadata tidak cocok.",
-                storageKey,
-                { scannedProjectId, scannedParticipantId, scannedIndex, scannedCode }
-            );
-            continue;
-        }
-
-        var normalizedScanned =
-            tryNormalize(
-                scannedRaw,
-                "localStorage scan: " +
-                storageKey
-            );
-
-        if (normalizedScanned) {
-            return normalizedScanned;
-        }
-
     }
 
-
-    /*
-       ======================================================
-       TIDAK DITEMUKAN
-       ======================================================
-    */
-
-    console.warn(
-        "HASIL ASSESSMENT TIDAK DITEMUKAN",
-        {
-            projectId:
-                projectId,
-
-            participantId:
-                participantId,
-
-            assessmentIndex:
-                assessmentIndex,
-
-            assessmentCode:
-                assessmentCode
-        }
-    );
-
-
+    console.warn("[TEST-RESULT] ❌ HASIL TIDAK DITEMUKAN");
     return null;
-
 }
 
-    
 /* ==========================================================
    NORMALIZE RESULT
 ========================================================== */
+function normalizeAssessmentResult(raw, projectId, participantId, assessmentIndex, assessmentCode, isDISC, isPAPI, isVAP) {
+    if (!raw || typeof raw !== "object") return null;
 
-function normalizeAssessmentResult(
-    raw,
-    projectId,
-    participantId,
-    assessmentIndex,
-    assessmentCode,
-    isDISC,
-    isPAPI,
-    isVAP
-) {
+    const result = Object.assign({}, raw, {
+        projectId: raw.projectId !== undefined ? raw.projectId : projectId,
+        participantId: raw.participantId !== undefined ? raw.participantId : participantId,
+        assessmentIndex: raw.assessmentIndex !== undefined ? raw.assessmentIndex : assessmentIndex,
+        assessmentCode: raw.assessmentCode !== undefined ? raw.assessmentCode : assessmentCode
+    });
 
-    if (
-        !raw ||
-        typeof raw !== "object"
-    ) {
-        return null;
-    }
+    if (isVAP && result.scores && typeof result.scores === "object") return result;
 
-
-    /* ======================================================
-       BASE RESULT
-    ====================================================== */
-
-    const result = {
-        ...raw,
-
-        projectId:
-            raw.projectId ??
-            projectId,
-
-        participantId:
-            raw.participantId ??
-            participantId,
-
-        assessmentIndex:
-            raw.assessmentIndex ??
-            assessmentIndex,
-
-        assessmentCode:
-            raw.assessmentCode ??
-            assessmentCode
-    };
-
-
-    /* ======================================================
-       VAP: KEMBALIKAN APA ADANYA
-       Data VAP (scores berisi speed/accuracy/dst.) sudah dalam
-       bentuk final dari speedtest.html — jangan diproses lewat
-       logika format DISC/PAPI di bawah, supaya tidak tertimpa.
-    ====================================================== */
-
-    if (
-        isVAP &&
-        result.scores &&
-        typeof result.scores === "object"
-    ) {
-        return result;
-    }
-
-
-    /* ======================================================
-       1. SUDAH MEMILIKI SCORES
-    ====================================================== */
-
-    if (
-        result.scores &&
-        typeof result.scores === "object"
-    ) {
-
-        // DISC v3/baru: wajib mempertahankan tiga graph apa adanya.
-        if (
-            isDISC &&
-            result.scores.most &&
-            result.scores.least &&
-            result.scores.change &&
-            typeof result.scores.most === "object" &&
-            typeof result.scores.least === "object" &&
-            typeof result.scores.change === "object"
-        ) {
-            const storedScores = {
+    if (result.scores && typeof result.scores === "object") {
+        if (isDISC && result.scores.most && result.scores.least && result.scores.change) {
+            result.scores = {
                 most: normalizeDiscScores(result.scores.most),
                 least: normalizeDiscScores(result.scores.least),
                 change: normalizeDiscScores(result.scores.change)
             };
-
-            // Bila jawaban 24 nomor tersedia, jawaban adalah sumber kebenaran.
-            const recoveredFromAnswers =
-                calculateDiscScoresFromAnswers(
-                    result.answers ||
-                    raw.answers ||
-                    raw.jawabanMentah
-                );
-
-            if (recoveredFromAnswers) {
-                const sameScores =
-                    JSON.stringify(storedScores) ===
-                    JSON.stringify(recoveredFromAnswers);
-
-                if (!sameScores) {
-                    console.warn(
-                        "DISC SCORE TIDAK SINKRON DENGAN ANSWERS. SCORE DIPULIHKAN DARI JAWABAN.",
-                        { participantId, assessmentIndex, storedScores, recoveredFromAnswers }
-                    );
-                    result.scores = recoveredFromAnswers;
-                } else {
-                    result.scores = storedScores;
-                }
-            } else {
-                result.scores = storedScores;
-            }
-
             return result;
         }
-
-        // DISC lama menyimpan scores langsung sebagai {D,I,S,C}.
-        // Jika answers tersedia, hitung ulang ketiga graph dari jawaban asli.
-        if (
-            isDISC &&
-            hasDiscDimensions(result.scores) &&
-            !result.scores.most &&
-            !result.scores.least &&
-            !result.scores.change
-        ) {
-
-            const recoveredDisc =
-                calculateDiscScoresFromAnswers(
-                    result.answers ||
-                    raw.answers ||
-                    raw.jawabanMentah
-                );
-
-            if (recoveredDisc) {
-                result.scores = recoveredDisc;
-                return result;
-            }
-
-            // Tidak ada jawaban yang dapat direkonstruksi.
-            // Angka flat lama diperlakukan sebagai MOST agar tidak hilang,
-            // tetapi Graph 2/3 tidak dibuat-buat.
-            result.scores = {
-                most: normalizeDiscScores(result.scores),
-                least: {},
-                change: {}
-            };
-        }
-
-        return result;
-
-    }
-
-
-    /* ======================================================
-       2. DISC - FORMAT GRAPH
-    ====================================================== */
-
-    if (isDISC) {
-
-        const most =
-            firstObject([
-                raw.most,
-                raw.graph1,
-                raw.graph1Most,
-                raw.graphs?.most,
-                raw.graphs?.graph1
-            ]);
-
-
-        const least =
-            firstObject([
-                raw.least,
-                raw.graph2,
-                raw.graph2Least,
-                raw.graphs?.least,
-                raw.graphs?.graph2
-            ]);
-
-
-        const change =
-            firstObject([
-                raw.change,
-                raw.graph3,
-                raw.graph3Change,
-                raw.graphs?.change,
-                raw.graphs?.graph3
-            ]);
-
-
-        if (
-            most ||
-            least ||
-            change
-        ) {
-
-            result.scores = {
-
-                most:
-                    most || {},
-
-                least:
-                    least || {},
-
-                change:
-                    change || {}
-
-            };
-
-
-            return result;
-
-        }
-
-
-        /* ==================================================
-           DISC - FORMAT SCORE LANGSUNG
-        ================================================== */
-
-        if (
-            hasDiscDimensions(raw)
-        ) {
-
-            result.scores = {
-
-                most: {},
-
-                least: {},
-
-                change: {
-
-                    D:
-                        Number(
-                            raw.D ??
-                            raw.d ??
-                            0
-                        ),
-
-                    I:
-                        Number(
-                            raw.I ??
-                            raw.i ??
-                            0
-                        ),
-
-                    S:
-                        Number(
-                            raw.S ??
-                            raw.s ??
-                            0
-                        ),
-
-                    C:
-                        Number(
-                            raw.C ??
-                            raw.c ??
-                            0
-                        )
-
-                }
-
-            };
-
-
-            return result;
-
-        }
-
-
-        /* ==================================================
-           DISC - DATA NESTED DI DALAM RESULT
-        ================================================== */
-
-        const nestedDisc =
-            raw.result ||
-            raw.resultData ||
-            raw.data ||
-            raw.disc ||
-            raw.discResult ||
-            raw.disc_result;
-
-
-        if (
-            nestedDisc &&
-            typeof nestedDisc === "object"
-        ) {
-
-            return normalizeAssessmentResult(
-                nestedDisc,
-                projectId,
-                participantId,
-                assessmentIndex,
-                assessmentCode,
-                true,
-                false
-            );
-
-        }
-
-    }
-
-
-    /* ======================================================
-       3. PAPI
-       FORMAT: skorDimensi
-    ====================================================== */
-
-    if (
-        isPAPI &&
-        raw.skorDimensi &&
-        typeof raw.skorDimensi === "object"
-    ) {
-
-        result.scores =
-            raw.skorDimensi;
-
-        return result;
-
-    }
-
-
-    /* ======================================================
-       4. GENERIC SCORE
-    ====================================================== */
-
-    if (
-        raw.score &&
-        typeof raw.score === "object"
-    ) {
-
-        result.scores =
-            raw.score;
-
-        return result;
-
-    }
-
-
-    /* ======================================================
-       5. RAW ANSWERS
-       Jangan buang data yang sudah ditemukan.
-    ====================================================== */
-
-    if (
-        raw.answers &&
-        typeof raw.answers === "object"
-    ) {
-
-        if (isDISC) {
-            const recoveredDisc =
-                calculateDiscScoresFromAnswers(raw.answers);
-
-            if (recoveredDisc) {
-                result.scores = recoveredDisc;
-                result.answers = raw.answers;
-                return result;
-            }
-        }
-
-        result.scores = {
-            answers:
-                raw.answers
-        };
-
         return result;
     }
 
-
-    if (
-        raw.jawabanMentah &&
-        typeof raw.jawabanMentah === "object"
-    ) {
-
-        result.scores = {
-
-            answers:
-                raw.jawabanMentah
-
-        };
-
-        result.answers =
-            raw.jawabanMentah;
-
+    if (isPAPI && raw.skorDimensi && typeof raw.skorDimensi === "object") {
+        result.scores = raw.skorDimensi;
         return result;
-
     }
 
+    if (raw.score && typeof raw.score === "object") {
+        result.scores = raw.score;
+        return result;
+    }
 
-    /* ======================================================
-       6. FALLBACK
-       Data sudah ditemukan dari localStorage.
-       Jangan langsung dianggap tidak ada.
-    ====================================================== */
+    if (raw.answers && typeof raw.answers === "object") {
+        result.scores = { answers: raw.answers };
+        result.answers = raw.answers;
+        return result;
+    }
 
     result.scores = {};
-
-    result.answers =
-        raw.answers ||
-        raw.jawabanMentah ||
-        {};
-
+    result.answers = raw.answers || {};
     return result;
-
 }
-
-
-/* ==========================================================
-   ASSESSMENT CODE RESOLVER
-========================================================== */
-
-function resolveAssessmentCode(
-    projectAssessment,
-    masterAssessments
-) {
-
-    if (
-        typeof projectAssessment ===
-        "string"
-    ) {
-
-        const text =
-            projectAssessment.trim();
-
-        if (!text) {
-            return "";
-        }
-
-        const byCode =
-            masterAssessments.find(
-                function (item) {
-
-                    return String(
-                        item?.code || ""
-                    ).toUpperCase() ===
-                    text.toUpperCase();
-
-                }
-            );
-
-        if (byCode) {
-            return String(
-                byCode.code || ""
-            ).trim();
-        }
-
-        const byName =
-            masterAssessments.find(
-                function (item) {
-
-                    return String(
-                        item?.name || ""
-                    ).toLowerCase() ===
-                    text.toLowerCase();
-
-                }
-            );
-
-        return String(
-            byName?.code || text
-        ).trim();
-
-    }
-
-
-    if (
-        projectAssessment &&
-        typeof projectAssessment ===
-        "object"
-    ) {
-
-        const directCode =
-            String(
-                projectAssessment.code ||
-                projectAssessment.assessmentCode ||
-                projectAssessment.assessment_code ||
-                projectAssessment?.raw_data?.code ||
-                projectAssessment?.raw_data?.assessment_code ||
-                ""
-            ).trim();
-
-        if (directCode) {
-            return directCode;
-        }
-
-        /*
-           FIX: tabel project_assessments TIDAK PUNYA kolom
-           code sendiri (cuma assessment_id, UUID, yang
-           menunjuk ke tabel master "assessments").
-
-           Sebelum jatuh ke assessment_id/id (UUID) sebagai
-           fallback code -- yang menyebabkan judul & deteksi
-           tipe test (isDISC/isPAPI/isVAP) salah total karena
-           UUID tidak pernah match "DISC"/"PAPI"/"VAP" -- coba
-           cari code ASLI dari master "assessments" (localStorage
-           key "assessments") lewat assessment_id.
-        */
-        const refId =
-            String(
-                projectAssessment.assessment_id ||
-                projectAssessment.assessmentId ||
-                ""
-            ).trim();
-
-        if (
-            refId &&
-            Array.isArray(masterAssessments)
-        ) {
-
-            const byId =
-                masterAssessments.find(
-                    function (item) {
-
-                        return String(
-                            item?.id || ""
-                        ).toLowerCase() ===
-                        refId.toLowerCase();
-                    }
-                );
-
-            if (byId) {
-
-                const resolvedCode =
-                    String(
-                        byId.assessment_code ||
-                        byId.code ||
-                        ""
-                    ).trim();
-
-                if (resolvedCode) {
-                    return resolvedCode;
-                }
-            }
-        }
-
-        return String(
-            projectAssessment.assessmentId ||
-            projectAssessment.assessment_id ||
-            projectAssessment.id ||
-            ""
-        ).trim();
-
-    }
-
-
-    return "";
-}
-
 
 /* ==========================================================
    HELPERS
-========================================================== */
-
-function readLocalStorageObject(
-    key
-) {
-
+   ========================================================== */
+function readLocalStorageObject(key) {
     try {
-
-        const raw =
-            localStorage.getItem(key);
-
-        if (!raw) {
-            return null;
-        }
-
-        const parsed =
-            JSON.parse(raw);
-
-        return (
-            parsed &&
-            typeof parsed === "object"
-        )
-            ? parsed
-            : null;
-
+        if (!key) return null;
+        const raw = localStorage.getItem(key);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return (parsed && typeof parsed === "object") ? parsed : null;
     } catch (error) {
-
-        console.error(
-            `Gagal membaca localStorage key "${key}":`,
-            error
-        );
-
         return null;
     }
 }
 
-
-function readLocalStorageArray(
-    key
-) {
-
+function readLocalStorageArray(key) {
     try {
-
-        const raw =
-            localStorage.getItem(key);
-
-        if (!raw) {
-            return [];
-        }
-
-        const parsed =
-            JSON.parse(raw);
-
-        return Array.isArray(parsed)
-            ? parsed
-            : [];
-
+        if (!key) return [];
+        const raw = localStorage.getItem(key);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-
-        console.error(
-            `Gagal membaca localStorage array "${key}":`,
-            error
-        );
-
         return [];
     }
 }
 
-
-function firstObject(
-    candidates
-) {
-
-    for (
-        const candidate of candidates
-    ) {
-
-        if (
-            candidate &&
-            typeof candidate === "object" &&
-            !Array.isArray(candidate)
-        ) {
-
-            return candidate;
-
-        }
-
-    }
-
-    return null;
-}
-
-
-function calculateDiscScoresFromAnswers(answers) {
-
-    if (!Array.isArray(answers) || !answers.length) {
-        return null;
-    }
-
-    const most = { D: 0, I: 0, S: 0, C: 0 };
-    const leastCount = { D: 0, I: 0, S: 0, C: 0 };
-
-    let typedAnswerCount = 0;
-
-    answers.forEach(function (answer) {
-
-        if (!answer || typeof answer !== "object") {
-            return;
-        }
-
-        // Jawaban hasil lama menyimpan index option, bukan tipe D/I/S/C.
-        // Karena normalizeAssessmentResult tidak memiliki questions[],
-        // rekonstruksi hanya mungkin bila caller menyimpan dimensi langsung.
-        // Jika format answer sudah membawa type, dukung juga format tersebut.
-        const mostType =
-            answer.mostType ||
-            answer.MType ||
-            answer.most?.type;
-
-        const leastType =
-            answer.leastType ||
-            answer.LType ||
-            answer.least?.type;
-
-        let used = false;
-
-        if (Object.prototype.hasOwnProperty.call(most, mostType)) {
-            most[mostType]++;
-            used = true;
-        }
-
-        if (Object.prototype.hasOwnProperty.call(leastCount, leastType)) {
-            leastCount[leastType]++;
-            used = true;
-        }
-
-        if (used) {
-            typedAnswerCount++;
-        }
-    });
-
-    // Index-only answers tidak cukup untuk direkonstruksi tanpa bank soal.
-    // Kembalikan null supaya tidak menghasilkan angka palsu.
-    if (typedAnswerCount === 0) {
-        return null;
-    }
-
-    const least = {
-        D: -leastCount.D,
-        I: -leastCount.I,
-        S: -leastCount.S,
-        C: -leastCount.C
+function normalizeDiscScores(obj) {
+    if (!obj || typeof obj !== "object") return {};
+    return {
+        D: Number(obj.D || obj.d || 0),
+        I: Number(obj.I || obj.i || 0),
+        S: Number(obj.S || obj.s || 0),
+        C: Number(obj.C || obj.c || 0)
     };
-
-    const change = {
-        D: most.D + least.D,
-        I: most.I + least.I,
-        S: most.S + least.S,
-        C: most.C + least.C
-    };
-
-    return { most, least, change };
 }
-
-
-function hasDiscDimensions(
-    value
-) {
-
-    if (
-        !value ||
-        typeof value !== "object"
-    ) {
-        return false;
-    }
-
-    return (
-        Object.prototype.hasOwnProperty.call(
-            value,
-            "D"
-        ) ||
-        Object.prototype.hasOwnProperty.call(
-            value,
-            "I"
-        ) ||
-        Object.prototype.hasOwnProperty.call(
-            value,
-            "S"
-        ) ||
-        Object.prototype.hasOwnProperty.call(
-            value,
-            "C"
-        )
-    );
-}
-
-
-function isDiscAssessment(
-    assessmentCode,
-    assessment
-) {
-
-    const code =
-        String(
-            assessmentCode || ""
-        ).toUpperCase();
-
-    const name =
-        String(
-            assessment?.name ||
-            assessment?.title ||
-            ""
-        ).toUpperCase();
-
-    return (
-        code.includes("DISC") ||
-        name.includes("DISC")
-    );
-}
-
 
 /* ==========================================================
    HEADER
 ========================================================== */
-
-function updateAssessmentHeader(
-    isDISC,
-    isPAPI
-) {
-
-    const titleEl =
-        document.getElementById(
-            "sectionTitle"
-        );
-
-    const descEl =
-        document.getElementById(
-            "sectionDesc"
-        );
-
-    const badgeEl =
-        document.getElementById(
-            "dominantBadge"
-        );
-
+function updateAssessmentHeader(isDISC, isPAPI) {
+    const titleEl = document.getElementById("sectionTitle");
+    const descEl = document.getElementById("sectionDesc");
+    const badgeEl = document.getElementById("dominantBadge");
 
     if (isDISC) {
-
-        if (titleEl) {
-            titleEl.textContent =
-                "Skoring & Analisis Hasil DISC";
-        }
-
-        if (descEl) {
-            descEl.textContent =
-                "Hasil evaluasi dan penilaian detail tipe perilaku kerja DISC.";
-        }
-
-        if (badgeEl) {
-            badgeEl.textContent = "D";
-        }
-
+        if (titleEl) titleEl.textContent = "Skoring & Analisis Hasil DISC";
+        if (descEl) descEl.textContent = "Hasil evaluasi dan penilaian detail tipe perilaku kerja DISC.";
+        if (badgeEl) badgeEl.textContent = "D";
         return;
     }
-
 
     if (isPAPI) {
-
-        if (titleEl) {
-            titleEl.textContent =
-                "Skoring & Analisis Hasil PAPI Kostick";
-        }
-
-        if (descEl) {
-            descEl.textContent =
-                "Profil aspek kepribadian, work role, dan kebutuhan dalam bekerja.";
-        }
-
-        if (badgeEl) {
-            badgeEl.textContent = "P";
-        }
-
+        if (titleEl) titleEl.textContent = "Skoring & Analisis Hasil PAPI Kostick";
+        if (descEl) descEl.textContent = "Profil aspek kepribadian, work role, dan kebutuhan dalam bekerja.";
+        if (badgeEl) badgeEl.textContent = "P";
         return;
     }
 
-
-    if (titleEl) {
-        titleEl.textContent =
-            "Hasil Assessment";
-    }
-
-    if (descEl) {
-        descEl.textContent =
-            "Hasil evaluasi assessment peserta.";
-    }
+    if (titleEl) titleEl.textContent = "Hasil Assessment";
+    if (descEl) descEl.textContent = "Hasil evaluasi assessment peserta.";
 }
 
-
 /* ==========================================================
-   UPDATE ELEMENT
+   MESSAGE
 ========================================================== */
-
-function updateElement(
-    elementId,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            elementId
-        );
-
-    if (element) {
-
-        element.textContent =
-            value ?? "-";
-
-    }
+function showResultMessage(message) {
+    const resultContent = document.getElementById("resultContent");
+    if (!resultContent) return;
+    resultContent.innerHTML =
+        '<div class="empty-test" style="padding:24px;border:1px solid #e2e8f0;border-radius:12px;background:#ffffff;color:#334155;display:flex;align-items:center;gap:10px;">' +
+            '<i class="fa-solid fa-circle-info" style="color:#2563eb;"></i>' +
+            '<span>' + escapeResultHTML(message) + '</span>' +
+        '</div>';
 }
 
-
-/* ==========================================================
-   SHOW MESSAGE
-========================================================== */
-
-function showResultMessage(
-    message
-) {
-
-    const resultContent =
-        document.getElementById(
-            "resultContent"
-        );
-
-    if (!resultContent) {
-        return;
-    }
-
-    resultContent.innerHTML = `
-
-        <div
-            class="empty-test"
-            style="
-                padding:24px;
-                border:1px solid #e2e8f0;
-                border-radius:12px;
-                background:#ffffff;
-                color:#334155;
-                display:flex;
-                align-items:center;
-                gap:10px;
-            "
-        >
-
-            <i
-                class="fa-solid fa-circle-info"
-                style="color:#2563eb;"
-            ></i>
-
-            <span>
-                ${escapeResultHTML(message)}
-            </span>
-
-        </div>
-
-    `;
-}
-
-
-/* ==========================================================
-   ESCAPE HTML
-========================================================== */
-
-function escapeResultHTML(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
+function escapeResultHTML(value) {
+    return String(value == null ? "" : value)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -2506,48 +830,15 @@ function escapeResultHTML(
         .replace(/'/g, "&#039;");
 }
 
+function formatTestDate(date) {
+    if (!date || date === "-") return "-";
+    const raw = String(date).trim();
+    const d = new Date(raw.indexOf("T") !== -1 ? raw : raw + "T00:00:00");
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+}
 
-/* ==========================================================
-   FORMAT DATE
-========================================================== */
-
-function formatTestDate(
-    date
-) {
-
-    if (
-        !date ||
-        date === "-"
-    ) {
-
-        return "-";
-    }
-
-    const raw =
-        String(date).trim();
-
-    const d =
-        new Date(
-            raw.includes("T")
-                ? raw
-                : raw + "T00:00:00"
-        );
-
-    if (
-        isNaN(
-            d.getTime()
-        )
-    ) {
-
-        return raw;
-    }
-
-    return d.toLocaleDateString(
-        "id-ID",
-        {
-            day: "2-digit",
-            month: "short",
-            year: "numeric"
-        }
-    );
+function updateElement(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) element.textContent = value == null ? "-" : value;
 }

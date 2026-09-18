@@ -499,10 +499,7 @@ project.organization ||
                             type="button"
                             title="Export"
                             aria-label="Export"
-                            onclick="
-                                exportProjectToExcel(
-                                    '${escapeJs(project.id)}'
-                                )
+                            onclick="window.open('export-project.html?projectId=${escapeJs(project.id)}', '_blank')"
                             "
 
                         >

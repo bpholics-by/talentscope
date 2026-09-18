@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="js/ts-supabase-sync.js"></script>
+<!-- ============================================================
+     SCRIPT CONFIG — WAJIB PALING ATAS
+     ============================================================ -->
+<script src="js/config.js"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
@@ -11,6 +15,7 @@
 >
 
 <title>Assessment Project | TalentScope</title>
+
 <style>
  /* =========================================================
    TALENTSCOPE - ASSESSMENT PROJECT
@@ -1070,6 +1075,11 @@ select{
     z-index: 5000;
 }
 
+.modal-backdrop.show,
+.modal-backdrop.active{
+    display: flex;
+}
+
 .modal{
     width: min(700px, 94vw);
 
@@ -1310,6 +1320,124 @@ select{
 
 
 /* =========================================================
+   SELECTED ASSESSMENTS REVIEW
+========================================================= */
+
+.selected-assessments-review{
+    margin-top: 18px;
+}
+
+.selected-assessments-review h3{
+    margin: 0 0 10px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    color: #223147;
+}
+
+.selected-assessments-list{
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+
+    max-height: 240px;
+
+    overflow-y: auto;
+
+    padding: 10px;
+
+    border: 1px solid var(--line);
+
+    border-radius: 10px;
+
+    background: #fbfcfe;
+}
+
+.selected-assessment-item{
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 10px 12px;
+
+    background: white;
+
+    border: 1px solid var(--line);
+
+    border-radius: 8px;
+}
+
+.selected-assessment-number{
+    width: 26px;
+    height: 26px;
+
+    min-width: 26px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #eaf3ff;
+
+    color: #1677e8;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.selected-assessment-info{
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.selected-assessment-info strong{
+    color: #1f2f45;
+
+    font-size: 13px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.selected-assessment-info span{
+    margin-top: 3px;
+
+    color: #7b8798;
+
+    font-size: 11px;
+}
+
+.selected-assessment-duration{
+    color: #64748b;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    white-space: nowrap;
+}
+
+.empty-assessment-selection{
+    padding: 20px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+
+    text-align: center;
+}
+
+
+/* =========================================================
    MODAL FOOTER
 ========================================================= */
 
@@ -1379,18 +1507,12 @@ select{
         overflow-x: hidden;
     }
 
-
-    /* APP */
-
     .app{
         display: block;
 
         width: 100%;
         min-height: 100vh;
     }
-
-
-    /* MAIN */
 
     .main{
         width: 100%;
@@ -1399,12 +1521,6 @@ select{
 
         min-height: 100vh;
     }
-
-
-    /* =====================================================
-       MOBILE SIDEBAR
-       Drawer dari kiri
-    ===================================================== */
 
     .sidebar{
         position: fixed;
@@ -1433,9 +1549,6 @@ select{
             visibility .3s ease;
     }
 
-
-    /* DUKUNG DUA SISTEM JS LAMA */
-
     body.sidebar-open .sidebar,
     .sidebar.mobile-open,
     .sidebar.active{
@@ -1448,11 +1561,6 @@ select{
         box-shadow:
             12px 0 35px rgba(15,23,42,.25);
     }
-
-
-    /* =====================================================
-       OVERLAY
-    ===================================================== */
 
     .mobile-sidebar-overlay{
         display: block;
@@ -1483,12 +1591,6 @@ select{
 
         pointer-events: auto;
     }
-
-
-    /* =====================================================
-       HAMBURGER
-       Kecil di kanan atas
-    ===================================================== */
 
     .mobile-menu-toggle{
         position: fixed;
@@ -1527,11 +1629,6 @@ select{
         background: #0d1726;
     }
 
-
-    /* =====================================================
-       HEADER
-    ===================================================== */
-
     .topbar{
         min-height: 0;
 
@@ -1547,11 +1644,6 @@ select{
 
         overflow: visible;
     }
-
-
-    /* =====================================================
-       HEADER TITLE
-    ===================================================== */
 
     .header-left{
         width: 100%;
@@ -1579,13 +1671,6 @@ select{
         white-space: normal;
     }
 
-
-    /* =====================================================
-       HEADER RIGHT
-       Search di bawah title
-       Profile di bawah search
-    ===================================================== */
-
     .header-right{
         width: 100%;
 
@@ -1597,9 +1682,6 @@ select{
 
         gap: 18px;
     }
-
-
-    /* SEARCH */
 
     .search{
         width: 100%;
@@ -1624,17 +1706,9 @@ select{
         font-size: 16px;
     }
 
-
-    /* HIDE NOTIFICATION IF EXISTS */
-
     .header-icon{
         display: none;
     }
-
-
-    /* =====================================================
-       PROFILE
-    ===================================================== */
 
     .header-user{
         width: 100%;
@@ -1716,9 +1790,6 @@ select{
         font-size: 16px;
     }
 
-
-    /* Dropdown mobile */
-
     .dropdown-menu{
         position: absolute;
 
@@ -1731,11 +1802,6 @@ select{
         z-index: 10005;
     }
 
-
-    /* =====================================================
-       CONTENT
-    ===================================================== */
-
     .content{
         padding: 24px 16px 100px;
     }
@@ -1747,11 +1813,6 @@ select{
 
         line-height: 1.6;
     }
-
-
-    /* =====================================================
-       ACTION BUTTONS
-    ===================================================== */
 
     .head,
     .head .head{
@@ -1786,11 +1847,6 @@ select{
         font-size: 14px;
     }
 
-
-    /* =====================================================
-       CARD
-    ===================================================== */
-
     .card{
         border-radius: 18px;
     }
@@ -1808,9 +1864,6 @@ select{
     .toolbar strong{
         font-size: 18px;
     }
-
-
-    /* FILTER */
 
     .filters{
         width: 100%;
@@ -1831,9 +1884,6 @@ select{
         font-size: 16px;
     }
 
-
-    /* TABLE */
-
     .table-wrap{
         padding: 0 0 18px;
 
@@ -1845,11 +1895,6 @@ select{
     .table{
         min-width: 850px;
     }
-
-
-    /* =====================================================
-       MODAL
-    ===================================================== */
 
     .modal-backdrop{
         padding: 12px;
@@ -1958,7 +2003,6 @@ select{
 
 <div class="app">
 
-
 <aside class="sidebar">
 
     <!-- BRAND -->
@@ -2065,7 +2109,6 @@ select{
                 </li>
 
 
-                
                 <!-- PROJECT ACCESS -->
                 <li>
                     <a href="projects.html">
@@ -2079,8 +2122,7 @@ select{
                     </a>
                 </li>
 
-
-                            </ul>
+            </ul>
 
         </nav>
 
@@ -2152,77 +2194,79 @@ select{
 
     <div class="header-right">
 
-
         <!-- SEARCH -->
 
-<div class="search global-search">
+        <div class="search global-search">
 
-    <i class="fa-solid fa-magnifying-glass"></i>
+            <i class="fa-solid fa-magnifying-glass"></i>
 
-    <input
-        type="text"
-        id="globalSearchInput"
-        placeholder="Search participants, assessments..."
-        autocomplete="off"
-    >
+            <input
+                type="text"
+                id="globalSearchInput"
+                placeholder="Search participants, assessments..."
+                autocomplete="off"
+            >
 
-    <div
-        id="globalSearchSuggestions"
-        class="global-search-suggestions"
-    ></div>
+            <div
+                id="globalSearchSuggestions"
+                class="global-search-suggestions"
+            ></div>
 
-</div>
+        </div>
 
 
-                <div class="header-user" id="userDropdown">
+        <!-- USER DROPDOWN -->
 
-    <div class="header-user-trigger" id="dropdownTrigger">
+        <div class="header-user" id="userDropdown">
 
-        <div
-    class="header-avatar"
-    id="headerAvatar"
->
-    A
-</div>
+            <div class="header-user-trigger" id="dropdownTrigger">
 
-<div class="header-user-info">
+                <div
+                    class="header-avatar"
+                    id="headerAvatar"
+                >
+                    A
+                </div>
 
-    <div
-        class="header-user-name"
-        id="headerUserName"
-    >
-        System Admin
-    </div>
+                <div class="header-user-info">
 
-    <div
-        class="header-user-role"
-        id="headerUserRole"
-    >
-        System Administrator
-    </div>
+                    <div
+                        class="header-user-name"
+                        id="headerUserName"
+                    >
+                        System Admin
+                    </div>
 
-</div>
-        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                    <div
+                        class="header-user-role"
+                        id="headerUserRole"
+                    >
+                        System Administrator
+                    </div>
 
-    </div>
+                </div>
 
-    <div class="dropdown-menu" id="dropdownMenu">
+                <i class="fa-solid fa-chevron-down arrow-icon"></i>
 
-        <a href="settings.html" class="dropdown-item">
-            <i class="fa-solid fa-gear"></i>
-            <span>Settings</span>
-        </a>
+            </div>
 
-        <div class="dropdown-divider"></div>
+            <div class="dropdown-menu" id="dropdownMenu">
 
-        <a href="#" class="dropdown-item logout-item" id="logoutBtn">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span>Log Out</span>
-        </a>
+                <a href="settings.html" class="dropdown-item">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Settings</span>
+                </a>
 
-    </div>
+                <div class="dropdown-divider"></div>
 
-</div>
+                <a href="#" class="dropdown-item logout-item" id="logoutBtn">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Log Out</span>
+                </a>
+
+            </div>
+
+        </div>
 
     </div>
 
@@ -2245,31 +2289,29 @@ select{
     <div class="head">
         <div class="head">
 
-    <div class="head-actions">
+            <div class="head-actions">
 
-        <button
-            class="btn btn-danger"
-            id="removeProjectBtn"
-            type="button"
-            disabled
-        >
-            <i class="fa-solid fa-trash"></i>
-            Remove Project
-        </button>
+                <button
+                    class="btn btn-danger"
+                    id="removeProjectBtn"
+                    type="button"
+                    disabled
+                >
+                    <i class="fa-solid fa-trash"></i>
+                    Remove Project
+                </button>
 
-        <button
-            class="btn btn-primary"
-            id="createBtn"
-            type="button"
-        >
-            + Create Project
-        </button>
+                <button
+                    class="btn btn-primary"
+                    id="createBtn"
+                    type="button"
+                >
+                    + Create Project
+                </button>
 
-    </div>
+            </div>
 
-</div>
-
-    
+        </div>
     </div>
 
 
@@ -2279,7 +2321,6 @@ select{
 
     <section class="card">
 
-
         <!-- TOOLBAR -->
 
         <div class="toolbar">
@@ -2288,7 +2329,6 @@ select{
                 Projects
             </strong>
 
-
             <div class="filters">
 
                 <input
@@ -2296,7 +2336,6 @@ select{
                     class="input"
                     placeholder="Search project..."
                 >
-
 
                 <select
                     id="statusFilter"
@@ -2344,37 +2383,18 @@ select{
                 <thead>
 
                     <tr>
-        <th style="width: 50px; text-align: center;">
-            <input type="checkbox" id="selectAllProjects">
-        </th>
 
-                        <th>
-                            Project
+                        <th style="width: 50px; text-align: center;">
+                            <input type="checkbox" id="selectAllProjects">
                         </th>
 
-                        <th>
-                            Company
-                        </th>
-
-                        <th>
-                            Type
-                        </th>
-
-                        <th>
-                            Schedule
-                        </th>
-
-                        <th>
-                            Participants
-                        </th>
-
-                        <th>
-                            Status
-                        </th>
-
-                        <th>
-                            Action
-                        </th>
+                        <th>Project</th>
+                        <th>Company</th>
+                        <th>Type</th>
+                        <th>Schedule</th>
+                        <th>Participants</th>
+                        <th>Status</th>
+                        <th>Action</th>
 
                     </tr>
 
@@ -2388,7 +2408,6 @@ select{
         </div>
 
     </section>
-
 
 </div>
 
@@ -2407,9 +2426,7 @@ select{
     id="projectModal"
 >
 
-
     <div class="modal">
-
 
         <!-- MODAL HEADER -->
 
@@ -2427,10 +2444,10 @@ select{
 
             </div>
 
-
             <button
                 class="close"
                 id="closeModal"
+                type="button"
             >
                 ×
             </button>
@@ -2444,41 +2461,18 @@ select{
         <div class="stepper">
 
             <div class="step active">
-
-                <b>
-                    1
-                </b>
-
-                <span>
-                    Project
-                </span>
-
+                <b>1</b>
+                <span>Project</span>
             </div>
 
-
             <div class="step">
-
-                <b>
-                    2
-                </b>
-
-                <span>
-                    Schedule
-                </span>
-
+                <b>2</b>
+                <span>Schedule</span>
             </div>
 
-
             <div class="step">
-
-                <b>
-                    3
-                </b>
-
-                <span>
-                    Review
-                </span>
-
+                <b>3</b>
+                <span>Review</span>
             </div>
 
         </div>
@@ -2496,7 +2490,6 @@ select{
 
             <div class="form-grid">
 
-
                 <div class="field full">
 
                     <label>
@@ -2509,7 +2502,6 @@ select{
                     >
 
                 </div>
-
 
                 <div class="field">
 
@@ -2524,7 +2516,6 @@ select{
 
                 </div>
 
-
                 <div class="field">
 
                     <label>
@@ -2533,26 +2524,14 @@ select{
 
                     <select id="pType">
 
-                        <option>
-                            Recruitment
-                        </option>
-
-                        <option>
-                            Development
-                        </option>
-
-                        <option>
-                            Promotion
-                        </option>
-
-                        <option>
-                            Assessment
-                        </option>
+                        <option>Recruitment</option>
+                        <option>Development</option>
+                        <option>Promotion</option>
+                        <option>Assessment</option>
 
                     </select>
 
                 </div>
-
 
             </div>
 
@@ -2571,7 +2550,6 @@ select{
 
             <div class="form-grid">
 
-
                 <div class="field">
 
                     <label>
@@ -2584,7 +2562,6 @@ select{
                     >
 
                 </div>
-
 
                 <div class="field">
 
@@ -2599,9 +2576,7 @@ select{
 
                 </div>
 
-
             </div>
-
 
             <div class="notice">
 
@@ -2626,95 +2601,53 @@ select{
 
             <div class="review">
 
-
                 <div>
-
-                    <span>
-                        Project
-                    </span>
-
-                    <strong id="rName">
-                        -
-                    </strong>
-
+                    <span>Project</span>
+                    <strong id="rName">-</strong>
                 </div>
 
-
                 <div>
-
-                    <span>
-                        Company
-                    </span>
-
-                    <strong id="rCompany">
-                        -
-                    </strong>
-
+                    <span>Company</span>
+                    <strong id="rCompany">-</strong>
                 </div>
 
-
                 <div>
-
-                    <span>
-                        Type
-                    </span>
-
-                    <strong id="rType">
-                        -
-                    </strong>
-
+                    <span>Type</span>
+                    <strong id="rType">-</strong>
                 </div>
 
-
                 <div>
-
-                    <span>
-                        Schedule
-                    </span>
-
-                    <strong id="rSchedule">
-                        -
-                    </strong>
-
+                    <span>Schedule</span>
+                    <strong id="rSchedule">-</strong>
                 </div>
 
-
                 <div>
-
-                    <span>
-                        Initial Status
-                    </span>
-
-                    <strong>
-                        Draft
-                    </strong>
-
+                    <span>Initial Status</span>
+                    <strong>Draft</strong>
                 </div>
-
 
             </div>
 
-<!-- SELECTED ASSESSMENTS -->
 
-<div class="selected-assessments-review">
+            <!-- SELECTED ASSESSMENTS -->
 
-    <h3>
-        Selected Assessments
-    </h3>
+            <div class="selected-assessments-review">
 
-    <div
-        id="selectedAssessmentsList"
-        class="selected-assessments-list"
-    >
+                <h3>
+                    Selected Assessments
+                </h3>
 
-        <!-- Render by JavaScript -->
+                <div
+                    id="selectedAssessmentsList"
+                    class="selected-assessments-list"
+                >
+                    <!-- Render by JavaScript -->
+                </div>
 
-    </div>
-
-</div>
+            </div>
 
 
-            <div class="notice">
+            <div class="notice" style="margin-top: 15px;">
 
                 Setelah dibuat, project akan masuk ke Assessment Project
                 dan otomatis membuka Project Detail.
@@ -2732,24 +2665,25 @@ select{
             <button
                 class="btn"
                 id="prevStep"
+                type="button"
             >
                 Back
             </button>
-
 
             <div>
 
                 <button
                     class="btn"
                     id="cancelProject"
+                    type="button"
                 >
                     Cancel
                 </button>
 
-
                 <button
                     class="btn btn-primary"
                     id="nextStep"
+                    type="button"
                 >
                     Continue
                 </button>
@@ -2758,7 +2692,6 @@ select{
 
         </div>
 
-
     </div>
 
 </div>
@@ -2766,14 +2699,15 @@ select{
 
 
 <!-- =====================================================
-     JAVASCRIPT
+     JAVASCRIPT — LOGIKA HALAMAN (INLINE)
      ===================================================== -->
 
 <script>
 
 /* =========================================================
    SIDEBAR ACTIVE MENU
-   ========================================================= */
+========================================================= */
+
 document.addEventListener("DOMContentLoaded", function () {
 
     const currentPage =
@@ -2813,233 +2747,39 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 /* =========================================================
-   DEFAULT PROJECT DATA
-   ========================================================= */
-
-const fallback = [
-
-    {
-        id:"by",
-        name:"by",
-        company:"-",
-        type:"Recruitment",
-        start:"2026-08-08",
-        end:"2026-08-09",
-        status:"Draft",
-
-        participants:[
-            {
-                id:"EMP001",
-                name:"Budi Santoso",
-                email:"budi@company.com",
-                position:"Manager",
-                status:"Not Started"
-            },
-            {
-                id:"EMP002",
-                name:"Siti Rahma",
-                email:"siti@company.com",
-                position:"Staff",
-                status:"Not Started"
-            }
-        ],
-
-        assessments:[
-            "Verbal Reasoning",
-            "Personality Assessment"
-        ]
-    },
-
-
-    {
-        id:"wwwweee",
-        name:"wwwweee",
-        company:"rew",
-        type:"Recruitment",
-        start:"2028-09-08",
-        end:"2029-10-08",
-        status:"Draft",
-
-        participants:[
-            {
-                id:"EMP003",
-                name:"Andi Wijaya",
-                email:"andi@company.com",
-                position:"Staff",
-                status:"Not Started"
-            },
-            {
-                id:"EMP004",
-                name:"Rina Putri",
-                email:"rina@company.com",
-                position:"Supervisor",
-                status:"Not Started"
-            }
-        ],
-
-        assessments:[
-            "Numerical Reasoning",
-            "Personality Assessment"
-        ]
-    }
-
-];
-
-
-/* =========================================================
-   LOCAL STORAGE
-   ========================================================= */
-
-function get(){
-
-    try{
-
-        const x = localStorage.getItem(
-            "talentscope_projects"
-        );
-
-        // IMPORTANT:
-        // Missing project storage means there are no persisted projects.
-        // Never substitute fallback/dummy projects into real storage.
-        if(x === null){
-            return [];
-        }
-
-        const parsed = JSON.parse(x);
-
-        return Array.isArray(parsed)
-            ? parsed
-            : [];
-
-    }catch(e){
-
-        console.error(
-            "TalentScope: gagal membaca talentscope_projects.",
-            e
-        );
-
-        return [];
-
-    }
-
-}
-
-
-function set(x){
-
-    localStorage.setItem(
-        "talentscope_projects",
-        JSON.stringify(x)
-    );
-
-}
-
-
-/* =========================================================
-   PROJECT STATUS
-   ========================================================= */
-
-function lifecycle(p){
-
-    if(
-        p.status === "Draft" ||
-        p.status === "Cancelled"
-    ){
-
-        return p.status;
-
-    }
-
-
-    let n = new Date();
-
-    n.setHours(
-        0,
-        0,
-        0,
-        0
-    );
-
-
-    let s = new Date(
-        p.start + "T00:00:00"
-    );
-
-
-    let e = new Date(
-        p.end + "T23:59:59"
-    );
-
-
-    let participants =
-        p.participants || [];
-
-
-    let all =
-        participants.length &&
-        participants.every(
-            x => x.status === "Completed"
-        );
-
-
-    return all || n > e
-        ? "Completed"
-        : n >= s && n <= e
-        ? "Ongoing"
-        : "Scheduled";
-
-}
-
-
-/* =========================================================
-   DATE FORMAT
-   ========================================================= */
+   HELPERS: DATE FORMAT & ESCAPE HTML
+========================================================= */
 
 function fmt(x){
 
-    if (!x) {
-        return "-";
-    }
+    if (!x) return "-";
 
     const dateStr =
-        String(x).includes("T")
-            ? x
-            : x + "T00:00:00";
+        String(x).includes("T") ? x : x + "T00:00:00";
 
     const d = new Date(dateStr);
 
-    if (isNaN(d.getTime())) {
-        return "-";
-    }
+    if (isNaN(d.getTime())) return "-";
 
-    return d.toLocaleDateString(
-        "en-GB",
-        {
-            day:"2-digit",
-            month:"short",
-            year:"numeric"
-        }
-    );
+    return d.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+    });
 
 }
 
 
-/* =========================================================
-   ESCAPE HTML
-   ========================================================= */
-
 function esc(x){
 
-    return String(
-        x ?? ""
-    ).replace(
+    return String(x ?? "").replace(
         /[&<>"']/g,
         m => ({
-            "&":"&amp;",
-            "<":"&lt;",
-            ">":"&gt;",
-            '"':"&quot;",
-            "'":"&#039;"
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;"
         }[m])
     );
 
@@ -3047,8 +2787,7 @@ function esc(x){
 
 
 /* =========================================================
-   RENDER PROJECT TABLE
-   SOURCE: SUPABASE
+   RENDER PROJECT TABLE — SOURCE: SUPABASE
 ========================================================= */
 
 async function render() {
@@ -3057,414 +2796,161 @@ async function render() {
         "[ASSESSMENT PROJECT] Loading projects from Supabase..."
     );
 
-
-    const rows =
-        document.getElementById(
-            "rows"
-        );
-
+    const rows = document.getElementById("rows");
 
     if (!rows) {
-
-        console.error(
-            "[ASSESSMENT PROJECT] rows element not found"
-        );
-
+        console.error("[ASSESSMENT PROJECT] rows element not found");
         return;
-
     }
-
 
     try {
 
-
-        /* =============================================
-           LOADING STATE
-        ============================================= */
-
         rows.innerHTML = `
             <tr>
-
-                <td
-                    colspan="8"
-                    class="empty"
-                >
-
+                <td colspan="8" class="empty">
                     Loading projects...
-
                 </td>
-
             </tr>
         `;
 
-
-        /* =============================================
-           GET PROJECTS FROM SUPABASE
-        ============================================= */
-
-        const projects =
-            await DataService.getProjects();
-
+        const projects = await DataService.getProjects();
 
         console.log(
             "[ASSESSMENT PROJECT] Projects loaded:",
             projects
         );
 
+        const searchElement = document.getElementById("search");
 
-        /* =============================================
-           GET SEARCH VALUE
-        ============================================= */
+        const q = searchElement
+            ? searchElement.value.trim().toLowerCase()
+            : "";
 
-        const searchElement =
-            document.getElementById(
-                "search"
-            );
+        const statusFilter = document.getElementById("statusFilter");
 
-
-        const q =
-            searchElement
-                ? searchElement.value
-                    .trim()
-                    .toLowerCase()
-                : "";
-
-
-        /* =============================================
-           GET STATUS FILTER
-        ============================================= */
-
-        const statusFilter =
-            document.getElementById(
-                "statusFilter"
-            );
-
-
-        const f =
-            statusFilter
-                ? statusFilter.value
-                : "All Status";
-
-
-        /* =============================================
-           GET PARTICIPANT COUNT PER PROJECT
-        ============================================= */
+        const f = statusFilter
+            ? statusFilter.value
+            : "All Status";
 
         let participantCounts = {};
 
         try {
-
             participantCounts =
                 await DataService.getProjectParticipantCounts();
-
         } catch (countError) {
-
             console.error(
                 "[ASSESSMENT PROJECT] Failed to load participant counts:",
                 countError
             );
-
         }
 
+        const data = projects.map(project => ({
+            id: project.id || "",
+            project_code: project.project_code || "",
+            name: project.name || project.project_name || "-",
+            company: project.company || project.client || "-",
+            type: project.project_type || "-",
+            start: project.start_date || project.startDate || project.start || null,
+            end: project.end_date || project.endDate || project.end || null,
+            status: project.status || "Draft",
+            participant_count: participantCounts[project.id] || 0
+        }));
 
-        /* =============================================
-           NORMALIZE SUPABASE DATA
-        ============================================= */
-
-        const data =
-            projects.map(
-                project => ({
-
-                    id:
-                        project.id || "",
-
-
-                    project_code:
-                        project.project_code || "",
-
-
-                    name:
-                        project.name ||
-                        project.project_name ||
-                        "-",
-
-
-                    company:
-                        project.company ||
-                        project.client ||
-                        "-",
-
-
-                    type:
-                        project.project_type ||
-                        "-",
-
-
-                    start:
-                        project.start_date ||
-                        project.startDate ||
-                        project.start ||
-                        null,
-
-
-                    end:
-                        project.end_date ||
-                        project.endDate ||
-                        project.end ||
-                        null,
-
-
-                    status:
-                        project.status ||
-                        "Draft",
-
-
-                    participant_count:
-                        participantCounts[project.id] || 0
-
-                })
-            );
-
-
-        /* =============================================
-           FILTER BY USER ACCESS (projectId)
-        ============================================= */
-
+        /* Filter by user access */
         let scopedData = data;
 
         try {
-
-            const rawSession =
-                sessionStorage.getItem(
-                    "ts_admin_session"
-                );
+            const rawSession = sessionStorage.getItem("ts_admin_session");
 
             if (rawSession) {
-
-                const activeUser =
-                    JSON.parse(rawSession);
-
-                const role =
-                    String(activeUser.role || "").trim();
-
-                const isSystemAdmin =
-                    /^system/i.test(role);
+                const activeUser = JSON.parse(rawSession);
+                const role = String(activeUser.role || "").trim();
+                const isSystemAdmin = /^system/i.test(role);
 
                 if (!isSystemAdmin && activeUser.projectId) {
-
-                    scopedData =
-                        data.filter(
-                            p => p.id === activeUser.projectId
-                        );
-
+                    scopedData = data.filter(
+                        p => p.id === activeUser.projectId
+                    );
                 }
-
             }
 
         } catch (scopeError) {
-
             console.warn(
                 "[ASSESSMENT PROJECT] Gagal baca session untuk filter:",
                 scopeError
             );
-
         }
 
+        /* Filter data */
+        const list = scopedData.filter(p => {
 
-        /* =============================================
-           FILTER DATA
-        ============================================= */
+            const searchText = [
+                p.name,
+                p.company,
+                p.type,
+                p.project_code
+            ].join(" ").toLowerCase();
 
-        const list =
-            scopedData.filter(
-                p => {
+            const matchSearch = !q || searchText.includes(q);
+            const matchStatus = f === "All Status" || p.status === f;
 
+            return matchSearch && matchStatus;
 
-                    const searchText =
-                        [
-                            p.name,
-                            p.company,
-                            p.type,
-                            p.project_code
-                        ]
-                        .join(" ")
-                        .toLowerCase();
-
-
-                    const matchSearch =
-                        !q ||
-                        searchText.includes(q);
-
-
-                    const matchStatus =
-                        f === "All Status" ||
-                        p.status === f;
-
-
-                    return (
-                        matchSearch &&
-                        matchStatus
-                    );
-
-                }
-            );
-
-
-        /* =============================================
-           EMPTY STATE
-        ============================================= */
+        });
 
         if (list.length === 0) {
-
-
             rows.innerHTML = `
                 <tr>
-
-                    <td
-                        colspan="8"
-                        class="empty"
-                    >
-
+                    <td colspan="8" class="empty">
                         No assessment projects found.
-
                     </td>
-
                 </tr>
             `;
-
-
             return;
-
         }
 
+        rows.innerHTML = list.map(p => `
 
-        /* =============================================
-           RENDER PROJECTS
-        ============================================= */
+            <tr>
+                <td style="text-align:center;">
+                    <input
+                        type="checkbox"
+                        class="project-checkbox"
+                        value="${esc(p.id)}"
+                    >
+                </td>
 
-        rows.innerHTML =
-            list.map(
-                p => `
+                <td>
+                    <div class="project-name">${esc(p.name)}</div>
+                    <div class="company">ID: ${esc(p.project_code)}</div>
+                </td>
 
-                <tr>
+                <td>${esc(p.company)}</td>
 
+                <td>${esc(p.type)}</td>
 
-                    <!-- CHECKBOX -->
+                <td>${fmt(p.start)} - ${fmt(p.end)}</td>
 
-                    <td style="text-align:center;">
+                <td>${p.participant_count}</td>
 
-                        <input
-                            type="checkbox"
-                            class="project-checkbox"
-                            value="${esc(p.id)}"
-                        >
+                <td>
+                    <span class="status ${String(p.status).toLowerCase().replace(/\s+/g, "-")}">
+                        ${esc(p.status)}
+                    </span>
+                </td>
 
-                    </td>
+                <td>
+                    <button
+                        class="action"
+                        title="Open Project Detail"
+                        onclick="openProject('${esc(p.id)}')"
+                    >
+                        →
+                    </button>
+                </td>
+            </tr>
 
-
-                    <!-- PROJECT NAME -->
-
-                    <td>
-
-                        <div class="project-name">
-
-                            ${esc(p.name)}
-
-                        </div>
-
-
-                        <div class="company">
-
-                            ID: ${esc(p.project_code)}
-
-                        </div>
-
-                    </td>
-
-
-                    <!-- COMPANY -->
-
-                    <td>
-
-                        ${esc(p.company)}
-
-                    </td>
-
-
-                    <!-- PROJECT TYPE -->
-
-                    <td>
-
-                        ${esc(p.type)}
-
-                    </td>
-
-
-                    <!-- SCHEDULE -->
-
-                    <td>
-
-                        ${fmt(p.start)}
-
-                        -
-
-                        ${fmt(p.end)}
-
-                    </td>
-
-
-                    <!-- PARTICIPANTS -->
-
-                    <td>
-
-                        ${p.participant_count}
-
-                    </td>
-
-
-                    <!-- STATUS -->
-
-                    <td>
-
-                        <span
-                            class="
-                                status
-                                ${String(p.status)
-                                    .toLowerCase()
-                                    .replace(/\s+/g, "-")}
-                            "
-                        >
-
-                            ${esc(p.status)}
-
-                        </span>
-
-                    </td>
-
-
-                    <!-- ACTION -->
-
-                    <td>
-
-                        <button
-                            class="action"
-                            title="Open Project Detail"
-                            onclick="openProject('${esc(p.id)}')"
-                        >
-
-                            →
-
-                        </button>
-
-                    </td>
-
-
-                </tr>
-
-                `
-            )
-            .join("");
-
+        `).join("");
 
         console.log(
             "[ASSESSMENT PROJECT] Render completed:",
@@ -3472,50 +2958,89 @@ async function render() {
             "projects"
         );
 
-
     } catch (error) {
-
 
         console.error(
             "[ASSESSMENT PROJECT] Failed to load projects:",
             error
         );
 
-
         rows.innerHTML = `
             <tr>
-
-                <td
-                    colspan="8"
-                    class="empty"
-                >
-
+                <td colspan="8" class="empty">
                     Failed to load projects.
-
                 </td>
-
             </tr>
         `;
-
 
     }
 
 }
+
+
 /* =========================================================
-   SELECT ALL PROJECTS
-   ========================================================= */
+   OPEN PROJECT DETAIL
+========================================================= */
+
+function openProject(id){
+
+    location.href =
+        "project-detail.html?id=" + encodeURIComponent(id);
+
+}
+
+
+/* =========================================================
+   SELECT ALL + REMOVE BUTTON STATE
+========================================================= */
+
+function updateRemoveButton() {
+
+    const checked =
+        document.querySelectorAll(".project-checkbox:checked").length;
+
+    const removeBtn =
+        document.getElementById("removeProjectBtn");
+
+    if (removeBtn) {
+        removeBtn.disabled = checked === 0;
+    }
+
+}
+
 
 document.addEventListener("change", function(e){
 
-    if(e.target.id === "selectAllProjects"){
+    if (e.target.id === "selectAllProjects") {
 
         document
             .querySelectorAll(".project-checkbox")
             .forEach(function(cb){
-
                 cb.checked = e.target.checked;
-
             });
+
+        updateRemoveButton();
+
+    }
+
+    if (e.target.classList.contains("project-checkbox")) {
+
+        const boxes =
+            document.querySelectorAll(".project-checkbox");
+
+        const checked =
+            document.querySelectorAll(".project-checkbox:checked");
+
+        const selectAll =
+            document.getElementById("selectAllProjects");
+
+        if (selectAll) {
+            selectAll.checked =
+                boxes.length > 0 &&
+                checked.length === boxes.length;
+        }
+
+        updateRemoveButton();
 
     }
 
@@ -3524,7 +3049,7 @@ document.addEventListener("change", function(e){
 
 /* =========================================================
    REMOVE SELECTED PROJECTS
-   ========================================================= */
+========================================================= */
 
 document
     .getElementById("removeProjectBtn")
@@ -3537,39 +3062,22 @@ document
             return;
         }
 
-        const selected =
-            Array.from(
-                document.querySelectorAll(".project-checkbox:checked")
-            ).map(function(cb){
+        const selected = Array.from(
+            document.querySelectorAll(".project-checkbox:checked")
+        ).map(cb => cb.value);
 
-                return cb.value;
-
-            });
-
-
-        if(selected.length === 0){
-
+        if (selected.length === 0) {
             alert("Silakan pilih project yang ingin dihapus.");
-
             return;
-
         }
 
+        const confirmDelete = confirm(
+            "Apakah Anda yakin ingin menghapus " +
+            selected.length +
+            " project? Semua data peserta yang terkait di project ini juga akan terhapus."
+        );
 
-        const confirmDelete =
-            confirm(
-                "Apakah Anda yakin ingin menghapus " +
-                selected.length +
-                " project? Semua data peserta yang terkait di project ini juga akan terhapus."
-            );
-
-
-        if(!confirmDelete){
-
-            return;
-
-        }
-
+        if (!confirmDelete) return;
 
         const removeBtn = document.getElementById("removeProjectBtn");
         const originalBtnHtml = removeBtn.innerHTML;
@@ -3579,617 +3087,84 @@ document
         const failed = [];
 
         for (const projectId of selected) {
-
             try {
-
                 await DataService.deleteProject(projectId);
-
             } catch (error) {
-
                 console.error(
                     "[ASSESSMENT PROJECT] Gagal menghapus project:",
                     projectId,
                     error
                 );
-
                 failed.push(projectId);
-
             }
-
         }
 
         removeBtn.disabled = false;
         removeBtn.innerHTML = originalBtnHtml;
 
         if (failed.length > 0) {
-
             alert(
                 "Gagal menghapus " +
-                failed.length +
-                " dari " +
-                selected.length +
-                " project. Silakan cek console untuk detail error (kemungkinan izin akses/RLS di Supabase)."
+                failed.length + " dari " + selected.length +
+                " project. Silakan cek console untuk detail error."
             );
-
         }
 
+        const selectAll = document.getElementById("selectAllProjects");
+        if (selectAll) selectAll.checked = false;
 
-        document.getElementById(
-            "selectAllProjects"
-        ).checked = false;
-
-
-        render().catch(
-    error => {
-
-        console.error(
-            "[ASSESSMENT PROJECT] Initial render failed:",
-            error
-        );
-
-    }
-);
+        render().catch(error => {
+            console.error(
+                "[ASSESSMENT PROJECT] Initial render failed:",
+                error
+            );
+        });
 
     });
 
+
 /* =========================================================
-   OPEN PROJECT DETAIL
-   ========================================================= */
+   SEARCH dengan DEBOUNCE (400ms) + STATUS FILTER
+========================================================= */
 
-function openProject(id){
+let __searchDebounceTimer = null;
 
-    location.href =
-        "project-detail.html?id=" +
-        encodeURIComponent(id);
+const searchInput = document.getElementById("search");
 
+if (searchInput) {
+    searchInput.addEventListener("input", function () {
+        clearTimeout(__searchDebounceTimer);
+        __searchDebounceTimer = setTimeout(render, 400);
+    });
+}
+
+const statusFilterElement = document.getElementById("statusFilter");
+
+if (statusFilterElement) {
+    statusFilterElement.addEventListener("change", render);
 }
 
 
 /* =========================================================
-   SEARCH / FILTER
-   ========================================================= */
+   CREATE PROJECT MODAL
+   ----------------------------------------------------------
+   SELURUH logika modal (open, close, step, validate, submit)
+   ditangani oleh js/project-create.js.
 
-document
-    .getElementById("search")
-    .addEventListener(
-        "input",
-        render
-    );
+   HTML hanya perlu:
+   1. Buka modal saat tombol Create Project diklik
+   2. Tutup modal saat klik di luar modal
+========================================================= */
 
+document.addEventListener("DOMContentLoaded", function () {
 
-document
-    .getElementById("statusFilter")
-    .addEventListener(
-        "change",
-        render
-    );
+    const createBtn = document.getElementById("createBtn");
+    const modal = document.getElementById("projectModal");
 
+    /* 1. Buka modal */
+    if (createBtn && modal) {
 
-/* =========================================================
-   MODAL
-   ========================================================= */
-
-let currentStep = 1;
-
-const modal =
-    document.getElementById(
-        "projectModal"
-    );
-
-
-/* =========================================================
-   OPEN CREATE MODAL
-   ========================================================= */
-
-function openCreate(){
-
-    currentStep = 1;
-
-
-    document.getElementById(
-        "pName"
-    ).value = "";
-
-
-    document.getElementById(
-        "pCompany"
-    ).value = "";
-
-
-    document.getElementById(
-        "pType"
-    ).value = "Recruitment";
-
-
-    let d = new Date();
-
-
-    d.setMinutes(
-        d.getMinutes() -
-        d.getTimezoneOffset()
-    );
-
-
-    let s =
-        d.toISOString()
-        .slice(0,10);
-
-
-    document.getElementById(
-        "pStart"
-    ).value = s;
-
-
-    document.getElementById(
-        "pEnd"
-    ).value = s;
-
-
-    updateStep();
-
-
-    modal.style.display = "flex";
-
-}
-
-
-/* =========================================================
-   CLOSE MODAL
-   ========================================================= */
-
-function closeCreate(){
-
-    modal.style.display = "none";
-
-}
-
-
-/* =========================================================
-   UPDATE STEP
-   ========================================================= */
-
-function updateStep(){
-
-    document
-        .querySelectorAll(".form-step")
-        .forEach(
-            (x,i) => {
-
-                x.classList.toggle(
-                    "active",
-                    i === currentStep - 1
-                );
-
-            }
-        );
-
-
-    document
-        .querySelectorAll(".step")
-        .forEach(
-            (x,i) => {
-
-                x.classList.toggle(
-                    "active",
-                    i === currentStep - 1
-                );
-
-            }
-        );
-
-
-    document.getElementById(
-        "prevStep"
-    ).style.visibility =
-        currentStep === 1
-            ? "hidden"
-            : "visible";
-
-
-    document.getElementById(
-        "nextStep"
-    ).textContent =
-        currentStep === 3
-            ? "Create Project"
-            : "Continue";
-
-
-    if(currentStep === 3){
-
-        document.getElementById(
-            "rName"
-        ).textContent =
-            document.getElementById(
-                "pName"
-            ).value || "-";
-
-
-        document.getElementById(
-            "rCompany"
-        ).textContent =
-            document.getElementById(
-                "pCompany"
-            ).value || "-";
-
-
-        document.getElementById(
-            "rType"
-        ).textContent =
-            document.getElementById(
-                "pType"
-            ).value;
-
-
-        document.getElementById(
-            "rSchedule"
-        ).textContent =
-            document.getElementById(
-                "pStart"
-            ).value
-            +
-            " – "
-            +
-            document.getElementById(
-                "pEnd"
-            ).value;
-
-    }
-
-}
-
-
-/* =========================================================
-   VALIDATION
-   ========================================================= */
-
-function valid(){
-
-    if(
-        currentStep === 1 &&
-        (
-            !document
-                .getElementById("pName")
-                .value
-                .trim()
-            ||
-            !document
-                .getElementById("pCompany")
-                .value
-                .trim()
-        )
-    ){
-
-        alert(
-            "Project Name dan Company / Client wajib diisi."
-        );
-
-        return false;
-
-    }
-
-
-    if(currentStep === 2){
-
-        let s =
-            document
-            .getElementById("pStart")
-            .value;
-
-
-        let e =
-            document
-            .getElementById("pEnd")
-            .value;
-
-
-        if(!s || !e){
-
-            alert(
-                "Tanggal wajib diisi."
-            );
-
-            return false;
-
-        }
-
-
-        if(
-            new Date(e) <
-            new Date(s)
-        ){
-
-            alert(
-                "End Date tidak boleh sebelum Start Date."
-            );
-
-            return false;
-
-        }
-
-    }
-
-
-    return true;
-
-}
-
-
-/* =========================================================
-   CREATE PROJECT
-   ========================================================= */
-
-/* =========================================================
-   CREATE PROJECT
-   ========================================================= */
-
-function createProject(){
-
-    if (
-        typeof RolePermissions !== "undefined" &&
-        RolePermissions.blockIfViewOnly("membuat project baru")
-    ) {
-        return;
-    }
-
-    /* =====================================================
-       AMBIL PROJECT LAMA
-    ===================================================== */
-
-    let data = get();
-
-
-    /* =====================================================
-       GENERATE PROJECT ID
-    ===================================================== */
-
-    let id =
-        "PRJ-" +
-        Date.now()
-        .toString()
-        .slice(-8);
-
-
-    /* =====================================================
-       AMBIL ASSESSMENT DARI ASSESSMENT CATALOG
-    ===================================================== */
-
-    let selectedAssessments = [];
-
-
-    try {
-
-        const saved =
-            sessionStorage.getItem(
-                "talentscope_selected_assessments"
-            );
-
-
-        if (saved) {
-
-            selectedAssessments =
-                JSON.parse(saved);
-
-        }
-
-    }
-    catch (error) {
-
-        console.error(
-            "Gagal membaca assessment terpilih:",
-            error
-        );
-
-        selectedAssessments = [];
-
-    }
-
-
-    /* =====================================================
-       PASTIKAN FORMAT ARRAY
-    ===================================================== */
-
-    if (
-        !Array.isArray(
-            selectedAssessments
-        )
-    ) {
-
-        selectedAssessments = [];
-
-    }
-
-
-    /* =====================================================
-       NORMALISASI ASSESSMENT
-    ===================================================== */
-
-    selectedAssessments =
-        selectedAssessments.map(
-            function (assessment, index) {
-
-                return {
-
-                    id:
-                        assessment.id ||
-                        assessment.code ||
-                        assessment.name,
-
-                    code:
-                        assessment.code ||
-                        "",
-
-                    name:
-                        assessment.name ||
-                        "",
-
-                    category:
-                        assessment.category ||
-                        "",
-
-                    duration:
-                        Number(
-                            assessment.duration
-                        ) || 0,
-
-                    questions:
-                        Number(
-                            assessment.questions
-                        ) || 0,
-
-                    required:
-                        assessment.required !== false,
-
-                    active:
-                        assessment.active !== false,
-
-                    order:
-                        index + 1
-
-                };
-
-            }
-        );
-
-
-    /* =====================================================
-       CREATE PROJECT OBJECT
-    ===================================================== */
-
-    let project = {
-
-        id:
-            id,
-
-        name:
-            document
-            .getElementById("pName")
-            .value
-            .trim(),
-
-        company:
-            document
-            .getElementById("pCompany")
-            .value
-            .trim(),
-
-        type:
-            document
-            .getElementById("pType")
-            .value,
-
-        start:
-            document
-            .getElementById("pStart")
-            .value,
-
-        end:
-            document
-            .getElementById("pEnd")
-            .value,
-
-        status:
-            "Draft",
-
-        participants:
-            [],
-
-        /*
-         * INI YANG PENTING
-         *
-         * Assessment yang dipilih dari
-         * Assessment Catalog masuk ke sini.
-         */
-        assessments:
-            selectedAssessments,
-
-        createdBy:
-            "Administrator",
-
-        createdAt:
-            new Date().toISOString(),
-
-        updatedAt:
-            new Date().toISOString()
-
-    };
-
-
-    /* =====================================================
-       ACTIVITY LOG
-    ===================================================== */
-
-    project.activityLog = [
-
-        {
-
-            id:
-                "ACT-" +
-                Date.now(),
-
-            title:
-                "Project created",
-
-            detail:
-                selectedAssessments.length +
-                " assessment(s) selected",
-
-            at:
-                new Date().toISOString(),
-
-            by:
-                "Administrator"
-
-        }
-
-    ];
-
-
-    /* =====================================================
-       MASUKKAN PROJECT KE DATA
-    ===================================================== */
-
-    data.push(
-        project
-    );
-
-
-    /* =====================================================
-       SIMPAN KE LOCAL STORAGE
-    ===================================================== */
-
-    set(
-        data
-    );
-
-
-    /* =====================================================
-       HAPUS DATA SEMENTARA
-    ===================================================== */
-
-    sessionStorage.removeItem(
-        "talentscope_selected_assessments"
-    );
-
-
-    /* =====================================================
-       BUKA PROJECT DETAIL
-    ===================================================== */
-
-    location.href =
-        "project-detail.html?id=" +
-        encodeURIComponent(id);
-
-}
-
-
-/* =========================================================
-   EVENT LISTENERS
-   ========================================================= */
-
-document
-    .getElementById("createBtn")
-    .onclick =
-        function () {
+        createBtn.addEventListener("click", function () {
 
             if (
                 typeof RolePermissions !== "undefined" &&
@@ -4198,334 +3173,141 @@ document
                 return;
             }
 
-            openCreate();
+            modal.style.display = "flex";
+            modal.classList.add("show", "active");
 
-        };
-
-
-document
-    .getElementById("closeModal")
-    .onclick =
-        closeCreate;
-
-
-document
-    .getElementById("cancelProject")
-    .onclick =
-        closeCreate;
-
-
-document
-    .getElementById("prevStep")
-    .onclick =
-        () => {
-
-            if(currentStep > 1){
-
-                currentStep--;
-
-                updateStep();
-
-            }
-
-        };
-
-
-document
-    .getElementById("nextStep")
-    .onclick =
-        () => {
-
-            if(!valid()){
-
-                return;
-
-            }
-
-
-            if(currentStep < 3){
-
-                currentStep++;
-
-                updateStep();
-
-            }
-
-            else{
-
-                createProject();
-
-            }
-
-        };
-
-
-/* CLICK OUTSIDE MODAL */
-
-modal.addEventListener(
-    "click",
-    e => {
-
-        if(e.target === modal){
-
-            closeCreate();
-
-        }
+        });
 
     }
-);
 
+    /* 2. Klik di luar modal → tutup */
+    if (modal) {
 
-function updateRemoveButton(){
+        modal.addEventListener("click", function (event) {
 
-    const checked =
-        document.querySelectorAll(
-            ".project-checkbox:checked"
-        ).length;
+            if (event.target === modal) {
 
-    const removeBtn =
-        document.getElementById(
-            "removeProjectBtn"
-        );
+                modal.style.display = "none";
+                modal.classList.remove("show", "active");
 
-    removeBtn.disabled =
-        checked === 0;
+            }
 
-}
-
-document.addEventListener(
-    "change",
-    function(e){
-
-        if(
-            e.target.id === "selectAllProjects"
-        ){
-
-            document
-                .querySelectorAll(
-                    ".project-checkbox"
-                )
-                .forEach(function(cb){
-
-                    cb.checked =
-                        e.target.checked;
-
-                });
-
-            updateRemoveButton();
-
-        }
-
-
-        if(
-            e.target.classList.contains(
-                "project-checkbox"
-            )
-        ){
-
-            updateRemoveButton();
-
-        }
+        });
 
     }
-);
 
-document.addEventListener(
-    "change",
-    function(e){
+});
 
-        if(
-            e.target.classList.contains(
-                "project-checkbox"
-            )
-        ){
-
-            const boxes =
-                document.querySelectorAll(
-                    ".project-checkbox"
-                );
-
-            const checked =
-                document.querySelectorAll(
-                    ".project-checkbox:checked"
-                );
-
-            const selectAll =
-                document.getElementById(
-                    "selectAllProjects"
-                );
-
-            selectAll.checked =
-                boxes.length > 0 &&
-                checked.length === boxes.length;
-
-            updateRemoveButton();
-
-        }
-
-    }
-);
 
 /* =========================================================
-   INITIAL RENDER
+   INITIAL RENDER — SAFETY NET
+   ----------------------------------------------------------
+   assessment-project-render.js juga panggil render(),
+   tapi ini sebagai cadangan kalau file itu gagal load.
 ========================================================= */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+document.addEventListener("DOMContentLoaded", function () {
 
-        console.log(
-            "[ASSESSMENT PROJECT] DOM ready"
-        );
+    console.log("[ASSESSMENT PROJECT] DOM ready");
 
-    }
-);
+    setTimeout(function () {
+
+        if (
+            typeof DataService !== "undefined" &&
+            typeof render === "function"
+        ) {
+            render().catch(function (error) {
+                console.error(
+                    "[ASSESSMENT PROJECT] Initial render failed:",
+                    error
+                );
+            });
+        }
+
+    }, 500);
+
+});
 
 </script>
-<!-- SUPABASE LIBRARY -->
+
+
+<!-- =====================================================
+     SUPABASE LIBRARY
+     ===================================================== -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
 <!-- SUPABASE CLIENT -->
-
 <script src="js/supabase-client.js"></script>
 
-
 <!-- DATA SERVICE -->
-
 <script src="js/data-service.js"></script>
+
+<!-- SUPABASE SYNC -->
+<script src="js/ts-supabase-sync.js"></script>
+
+<!-- ROLE PERMISSIONS -->
 <script src="js/role-permissions.js"></script>
 
 <!-- LSJT CATALOG SEED -->
 <script src="js/lsjt-catalog-seed.js"></script>
 
-
-<!-- PROJECT CREATE -->
-
-<script src="js/project-create.js?v=UUID-FIX-001"></script>
-
+<!-- PROJECT CREATE (Supabase-ready, UUID-based) -->
+<script src="js/project-create.js?v=UUID-FIX-002"></script>
 
 <!-- ASSESSMENT PROJECT SUPABASE RENDER -->
-
 <script src="js/assessment-project-render.js"></script>
 
-
-<!-- GLOBAL SEARCH -->
-
-<script src="js/global-search.js"></script>
-
 <!-- GLOBAL SEARCH -->
 <script src="js/global-search.js"></script>
 
+
+<!-- =====================================================
+     LOGOUT SCRIPT
+     ===================================================== -->
 
 <script>
-/* ==========================================================
-   TALENTSCOPE SAFE LOGOUT
-   ----------------------------------------------------------
-   Project data is now stored in Supabase.
-   Logout only removes authentication/session data.
-========================================================== */
-
 (function () {
 
     "use strict";
 
+    document.addEventListener("DOMContentLoaded", function () {
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
+        const logoutBtn = document.getElementById("logoutBtn");
 
+        if (!logoutBtn) return;
 
-            const logoutBtn =
-                document.getElementById(
-                    "logoutBtn"
-                );
+        logoutBtn.addEventListener("click", function (event) {
 
+            event.preventDefault();
+            event.stopPropagation();
 
-            if (!logoutBtn) {
+            const yakin = confirm("Apakah Anda yakin ingin Log Out?");
 
-                return;
+            if (!yakin) return;
 
-            }
+            /* REMOVE SESSION ONLY */
+            sessionStorage.removeItem("ts_admin_session");
+            sessionStorage.removeItem("ts_participant_session");
+            sessionStorage.removeItem("talentscope_current_user");
+            sessionStorage.removeItem("talentscope_session");
+            sessionStorage.removeItem("talentscope_user");
 
+            console.log("[AUTH] Session cleared safely");
 
-            logoutBtn.addEventListener(
-                "click",
-                function (event) {
+            window.location.href = "login.html";
 
+        });
 
-                    event.preventDefault();
-
-                    event.stopPropagation();
-
-
-                    const yakin =
-                        confirm(
-                            "Apakah Anda yakin ingin Log Out?"
-                        );
-
-
-                    if (!yakin) {
-
-                        return;
-
-                    }
-
-
-                    /* =====================================
-                       REMOVE SESSION ONLY
-                    ===================================== */
-
-                    sessionStorage.removeItem(
-                        "ts_admin_session"
-                    );
-
-
-                    sessionStorage.removeItem(
-                        "ts_participant_session"
-                    );
-
-
-                    sessionStorage.removeItem(
-                        "talentscope_current_user"
-                    );
-
-
-                    sessionStorage.removeItem(
-                        "talentscope_session"
-                    );
-
-
-                    sessionStorage.removeItem(
-                        "talentscope_user"
-                    );
-
-
-                    console.log(
-                        "[AUTH] Session cleared safely"
-                    );
-
-
-                    /* =====================================
-                       PROJECT DATA REMAINS IN SUPABASE
-                    ===================================== */
-
-                    window.location.href =
-                        "login.html";
-
-
-                }
-            );
-
-
-        }
-    );
-
+    });
 
 })();
 </script>
 
+
+<!-- =====================================================
+     MOBILE SIDEBAR + USER DROPDOWN
+     ===================================================== -->
 
 <div class="mobile-sidebar-overlay"></div>
 
@@ -4537,35 +3319,22 @@ document.addEventListener("DOMContentLoaded", function () {
     ===================================================== */
 
     const menuToggle =
-        document.getElementById(
-            "mobileMenuToggle"
-        );
+        document.getElementById("mobileMenuToggle");
 
     const overlay =
-        document.querySelector(
-            ".mobile-sidebar-overlay"
-        );
+        document.querySelector(".mobile-sidebar-overlay");
 
     const sidebar =
-        document.querySelector(
-            ".sidebar"
-        );
-
+        document.querySelector(".sidebar");
 
     const dropdownTrigger =
-        document.getElementById(
-            "dropdownTrigger"
-        );
+        document.getElementById("dropdownTrigger");
 
     const dropdownMenu =
-        document.getElementById(
-            "dropdownMenu"
-        );
+        document.getElementById("dropdownMenu");
 
     const userDropdown =
-        document.getElementById(
-            "userDropdown"
-        );
+        document.getElementById("userDropdown");
 
 
     /* =====================================================
@@ -4574,149 +3343,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function openSidebar() {
 
-        document.body.classList.add(
-            "sidebar-open"
-        );
-
+        document.body.classList.add("sidebar-open");
 
         if (menuToggle) {
-
             menuToggle.innerHTML =
                 '<i class="fa-solid fa-xmark"></i>';
-
-            menuToggle.setAttribute(
-                "aria-label",
-                "Close menu"
-            );
-
+            menuToggle.setAttribute("aria-label", "Close menu");
         }
 
     }
-
 
     function closeSidebar() {
 
-        document.body.classList.remove(
-            "sidebar-open"
-        );
-
+        document.body.classList.remove("sidebar-open");
 
         if (menuToggle) {
-
             menuToggle.innerHTML =
                 '<i class="fa-solid fa-bars"></i>';
-
-            menuToggle.setAttribute(
-                "aria-label",
-                "Open menu"
-            );
-
+            menuToggle.setAttribute("aria-label", "Open menu");
         }
 
     }
 
-
-    /* =====================================================
-       HAMBURGER CLICK
-    ===================================================== */
 
     if (menuToggle) {
 
-        menuToggle.addEventListener(
-            "click",
-            function (event) {
+        menuToggle.addEventListener("click", function (event) {
 
-                event.preventDefault();
+            event.preventDefault();
+            event.stopPropagation();
 
-                event.stopPropagation();
-
-
-                if (
-                    document.body.classList.contains(
-                        "sidebar-open"
-                    )
-                ) {
-
-                    closeSidebar();
-
-                } else {
-
-                    openSidebar();
-
-                }
-
+            if (document.body.classList.contains("sidebar-open")) {
+                closeSidebar();
+            } else {
+                openSidebar();
             }
-        );
+
+        });
 
     }
 
-
-    /* =====================================================
-       OVERLAY CLICK
-    ===================================================== */
 
     if (overlay) {
 
-        overlay.addEventListener(
-            "click",
-            function () {
-
-                closeSidebar();
-
-            }
-        );
+        overlay.addEventListener("click", function () {
+            closeSidebar();
+        });
 
     }
 
-
-    /* =====================================================
-       CLOSE SIDEBAR AFTER MENU CLICK
-    ===================================================== */
 
     if (sidebar) {
 
-        sidebar
-            .querySelectorAll("a")
-            .forEach(function (link) {
+        sidebar.querySelectorAll("a").forEach(function (link) {
 
-                link.addEventListener(
-                    "click",
-                    function () {
+            link.addEventListener("click", function () {
 
-                        if (
-                            window.innerWidth <= 768
-                        ) {
-
-                            closeSidebar();
-
-                        }
-
-                    }
-                );
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
 
             });
+
+        });
 
     }
 
 
-    /* =====================================================
-       RESET SIDEBAR ON DESKTOP
-    ===================================================== */
+    window.addEventListener("resize", function () {
 
-    window.addEventListener(
-        "resize",
-        function () {
-
-            if (
-                window.innerWidth > 768
-            ) {
-
-                closeSidebar();
-
-            }
-
+        if (window.innerWidth > 768) {
+            closeSidebar();
         }
-    );
+
+    });
 
 
     /* =====================================================
@@ -4726,141 +3426,79 @@ document.addEventListener("DOMContentLoaded", function () {
     function closeDropdown() {
 
         if (dropdownMenu) {
-
-            dropdownMenu.classList.remove(
-                "show"
-            );
-
+            dropdownMenu.classList.remove("show");
         }
 
-
         if (userDropdown) {
-
-            userDropdown.classList.remove(
-                "open"
-            );
-
+            userDropdown.classList.remove("open");
         }
 
     }
-
 
     function toggleDropdown() {
 
-        if (
-            !dropdownMenu ||
-            !userDropdown
-        ) {
-            return;
-        }
-
+        if (!dropdownMenu || !userDropdown) return;
 
         const willOpen =
-            !dropdownMenu.classList.contains(
-                "show"
-            );
+            !dropdownMenu.classList.contains("show");
 
-
-        dropdownMenu.classList.toggle(
-            "show",
-            willOpen
-        );
-
-
-        userDropdown.classList.toggle(
-            "open",
-            willOpen
-        );
+        dropdownMenu.classList.toggle("show", willOpen);
+        userDropdown.classList.toggle("open", willOpen);
 
     }
 
-
-    /* =====================================================
-       PROFILE CLICK
-    ===================================================== */
 
     if (dropdownTrigger) {
 
-        dropdownTrigger.addEventListener(
-            "click",
-            function (event) {
+        dropdownTrigger.addEventListener("click", function (event) {
 
-                event.preventDefault();
+            event.preventDefault();
+            event.stopPropagation();
 
-                event.stopPropagation();
+            toggleDropdown();
 
-                toggleDropdown();
-
-            }
-        );
+        });
 
     }
 
-
-    /* =====================================================
-       PREVENT DROPDOWN CLICK FROM CLOSING
-    ===================================================== */
 
     if (dropdownMenu) {
 
-        dropdownMenu.addEventListener(
-            "click",
-            function (event) {
-
-                event.stopPropagation();
-
-            }
-        );
+        dropdownMenu.addEventListener("click", function (event) {
+            event.stopPropagation();
+        });
 
     }
 
 
-    /* =====================================================
-       CLICK OUTSIDE
-    ===================================================== */
+    document.addEventListener("click", function (event) {
 
-    document.addEventListener(
-        "click",
-        function (event) {
-
-            if (
-                userDropdown &&
-                !userDropdown.contains(
-                    event.target
-                )
-            ) {
-
-                closeDropdown();
-
-            }
-
+        if (
+            userDropdown &&
+            !userDropdown.contains(event.target)
+        ) {
+            closeDropdown();
         }
-    );
+
+    });
 
 
-    /* =====================================================
-       ESC KEY
-    ===================================================== */
+    document.addEventListener("keydown", function (event) {
 
-    document.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (
-                event.key === "Escape"
-            ) {
-
-                closeSidebar();
-
-                closeDropdown();
-
-            }
-
+        if (event.key === "Escape") {
+            closeSidebar();
+            closeDropdown();
         }
-    );
+
+    });
 
 });
 </script>
+
+
+<!-- =====================================================
+     HEADER USER INFO + ROLE FILTER
+     ===================================================== -->
 
 <script>
 (function () {
@@ -4870,28 +3508,16 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================== */
 
     var rawSession =
-        sessionStorage.getItem(
-            "ts_admin_session"
-        );
+        sessionStorage.getItem("ts_admin_session");
 
-    if (!rawSession) {
-        return;
-    }
-
+    if (!rawSession) return;
 
     var activeUser;
 
     try {
-
-        activeUser =
-            JSON.parse(rawSession);
-
+        activeUser = JSON.parse(rawSession);
     } catch (error) {
-
-        console.warn(
-            "Admin session tidak valid"
-        );
-
+        console.warn("Admin session tidak valid");
         return;
     }
 
@@ -4905,7 +3531,6 @@ document.addEventListener("DOMContentLoaded", function () {
         activeUser.username ||
         "User";
 
-
     var userRole =
         activeUser.role ||
         "System Administrator";
@@ -4915,13 +3540,8 @@ document.addEventListener("DOMContentLoaded", function () {
        NORMALISASI ROLE
     ========================================== */
 
-    if (
-        userRole === "System Admin"
-    ) {
-
-        userRole =
-            "System Administrator";
-
+    if (userRole === "System Admin") {
+        userRole = "System Administrator";
     }
 
 
@@ -4929,22 +3549,9 @@ document.addEventListener("DOMContentLoaded", function () {
        HEADER ELEMENTS
     ========================================== */
 
-    var avatar =
-        document.getElementById(
-            "headerAvatar"
-        );
-
-
-    var nameElement =
-        document.getElementById(
-            "headerUserName"
-        );
-
-
-    var roleElement =
-        document.getElementById(
-            "headerUserRole"
-        );
+    var avatar = document.getElementById("headerAvatar");
+    var nameElement = document.getElementById("headerUserName");
+    var roleElement = document.getElementById("headerUserRole");
 
 
     /* ==========================================
@@ -4952,43 +3559,25 @@ document.addEventListener("DOMContentLoaded", function () {
     ========================================== */
 
     if (avatar) {
-
         avatar.textContent =
-            String(userName)
-                .charAt(0)
-                .toUpperCase();
-
+            String(userName).charAt(0).toUpperCase();
     }
-
 
     if (nameElement) {
-
-        nameElement.textContent =
-            userName;
-
+        nameElement.textContent = userName;
     }
 
-
     if (roleElement) {
-
-        roleElement.textContent =
-            userRole;
-
+        roleElement.textContent = userRole;
     }
 
 
     /* ==========================================
        FILTER SIDEBAR MENU BY ROLE
-       (halaman ini punya sidebar statis, jadi
-        difilter manual di sini)
     ========================================== */
 
-    var isClient =
-        /client/i.test(userRole);
-
-    var isAsesor =
-        /asesor|assessor/i.test(userRole);
-
+    var isClient = /client/i.test(userRole);
+    var isAsesor = /asesor|assessor/i.test(userRole);
     var isAdmin =
         /administrator/i.test(userRole) &&
         !/system/i.test(userRole);
@@ -5006,25 +3595,20 @@ document.addEventListener("DOMContentLoaded", function () {
     if (hideList.length > 0) {
 
         var sidebarLinks =
-            document.querySelectorAll(
-                ".sidebar .menu a, .sidebar .menu li"
-            );
+            document.querySelectorAll(".sidebar .menu a, .sidebar .menu li");
 
         sidebarLinks.forEach(function (link) {
 
-            var linkText =
-                link.textContent.trim();
+            var linkText = link.textContent.trim();
 
             hideList.forEach(function (menuName) {
 
                 if (linkText.includes(menuName)) {
-
                     link.style.setProperty(
                         "display",
                         "none",
                         "important"
                     );
-
                 }
 
             });

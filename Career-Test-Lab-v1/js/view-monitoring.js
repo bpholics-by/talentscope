@@ -506,6 +506,17 @@ function buildMonitoringParticipant(relation) {
    sedang aktif dibuka.
 ========================================================== */
 
+/* ==========================================================
+   LIVE MONITORING REFRESH (v2 - FIXED)
+   ----------------------------------------------------------
+   PERBAIKAN:
+   1. Interval 60s → 30s (lebih responsif)
+   2. Refresh juga saat belum pilih project (daftar project)
+   3. Timeout 10 detik untuk query Supabase
+   4. Log debug untuk tracking
+   5. Update timestamp "last refresh" di UI (kalau ada)
+========================================================== */
+
 function startLiveMonitoringRefresh() {
 
     if (window.talentScopeMonitoringRefreshStarted) {
@@ -514,168 +525,137 @@ function startLiveMonitoringRefresh() {
 
     window.talentScopeMonitoringRefreshStarted = true;
 
+    console.log("[Monitoring] Live refresh started (interval: 30s)");
+
     setInterval(async function () {
         try {
-
+            // ==================================================
+            // PRIORITAS 1: Kalau belum pilih project → refresh daftar
+            // ==================================================
             if (!selectedProject) {
+                console.log("[Monitoring] Auto-refresh daftar project...");
+                await loadMonitoringProjects();
+                renderMonitoringProjects();
+                updateMonitoringTimestamp();
                 return;
             }
 
-            const selectedProjectId =
-                getProjectId(selectedProject);
+            // ==================================================
+            // PRIORITAS 2: Kalau sudah pilih project → refresh participants
+            // ==================================================
+            const selectedProjectId = getProjectId(selectedProject);
+            if (!selectedProjectId) return;
 
-            if (!selectedProjectId) {
+            console.log("[Monitoring] Auto-refresh participants for:", selectedProjectId);
+
+            // Timeout 10 detik supaya tidak hanging
+            const relations = await Promise.race([
+                DataService.getProjectParticipants(selectedProjectId),
+                new Promise(function (resolve) {
+                    setTimeout(function () { 
+                        console.warn("[Monitoring] Query timeout, skip");
+                        resolve([]); 
+                    }, 10000);
+                })
+            ]);
+
+            if (!Array.isArray(relations) || relations.length === 0) {
+                console.warn("[Monitoring] No participants returned");
                 return;
             }
 
-            const relations =
-                await DataService.getProjectParticipants(
-                    selectedProjectId
-                );
+            const latestParticipants = relations.map(buildMonitoringParticipant);
 
-            const latestParticipants =
-                relations.map(
-                    buildMonitoringParticipant
-                );
+            // Update object
+            selectedProject.participants = latestParticipants;
 
-            // HAPUS SEMUA LOGIKA AUTO-OFFLINE BERBASIS WAKTU (> 10 DETIK).
-            // Biarkan halaman admin murni merender data terbaru apa adanya
-            // berdasarkan aksi nyata peserta (Login / Tutup Tab / Logout).
-
-            selectedProject.participants =
-                latestParticipants;
-
-            // Sinkronkan juga ke daftar utama, supaya kalau
-            // admin kembali ke daftar project, datanya konsisten.
-            const projectIndex =
-                monitoringProjects.findIndex(
-                    function (project) {
-                        return getProjectId(project) === selectedProjectId;
-                    }
-                );
+            // Sync ke daftar utama
+            const projectIndex = monitoringProjects.findIndex(
+                function (project) {
+                    return getProjectId(project) === selectedProjectId;
+                }
+            );
 
             if (projectIndex !== -1) {
-                monitoringProjects[projectIndex].participants =
-                    latestParticipants;
+                monitoringProjects[projectIndex].participants = latestParticipants;
             }
 
+            // ==================================================
+            // Auto-logout untuk peserta yang sudah disconnect > 5 menit
+            // ==================================================
+            let hasAutomaticLogout = false;
+            const changedParticipants = [];
 
-            /* ======================================================
-               CEK PARTICIPANT YANG SUDAH DISCONNECT
-            ====================================================== */
+            latestParticipants.forEach(function (participant) {
+                if (participant.isLoggedIn !== true) return;
+                if (participant.logoutTime) return;
+                if (participant.logout_at) return;
 
-            let hasAutomaticLogout =
-                false;
+                const lastSeen = participant.lastSeenAt || participant.lastSeen || "";
+                if (!lastSeen) return;
 
-            const changedParticipants =
-                [];
+                const lastSeenTime = new Date(lastSeen).getTime();
+                if (!Number.isFinite(lastSeenTime)) return;
 
+                const minutesAgo = (Date.now() - lastSeenTime) / (60 * 1000);
 
-            /* ==========================================================
-               CEK PESERTA YANG SUDAH TIDAK AKTIF
-               DAN CATAT AUTOMATIC LOGOUT
-            ========================================================== */
-
-            latestParticipants.forEach(
-                function (participant) {
-
-                    const updated =
-                        recordAutomaticLogout(
-                            selectedProject,
-                            participant
-                        );
-
-
+                if (minutesAgo > 5) {
+                    const updated = recordAutomaticLogout(selectedProject, participant);
                     if (updated) {
-
-                        hasAutomaticLogout =
-                            true;
-
-                        changedParticipants.push(
-                            participant
-                        );
-
+                        hasAutomaticLogout = true;
+                        changedParticipants.push(participant);
                     }
-
                 }
-            );
-
-
-            /* ==========================================================
-               PENTING:
-               JIKA ADA AUTOMATIC LOGOUT,
-               SIMPAN PERUBAHAN KE SUPABASE
-
-               Sebelumnya object participant berubah di memory,
-               tetapi perubahan logout belum tentu tersimpan permanen.
-            ========================================================== */
+            });
 
             if (hasAutomaticLogout) {
+                await persistAutomaticLogouts(changedParticipants);
+            }
 
-                await persistAutomaticLogouts(
-                    changedParticipants
+            // ==================================================
+            // Render ulang tampilan
+            // ==================================================
+            renderParticipants(selectedProject);
+            updateMonitoringTimestamp();
+
+            // Update detail participant yang sedang dibuka
+            if (selectedParticipant) {
+                const selectedParticipantId = getParticipantId(selectedParticipant);
+                const latestParticipant = latestParticipants.find(
+                    function (participant) {
+                        return getParticipantId(participant) === selectedParticipantId;
+                    }
                 );
 
-            }
-
-
-            /* ==========================================================
-               RENDER ULANG TAMPILAN
-            ========================================================== */
-
-            renderParticipants(
-                selectedProject
-            );
-
-
-            /* ======================================================
-               UPDATE DETAIL PARTICIPANT YANG SEDANG DIBUKA
-            ====================================================== */
-
-            if (selectedParticipant) {
-
-                const selectedParticipantId =
-                    getParticipantId(
-                        selectedParticipant
-                    );
-
-
-                const latestParticipant =
-                    latestParticipants.find(
-                        function (participant) {
-
-                            return (
-                                getParticipantId(
-                                    participant
-                                ) === selectedParticipantId
-                            );
-
-                        }
-                    );
-
-
                 if (latestParticipant) {
-
-                    selectedParticipant =
-                        latestParticipant;
-
-
-                    fillParticipantDetail(
-                        selectedProject,
-                        latestParticipant
-                    );
-
+                    selectedParticipant = latestParticipant;
+                    fillParticipantDetail(selectedProject, latestParticipant);
                 }
-
             }
 
+        } catch (error) {
+            console.warn("[Monitoring] Live refresh gagal:", error);
         }
-        catch (error) {
-            console.warn("Live monitoring refresh gagal:", error);
-        }
-    }, 3000);
+    }, 30000);  // ← 30 detik (dari 60 detik)
 }
 
+/* ==========================================================
+   HELPER: Update timestamp "last refresh" di UI
+========================================================== */
+
+function updateMonitoringTimestamp() {
+    var el = document.getElementById("lastRefreshTime");
+    if (!el) return;
+    
+    var now = new Date();
+    var timeStr = now.toLocaleTimeString("id-ID", { 
+        hour: "2-digit", 
+        minute: "2-digit", 
+        second: "2-digit" 
+    });
+    el.textContent = "Last update: " + timeStr;
+    el.style.color = "#16a34a";
+}
 
 /* ==========================================================
    SIMPAN AUTOMATIC LOGOUT KE SUPABASE
@@ -694,65 +674,74 @@ async function persistAutomaticLogouts(participants) {
 
     for (const participant of participants) {
 
-        if (
-            !participant ||
-            !participant._supabaseParticipantId
-        ) {
+        if (!participant || !participant._supabaseParticipantId) {
             continue;
         }
 
         try {
+            // Ambil timestamp logout yang valid
+            const logoutTimeISO = participant.logoutTime ||
+                participant.logoutAt ||
+                participant.lastLogoutAt ||
+                participant.waktuLogout ||
+                new Date().toISOString();
 
-            const updatedRawData =
-                Object.assign(
-                    {},
-                    participant._supabaseRawData,
-                    {
-                        isLoggedIn: participant.isLoggedIn,
-                        onlineStatus: participant.onlineStatus,
-                        status: participant.status,
-                        logoutTime: participant.logoutTime,
-                        loggedOutAt: participant.loggedOutAt,
-                        logoutAt: participant.logoutAt,
-                        lastLogoutAt: participant.lastLogoutAt,
-                        lastLogout: participant.lastLogout,
-                        waktuLogout: participant.waktuLogout,
-                        currentActivity: participant.currentActivity,
-                        activityHistory: participant.activityHistory
-                    }
-                );
+            // Validasi timestamp
+            const parsedDate = new Date(logoutTimeISO);
+            if (isNaN(parsedDate.getTime())) {
+                console.warn("[Monitoring] Timestamp logout invalid, skip:", participant.id);
+                continue;
+            }
 
-            await DataService.updateParticipant(
-                participant._supabaseParticipantId,
+            // Siapkan raw_data
+            const updatedRawData = Object.assign(
+                {},
+                participant._supabaseRawData || {},
                 {
-                    is_logged_in: false,
+                    isLoggedIn: false,
+                    onlineStatus: "offline",
                     status: "Offline",
-                    activity: "Offline",
-                    current_activity: "Offline",
-                    logout_at: participant.logoutTime,
-                    logged_out_at: participant.logoutTime,
-                    last_logout_at: participant.logoutTime,
-                    raw_data: updatedRawData
+                    logoutTime: logoutTimeISO,
+                    logoutAt: logoutTimeISO,
+                    lastLogoutAt: logoutTimeISO,
+                    lastLogout: logoutTimeISO,
+                    waktuLogout: logoutTimeISO,
+                    currentActivity: "Offline",
+                    activityHistory: participant.activityHistory || []
                 }
             );
 
-            console.log(
-                "[Monitoring] Automatic logout tersimpan ke Supabase:",
-                participant.id
+            // FIX: Kirim HANYA kolom yang ada di database
+            // Kolom yang ada: is_logged_in, logout_at, last_logout_at, raw_data
+            // Kolom yang TIDAK ada: logged_out_at, status, activity, current_activity
+            const updatePayload = {
+                is_logged_in: false,
+                logout_at: logoutTimeISO,
+                last_logout_at: logoutTimeISO,
+                raw_data: updatedRawData
+            };
+
+            console.log("[Monitoring] Sending update payload:", updatePayload);
+
+            const result = await DataService.updateParticipant(
+                participant._supabaseParticipantId,
+                updatePayload
             );
 
-        } catch (error) {
+            if (result) {
+                console.log("[Monitoring] ✅ Automatic logout tersimpan:", participant.id);
+            } else {
+                console.warn("[Monitoring] ⚠️ Update returned null:", participant.id);
+            }
 
+        } catch (error) {
             console.error(
-                "[Monitoring] Gagal menyimpan automatic logout ke Supabase:",
+                "[Monitoring] ❌ Gagal menyimpan automatic logout:",
                 participant.id,
                 error
             );
-
         }
-
     }
-
 }
 
 /* ==========================================================
@@ -1832,17 +1821,50 @@ function fillParticipantDetail(
         "-";
 
 
-    /* ======================================================
-       LOGOUT
+        /* ======================================================
+       LOGOUT — PATCH: Fallback dari activityHistory
     ====================================================== */
 
-    const logout =
+    let logout =
         participant?.logoutTime ||
         participant?.loggedOutAt ||
         participant?.logoutAt ||
         participant?.timeLogout ||
-        "-";
+        participant?.lastLogoutAt ||
+        "";
 
+    // FALLBACK: Kalau tidak ada field, cari di activityHistory
+    if (!logout) {
+
+        var logoutHistory = Array.isArray(participant.activityHistory)
+            ? participant.activityHistory
+            : [];
+
+        var logoutItem = logoutHistory.find(function(item) {
+
+            var type = String(item?.type || "").toLowerCase();
+            var activity = String(item?.activity || item?.description || "").toLowerCase();
+
+            return type === "logout" ||
+                   activity.includes("keluar") ||
+                   activity.includes("logout") ||
+                   activity.includes("sesi berakhir");
+        });
+
+        if (logoutItem) {
+
+            logout = logoutItem.timestamp ||
+                     logoutItem.time ||
+                     logoutItem.createdAt ||
+                     "";
+
+            console.log("[View Monitoring] Logout dari history:", logout);
+        }
+    }
+
+    if (!logout) {
+        logout = "-";
+    }
 
     /* ======================================================
        BASIC INFORMATION
@@ -1885,9 +1907,102 @@ function fillParticipantDetail(
 
 
     setText(
-        "detailLogout",
-        formatDateTime(logout)
-    );
+    "detailLogout",
+    formatDateTime(logout)
+);
+
+
+/* ==========================================================
+   PATCH BONUS: Statistik Pindah Tab
+   ----------------------------------------------------------
+   Menampilkan berapa kali peserta pindah tab selama sesi.
+   Ini indikator fokus peserta — pindah tab sering bisa
+   jadi sinyal peserta cari jawaban di tab/aplikasi lain.
+
+   Data dibaca dari participant.tabSwitchCount yang dikirim
+   oleh participant-dashboard.html lewat pushParticipantsPresence.
+========================================================== */
+
+var tabStatsEl = document.getElementById("detailTabStats");
+if (tabStatsEl) {
+
+    /* ==========================================================
+       PILAR 3: Counter langsung + fallback dari activityHistory
+       ----------------------------------------------------------
+       Kalau tabSwitchCount ada → pakai itu (data baru)
+       Kalau tidak ada → hitung dari activityHistory (data lama)
+    ========================================================== */
+
+    var tabCount = Number(participant.tabSwitchCount) || 0;
+    var tabLong = Number(participant.tabSwitchLongSwitches) || 0;
+    var tabDuration = Number(participant.tabSwitchTotalDuration) || 0;
+
+    // FALLBACK: Hitung dari activityHistory kalau counter = 0
+    if (tabCount === 0) {
+        var history = Array.isArray(participant.activityHistory)
+            ? participant.activityHistory
+            : [];
+
+        history.forEach(function(item) {
+            var text = String(
+                item?.activity ||
+                item?.description ||
+                item?.title ||
+                ""
+            ).toLowerCase();
+
+            if (text.includes("pindah tab") || text.includes("berpindah tab")) {
+                tabCount++;
+
+                // Cek durasi di teks
+                var match = text.match(/(\d+)\s*detik/);
+                if (match) {
+                    var sec = Number(match[1]);
+                    tabDuration += sec;
+                    if (sec > 30) {
+                        tabLong++;
+                    }
+                }
+            }
+        });
+
+        if (tabCount > 0) {
+            console.log("[View Monitoring] Counter dari history:", tabCount);
+        }
+    }
+
+    // TAMPILKAN
+    if (tabCount === 0) {
+        tabStatsEl.textContent = "Tidak ada pindah tab";
+        tabStatsEl.style.color = "#16a34a";
+    } else if (tabCount <= 2) {
+        tabStatsEl.textContent = tabCount + "× pindah tab (normal)";
+        tabStatsEl.style.color = "#65a30d";
+    } else if (tabCount <= 5) {
+        tabStatsEl.textContent = tabCount + "× pindah tab" +
+            (tabLong > 0 ? ", " + tabLong + "× > 30 detik ⚠️" : "");
+        tabStatsEl.style.color = "#d97706";
+        tabStatsEl.style.fontWeight = "700";
+    } else {
+        tabStatsEl.textContent = tabCount + "× pindah tab" +
+            (tabLong > 0 ? ", " + tabLong + "× > 30 detik 🚨" : "");
+        tabStatsEl.style.color = "#dc2626";
+        tabStatsEl.style.fontWeight = "800";
+    }
+
+    if (tabDuration > 0) {
+        tabStatsEl.title = "Total waktu di tab lain: " +
+            Math.round(tabDuration) + " detik";
+    }
+}
+
+/* ======================================================
+   ACTIVITY
+====================================================== */
+
+renderParticipantActivity(
+    participant
+);
 
 
     /* ======================================================
@@ -2096,23 +2211,48 @@ function renderParticipantActivity(
             participant?.isLoggedIn === "true";
 
         /* ======================================================
-   TENTUKAN TAMPILAN ACTIVITY
-
+   PATCH FASE 2: 3 STATUS — Online / Idle / Offline
+   ------------------------------------------------------
    PRIORITAS:
-   1. Completed
-   2. Offline
-   3. Sedang mengerjakan tes
-   4. Online
+   1. Completed   → "Assessment selesai"
+   2. Explicit Logout → "Offline" (peserta klik tombol logout)
+   3. > 30 menit tanpa heartbeat → "Offline" (tab ditutup lama)
+   4. > 2 menit tanpa heartbeat  → "Idle" (tab background sementara)
+   5. Sedang mengerjakan tes → "Sedang mengerjakan tes"
+   6. Online (heartbeat < 2 menit) → "Online"
+
+   Efek: Log "keluar palsu" hilang. Peserta yang tinggal tab
+   beberapa menit tampil sebagai "Idle", bukan "Offline".
 ====================================================== */
 
 let displayActivity = "Offline";
-
-let displaySubtext =
-    "Peserta sedang tidak aktif";
-
+let displaySubtext = "Peserta tidak terhubung";
 
 /* ======================================================
-   STATUS COMPLETED
+   HITUNG UMUR HEARTBEAT
+====================================================== */
+
+const lastSeen = participant.lastSeenAt || participant.lastSeen || "";
+const lastSeenTime = lastSeen ? new Date(lastSeen).getTime() : 0;
+const ageSec = lastSeenTime > 0 ? (Date.now() - lastSeenTime) / 1000 : Infinity;
+
+const IDLE_THRESHOLD_SEC = 30 * 60;   // 30 menit → anggap Offline
+const ONLINE_THRESHOLD_SEC = 2 * 60;  // 2 menit → masih Online
+
+/* ======================================================
+   CEK LOGOUT EKSPLISIT
+   Peserta klik tombol Logout → logoutTime terisi
+====================================================== */
+
+const explicitLogout = !!(
+    participant.logoutTime ||
+    participant.loggedOutAt ||
+    participant.logoutAt ||
+    participant.lastLogoutAt
+);
+
+/* ======================================================
+   STATUS PARTICIPANT (Completed / dll)
 ====================================================== */
 
 const participantStatus =
@@ -2125,38 +2265,54 @@ const participantStatus =
     .trim();
 
 
+/* ======================================================
+   PRIORITAS 1: COMPLETED
+====================================================== */
+
 if (
     participantStatus === "completed" ||
     participantStatus === "complete"
 ) {
 
-    displayActivity =
-        "Assessment selesai";
-
-    displaySubtext =
-        "Peserta telah menyelesaikan assessment";
+    displayActivity = "Assessment selesai";
+    displaySubtext = "Peserta telah menyelesaikan assessment";
 
 
 /* ======================================================
-   OFFLINE
-
-   PENTING:
-   Walaupun currentActivity masih
-   \"Sedang mengerjakan tes\",
-   jika heartbeat mati tetap OFFLINE.
+   PRIORITAS 2: EXPLICIT LOGOUT
+   Peserta klik tombol Logout
 ====================================================== */
 
-} else if (!isOnline) {
+} else if (explicitLogout) {
 
-    displayActivity =
-        "Offline";
-
-    displaySubtext =
-        "Peserta tidak sedang terhubung";
+    displayActivity = "Offline";
+    displaySubtext = "Peserta sudah logout";
 
 
 /* ======================================================
-   SEDANG MENGERJAKAN TES
+   PRIORITAS 3: OFFLINE (tidak heartbeat > 30 menit)
+   Tab sudah ditutup lama / tidak aktif
+====================================================== */
+
+} else if (ageSec > IDLE_THRESHOLD_SEC) {
+
+    displayActivity = "Offline";
+    displaySubtext = "Tidak aktif > 30 menit";
+
+
+/* ======================================================
+   PRIORITAS 4: IDLE (2-30 menit tanpa heartbeat)
+   Tab terbuka tapi tidak aktif sementara
+====================================================== */
+
+} else if (ageSec > ONLINE_THRESHOLD_SEC) {
+
+    displayActivity = "Idle";
+    displaySubtext = "Tidak aktif sementara";
+
+
+/* ======================================================
+   PRIORITAS 5: SEDANG MENGERJAKAN TES
 ====================================================== */
 
 } else if (
@@ -2181,12 +2337,12 @@ if (
                 : "Sedang mengerjakan tes"
         );
 
-    displaySubtext =
-        "Sedang berlangsung";
+    displaySubtext = "Sedang berlangsung";
 
 
 /* ======================================================
-   ONLINE
+   PRIORITAS 6: ONLINE
+   Heartbeat < 2 menit
 ====================================================== */
 
 } else if (
@@ -2194,11 +2350,18 @@ if (
     isLoggedIn
 ) {
 
-    displayActivity =
-        "Online";
+    displayActivity = "Online";
+    displaySubtext = "Siap mengerjakan tes";
 
-    displaySubtext =
-        "Siap mengerjakan tes";
+
+/* ======================================================
+   FALLBACK
+====================================================== */
+
+} else {
+
+    displayActivity = "Offline";
+    displaySubtext = "Peserta tidak terhubung";
 
 }
         currentBox.classList.toggle(
@@ -2441,8 +2604,12 @@ function isParticipantOnline(
     }
 
 
+        // PATCH: ONLINE_TIMEOUT harus lebih besar dari heartbeat interval.
+    // Heartbeat peserta sekarang 60 detik (lihat participant-dashboard.html),
+    // jadi timeout diset 120 detik (2×) supaya peserta tidak salah
+    // dianggap offline tepat sebelum heartbeat berikutnya datang.
     const ONLINE_TIMEOUT =
-        30 * 1000;
+        120 * 1000;  // 120 detik = 2 menit
 
 
     const age =
@@ -3497,34 +3664,16 @@ function backToParticipants(projectId) {
 }
 
 /* ==========================================================
-   LIVE MONITORING REFRESH
+   CATATAN: Blok "latestSelectedProject" DIHAPUS
+   ----------------------------------------------------------
+   Blok lama ini mereferensikan variabel `latestSelectedProject`
+   yang TIDAK PERNAH dideklarasikan di file ini — menyebabkan
+   ReferenceError setiap kali view-monitoring.js di-load.
 
-   HANYA MEMBACA STATUS PESERTA.
-   View Monitoring TIDAK BOLEH mencatat logout otomatis.
+   Isinya juga tidak melakukan apa-apa (hanya comment di dalam
+   forEach). Jadi aman dihapus total.
 
-   Logout hanya dicatat oleh:
-   1. Tombol Logout peserta
-   2. Close tab/window peserta
+   Auto-logout sudah ditangani di startLiveMonitoringRefresh()
+   — atau lebih tepatnya, sudah kita nonaktifkan untuk
+   menghindari false positive.
 ========================================================== */
-
-if (
-    latestSelectedProject &&
-    latestSelectedProject.participants &&
-    Array.isArray(latestSelectedProject.participants)
-) {
-    latestSelectedProject.participants.forEach(function(participant) {
-
-        /*
-         * Jangan ubah:
-         * - isLoggedIn
-         * - status
-         * - onlineStatus
-         * - logoutTime
-         * - logoutAt
-         * - waktuLogout
-         *
-         * View Monitoring hanya membaca data terbaru.
-         */
-
-    });
-}

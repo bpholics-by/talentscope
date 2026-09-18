@@ -1,5 +1,6 @@
 /* ==========================================================
     RENDER TEST RESULT (PAPI KOSTICK - CUSTOM INTERPRETATION)
+    FULL FIX VERSION — dengan narasi kontekstual
 ========================================================== */
 
 function renderTestResult(assessment, result) {
@@ -11,12 +12,6 @@ function renderTestResult(assessment, result) {
         document.body.appendChild(resultContent);
     }
 
-    // ==========================================================
-    // SUMBER DATA TUNGGAL:
-    // Renderer memakai hasil yang SUDAH dipilih oleh
-    // test-result.js berdasarkan project + participant + index.
-    // Tidak ada lookup localStorage berbasis URL di renderer.
-    // ==========================================================
     const sourceResult =
         result && typeof result === 'object'
             ? result
@@ -47,9 +42,7 @@ function renderTestResult(assessment, result) {
         sourceResult
     );
 
-        const keys = ['N', 'G', 'A', 'L', 'P', 'I', 'T', 'V', 'S', 'B', 'O', 'X', 'C', 'D', 'R', 'Z', 'E', 'K', 'F', 'W'];
-
-    // ... (lanjutkan sisa kode fungsi ke bawah seperti biasa)
+    const keys = ['N', 'G', 'A', 'L', 'P', 'I', 'T', 'V', 'S', 'B', 'O', 'X', 'C', 'D', 'R', 'Z', 'E', 'K', 'F', 'W'];
 
     const papiDefinitions = {
         N: { name: "Kebutuhan Menyelesaikan Tugas (Need to Finish a Task)" },
@@ -66,7 +59,7 @@ function renderTestResult(assessment, result) {
         X: { name: "Kebutuhan Untuk Diperhatikan (Need to be Noticed)" },
         C: { name: "Keteraturan (Organized Type)" },
         D: { name: "Minat Terhadap Detail (Interest in Working with Details)" },
-        R: { name: "Orientasi Teoritis (Theoretical Type)" },
+        R: { name: "Orientasi Teoretis (Theoretical Type)" },
         Z: { name: "Kebutuhan Terhadap Perubahan (Need for Change)" },
         E: { name: "Pengendalian Emosi (Emotional Restraint)" },
         K: { name: "Kebutuhan Bersikap Tegas (Need to be Forceful)" },
@@ -74,7 +67,6 @@ function renderTestResult(assessment, result) {
         W: { name: "Kebutuhan Terhadap Aturan dan Pengawasan (Need for Rules & Supervision)" }
     };
 
-    // Fungsi helper dinamis untuk mengambil interpretasi berdasarkan Dimensi (Key) dan Skor
     function getInterpretationByScore(key, score) {
         const s = Number(score);
         switch (key) {
@@ -184,6 +176,423 @@ function renderTestResult(assessment, result) {
         }
     }
 
+    // ==========================================================
+    // HELPER: Akses skor & layer analysis
+    // ==========================================================
+    function getActualScore(key) {
+        const raw = scoresObj ? scoresObj[key] : undefined;
+        const n = Number(raw);
+        return (raw !== undefined && raw !== null && raw !== '' && Number.isFinite(n))
+            ? Math.max(0, Math.min(9, n))
+            : null;
+    }
+
+    function getGroupScores(groupKeys) {
+        return groupKeys
+            .map(function (key) {
+                const score = getActualScore(key);
+                return score === null ? null : { key: key, score: score };
+            })
+            .filter(Boolean);
+    }
+
+    function _layerize(items) {
+        if (!items || items.length === 0) return { dominant: [], supporting: [], latent: [] };
+        
+        const scores = items.map(x => x.score);
+        const max = Math.max(...scores);
+        const min = Math.min(...scores);
+        const range = max - min;
+        
+        if (range <= 1) {
+            return { dominant: [], supporting: items, latent: [] };
+        }
+        
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        const dominantCut = Math.max(avg + (range * 0.05), avg + 0.5);
+        const latentCut = Math.min(avg - (range * 0.05), avg - 0.5);
+        
+        let dominant = items.filter(x => x.score >= dominantCut);
+        let latent = items.filter(x => x.score <= latentCut);
+        let supporting = items.filter(x => !dominant.includes(x) && !latent.includes(x));
+        
+        // Fallback: ambil top 2 kalau dominant < 2
+        if (dominant.length < 2 && items.length > 2) {
+            const sorted = [...items].sort((a, b) => b.score - a.score);
+            for (let i = 0; i < 2; i++) {
+                if (!dominant.includes(sorted[i]) && !latent.includes(sorted[i])) {
+                    dominant.push(sorted[i]);
+                    const idx = supporting.indexOf(sorted[i]);
+                    if (idx >= 0) supporting.splice(idx, 1);
+                }
+            }
+        }
+        
+        // Fallback: ambil bottom 2 kalau latent < 2
+        if (latent.length < 2 && items.length > 2) {
+            const sorted = [...items].sort((a, b) => a.score - b.score);
+            for (let i = 0; i < 2; i++) {
+                if (!latent.includes(sorted[i]) && !dominant.includes(sorted[i])) {
+                    latent.push(sorted[i]);
+                    const idx = supporting.indexOf(sorted[i]);
+                    if (idx >= 0) supporting.splice(idx, 1);
+                }
+            }
+        }
+        
+        return { dominant, supporting, latent };
+    }
+
+    function _profilePattern(items) {
+        if (!items || items.length < 2) return "unknown";
+        const scores = items.map(x => x.score);
+        const max = Math.max(...scores);
+        const min = Math.min(...scores);
+        const spread = max - min;
+        
+        if (spread <= 2) return "flat";
+        if (spread <= 4) return "moderate";
+        return "polarized";
+    }
+
+    const PAPI_DIM_LABEL = {
+        L: "Peran Kepemimpinan",
+        P: "Kebutuhan Mengatur Orang Lain",
+        I: "Kemudahan Mengambil Keputusan",
+        S: "Hubungan Sosial",
+        B: "Kebutuhan Menjadi Bagian Kelompok",
+        O: "Kebutuhan Kedekatan Interpersonal",
+        X: "Kebutuhan Untuk Diperhatikan",
+        N: "Kebutuhan Menyelesaikan Tugas",
+        G: "Peran Pekerja Keras",
+        A: "Kebutuhan Berprestasi",
+        V: "Semangat Aktivitas Fisik",
+        T: "Tempo Kerja",
+        R: "Orientasi Teoretis",
+        D: "Minat Terhadap Detail",
+        C: "Keteraturan Kerja",
+        Z: "Kebutuhan Terhadap Perubahan",
+        E: "Pengendalian Emosi",
+        K: "Kebutuhan Bersikap Tegas",
+        F: "Dukungan Terhadap Otoritas",
+        W: "Kebutuhan Terhadap Aturan"
+    };
+
+    function _namesOf(items) {
+        return items.map(x => PAPI_DIM_LABEL[x.key] || x.key).join(", ");
+    }
+
+    // ==========================================================
+    // 1. LEADERSHIP — Narasi Kontekstual
+    // ==========================================================
+    function buildLeadershipSummary() {
+        const items = getGroupScores(['L', 'P', 'I']);
+        if (items.length < 3) {
+            return 'Data kepemimpinan belum lengkap untuk dianalisis.';
+        }
+        
+        const L = getActualScore('L');
+        const P = getActualScore('P');
+        const I = getActualScore('I');
+        const E = getActualScore('E');
+        const K = getActualScore('K');
+        const layers = _layerize(items);
+        
+        const dominantKeys = layers.dominant.map(x => x.key);
+        const latentKeys = layers.latent.map(x => x.key);
+        
+        const emotionCtx = (E !== null && E >= 6) 
+            ? "Dengan pengendalian emosi yang kuat, ia cenderung tetap tenang di bawah tekanan" 
+            : (E !== null && E <= 3) 
+                ? "Dengan ekspresi emosi yang terbuka, ia mudah menunjukkan reaksi saat menghadapi tekanan"
+                : "Dengan pengendalian emosi yang seimbang, ia dapat menahan diri saat perlu dan mengekspresikan saat tepat";
+        
+        const assertiveCtx = (K !== null && K >= 6)
+            ? "didukung ketegasan tinggi, ia berani menyampaikan posisi bahkan saat tidak populer"
+            : (K !== null && K <= 3)
+                ? "namun dengan ketegasan yang rendah, ia cenderung menghindari konfrontasi langsung"
+                : "dengan ketegasan yang moderat, ia dapat menyesuaikan diri antara tegas dan diplomatis";
+        
+        let narasi = "";
+        
+        // KASUS 1: Pemimpin Utuh
+        if (L >= 6 && P >= 6 && I >= 6) {
+            narasi = "🎯 **Pemimpin Utuh** — Kandidat menunjukkan kombinasi lengkap: nyaman memimpin (**Peran Kepemimpinan**), terdorong mengarahkan orang lain (**Kebutuhan Mengatur Orang Lain**), dan berani mengambil keputusan (**Kemudahan Mengambil Keputusan**). " + emotionCtx + ". " + assertiveCtx + ". **Konteks optimal:** posisi manajerial senior, kepala unit, atau peran yang menuntut kepemimpinan formal dengan tanggung jawab besar — seperti memimpin tim produksi, mengelola cabang, atau mengarahkan proyek strategis. **Risiko:** dorongan kontrol yang kuat bisa mematikan inisiatif tim; perlu menjaga keseimbangan antara mengarahkan dan memberi ruang.";
+        }
+        // KASUS 2: Pemimpin Visioner
+        else if (dominantKeys.includes('L') && dominantKeys.includes('I') && latentKeys.includes('P')) {
+            narasi = "🎯 **Pemimpin Visioner** — Kandidat nyaman memimpin (**Peran Kepemimpinan**) dan berani memutuskan (**Kemudahan Mengambil Keputusan**), tetapi tidak merasa perlu mengontrol detail pekerjaan orang lain. Ia lebih mengandalkan visi dan arahan strategis dibanding pengawasan operasional. " + emotionCtx + ". **Konteks optimal:** peran kepemimpinan strategis, head of department, atau posisi yang menuntut pengambilan keputusan cepat dengan delegasi luas. **Contoh situasi:** saat harus memilih antara dua strategi besar dengan informasi terbatas, ia akan memutuskan dengan tegas dan mempercayakan eksekusi kepada tim. **Pengembangan:** pada situasi yang menuntut pemantauan ketat (audit, quality control), ia perlu lebih sabar terlibat detail operasional.";
+        }
+        // KASUS 3: Pemimpin Konservatif
+        else if (dominantKeys.includes('L') && dominantKeys.includes('P') && latentKeys.includes('I')) {
+            narasi = "🎯 **Pemimpin Konservatif** — Kandidat menunjukkan dorongan kuat untuk memimpin (**Peran Kepemimpinan**) dan mengatur orang lain (**Kebutuhan Mengatur Orang Lain**), namun dalam mengambil keputusan ia cenderung berhati-hati (**Kemudahan Mengambil Keputusan** rendah). Ia lebih suka mempertimbangkan banyak hal dan mengumpulkan informasi sebelum memutuskan. " + assertiveCtx + ". **Konteks optimal:** posisi manajerial yang menuntut keputusan matang dengan konsekuensi besar — seperti HR manager, kepala compliance, atau peran yang menangani isu sensitif. **Contoh situasi:** saat menghadapi konflik antar-anggota tim, ia akan mendengarkan semua pihak dan mempertimbangkan berbagai sudut sebelum mengambil tindakan. **Risiko:** pada situasi yang menuntut keputusan cepat (krisis operasional, deadline mendesak), ia perlu melatih diri untuk lebih tegas.";
+        }
+        // KASUS 4: Penggerak Operasional
+        else if (dominantKeys.includes('P') && dominantKeys.includes('I') && latentKeys.includes('L')) {
+            narasi = "🎯 **Penggerak Operasional** — Kandidat tidak merasa perlu tampil sebagai 'pemimpin formal', tetapi memiliki dorongan kuat untuk mengatur pekerjaan (**Kebutuhan Mengatur Orang Lain**) dan mengambil keputusan (**Kemudahan Mengambil Keputusan**). Ia lebih nyaman menggerakkan dari sisi teknis atau operasional — memastikan pekerjaan berjalan benar tanpa harus menjadi figur sentral. " + emotionCtx + ". **Konteks optimal:** project coordinator, team lead non-formal, atau orang kepercayaan di belakang pemimpin. **Contoh situasi:** saat tim butuh keputusan cepat di lapangan tapi atasannya tidak ada, ia akan mengambil tanggung jawab dan memutuskan tanpa ragu. **Pengembangan:** pada situasi yang menuntut visibilitas kepemimpinan publik (presentasi ke eksekutif, negosiasi strategis), ia perlu membangun kepercayaan diri untuk tampil di depan.";
+        }
+        // KASUS 5: Pemimpin Simbolik
+        else if (dominantKeys.includes('L') && !dominantKeys.includes('P') && !dominantKeys.includes('I')) {
+            narasi = "🎯 **Pemimpin Simbolik** — Kandidat memiliki kebutuhan menonjol untuk memproyeksikan diri sebagai pemimpin (**Peran Kepemimpinan**), tetapi dimensi lain dalam area kepemimpinan tidak selalu mendukung secara merata. Ini bisa berarti ia mengandalkan kharisma atau otoritas posisi, bukan kontrol langsung atau keberanian keputusan. " + assertiveCtx + ". **Konteks optimal:** peran yang menuntut representasi, tokoh panutan, atau figurehead — seperti ketua komite, spokesperson tim, atau lead yang menginspirasi. **Contoh situasi:** saat tim butuh figur yang menenangkan atau mewakili mereka ke pihak eksternal, ia tampil optimal. **Pengembangan:** memperkuat kemampuan teknis kepemimpinan (mengatur, memutuskan) agar tidak hanya terlihat memimpin tapi juga efektif menggerakkan.";
+        }
+        // KASUS 6: Manajer Kontrol
+        else if (dominantKeys.includes('P') && !dominantKeys.includes('L') && !dominantKeys.includes('I')) {
+            narasi = "🎯 **Manajer Kontrol** — Kandidat menunjukkan kebutuhan kuat untuk mengendalikan dan mengarahkan pekerjaan orang lain (**Kebutuhan Mengatur Orang Lain**). Ia merasa nyaman mengambil tanggung jawab atas hasil kerja tim, dan cenderung ingin memastikan segala sesuatunya berjalan sesuai standar. " + assertiveCtx + ". **Konteks optimal:** posisi supervisory, manajer operasional, atau kepala shift. **Contoh situasi:** saat ada anggota tim yang tidak mengikuti SOP, ia akan langsung menegur dan mengarahkan sesuai standar yang berlaku. **Risiko:** dorongan kontrol ini perlu diimbangi kepercayaan terhadap kemampuan orang lain agar tidak berubah menjadi micromanagement yang mematikan inisiatif.";
+        }
+        // KASUS 7: Pengambil Keputusan
+        else if (dominantKeys.includes('I') && !dominantKeys.includes('L') && !dominantKeys.includes('P')) {
+            narasi = "🎯 **Pengambil Keputusan** — Kandidat menunjukkan kepercayaan diri tinggi dalam mengambil keputusan (**Kemudahan Mengambil Keputusan**). Ia tidak mudah ragu, dan merasa mantap ketika harus menentukan pilihan — bahkan dalam situasi yang ambigu atau penuh ketidakpastian. " + emotionCtx + ". **Konteks optimal:** peran yang menuntut ketegasan dan respons cepat — seperti crisis manager, kapten tim lapangan, atau posisi yang harus sering mengambil keputusan di bawah tekanan waktu. **Contoh situasi:** saat terjadi gangguan operasional dan tidak ada yang mengambil inisiatif, ia akan segera memutuskan langkah penanganan berdasarkan informasi yang ada. **Pengembangan:** perlu diimbangi keterbukaan terhadap informasi baru dan kemampuan meninjau ulang keputusan bila konteks berubah.";
+        }
+        // KASUS 8: Profil Eksekutif
+        else if (dominantKeys.includes('L') && dominantKeys.includes('I')) {
+            narasi = "🎯 **Profil Eksekutif** — Kandidat menunjukkan kombinasi kuat antara kenyamanan memimpin (**Peran Kepemimpinan**) dan keberanian mengambil keputusan (**Kemudahan Mengambil Keputusan**). Ini adalah profil yang mampu mengarahkan sekaligus bertindak cepat ketika situasi menuntut. " + emotionCtx + ". **Konteks optimal:** peran kepemimpinan strategis, direktur, atau posisi yang harus mengambil keputusan berdampak besar dengan cepat. **Contoh situasi:** saat organisasi menghadapi perubahan pasar mendadak, ia akan segera mengarahkan tim dan mengambil keputusan strategis untuk menyesuaikan diri.";
+        }
+        // KASUS 9: Manajer Tegas
+        else if (dominantKeys.includes('L') && dominantKeys.includes('P')) {
+            narasi = "🎯 **Manajer Tegas** — Kandidat menunjukkan dorongan kuat untuk memimpin (**Peran Kepemimpinan**) dan mengendalikan (**Kebutuhan Mengatur Orang Lain**). Ia tidak hanya nyaman di depan, tetapi juga merasa perlu memastikan pekerjaan orang lain berjalan sesuai arah yang ia tentukan. " + assertiveCtx + ". **Konteks optimal:** posisi manajerial dengan tuntutan kontrol operasional ketat — seperti kepala produksi, manajer QC, atau posisi yang menuntut kepatuhan tinggi terhadap prosedur. **Contoh situasi:** saat ada anggota tim yang menyimpang dari standar, ia akan segera mengambil alih dan mengoreksi tanpa ragu.";
+        }
+        // KASUS 10: Supervisor Operasional
+        else if (dominantKeys.includes('P') && dominantKeys.includes('I')) {
+            narasi = "🎯 **Supervisor Operasional** — Kandidat menunjukkan kemampuan mengendalikan orang lain (**Kebutuhan Mengatur Orang Lain**) sekaligus mengambil keputusan dengan mantap (**Kemudahan Mengambil Keputusan**). Kombinasi ini efektif pada peran yang menuntut pengawasan sekaligus keputusan cepat. **Konteks optimal:** supervisor produksi, manajer operasional, atau kepala shift. **Contoh situasi:** saat ada masalah operasional yang perlu keputusan cepat, ia akan segera mengarahkan tim dan memutuskan langkah penanganan tanpa menunggu instruksi atasan.";
+        }
+        // FALLBACK: Profil Fleksibel
+        else {
+            narasi = "🎯 **Profil Kepemimpinan Fleksibel** — Kandidat menunjukkan dorongan kepemimpinan yang bergantung pada konteks. Ia dapat mengambil peran memimpin ketika situasi menuntut, tetapi juga nyaman berada di belakang layar bila ada pihak lain yang lebih tepat memimpin. " + emotionCtx + ". " + assertiveCtx + ". **Konteks optimal:** peran lintas fungsi, koordinator, atau posisi yang menuntut kolaborasi. **Contoh situasi:** saat tim membutuhkan pemimpin, ia akan maju; saat ada figur lain yang lebih tepat, ia akan mendukung dari belakang. **Pengembangan:** kejelasan dalam menentukan kapan harus maju dan kapan harus mendukung.";
+        }
+        
+        // Dinamika internal
+        if (layers.dominant.length > 0 && layers.latent.length > 0) {
+            const namaDominan = _namesOf(layers.dominant);
+            const namaLatent = _namesOf(layers.latent);
+            narasi += "\n\n📊 **Dinamika internal** — Kekuatan: " + namaDominan + ". Pengembangan: " + namaLatent + ".";
+        }
+        
+        return narasi;
+    }
+
+    // ==========================================================
+    // 2. HUBUNGAN SOSIAL — Narasi Kontekstual
+    // ==========================================================
+    function buildSocialSummary() {
+        const items = getGroupScores(['S', 'B', 'O', 'X']);
+        if (items.length < 4) {
+            return 'Data hubungan sosial belum lengkap untuk dianalisis.';
+        }
+        
+        const S = getActualScore('S');
+        const B = getActualScore('B');
+        const O = getActualScore('O');
+        const X = getActualScore('X');
+        const layers = _layerize(items);
+        const pattern = _profilePattern(items);
+        
+        const dominantKeys = layers.dominant.map(x => x.key);
+        const latentKeys = layers.latent.map(x => x.key);
+        
+        let narasi = "";
+        
+        // KASUS 1: Sosial Penuh
+        if (dominantKeys.includes('S') && dominantKeys.includes('B') && dominantKeys.includes('O')) {
+            narasi = "🎯 **Sosial Penuh** — Kandidat menunjukkan orientasi sosial yang utuh: nyaman berinteraksi (**Hubungan Sosial**), terdorong menjadi bagian dari kelompok (**Kebutuhan Menjadi Bagian Kelompok**), dan cukup peka terhadap kebutuhan interpersonal (**Kebutuhan Kedekatan Interpersonal**). Ia cenderung mudah membangun hubungan dan menjadi penggerak dalam dinamika tim. **Konteks optimal:** peran yang menuntut kolaborasi intens, customer-facing, atau kerja lintas fungsi — seperti account manager, HR business partner, atau community manager. **Contoh situasi:** saat tim mengalami konflik internal, ia akan menjadi jembatan komunikasi dan membantu menyelesaikan perbedaan. **Pengembangan:** pada situasi yang menuntut keputusan tidak populer, kepekaan sosial yang tinggi bisa membuatnya enggan menyampaikan hal yang berpotensi mengganggu harmoni.";
+        }
+        // KASUS 2: Sosialis Praktis
+        else if (dominantKeys.includes('S') && dominantKeys.includes('B') && latentKeys.includes('O')) {
+            narasi = "🎯 **Sosialis Praktis** — Kandidat menunjukkan kebutuhan kuat untuk berinteraksi (**Hubungan Sosial**) dan menjadi bagian dari kelompok (**Kebutuhan Menjadi Bagian Kelompok**), tetapi tidak terlalu bergantung pada kedekatan emosional yang mendalam. Ia nyaman bergaul dalam lingkaran luas, tetapi menjaga jarak yang sehat. **Konteks optimal:** peran yang menuntut jaringan luas tanpa harus terlibat personal mendalam — seperti business development, partnership manager, atau peran lintas organisasi. **Contoh situasi:** saat harus membangun kemitraan dengan pihak eksternal, ia akan mudah membuka percakapan tanpa merasa perlu terikat secara personal.";
+        }
+        // KASUS 3: Sosialis Independen
+        else if (dominantKeys.includes('S') && dominantKeys.includes('O') && latentKeys.includes('B')) {
+            narasi = "🎯 **Sosialis Independen** — Kandidat nyaman berinteraksi (**Hubungan Sosial**) dan cukup peka terhadap kebutuhan orang lain (**Kebutuhan Kedekatan Interpersonal**), tetapi tidak merasa perlu selalu menjadi bagian dari kelompok tertentu. Ia bisa bergaul dengan banyak orang namun tetap memiliki jarak yang sehat. **Konteks optimal:** peran yang menuntut jaringan luas tanpa kehilangan independensi — seperti konsultan, freelancer, atau spesialis yang bekerja lintas tim. **Contoh situasi:** saat harus berganti-ganti tim untuk berbagai proyek, ia akan cepat beradaptasi tanpa kehilangan jati diri.";
+        }
+        // KASUS 4: Setia Kelompok
+        else if (dominantKeys.includes('B') && dominantKeys.includes('O') && latentKeys.includes('S')) {
+            narasi = "🎯 **Setia Kelompok** — Kandidat menunjukkan kebutuhan kuat untuk menjadi bagian dari kelompok yang erat (**Kebutuhan Menjadi Bagian Kelompok**) dan peka terhadap kebutuhan interpersonal (**Kebutuhan Kedekatan Interpersonal**). Ia lebih mengutamakan kedalaman relasi daripada luasnya jaringan. **Konteks optimal:** peran yang menuntut loyalitas, kerja tim yang erat, dan dedikasi jangka panjang — seperti tim R&D, tim proyek jangka panjang, atau peran yang membutuhkan kepercayaan tinggi. **Contoh situasi:** saat tim menghadapi masa sulit, ia akan tetap setia dan berusaha menjaga kohesi kelompok. **Pengembangan:** keterbukaan terhadap jaringan baru agar tidak terjebak dalam kelompok yang terlalu eksklusif.";
+        }
+        // KASUS 5: Ekstrovert Sosial
+        else if (dominantKeys.includes('S') && !dominantKeys.includes('B') && !dominantKeys.includes('O')) {
+            narasi = "🎯 **Ekstrovert Sosial** — Kandidat menunjukkan kebutuhan tinggi untuk berinteraksi dan berkomunikasi (**Hubungan Sosial**). Ia merasa berenergi saat berada di tengah orang banyak, mudah memulai percakapan, dan cenderung menjadi penghubung dalam tim. **Konteks optimal:** peran yang menuntut interaksi intens, presentasi, atau negosiasi — seperti sales, marketing, atau public relations. **Contoh situasi:** saat harus mempresentasikan ide ke banyak pihak, ia akan tampil percaya diri dan energik. **Pengembangan:** pada pekerjaan yang menuntut fokus soliter dalam waktu lama, ia mungkin merasa cepat bosan dan kehilangan energi.";
+        }
+        // KASUS 6: Setia Kelompok (B saja)
+        else if (dominantKeys.includes('B') && !dominantKeys.includes('S') && !dominantKeys.includes('O')) {
+            narasi = "🎯 **Setia Kelompok** — Kandidat memiliki dorongan kuat untuk menjadi bagian dari kelompok (**Kebutuhan Menjadi Bagian Kelompok**) — ia menghargai kebersamaan, komitmen, dan rasa memiliki. **Konteks optimal:** budaya organisasi yang menekankan kerja tim dan loyalitas — seperti perusahaan keluarga, tim dengan ikatan kuat, atau organisasi dengan budaya kolektif. **Contoh situasi:** saat ada anggota tim baru, ia akan berusaha membuat mereka merasa diterima dan menjadi bagian dari kelompok. **Pengembangan:** pada situasi yang menuntut keputusan independen, dorongan untuk selalu selaras dengan kelompok bisa membuatnya enggan mengambil sikap berbeda.";
+        }
+        // KASUS 7: Hangat
+        else if (dominantKeys.includes('O') && !dominantKeys.includes('S') && !dominantKeys.includes('B')) {
+            narasi = "🎯 **Hangat** — Kandidat menunjukkan kepekaan interpersonal yang menonjol (**Kebutuhan Kedekatan Interpersonal**) — ia memperhatikan perasaan orang lain, mudah menangkap nuansa emosional, dan cenderung membangun kedekatan yang tulus. **Konteks optimal:** peran yang menuntut empati — seperti HR, coaching, customer relations, atau peran pendampingan. **Contoh situasi:** saat ada anggota tim yang sedang mengalami kesulitan, ia akan menjadi pendengar yang baik dan menawarkan dukungan. **Pengembangan:** kepekaan yang tinggi bisa membuatnya terlalu terlibat secara emosional, sehingga perlu menjaga batas profesional.";
+        }
+        // KASUS 8: Cari Pengakuan
+        else if (dominantKeys.includes('X') && !dominantKeys.includes('S') && !dominantKeys.includes('B') && !dominantKeys.includes('O')) {
+            narasi = "🎯 **Cari Pengakuan** — Kandidat menunjukkan kebutuhan menonjol untuk diperhatikan dan diakui (**Kebutuhan Untuk Diperhatikan**). Ia senang menonjolkan pencapaian, mengharapkan apresiasi, dan merasa termotivasi oleh pengakuan publik. **Konteks optimal:** peran yang menuntut kehadiran sosial tinggi — seperti sales, marketing, MC, atau posisi public-facing. **Contoh situasi:** saat berhasil mencapai target, ia akan merasa termotivasi ketika pencapaiannya diakui di depan tim. **Pengembangan:** dorongan mencari perhatian perlu diimbangi kepekaan terhadap kontribusi orang lain agar tidak dianggap egois.";
+        }
+        // KASUS 9: Sosialis Ekspresif
+        else if (dominantKeys.includes('S') && dominantKeys.includes('X')) {
+            narasi = "🎯 **Sosialis Ekspresif** — Kandidat menunjukkan kombinasi sosial yang ekspresif: nyaman berinteraksi (**Hubungan Sosial**) sekaligus ingin diperhatikan dan diakui (**Kebutuhan Untuk Diperhatikan**). Ia tampil sebagai figur yang hadir dan terlihat dalam dinamika kelompok. **Konteks optimal:** peran public-facing, MC, atau posisi yang menuntut kehadiran sosial yang kuat — seperti brand ambassador, event host, atau public speaker.";
+        }
+        // FALLBACK: Sosial Fleksibel
+        else {
+            narasi = "🎯 **Sosial Fleksibel** — Kebutuhan hubungan sosial kandidat berada pada tingkat yang seimbang. Ia dapat menikmati interaksi sosial namun tidak bergantung pada kehadiran orang lain. **Konteks optimal:** peran yang menuntut adaptasi sosial — dari kerja tim hingga fokus soliter. **Contoh situasi:** saat bekerja dalam tim, ia dapat berkontribusi; saat bekerja mandiri, ia juga produktif. **Pengembangan:** fleksibilitas dalam menyesuaikan intensitas sosial dengan tuntutan konteks.";
+        }
+        
+        // Dinamika internal
+        if (layers.dominant.length > 0 && layers.latent.length > 0) {
+            const namaDominan = _namesOf(layers.dominant);
+            const namaLatent = _namesOf(layers.latent);
+            narasi += "\n\n📊 **Dinamika internal** — Kekuatan: " + namaDominan + ". Pengembangan: " + namaLatent + ".";
+        }
+        
+        return narasi;
+    }
+
+    // ==========================================================
+    // 3. SIKAP KERJA — Narasi Kontekstual
+    // ==========================================================
+    function buildWorkAttitudeSummary() {
+        const items = getGroupScores(['N', 'G', 'A', 'V', 'T', 'R', 'D', 'C']);
+        if (items.length < 8) {
+            return 'Data sikap kerja belum lengkap untuk dianalisis.';
+        }
+        
+        const N = getActualScore('N');
+        const G = getActualScore('G');
+        const A = getActualScore('A');
+        const V = getActualScore('V');
+        const T = getActualScore('T');
+        const R = getActualScore('R');
+        const D = getActualScore('D');
+        const C = getActualScore('C');
+        const layers = _layerize(items);
+        
+        const dominantKeys = layers.dominant.map(x => x.key);
+        const latentKeys = layers.latent.map(x => x.key);
+        
+        let narasi = "";
+        
+        // Deteksi kluster
+        const effortCluster = ['N', 'G', 'A'].filter(k => dominantKeys.includes(k));
+        const structureCluster = ['C', 'D'].filter(k => dominantKeys.includes(k));
+        const energyCluster = ['T', 'V'].filter(k => dominantKeys.includes(k));
+        const theoryCluster = ['R'].filter(k => dominantKeys.includes(k));
+        
+        // KASUS 1: Pekerja Terstruktur & Produktif
+        if (effortCluster.length >= 2 && structureCluster.length >= 1) {
+            const effortNames = effortCluster.map(k => PAPI_DIM_LABEL[k]).join(", ");
+            const structureNames = structureCluster.map(k => PAPI_DIM_LABEL[k]).join(", ");
+            narasi = "🎯 **Pekerja Terstruktur & Produktif** — Kandidat menunjukkan kombinasi kuat antara **" + effortNames + "** dengan **" + structureNames + "**. Ia bukan hanya ambisius dan tekun, tetapi juga sistematis dan bertanggung jawab. **Konteks optimal:** peran dengan target tinggi dan tuntutan akurasi — seperti finance manager, project manager, atau posisi quality control senior. **Contoh situasi:** saat menghadapi deadline ketat, ia akan menyusun rencana kerja terstruktur dan mengeksekusinya dengan disiplin. **Pengembangan:** menjaga keseimbangan antara ambisi dan istirahat agar tidak burnout.";
+        }
+        // KASUS 2: Pekerja Ambisius
+        else if (effortCluster.length >= 2) {
+            const effortNames = effortCluster.map(k => PAPI_DIM_LABEL[k]).join(", ");
+            narasi = "🎯 **Pekerja Ambisius** — Kandidat menunjukkan kekuatan utama pada **" + effortNames + "**. Ia berorientasi pada hasil, tidak mudah menyerah pada tuntutan kerja, dan merasa terdorong untuk membuktikan kemampuan. **Konteks optimal:** peran kompetitif atau peran dengan target yang jelas dan terukur — seperti sales manager, business development, atau posisi dengan KPI ketat. **Contoh situasi:** saat diberikan target tinggi, ia akan menyusun strategi ambisius dan bekerja keras untuk mencapainya. **Pengembangan:** pada peran yang menuntut konsistensi jangka panjang, perlu menjaga ritme agar tidak cepat kehabisan energi.";
+        }
+        // KASUS 3: Pekerja Presisi
+        else if (structureCluster.length >= 2) {
+            const structureNames = structureCluster.map(k => PAPI_DIM_LABEL[k]).join(", ");
+            narasi = "🎯 **Pekerja Presisi** — Kandidat menunjukkan preferensi kuat terhadap **" + structureNames + "**. Ia nyaman dengan prosedur yang jelas, teliti dalam detail, dan merasa tidak nyaman dengan pekerjaan yang serba kasar. **Konteks optimal:** peran yang menuntut akurasi tinggi — seperti quality control, keuangan, audit, atau analisis data. **Contoh situasi:** saat menemukan selisih kecil dalam laporan, ia akan menelusuri hingga detail untuk memastikan akurasi. **Pengembangan:** pada peran yang menuntut kecepatan, ia perlu menyeimbangkan presisi dengan efisiensi waktu.";
+        }
+        // KASUS 4: Pekerja Dinamis
+        else if (energyCluster.length >= 1) {
+            const energyNames = energyCluster.map(k => PAPI_DIM_LABEL[k]).join(", ");
+            narasi = "🎯 **Pekerja Dinamis** — Kandidat menunjukkan energi kerja yang menonjol pada **" + energyNames + "**. Ia bergerak cepat, tidak suka menunda, dan merasa hidup ketika pekerjaan berjalan dinamis. **Konteks optimal:** lingkungan yang menuntut kecepatan dan mobilitas tinggi — seperti operasional, sales lapangan, atau peran dengan volume kerja besar. **Contoh situasi:** saat menghadapi banyak pekerjaan bersamaan, ia akan bergerak cepat dan menikmati ritme tinggi tersebut. **Pengembangan:** pada pekerjaan yang menuntut fokus mendalam (analisis, perencanaan), ia perlu belajar memperlambat tempo.";
+        }
+        // KASUS 5: Pemikir Konseptual
+        else if (theoryCluster.length >= 1) {
+            narasi = "🎯 **Pemikir Konseptual** — Kandidat menunjukkan orientasi teoretis yang kuat (**Orientasi Teoretis**). Ia senang berpikir mendalam, menganalisis prinsip, dan merasa tertarik pada gagasan-gagasan abstrak. **Konteks optimal:** peran yang menuntut analisis konseptual, riset, atau pengembangan strategi — seperti business analyst, researcher, atau strategic planner. **Contoh situasi:** saat menghadapi masalah kompleks, ia akan menganalisis akar penyebab dan menyusun solusi konseptual. **Pengembangan:** pada situasi yang menuntut tindakan cepat, ia perlu belajar mengimbangi analisis dengan eksekusi praktis.";
+        }
+        // FALLBACK: Pekerja Stabil
+        else {
+            narasi = "🎯 **Pekerja Stabil** — Dorongan kerja kandidat berada pada tingkat yang seimbang. Ia dapat bekerja dengan stabil tanpa dorongan ambisi yang berlebihan. **Konteks optimal:** peran yang menuntut konsistensi jangka panjang — seperti posisi administratif, operasional rutin, atau peran support. **Contoh situasi:** saat menjalani pekerjaan rutin, ia akan konsisten dan dapat diandalkan. **Pengembangan:** pada situasi yang menuntut inisiatif tinggi, ia perlu membangun dorongan internal untuk lebih proaktif.";
+        }
+        
+        // Dinamika internal
+        if (layers.dominant.length > 0 || layers.latent.length > 0) {
+            const parts = [];
+            if (layers.dominant.length > 0) {
+                parts.push("Kekuatan: " + _namesOf(layers.dominant));
+            }
+            if (layers.latent.length > 0) {
+                parts.push("Pengembangan: " + _namesOf(layers.latent));
+            }
+            narasi += "\n\n📊 **Dinamika internal** — " + parts.join(". ") + ".";
+        }
+        
+        return narasi;
+    }
+
+    // ==========================================================
+    // 4. ADAPTASI — Narasi Kontekstual
+    // ==========================================================
+    function buildAdaptationSummary() {
+        const items = getGroupScores(['Z', 'E', 'K', 'F', 'W']);
+        if (items.length < 5) {
+            return 'Data adaptasi belum lengkap untuk dianalisis.';
+        }
+        
+        const Z = getActualScore('Z');
+        const E = getActualScore('E');
+        const K = getActualScore('K');
+        const F = getActualScore('F');
+        const W = getActualScore('W');
+        const layers = _layerize(items);
+        
+        const dominantKeys = layers.dominant.map(x => x.key);
+        const latentKeys = layers.latent.map(x => x.key);
+        
+        let narasi = "";
+        
+        const highZ = Z >= 5 && dominantKeys.includes('Z');
+        const lowZ = Z <= 4 && latentKeys.includes('Z');
+        const highE = E >= 6;
+        const lowE = E <= 3;
+        const highK = K >= 6;
+        const lowK = K <= 3;
+        const highW = W >= 5;
+        const highF = F >= 5;
+        
+        // KASUS 1: Fleksibel & Mandiri
+        if (highZ && (dominantKeys.includes('Z')) && (highK || highE)) {
+            narasi = "🎯 **Fleksibel & Mandiri** — Kandidat menunjukkan profil adaptif yang mandiri: mencari perubahan dan variasi (**Kebutuhan Terhadap Perubahan**), tidak membutuhkan banyak arahan eksternal, dan memiliki kestabilan emosi atau ketegasan. **Konteks optimal:** peran yang menuntut inisiatif, otonomi, dan kemampuan menavigasi situasi ambigu — seperti startup environment, peran konsultan, atau posisi yang sering menghadapi perubahan. **Contoh situasi:** saat proyek berubah arah mendadak, ia akan cepat beradaptasi dan mencari cara baru untuk mencapai tujuan. **Pengembangan:** dalam organisasi yang menuntut kepatuhan ketat, gaya ini bisa terasa 'terlalu bebas' — perlu keseimbangan antara otonomi dan kolaborasi.";
+        }
+        // KASUS 2: Stabil & Terstruktur
+        else if (lowZ && (highW || highF)) {
+            narasi = "🎯 **Stabil & Terstruktur** — Kandidat menunjukkan preferensi kuat terhadap stabilitas, aturan, dan struktur yang jelas. Ia merasa nyaman dengan rutinitas, menghargai hierarki, dan lebih produktif bila ekspektasi kerjanya terdefinisi dengan baik. **Konteks optimal:** peran yang menuntut konsistensi, kepatuhan prosedural, atau lingkungan yang sudah mapan — seperti pemerintahan, perbankan, atau perusahaan dengan SOP ketat. **Contoh situasi:** saat menjalani prosedur rutin, ia akan menjalankannya dengan disiplin dan konsisten. **Pengembangan:** fleksibilitas menghadapi perubahan tak terduga agar tidak kaku.";
+        }
+        // KASUS 3: Eksploratif
+        else if (highZ && !highW && !highF) {
+            narasi = "🎯 **Eksploratif** — Kandidat menunjukkan orientasi eksploratif yang kuat: mencari perubahan, variasi, dan gagasan baru tanpa perlu banyak pengawasan eksternal. Ia lebih suka mengatur sendiri cara kerjanya dan merasa bosan dengan rutinitas. **Konteks optimal:** peran kreatif, inovasi, atau lingkungan startup yang dinamis — seperti R&D, product development, atau creative director. **Contoh situasi:** saat harus menyelesaikan masalah dengan cara lama, ia akan mencari pendekatan baru yang lebih efisien. **Pengembangan:** dalam sistem yang menuntut prosedur ketat, gaya ini perlu adaptasi.";
+        }
+        // KASUS 4: Tegas & Ekspresif
+        else if (highK && lowE) {
+            narasi = "🎯 **Tegas & Ekspresif** — Kandidat menunjukkan ketegasan yang kuat (**Kebutuhan Bersikap Tegas**) disertai ekspresi emosi yang terbuka (**Pengendalian Emosi** rendah). Ia berani menyampaikan pendapat, tidak mudah mundur pada tekanan, dan tidak menyimpan perasaan di dalam. **Konteks optimal:** peran yang menuntut advokasi, negosiasi keras, atau kepemimpinan yang tegas — seperti negosiator, sales manager, atau tim legal. **Contoh situasi:** saat harus mempertahankan posisi dalam negosiasi, ia akan tegas dan tidak mudah mundur. **Pengembangan:** pada situasi yang menuntut diplomasi, ia perlu mengelola intensitas agar tidak terkesan konfrontatif.";
+        }
+        // KASUS 5: Tenang & Menahan Diri
+        else if (highE && !highK) {
+            narasi = "🎯 **Tenang & Menahan Diri** — Kandidat menunjukkan pengendalian emosi yang kuat (**Pengendalian Emosi**): cenderung menahan ekspresi perasaan, menjaga jarak, dan mempertahankan ketenangan di bawah tekanan. **Konteks optimal:** peran yang menuntut stabilitas emosional tinggi — seperti mediasi, negosiasi sensitif, atau posisi dengan tekanan publik. **Contoh situasi:** saat menghadapi pelanggan marah atau krisis, ia akan tetap tenang dan profesional. **Pengembangan:** keterbukaan komunikasi perlu tetap dijaga agar tidak dianggap 'tertutup' atau sulit dibaca.";
+        }
+        // KASUS 6: Kombinasi Z + W
+        else if (highZ && highW) {
+            narasi = "🎯 **Adaptif Terarah** — Kandidat mencari perubahan (**Kebutuhan Terhadap Perubahan**) tetapi tetap membutuhkan kerangka kerja yang jelas (**Kebutuhan Terhadap Aturan**). **Konteks optimal:** lingkungan yang dinamis namun tetap terstruktur — seperti organisasi yang sedang bertransformasi dengan arah terdefinisi, atau tim agile dengan sprint terencana. **Contoh situasi:** saat harus mengadopsi sistem baru, ia akan antusias belajar tapi tetap butuh panduan implementasi yang jelas.";
+        }
+        // KASUS 7: Kombinasi Z + F
+        else if (highZ && highF) {
+            narasi = "🎯 **Adaptif Terarah** — Kandidat menyukai perubahan (**Kebutuhan Terhadap Perubahan**) tetapi tetap menghargai arahan dan otoritas yang jelas (**Dukungan Terhadap Otoritas**). **Konteks optimal:** peran yang menuntut inovasi dalam kerangka kebijakan terdefinisi — seperti product manager di perusahaan besar, atau posisi yang harus menyeimbangkan inovasi dengan compliance.";
+        }
+        // FALLBACK: Adaptasi Fleksibel
+        else {
+            narasi = "🎯 **Adaptasi Fleksibel** — Profil adaptasi kandidat relatif seimbang: sikapnya terhadap perubahan, emosi, ketegasan, otoritas, dan struktur berada pada tingkat moderat. Ia fleksibel dan dapat menyesuaikan gaya adaptasinya dengan konteks yang dihadapi. **Konteks optimal:** peran yang menuntut adaptasi beragam — dari inovasi hingga konsistensi. **Contoh situasi:** saat menghadapi perubahan kecil, ia dapat menyesuaikan diri; saat menghadapi perubahan besar, ia juga bisa bertahan. **Pengembangan:** kejelasan arah adaptasi sesuai tuntutan peran.";
+        }
+        
+        // Dinamika internal
+        if (layers.dominant.length > 0 && layers.latent.length > 0) {
+            const namaDominan = _namesOf(layers.dominant);
+            const namaLatent = _namesOf(layers.latent);
+            narasi += "\n\n📊 **Dinamika internal** — Kekuatan: " + namaDominan + ". Pengembangan: " + namaLatent + ".";
+        }
+        
+        return narasi;
+    }
+
+    // ==========================================================
+    // RENDER KOMPONEN
+    // ==========================================================
     const size = 820;
     const centerX = size / 2;
     const centerY = size / 2;
@@ -322,265 +731,8 @@ function renderTestResult(assessment, result) {
     });
 
     // ==========================================================
-    // RINGKASAN EKSEKUTIF PROFIL KERJA — DINAMIKA 4 AREA
-    // ----------------------------------------------------------
-    // Ringkasan TIDAK mengambil 4 skor tertinggi secara global.
-    // Setiap area membaca dinamika kelompok dimensi yang memang
-    // membentuk konstruk tersebut:
-    //   Leadership : L, P, I
-    //   Hubungan Sosial : S, B, O, X
-    //   Sikap Kerja : N, G, A, V, T, R, D, C
-    //   Adaptasi : Z, E, K, F, W
-    // Semua kalimat diturunkan dari skor aktual peserta.
+    // EXECUTIVE SUMMARY
     // ==========================================================
-
-    function getActualScore(key) {
-        const raw = scoresObj ? scoresObj[key] : undefined;
-        const n = Number(raw);
-        return (raw !== undefined && raw !== null && raw !== '' && Number.isFinite(n))
-            ? Math.max(0, Math.min(9, n))
-            : null;
-    }
-
-    function getGroupScores(groupKeys) {
-        return groupKeys
-            .map(function (key) {
-                const score = getActualScore(key);
-                return score === null ? null : { key: key, score: score };
-            })
-            .filter(Boolean);
-    }
-
-    function avgOf(items) {
-        return items.length
-            ? items.reduce(function (sum, item) { return sum + item.score; }, 0) / items.length
-            : null;
-    }
-
-    function minOf(items) {
-        return items.length ? Math.min.apply(null, items.map(function (x) { return x.score; })) : null;
-    }
-
-    function maxOf(items) {
-        return items.length ? Math.max.apply(null, items.map(function (x) { return x.score; })) : null;
-    }
-
-    function keysWithScore(items, threshold, mode) {
-        return items
-            .filter(function (x) {
-                return mode === 'low' ? x.score <= threshold : x.score >= threshold;
-            })
-            .map(function (x) { return x.key; });
-    }
-
-    function fmtKeys(list) {
-        return list.join(', ');
-    }
-
-    function buildLeadershipSummary() {
-        const items = getGroupScores(['L', 'P', 'I']);
-        if (items.length < 3) return 'Data Leadership (L, P, I) belum lengkap sehingga dinamika kepemimpinan belum dapat disimpulkan secara penuh.';
-
-        const L = getActualScore('L'), P = getActualScore('P'), I = getActualScore('I');
-        const avg = avgOf(items);
-        const parts = [];
-
-        if (L >= 6 && P >= 6 && I >= 6) {
-            parts.push('Profil menunjukkan dorongan kepemimpinan yang kuat, disertai kebutuhan mengarahkan orang lain dan keberanian mengambil keputusan');
-        } else if (L >= 6 && P <= 4 && I >= 6) {
-            parts.push('Profil menunjukkan kecenderungan tampil sebagai pemimpin dan mengambil keputusan, tetapi tidak terlalu berorientasi pada kontrol langsung terhadap orang lain');
-        } else if (L >= 6 && P >= 6 && I <= 4) {
-            parts.push('Dorongan memimpin dan mengarahkan orang lain cukup kuat, namun pengambilan keputusan cenderung lebih berhati-hati');
-        } else if (L <= 4 && P >= 6 && I >= 6) {
-            parts.push('Kemampuan mengambil keputusan dan dorongan mengendalikan pekerjaan orang lain cukup kuat, tetapi kebutuhan untuk memproyeksikan diri sebagai pemimpin relatif lebih rendah');
-        } else if (L >= 6) {
-            parts.push('Kecenderungan mengambil peran kepemimpinan terlihat cukup kuat');
-        } else if (P >= 6) {
-            parts.push('Kebutuhan mengarahkan atau mengontrol pekerjaan orang lain terlihat cukup menonjol');
-        } else if (I >= 6) {
-            parts.push('Kepercayaan diri dalam mengambil keputusan relatif menonjol');
-        } else if (L <= 3 && P <= 3 && I <= 3) {
-            parts.push('Profil cenderung tidak agresif dalam mengambil posisi kepemimpinan, kontrol terhadap orang lain, maupun keputusan yang cepat');
-        } else {
-            parts.push('Kecenderungan kepemimpinan berada pada tingkat moderat dan relatif bergantung pada tuntutan situasi');
-        }
-
-        const high = keysWithScore(items, 6, 'high');
-        const low = keysWithScore(items, 3, 'low');
-        if (high.length && low.length) {
-            parts.push('Kekuatan utama tampak pada ' + fmtKeys(high) + ', sementara ' + fmtKeys(low) + ' relatif lebih rendah sehingga gaya kepemimpinan tidak sepenuhnya seragam');
-        } else if (Math.max.apply(null, items.map(function (x) { return x.score; })) - Math.min.apply(null, items.map(function (x) { return x.score; })) <= 2) {
-            parts.push('Ketiga dimensi relatif seimbang');
-        }
-
-        return parts.join('. ') + '.';
-    }
-
-    function buildSocialSummary() {
-        const items = getGroupScores(['S', 'B', 'O', 'X']);
-        if (items.length < 4) return 'Data Hubungan Sosial (S, B, O, X) belum lengkap sehingga dinamika sosial belum dapat disimpulkan secara penuh.';
-
-        const S = getActualScore('S'), B = getActualScore('B'), O = getActualScore('O'), X = getActualScore('X');
-        const parts = [];
-
-        if (S >= 6 && B >= 6 && O >= 6) {
-            parts.push('Profil menunjukkan keterlibatan sosial yang kuat, nyaman berada dalam kelompok, dan cukup peka terhadap kebutuhan interpersonal');
-        } else if (S >= 6 && B <= 3) {
-            parts.push('Peserta tampak nyaman berinteraksi secara sosial, tetapi kebutuhan untuk menjadi bagian dari kelompok relatif lebih rendah sehingga relasi dapat lebih bersifat individual');
-        } else if (B >= 6 && S <= 3) {
-            parts.push('Kebutuhan menjadi bagian kelompok cukup kuat, tetapi ekspansi hubungan sosial secara luas relatif lebih rendah');
-        } else if (O >= 6 && S >= 6) {
-            parts.push('Keterampilan relasional dan kebutuhan interaksi sosial sama-sama menonjol');
-        } else if (O >= 6) {
-            parts.push('Kepekaan terhadap orang lain dan kualitas hubungan interpersonal relatif menonjol');
-        } else if (S >= 6) {
-            parts.push('Kebutuhan berinteraksi dan berkomunikasi dengan orang lain relatif tinggi');
-        } else if (B >= 6) {
-            parts.push('Kebutuhan keterlibatan dalam kelompok relatif tinggi');
-        } else if (S <= 3 && B <= 3) {
-            parts.push('Profil sosial cenderung selektif dan tidak terlalu membutuhkan intensitas interaksi atau keterikatan kelompok');
-        } else {
-            parts.push('Kebutuhan hubungan sosial berada pada tingkat moderat dan dapat menyesuaikan konteks');
-        }
-
-        if (X >= 7 && (S >= 6 || B >= 6)) {
-            parts.push('Dorongan memperoleh pengakuan juga cukup kuat, sehingga visibilitas sosial dapat menjadi bagian penting dalam interaksi');
-        } else if (X <= 3 && S >= 6) {
-            parts.push('Interaksi sosial yang tinggi tidak otomatis diikuti kebutuhan tampil atau mencari perhatian');
-        } else if (X >= 7) {
-            parts.push('Kebutuhan untuk diperhatikan atau memperoleh pengakuan terlihat menonjol');
-        }
-
-        const spread = maxOf(items) - minOf(items);
-        if (spread <= 2) parts.push('Keempat dimensi sosial relatif seimbang');
-        else {
-            const high = keysWithScore(items, 7, 'high');
-            const low = keysWithScore(items, 3, 'low');
-            if (high.length && low.length) {
-                parts.push('Pola paling menonjol berada pada ' + fmtKeys(high) + ', sedangkan ' + fmtKeys(low) + ' menjadi sisi yang relatif lebih rendah');
-            }
-        }
-
-        return parts.join('. ') + '.';
-    }
-
-    function buildWorkAttitudeSummary() {
-        const items = getGroupScores(['N', 'G', 'A', 'V', 'T', 'R', 'D', 'C']);
-        if (items.length < 8) return 'Data Sikap Kerja (N, G, A, V, T, R, D, C) belum lengkap sehingga dinamika sikap kerja belum dapat disimpulkan secara penuh.';
-
-        const N = getActualScore('N'), G = getActualScore('G'), A = getActualScore('A');
-        const V = getActualScore('V'), T = getActualScore('T'), R = getActualScore('R');
-        const D = getActualScore('D'), C = getActualScore('C');
-        const parts = [];
-
-        if (G >= 6 && A >= 6 && N >= 5) {
-            parts.push('Dorongan menyelesaikan pekerjaan, kemauan bekerja keras, dan orientasi pencapaian tampak kuat');
-        } else if (A >= 6 && G >= 6) {
-            parts.push('Orientasi target dan kemauan bekerja keras terlihat menonjol');
-        } else if (N >= 6) {
-            parts.push('Dorongan menyelesaikan pekerjaan sampai tuntas relatif kuat');
-        } else if (G >= 6) {
-            parts.push('Kemauan bekerja keras dan energi untuk mengejar tuntutan kerja relatif kuat');
-        } else if (A >= 6) {
-            parts.push('Orientasi pencapaian dan inisiatif relatif menonjol');
-        } else {
-            parts.push('Dorongan dasar terhadap penyelesaian tugas, usaha, dan pencapaian berada pada tingkat moderat');
-        }
-
-        if (T >= 7 && V >= 6) {
-            parts.push('Tempo kerja dan aktivitas juga tinggi sehingga cenderung cocok dengan pekerjaan yang dinamis dan menuntut energi');
-        } else if (T >= 7) {
-            parts.push('Tempo kerja cenderung tinggi meskipun aktivitas fisik tidak selalu setinggi itu');
-        } else if (V >= 7) {
-            parts.push('Energi aktivitas fisik relatif tinggi, sementara tempo kerja perlu dibaca bersama tuntutan situasi');
-        } else if (T <= 3 && V <= 3) {
-            parts.push('Tempo dan aktivitas cenderung tenang sehingga lingkungan kerja yang stabil dapat lebih sesuai');
-        }
-
-        if (C >= 6 && D >= 6) {
-            parts.push('Keteraturan dan perhatian terhadap detail sama-sama kuat, mendukung pendekatan kerja yang sistematis dan teliti');
-        } else if (C >= 6) {
-            parts.push('Kecenderungan bekerja secara terstruktur dan teratur cukup kuat');
-        } else if (D >= 6) {
-            parts.push('Perhatian terhadap detail dan akurasi cukup menonjol');
-        } else if (C <= 2 && D <= 2) {
-            parts.push('Kebutuhan struktur dan keterlibatan pada detail relatif rendah, sehingga pendekatan kerja cenderung lebih fleksibel atau makro');
-        }
-
-        if (R >= 7) {
-            parts.push('Pertimbangan teoritis/konseptual juga cukup kuat');
-        } else if (R <= 3) {
-            parts.push('Pendekatan kerja cenderung lebih praktis daripada teoritis');
-        }
-
-        const high = keysWithScore(items, 7, 'high');
-        const low = keysWithScore(items, 2, 'low');
-        if (high.length && low.length) {
-            parts.push('Secara keseluruhan, dinamika paling kuat terlihat pada ' + fmtKeys(high) + ', sementara ' + fmtKeys(low) + ' relatif lebih rendah');
-        }
-
-        return parts.join('. ') + '.';
-    }
-
-    function buildAdaptationSummary() {
-        const items = getGroupScores(['Z', 'E', 'K', 'F', 'W']);
-        if (items.length < 5) return 'Data Adaptasi (Z, E, K, F, W) belum lengkap sehingga dinamika adaptasi belum dapat disimpulkan secara penuh.';
-
-        const Z = getActualScore('Z'), E = getActualScore('E'), K = getActualScore('K');
-        const F = getActualScore('F'), W = getActualScore('W');
-        const parts = [];
-
-        if (Z >= 7) {
-            parts.push('Kebutuhan terhadap perubahan dan variasi relatif tinggi');
-        } else if (Z <= 3) {
-            parts.push('Preferensi terhadap stabilitas relatif kuat');
-        } else {
-            parts.push('Sikap terhadap perubahan cenderung fleksibel dan situasional');
-        }
-
-        if (E >= 7) {
-            parts.push('pengendalian ekspresi emosi juga kuat sehingga respons cenderung lebih tertahan');
-        } else if (E <= 3) {
-            parts.push('ekspresi respons emosional cenderung lebih terbuka');
-        } else {
-            parts.push('pengendalian emosi berada pada tingkat relatif seimbang');
-        }
-
-        if (K >= 7) {
-            parts.push('ketegasan dan dorongan mempertahankan posisi cukup kuat');
-        } else if (K <= 3) {
-            parts.push('kecenderungan konfrontatif relatif rendah dan pendekatan cenderung lebih menghindari konflik');
-        } else {
-            parts.push('ketegasan dapat disesuaikan dengan tuntutan situasi');
-        }
-
-        if (F >= 6 && W >= 6) {
-            parts.push('Pada sisi struktur, loyalitas terhadap otoritas dan kebutuhan akan aturan/pengawasan sama-sama menonjol');
-        } else if (F >= 6) {
-            parts.push('Loyalitas terhadap otoritas atau struktur hierarki cukup menonjol');
-        } else if (W >= 6) {
-            parts.push('Kebutuhan terhadap arahan, aturan, dan struktur kerja cukup menonjol');
-        } else if (F <= 3 && W <= 3) {
-            parts.push('kemandirian terhadap otoritas dan aturan eksternal relatif tinggi');
-        }
-
-        if (Z >= 7 && W >= 6) {
-            parts.push('Kombinasi ini menunjukkan kebutuhan akan variasi yang tetap memerlukan kerangka atau ekspektasi kerja yang jelas');
-        } else if (Z <= 3 && W >= 6) {
-            parts.push('Kombinasi stabilitas dan kebutuhan struktur menunjukkan kecenderungan nyaman pada lingkungan kerja yang teratur dan konsisten');
-        } else if (Z >= 7 && W <= 3) {
-            parts.push('Kombinasi ini menunjukkan kecenderungan mencari perubahan dengan kebutuhan pengawasan eksternal yang relatif rendah');
-        }
-
-        const high = keysWithScore(items, 7, 'high');
-        const low = keysWithScore(items, 3, 'low');
-        if (high.length && low.length) {
-            parts.push('Pola adaptasi paling menonjol pada ' + fmtKeys(high) + ', sedangkan ' + fmtKeys(low) + ' relatif lebih rendah');
-        }
-
-        return parts.join('. ') + '.';
-    }
-
     const executiveGroups = [
         { title: 'Leadership', keys: ['L', 'P', 'I'], build: buildLeadershipSummary },
         { title: 'Hubungan Sosial', keys: ['S', 'B', 'O', 'X'], build: buildSocialSummary },
@@ -597,10 +749,19 @@ function renderTestResult(assessment, result) {
         : 'Data skor PAPI Kostick peserta belum tersedia, sehingga ringkasan profil kerja belum dapat dibuat.';
 
     const summaryItemsHtml = summaryDataAvailable
-        ? executiveGroups.map(function (group) {
-            return `<li style="margin-bottom: 8px;"><strong>${group.title}:</strong> ${group.build()}</li>`;
-        }).join('')
-        : '<li>Hasil belum tersedia untuk peserta ini.</li>';
+    ? executiveGroups.map(function (group) {
+        const rawNarasi = group.build();
+        // FIX: Convert markdown bold + emoji jadi HTML yang proper
+        const cleanNarasi = rawNarasi
+            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')   // **text** → <strong>text</strong>
+            .replace(/🎯\s*/g, '')                                 // hapus emoji target
+            .replace(/⚠️\s*/g, '')                                // hapus emoji warning
+            .replace(/⚖️\s*/g, '')                                // hapus emoji balance
+            .replace(/📊\s*/g, '')                                 // hapus emoji chart
+            .replace(/\n\n/g, '<br><br>');                         // line break
+        return `<li style="margin-bottom: 14px; line-height: 1.7;"><strong>${group.title}:</strong><br>${cleanNarasi}</li>`;
+    }).join('')
+    : '<li>Hasil belum tersedia untuk peserta ini.</li>';
 
     let tableRowsHtml = '';
     keys.forEach(key => {
@@ -710,13 +871,11 @@ function renderTestResult(assessment, result) {
     `;
 }
 
+// ==========================================================
+// EXPORT KE WINDOW
+// ==========================================================
 if (typeof window !== 'undefined') {
     window.renderTestResult = renderTestResult;
-}
-// Tambahkan alias ini di bagian paling bawah papikostick.js
-if (typeof window !== 'undefined') {
-    window.renderTestResult = renderTestResult;
-    // Tambahkan alias cadangan agar terdeteksi oleh test-result.js
     window.renderPAPIPage = renderTestResult;
     window.renderPAPIResult = renderTestResult;
     window.PAPIAssessment = {

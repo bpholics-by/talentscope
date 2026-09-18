@@ -1,7 +1,11 @@
 <!doctype html>
 <html lang="id">
 <head>
-<script src="js/ts-supabase-sync.js"></script>
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TalentScope — Participant Portal</title>
@@ -258,40 +262,161 @@ a{text-decoration:none;color:inherit}
 </main>
 </div>
 </div>
-
 <script>
 /* =========================================================
-   TALENTSCOPE PARTICIPANT DASHBOARD — FULL FIX v2
+   TALENTSCOPE PARTICIPANT DASHBOARD — SESSION ISOLATION v3
+   ---------------------------------------------------------
+   - Pre-load dari Supabase (aman device manapun)
+   - Fallback ke localStorage kalau Supabase down
    - Routing LSJT/MSJT/VAP/DISC/PAPI
-   - Tombol tidak stuck (try/catch)
-   - Heartbeat 15s (bukan 5s) untuk hindari deadlock
-   - Fallback katalog untuk assessment_name NULL
+   - Warning pindah tab (counter + popup)
+   - Heartbeat 60s + visibility change
+   - Login sync dengan retry
 ========================================================= */
 (function () {
     "use strict";
 
-    /* ===== ROUTE MAP: dipakai oleh click handler ===== */
-    function getAssessmentRoute(code, name) {
-        var c = String(code || "").toLowerCase();
-        var n = String(name || "").toLowerCase();
+        /* ==========================================================
+       PATCH: PRE-LOAD DARI SUPABASE
+       ----------------------------------------------------------
+       Sebelum kode utama baca localStorage, kita query Supabase
+       untuk project + peserta + assessments terbaru.
+       Hasilnya di-inject ke localStorage DAN sessionStorage.
+    ========================================================== */
+    function __tsPreloadFromSupabase() {
+        return new Promise(function (resolve) {
+            (async function () {
+                try {
+                    var rawSession = sessionStorage.getItem("ts_participant_session");
+                    if (!rawSession) { resolve(); return; }
 
-        // Cek CODE dulu
-        if (c.includes("lsjt") || c.includes("leadership")) return "sjt_leadership.html";
-        if (c.includes("msjt") || c.includes("managerial")) return "msjt_managerial.html";
-        if (c.includes("vap") || c.includes("visual") || c.includes("performance")) return "speedtest.html";
-        if (c.includes("papi") || c.includes("kostick")) return "papi_kostick_test.html";
-        if (c.includes("disc")) return "disc_test.html";
+                    var session = JSON.parse(rawSession);
+                    var projectId = String(session.projectId || session.project_id || "").trim();
+                    if (!projectId) { resolve(); return; }
 
-        // Fallback cek NAME
-        if (n.includes("lsjt") || n.includes("leadership") || n.includes("leadership situational")) return "sjt_leadership.html";
-        if (n.includes("msjt") || n.includes("managerial") || n.includes("managerial situational")) return "msjt_managerial.html";
-        if (n.includes("vap") || n.includes("visual attention") || n.includes("work performance") || n.includes("sustained attention") || n.includes("speed test")) return "speedtest.html";
-        if (n.includes("papi") || n.includes("kostick")) return "papi_kostick_test.html";
-        if (n.includes("disc")) return "disc_test.html";
+                    var sb = window.supabaseClient || window.supabase;
+if (!sb || typeof sb.from !== "function") {
+    console.warn("[DASHBOARD-PRELOAD] Supabase client tidak tersedia, pakai localStorage");
+    resolve(); return;
+}
 
-        console.warn("[ASSESSMENT ROUTE] Tidak ada match:", {code: code, name: name});
-        return "disc_test.html";
+// Timeout: kalau Supabase lambat > 5 detik, pakai localStorage
+var timeoutPromise = new Promise(function(resolve) {
+    setTimeout(function() {
+        console.warn("[DASHBOARD-PRELOAD] Supabase timeout, pakai localStorage");
+        resolve({ timeout: true });
+    }, 5000);
+});
+
+                    console.log("[DASHBOARD-PRELOAD] Query Supabase untuk project:", projectId);
+
+                    // 1. Query project
+                    var projRes = await sb.from("projects").select("*").eq("id", projectId).single();
+                    if (projRes.error || !projRes.data) {
+                        console.warn("[DASHBOARD-PRELOAD] Project tidak ada di Supabase, fallback localStorage");
+                        resolve(); return;
+                    }
+                    var project = projRes.data;
+
+                    // 2. Query participants
+                    var relationsRes = await sb.from("project_participants").select("*").eq("project_id", projectId);
+                    var participants = [];
+                    if (Array.isArray(relationsRes.data) && relationsRes.data.length > 0) {
+                        var pids = relationsRes.data.map(function (r) { return r.participant_id; }).filter(Boolean);
+                        var partsRes = await sb.from("participants").select("*").in("id", pids);
+                        if (Array.isArray(partsRes.data)) {
+                            participants = partsRes.data.map(function (p) {
+                                var rawData = p.raw_data || {};
+                                var merged = Object.assign({}, rawData, p);
+                                var rel = relationsRes.data.find(function (r) { return String(r.participant_id) === String(p.id); });
+                                if (rel) merged.status = p.status || rel.status || rel.participant_status || "Not Started";
+                                return merged;
+                            });
+                        }
+                    }
+
+                    // 3. Query assessments — sort by sort_order
+                    var assessRes = await sb.from("project_assessments").select("*")
+                        .eq("project_id", projectId)
+                        .order("sort_order", { ascending: true });
+                    var assessments = Array.isArray(assessRes.data) ? assessRes.data : [];
+
+                    // 4. Merge ke localStorage
+                    var projects = [];
+                    try {
+                        projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+                    } catch (e) {}
+                    if (!Array.isArray(projects)) projects = [];
+
+                    var existingIdx = projects.findIndex(function (p) {
+                        return String(p.id) === String(projectId);
+                    });
+
+                    var freshProject = Object.assign({}, project, {
+                        participants: participants,
+                        assessments: assessments
+                    });
+
+                    if (existingIdx >= 0) {
+                        projects[existingIdx] = Object.assign({}, projects[existingIdx], freshProject);
+                    } else {
+                        projects.push(freshProject);
+                    }
+
+                    localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+
+                    // 5. Update sessionStorage juga
+                    try {
+                        var freshSession = JSON.parse(sessionStorage.getItem("ts_participant_session") || "{}");
+                        if (freshSession && typeof freshSession === "object") {
+                            freshSession.assessments = assessments;
+                            freshSession.assessmentPackage = assessments;
+                            freshSession.assignedAssessments = assessments;
+                            sessionStorage.setItem("ts_participant_session", JSON.stringify(freshSession));
+                            console.log("[DASHBOARD-PRELOAD] ✅ Session di-update dengan", assessments.length, "assessment");
+                        }
+                    } catch (sessionErr) {
+                        console.warn("[DASHBOARD-PRELOAD] Gagal update session:", sessionErr);
+                    }
+
+                    console.log("[DASHBOARD-PRELOAD] ✅ Berhasil:", participants.length, "peserta,", assessments.length, "assessment");
+                    resolve();
+
+                } catch (error) {
+                    console.warn("[DASHBOARD-PRELOAD] Gagal:", error);
+                    resolve();
+                }
+            })();
+        });
     }
+
+    /* ===== ROUTE MAP ===== */
+    function getAssessmentRoute(code, name) {
+    var c = String(code || "").toLowerCase();
+    var n = String(name || "").toLowerCase();
+
+    // ✅ PRIORITAS 1: Match CODE
+    if (c.includes("tpdk") || c.includes("penalaran")) return "tpdk_test.html";
+    if (c.includes("lsjt") || c.includes("leadership")) return "sjt_leadership.html";
+    if (c.includes("msjt") || c.includes("managerial")) return "msjt_managerial.html";
+    if (c.includes("vap") || c.includes("visual") || c.includes("performance")) return "speedtest.html";
+    if (c.includes("papi") || c.includes("kostick")) return "papi_kostick_test.html";
+    if (c.includes("disc")) return "disc_test.html";
+
+    // ✅ PRIORITAS 2: Match NAME
+    if (n.includes("tpdk") || n.includes("penalaran") || n.includes("tes penalaran")) return "tpdk_test.html";
+    if (n.includes("lsjt") || n.includes("leadership") || n.includes("leadership situational")) return "sjt_leadership.html";
+    if (n.includes("msjt") || n.includes("managerial") || n.includes("managerial situational")) return "msjt_managerial.html";
+    if (n.includes("vap") || n.includes("visual attention") || n.includes("work performance") || n.includes("sustained attention") || n.includes("speed test")) return "speedtest.html";
+    if (n.includes("papi") || n.includes("kostick")) return "papi_kostick_test.html";
+    if (n.includes("disc")) return "disc_test.html";
+
+    // ⚠️ FALLBACK: JANGAN ke DISC — return kosong
+    console.error("[ASSESSMENT ROUTE] ❌ Tidak ada match!");
+    console.error("   Code:", code);
+    console.error("   Name:", name);
+    return "";
+}
 
     function updateClock() {
         var d = new Date();
@@ -300,8 +425,6 @@ a{text-decoration:none;color:inherit}
         if (dateEl) dateEl.textContent = new Intl.DateTimeFormat("en-US",{day:"numeric",month:"long",year:"numeric"}).format(d);
         if (timeEl) timeEl.textContent = new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit",hour12:true}).format(d);
     }
-    updateClock();
-    setInterval(updateClock, 30000);
 
     window.__tsParticipantInternalNavigation = false;
 
@@ -309,8 +432,7 @@ a{text-decoration:none;color:inherit}
         try {
             var raw = localStorage.getItem(key);
             if (!raw) return fallback;
-            var parsed = JSON.parse(raw);
-            return parsed;
+            return JSON.parse(raw);
         } catch (error) {
             console.warn("readJSON error:", key, error);
             return fallback;
@@ -323,6 +445,16 @@ a{text-decoration:none;color:inherit}
     function normalize(v){ return String(v == null ? "" : v).trim(); }
     function normalizeEmail(v){ return String(v == null ? "" : v).trim().toLowerCase(); }
 
+    /* ==========================================================
+       MAIN FUNCTION — dijalankan setelah preload selesai
+    ========================================================== */
+    function __tsRunDashboardMain() {
+
+    /* ===== CLOCK ===== */
+    updateClock();
+    setInterval(updateClock, 30000);
+
+    /* ===== SESSION ===== */
     var rawSession = sessionStorage.getItem("ts_participant_session");
     if (!rawSession) { window.location.href = "login.html"; return; }
 
@@ -358,6 +490,7 @@ a{text-decoration:none;color:inherit}
         return;
     }
 
+    /* ===== HELPERS ===== */
     function isGenericAssessmentLabel(value) {
         var v = normalize(value).toLowerCase();
         if (!v) return true;
@@ -372,38 +505,30 @@ a{text-decoration:none;color:inherit}
     }
 
     function assessmentCodeOf(item) {
-        if (typeof item === "string") return item.trim().toUpperCase();
-        if (!item || typeof item !== "object") return "";
-        var code = normalize(
-            item.code ||
-            item.assessment_code ||
-            item.assessmentCode ||
-            ""
-        ).toUpperCase();
-        // Kalau code generik, extract dari name
-        if (!code || isGenericAssessmentLabel(code)) {
-            var n = String(item.assessment_name || item.assessmentName || item.name || "").toLowerCase();
-            if (n.includes("leadership")) return "LSJT";
-            if (n.includes("managerial")) return "MSJT";
-            if (n.includes("vap") || n.includes("work performance")) return "VAP";
-            if (n.includes("disc")) return "DISC";
-            if (n.includes("papi")) return "PAPI";
-        }
-        return code;
+    if (typeof item === "string") return item.trim().toUpperCase();
+    if (!item || typeof item !== "object") return "";
+    var code = normalize(
+        item.code || item.assessment_code || item.assessmentCode || ""
+    ).toUpperCase();
+    if (!code || isGenericAssessmentLabel(code)) {
+        var n = String(item.assessment_name || item.assessmentName || item.name || "").toLowerCase();
+        if (n.includes("tpdk") || n.includes("penalaran")) return "TPDK";  // ← TAMBAH INI
+        if (n.includes("leadership")) return "LSJT";
+        if (n.includes("managerial")) return "MSJT";
+        if (n.includes("vap") || n.includes("work performance")) return "VAP";
+        if (n.includes("disc")) return "DISC";
+        if (n.includes("papi")) return "PAPI";
     }
+    return code;
+}
 
     function assessmentNameOf(item) {
         if (typeof item === "string") return item.trim();
         if (!item || typeof item !== "object") return "Assessment";
         var candidates = [
-            item.assessment_name,
-            item.assessmentName,
-            item.name,
-            item.title,
-            item.testName,
-            item.label,
-            item.code,
-            item.assessment_code
+            item.assessment_name, item.assessmentName, item.name,
+            item.title, item.testName, item.label,
+            item.code, item.assessment_code
         ];
         var firstNonEmpty = "";
         for (var i = 0; i < candidates.length; i++) {
@@ -415,6 +540,7 @@ a{text-decoration:none;color:inherit}
         return firstNonEmpty || "Assessment";
     }
 
+    /* ===== LOAD PROJECT & PARTICIPANT ===== */
     var projects = readJSON("talentscope_projects", []);
     if (!Array.isArray(projects)) projects = [];
 
@@ -498,52 +624,68 @@ a{text-decoration:none;color:inherit}
         "PAPI": "PAPI Kostick"
     };
 
-    if (sessionAssessments.length > 0) {
-        var mergedSessionAssessments = sessionAssessments.map(function (item, idx) {
-            var merged = mergeWithCanonicalAssessment(item, idx);
-            var hasValidName = merged.assessment_name && !isGenericAssessmentLabel(merged.assessment_name);
-            if (!hasValidName) {
-                var code = normalize(merged.assessment_code || merged.code || "").toUpperCase();
-                if (CATALOG_FALLBACK[code]) merged.assessment_name = CATALOG_FALLBACK[code];
-            }
-            return merged;
-        });
+   // ==========================================================
+// FIX #1: SELALU pakai PROJECT (fresh dari Supabase)
+// Session cuma fallback kalau project kosong
+// ==========================================================
+var projectAssessmentsCount = Array.isArray(currentProject.assessments) 
+    ? currentProject.assessments.length 
+    : 0;
+var sessionAssessmentsCount = sessionAssessments.length;
 
-        currentParticipant.assessments = mergedSessionAssessments;
-        currentProject.assessments = mergedSessionAssessments;
-        currentProject.assessmentPackage = mergedSessionAssessments;
-    }
+console.log("[DASHBOARD] Project assessments:", projectAssessmentsCount, 
+            "| Session assessments:", sessionAssessmentsCount);
+
+if (projectAssessmentsCount > 0) {
+    // ✅ PRIORITAS 1: Pakai project (authoritative, fresh dari Supabase)
+    currentParticipant.assessments = currentProject.assessments;
+    console.log("[DASHBOARD] ✅ Pakai PROJECT assessments (authoritative):", projectAssessmentsCount);
+    
+} else if (sessionAssessmentsCount > 0) {
+    // 🟡 PRIORITAS 2: Fallback ke session (kalau Supabase down/gagal)
+    var mergedSessionAssessments = sessionAssessments.map(function (item, idx) {
+        var merged = mergeWithCanonicalAssessment(item, idx);
+        var hasValidName = merged.assessment_name && !isGenericAssessmentLabel(merged.assessment_name);
+        if (!hasValidName) {
+            var code = normalize(merged.assessment_code || merged.code || "").toUpperCase();
+            if (CATALOG_FALLBACK[code]) merged.assessment_name = CATALOG_FALLBACK[code];
+        }
+        return merged;
+    });
+    currentParticipant.assessments = mergedSessionAssessments;
+    console.log("[DASHBOARD] ⚠️ Fallback ke SESSION assessments:", mergedSessionAssessments.length);
+    
+} else {
+    // 🔴 PRIORITAS 3: Tidak ada data sama sekali
+    currentParticipant.assessments = [];
+    console.warn("[DASHBOARD] ❌ Tidak ada assessments dari project maupun session");
+}
 
     writeJSON("talentscope_projects", projects);
 
     function getCurrentAssessments() {
-    // Prioritas 1: participant.assessments (paling spesifik)
-    if (currentParticipant && Array.isArray(currentParticipant.assessments) && currentParticipant.assessments.length) {
-        console.log("[DASHBOARD] Assessments dari participant:", currentParticipant.assessments.length);
-        return currentParticipant.assessments;
+        // PRIORITAS 1: project.assessments (fresh dari Supabase)
+        if (currentProject && Array.isArray(currentProject.assessments) && currentProject.assessments.length) {
+            console.log("[DASHBOARD] Assessments dari project (fresh):", currentProject.assessments.length);
+            var sorted = currentProject.assessments.slice().sort(function (a, b) {
+                var sa = Number(a.sort_order || 999);
+                var sb = Number(b.sort_order || 999);
+                return sa - sb;
+            });
+            return sorted;
+        }
+        if (currentProject && currentProject.raw_data && Array.isArray(currentProject.raw_data.assessments) && currentProject.raw_data.assessments.length) {
+            return currentProject.raw_data.assessments;
+        }
+        if (currentParticipant && Array.isArray(currentParticipant.assessments) && currentParticipant.assessments.length) {
+            return currentParticipant.assessments;
+        }
+        if (Array.isArray(sessionAssessments) && sessionAssessments.length) {
+            return sessionAssessments;
+        }
+        console.warn("[DASHBOARD] Tidak ada assessments ditemukan");
+        return [];
     }
-    
-    // Prioritas 2: session.assessments (dari login.html)
-    if (Array.isArray(sessionAssessments) && sessionAssessments.length) {
-        console.log("[DASHBOARD] Assessments dari session:", sessionAssessments.length);
-        return sessionAssessments;
-    }
-    
-    // Prioritas 3: project.assessments (dari localStorage)
-    if (currentProject && Array.isArray(currentProject.assessments) && currentProject.assessments.length) {
-        console.log("[DASHBOARD] Assessments dari project:", currentProject.assessments.length);
-        return currentProject.assessments;
-    }
-    
-    // Prioritas 4 (NEW): project.raw_data.assessments
-    if (currentProject && currentProject.raw_data && Array.isArray(currentProject.raw_data.assessments) && currentProject.raw_data.assessments.length) {
-        console.log("[DASHBOARD] Assessments dari project.raw_data:", currentProject.raw_data.assessments.length);
-        return currentProject.raw_data.assessments;
-    }
-    
-    console.warn("[DASHBOARD] Tidak ada assessments ditemukan di semua sumber");
-    return [];
-}
     var activeAssessments = getCurrentAssessments();
 
     function assessmentStatusOf(project, participant, assessment, index) {
@@ -617,6 +759,7 @@ a{text-decoration:none;color:inherit}
     var avatar = document.getElementById("avatar");
     if (avatar) avatar.textContent = String(displayName).charAt(0).toUpperCase();
 
+    /* ===== PRESENCE ===== */
     function updateParticipantStatus(callback) {
         var latestProjects = readJSON("talentscope_projects", []);
         if (!Array.isArray(latestProjects)) return false;
@@ -674,12 +817,32 @@ a{text-decoration:none;color:inherit}
     }
     var loggedInParticipant = recordParticipantLogin();
 
+    /* ===== LOGIN SYNC + RETRY ===== */
     if (loggedInParticipant && loggedInParticipant.id && window.TalentScopeSync && typeof window.TalentScopeSync.pushParticipantPresenceNow === "function") {
-        window.TalentScopeSync.pushParticipantPresenceNow(loggedInParticipant.id, loggedInParticipant).catch(function (error) {
-            console.warn("[LOGIN SYNC] Gagal:", error);
-        });
+        (function () {
+            function syncLoginPresence(attempt) {
+                attempt = attempt || 1;
+                return window.TalentScopeSync.pushParticipantPresenceNow(loggedInParticipant.id, loggedInParticipant)
+                    .then(function (result) {
+                        if (result && result.ok) return result;
+                        if (attempt < 3) {
+                            return new Promise(function (resolve) { setTimeout(resolve, 1000 * attempt); })
+                                .then(function () { return syncLoginPresence(attempt + 1); });
+                        }
+                        return result;
+                    })
+                    .catch(function () {
+                        if (attempt < 3) {
+                            return new Promise(function (resolve) { setTimeout(resolve, 1000 * attempt); })
+                                .then(function () { return syncLoginPresence(attempt + 1); });
+                        }
+                    });
+            }
+            syncLoginPresence(1);
+        })();
     }
 
+    /* ===== HEARTBEAT ===== */
     function updateParticipantHeartbeat() {
         var now = new Date().toISOString();
         updateParticipantStatus(function (participant) {
@@ -704,9 +867,21 @@ a{text-decoration:none;color:inherit}
     }
 
     updateParticipantHeartbeat();
-    // HEARTBEAT diperlambat dari 5s ke 15s untuk mengurangi deadlock Supabase
-    var participantHeartbeatTimer = setInterval(updateParticipantHeartbeat, 15000);
+    var participantHeartbeatTimer = setInterval(updateParticipantHeartbeat, 60000);
 
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "visible") {
+            console.log("[HEARTBEAT] Tab kembali aktif");
+            updateParticipantHeartbeat();
+        }
+    });
+
+    window.addEventListener("focus", function() {
+        console.log("[HEARTBEAT] Window focus");
+        updateParticipantHeartbeat();
+    });
+
+    /* ===== STATS ===== */
     var completedCount = entries.filter(function (entry) {
         return String(entry.status).toLowerCase() === "completed";
     }).length;
@@ -774,7 +949,6 @@ a{text-decoration:none;color:inherit}
         var now = new Date().toISOString();
         var ordinal = Number.isFinite(Number(assessmentIndex)) ? (Number(assessmentIndex) + 1) : null;
         var activityText = "Sedang mengerjakan tes" + (ordinal ? " " + ordinal : "") + " (" + assessmentName + ")";
-
         updateParticipantStatus(function (participant) {
             participant.isLoggedIn = true;
             participant.status = "Online";
@@ -792,99 +966,96 @@ a{text-decoration:none;color:inherit}
             participant.lastSeenAt = now;
             if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
             participant.activityHistory.push({
-                type: "test-start",
-                activity: activityText,
-                title: activityText,
-                action: "Start Assessment",
-                test: assessmentName,
-                testName: assessmentName,
-                assessmentName: assessmentName,
-                assessmentCode: assessmentCode,
-                assessmentIndex: Number(assessmentIndex),
-                projectId: projectId,
+                type: "test-start", activity: activityText, title: activityText,
+                action: "Start Assessment", test: assessmentName, testName: assessmentName,
+                assessmentName: assessmentName, assessmentCode: assessmentCode,
+                assessmentIndex: Number(assessmentIndex), projectId: projectId,
                 participantId: participantId,
                 description: "Peserta mulai mengerjakan " + assessmentName + ".",
-                timestamp: now,
-                time: now,
-                sessionId: activeSessionId
+                timestamp: now, time: now, sessionId: activeSessionId
             });
         });
     }
 
     var actionButton = document.querySelector(".action");
-
-    if (actionButton) {
-        actionButton.addEventListener("click", function () {
-
-            // EARLY GUARD: package completed
-            if (packageStatus === "Completed") {
-                alert("Semua assessment telah selesai.");
+if (actionButton) {
+    actionButton.addEventListener("click", function () {
+        if (packageStatus === "Completed") { 
+            alert("Semua assessment telah selesai."); 
+            return; 
+        }
+        
+        actionButton.disabled = true;
+        actionButton.classList.add("loading");
+        
+        try {
+            var projectId = normalize(actionButton.getAttribute("data-project"));
+            var participantId = normalize(actionButton.getAttribute("data-participant"));
+            var assessmentIndex = actionButton.getAttribute("data-assessment-index");
+            var assessmentCode = actionButton.getAttribute("data-assessment-code") || "";
+            var assessmentName = actionButton.getAttribute("data-assessment-name") || "";
+            
+            if (!projectId || !participantId) {
+                alert("Identitas peserta tidak valid. Silakan login kembali.");
+                window.location.href = "login.html";
                 return;
             }
-
-            // LOADING STATE
-            actionButton.disabled = true;
-            actionButton.classList.add("loading");
-
-            // WRAP SEMUA DALAM TRY/CATCH — supaya kalau error, tombol kembali normal
-            try {
-                var projectId = normalize(actionButton.getAttribute("data-project"));
-                var participantId = normalize(actionButton.getAttribute("data-participant"));
-                var assessmentIndex = actionButton.getAttribute("data-assessment-index");
-                var assessmentCode = actionButton.getAttribute("data-assessment-code") || "";
-                var assessmentName = actionButton.getAttribute("data-assessment-name") || "";
-
-                if (!projectId || !participantId) {
-                    alert("Identitas peserta tidak valid. Silakan login kembali.");
-                    window.location.href = "login.html";
-                    return;
-                }
-
-                // Activity record — dibungkus try/catch terpisah agar error di sini tidak blokir navigasi
-                try {
-                    recordAssessmentStartActivity(
-                        projectId,
-                        participantId,
-                        Number(assessmentIndex),
-                        assessmentCode,
-                        assessmentName
-                    );
-                } catch (activityErr) {
-                    console.warn("[START] Activity record gagal (tidak fatal):", activityErr);
-                }
-
-                // PREVENT LOGOUT
-                window.__tsParticipantInternalNavigation = true;
-
-                // RESOLVE ROUTE
-                var resolvedTestUrl = getAssessmentRoute(assessmentCode, assessmentName);
-
-                console.log("[ASSESSMENT FLOW] Routing assessment:", {
-                    assessmentCode: assessmentCode,
-                    assessmentName: assessmentName,
-                    resolvedTestUrl: resolvedTestUrl
-                });
-
-                // NAVIGATE
-                window.location.href =
-                    "assessment.html" +
-                    "?projectId=" + encodeURIComponent(projectId) +
-                    "&participantId=" + encodeURIComponent(participantId) +
-                    "&assessmentIndex=" + encodeURIComponent(assessmentIndex) +
-                    "&assessmentCode=" + encodeURIComponent(assessmentCode) +
-                    "&assessmentName=" + encodeURIComponent(assessmentName) +
-                    "&nextTestUrl=" + encodeURIComponent(resolvedTestUrl);
-
-            } catch (navErr) {
-                console.error("[START ASSESSMENT] Error:", navErr);
-                alert("Gagal memulai assessment: " + (navErr.message || navErr));
-                // Reset tombol supaya bisa diklik ulang
+            
+            // ✅ Resolve route DULU
+            var resolvedTestUrl = getAssessmentRoute(assessmentCode, assessmentName);
+            
+            console.log("[DASHBOARD] Start:", {
+                code: assessmentCode,
+                name: assessmentName,
+                route: resolvedTestUrl
+            });
+            
+            // ❌ Jika route kosong — error, jangan lanjut
+            if (!resolvedTestUrl) {
+                alert(
+                    "⚠ Assessment tidak dikenali:\n" +
+                    "Code: " + assessmentCode + "\n" +
+                    "Name: " + assessmentName
+                );
                 actionButton.disabled = false;
                 actionButton.classList.remove("loading");
+                return;
             }
-        });
-    }
+            
+            // Record activity
+            try {
+                recordAssessmentStartActivity(
+                    projectId, 
+                    participantId, 
+                    Number(assessmentIndex), 
+                    assessmentCode, 
+                    assessmentName
+                );
+            } catch (activityErr) { 
+                console.warn("[START] Activity record gagal:", activityErr); 
+            }
+            
+            window.__tsParticipantInternalNavigation = true;
+            
+            // ✅ LANGSUNG ke file tes (skip assessment.html)
+            window.location.href =
+                resolvedTestUrl +
+                "?projectId=" + encodeURIComponent(projectId) +
+                "&participantId=" + encodeURIComponent(participantId) +
+                "&assessmentIndex=" + encodeURIComponent(assessmentIndex) +
+                "&assessmentCode=" + encodeURIComponent(assessmentCode) +
+                "&assessmentName=" + encodeURIComponent(assessmentName);
+                
+        } catch (navErr) {
+            console.error("[START ASSESSMENT] Error:", navErr);
+            alert("Gagal memulai assessment: " + (navErr.message || navErr));
+            actionButton.disabled = false;
+            actionButton.classList.remove("loading");
+        }
+    });
+}
 
+    /* ===== LOGOUT ===== */
     var logoutRecorded = false;
     var matchedLogoutParticipant = null;
 
@@ -946,9 +1117,7 @@ a{text-decoration:none;color:inherit}
                     type: "logout",
                     activity: "Logout dari Portal Peserta",
                     description: "Peserta keluar dari Participant Portal.",
-                    timestamp: logoutTime,
-                    time: logoutTime,
-                    sessionId: logoutSessionId
+                    timestamp: logoutTime, time: logoutTime, sessionId: logoutSessionId
                 });
                 changed = true;
                 matchedLogoutParticipant = participant;
@@ -983,6 +1152,133 @@ a{text-decoration:none;color:inherit}
         if (!window.__tsParticipantInternalNavigation) recordParticipantLogout();
     });
 
+    /* ===== TAB SWITCH COUNTER + WARNING ===== */
+    var __tsTabSwitchStats = {
+        count: 0, longSwitches: 0, totalDuration: 0,
+        lastHiddenAt: null, warningShownAt: {}
+    };
+
+    try {
+        var saved = sessionStorage.getItem("ts_tab_switch_stats");
+        if (saved) {
+            var parsed = JSON.parse(saved);
+            __tsTabSwitchStats.count = parsed.count || 0;
+            __tsTabSwitchStats.longSwitches = parsed.longSwitches || 0;
+            __tsTabSwitchStats.totalDuration = parsed.totalDuration || 0;
+            __tsTabSwitchStats.warningShownAt = parsed.warningShownAt || {};
+        }
+    } catch (e) {}
+
+    function saveTabSwitchStats() {
+        try {
+            sessionStorage.setItem("ts_tab_switch_stats", JSON.stringify({
+                count: __tsTabSwitchStats.count,
+                longSwitches: __tsTabSwitchStats.longSwitches,
+                totalDuration: __tsTabSwitchStats.totalDuration,
+                warningShownAt: __tsTabSwitchStats.warningShownAt
+            }));
+        } catch (e) {}
+    }
+
+    function recordTabSwitch(hidden) {
+        var now = new Date().toISOString();
+        if (hidden) {
+            __tsTabSwitchStats.lastHiddenAt = Date.now();
+            __tsTabSwitchStats.count++;
+            saveTabSwitchStats();
+            var activityText = "Berpindah tab #" + __tsTabSwitchStats.count;
+            updateParticipantStatus(function (participant) {
+                if (participant.activeSessionId && participant.activeSessionId !== activeSessionId) return;
+                if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+                participant.activityHistory.push({
+                    type: "tab-hidden", activity: activityText,
+                    description: "Peserta meninggalkan tab dashboard.",
+                    timestamp: now, time: now, sessionId: activeSessionId,
+                    tabSwitchCount: __tsTabSwitchStats.count
+                });
+            });
+        } else {
+            var duration = 0;
+            if (__tsTabSwitchStats.lastHiddenAt) {
+                duration = Math.round((Date.now() - __tsTabSwitchStats.lastHiddenAt) / 1000);
+                __tsTabSwitchStats.totalDuration += duration;
+                __tsTabSwitchStats.lastHiddenAt = null;
+                var isLong = duration > 30;
+                if (isLong) __tsTabSwitchStats.longSwitches++;
+                saveTabSwitchStats();
+                var activityText2 = "Kembali ke dashboard (pindah tab #" + __tsTabSwitchStats.count + (duration > 0 ? " — " + duration + " detik" : "") + (isLong ? " ⚠️" : "") + ")";
+                updateParticipantStatus(function (participant) {
+                    if (participant.activeSessionId && participant.activeSessionId !== activeSessionId) return;
+                    if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+                    participant.activityHistory.push({
+                        type: "tab-visible", activity: activityText2,
+                        description: isLong ? "Peserta kembali setelah " + duration + " detik di tab lain." : "Peserta kembali ke tab dashboard.",
+                        timestamp: now, time: now, sessionId: activeSessionId,
+                        tabSwitchCount: __tsTabSwitchStats.count,
+                        tabSwitchDuration: duration, isLongSwitch: isLong
+                    });
+                    participant.lastSeen = now;
+                    participant.lastSeenAt = now;
+                    participant.activityUpdatedAt = now;
+                    participant.currentActivity = "Online";
+                    participant.activity = "Online";
+                    participant.tabSwitchCount = __tsTabSwitchStats.count;
+                    participant.tabSwitchLongSwitches = __tsTabSwitchStats.longSwitches;
+                    participant.tabSwitchTotalDuration = __tsTabSwitchStats.totalDuration;
+                    participant.tabSwitchUpdatedAt = now;
+                });
+                checkTabSwitchWarning();
+            }
+        }
+    }
+
+    function checkTabSwitchWarning() {
+        var count = __tsTabSwitchStats.count;
+        var lastWarning = __tsTabSwitchStats.warningShownAt[count] || 0;
+        if (Date.now() - lastWarning < 60000) return;
+
+        var message = null;
+        var warningLevel = null;
+
+        if (count === 3) {
+            warningLevel = "first";
+            message = "⚠️ PERINGATAN PINDAH TAB\n\nAnda terdeteksi pindah tab 3 kali selama asesmen.\n\nMohon fokus pada tes. Aktivitas pindah tab TERCATAT dalam log asesmen dan dapat mempengaruhi penilaian integritas Anda.";
+        } else if (count === 5) {
+            warningLevel = "second";
+            message = "⚠️ PERINGATAN KEDUA\n\nAnda sudah pindah tab 5 kali.\n\nAktivitas ini mencurigakan. Bila perlu bantuan, silakan hubungi administrator.\n\nPindah tab berulang dapat menyebabkan hasil tes Anda ditinjau ulang atau dibatalkan.";
+        } else if (count === 7) {
+            warningLevel = "final";
+            message = "🚨 PERINGATAN TERAKHIR\n\nAnda sudah pindah tab 7 kali.\n\nPindah tab berulang selama asesmen melanggar ketentuan integritas. Administrator sudah diberitahu.\n\nMohon tetap fokus. Bila perlu intervensi, hubungi administrator segera.";
+        } else if (count > 7 && count % 3 === 1) {
+            warningLevel = "recurring";
+            message = "⚠️ PERINGATAN\n\nAnda sudah pindah tab " + count + " kali.\n\nAktivitas ini dicatat. Mohon fokus pada tes.";
+        }
+
+        if (message) {
+            __tsTabSwitchStats.warningShownAt[count] = Date.now();
+            saveTabSwitchStats();
+            setTimeout(function () {
+                alert(message);
+                updateParticipantStatus(function (participant) {
+                    if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+                    participant.activityHistory.push({
+                        type: "tab-warning",
+                        activity: "Peringatan pindah tab #" + count,
+                        description: "Sistem menampilkan peringatan karena peserta pindah tab " + count + " kali.",
+                        timestamp: new Date().toISOString(), time: new Date().toISOString(),
+                        sessionId: activeSessionId, warningLevel: warningLevel
+                    });
+                });
+            }, 500);
+        }
+    }
+
+    document.addEventListener("visibilitychange", function () {
+        if (window.__tsParticipantInternalNavigation) return;
+        recordTabSwitch(document.visibilityState === "hidden");
+    });
+
+    /* ===== HAMBURGER MENU ===== */
     (function () {
         var menuBtn = document.getElementById("menuBtn");
         var sidebar = document.getElementById("sidebarDrawer");
@@ -1003,9 +1299,21 @@ a{text-decoration:none;color:inherit}
     console.log("=== TALENTSCOPE DASHBOARD READY ===");
     console.log("Project:", sessionProjectId);
     console.log("Participant:", sessionParticipantId);
-    console.log("Assessments:", activeAssessments);
-    console.log("Entries:", entries);
+    console.log("Assessments:", activeAssessments.length);
     console.log("==================================");
+
+    } /* ← tutup __tsRunDashboardMain */
+
+    /* ==========================================================
+       JALANKAN: preload dulu, baru main
+    ========================================================== */
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () {
+            __tsPreloadFromSupabase().then(__tsRunDashboardMain);
+        });
+    } else {
+        __tsPreloadFromSupabase().then(__tsRunDashboardMain);
+    }
 
 })();
 </script>

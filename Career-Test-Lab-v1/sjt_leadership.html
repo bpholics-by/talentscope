@@ -2,10 +2,15 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-    <script src="js/ts-supabase-sync.js"></script>
+<script>
+    window.__TS_DISABLE_AUTO_SYNC = true;
+</script>
+    <script src="js/config.js"></script>
+    <script src="js/tab-switch-warning.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/data-service.js"></script>
+    <script src="js/ts-supabase-sync.js"></script>
     <script src="js/participant-activity.js"></script>
     <script>
         if (typeof ParticipantActivity !== "undefined") {
@@ -49,7 +54,6 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
 .shield{width:22px;height:22px;border-radius:7px;background:#f3e8ff;color:var(--purple);display:grid;place-items:center;flex:0 0 22px}
 .shield svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* TEST AREA */
 .test{max-width:900px;margin:auto}
 .test-head{display:flex;justify-content:space-between;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px 20px}
 .progress-wrap{margin-top:14px}
@@ -104,7 +108,6 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
 </header>
 <main>
 
-<!-- INTRO -->
 <section id="intro">
   <div class="hero">
     <span class="pill">TALENTSCOPE ENTERPRISE • ASSESSMENT</span>
@@ -145,7 +148,6 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
   </div>
 </section>
 
-<!-- TEST -->
 <section id="test" class="hidden test">
   <div class="test-head">
     <div>
@@ -180,7 +182,6 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
   <div class="nav-hint" id="navHint"></div>
 </section>
 
-<!-- FINISH -->
 <section id="finish" class="hidden break">
   <div class="card">
     <div class="check">✓</div>
@@ -194,13 +195,17 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
 /* =========================================================
    LSJT — Leadership Situational Judgment Test
    Master Form A — 28 Item | 30 Menit
+   ---------------------------------------------------------
+   PATCH UUID v1:
+   - Ambil assessmentId dari URL
+   - Simpan dual-write (UUID + index)
+   - Cegah tabrakan data dengan tes lain
 ========================================================= */
 
-const TEST_MODE = false; // false = 30 menit (production)
+const TEST_MODE = false;
 
 const CFG = {
     totalSeconds: TEST_MODE ? 60 : 1800,
-    // 30 menit = 1800 detik
 };
 
 const STYLES = {
@@ -210,319 +215,35 @@ const STYLES = {
     SITUASIONAL: "Situasional"
 };
 
-/* =========================================================
-   ITEM BANK — 28 Items dengan mapping konstruk
-   Format: { id, title, scenario, options: [{text, style}] }
-========================================================= */
 const ITEMS = [
-  {
-    id: "LSJT-01",
-    title: "Keputusan di Bawah Tekanan Waktu",
-    scenario: "Anda dan tim harus menyelesaikan keputusan penting dalam waktu yang sangat terbatas. Beberapa anggota memiliki pandangan berbeda, dan tenggat waktu tidak dapat ditunda.",
-    options: [
-      { text: "Mengambil keputusan sendiri berdasarkan informasi yang tersedia dan meminta tim menjalankannya segera.", style: "OTORITER" },
-      { text: "Mengumpulkan tim untuk membahas pilihan secara singkat, kemudian mengambil keputusan berdasarkan masukan yang diperoleh.", style: "DEMOKRATIS" },
-      { text: "Meminta setiap anggota menuliskan rekomendasi mereka dan memilih opsi yang paling banyak didukung sebelum mengambil keputusan.", style: "LAISSEZ_FAIRE" },
-      { text: "Menentukan bahwa keputusan akan diambil setelah setiap anggota menyampaikan pandangannya, meskipun itu berarti sedikit melampaui tenggat.", style: "SITUASIONAL" }
-    ]
-  },
-  {
-    id: "LSJT-02",
-    title: "Anggota Baru dengan Kemampuan Dasar Baik",
-    scenario: "Seorang anggota baru memiliki pengetahuan dan keterampilan dasar yang baik untuk pekerjaannya, tetapi belum terbiasa dengan prosedur dan dinamika tim.",
-    options: [
-      { text: "Memberikan panduan langkah demi langkah pada awalnya dan secara bertahap mengurangi arahan seiring dengan peningkatan kemampuannya.", style: "SITUASIONAL" },
-      { text: "Menugaskan anggota senior untuk mendampinginya dan hanya terlibat jika ada masalah signifikan.", style: "DEMOKRATIS" },
-      { text: "Mengajaknya berdiskusi secara teratur mengenai kemajuan dan hambatan yang dihadapinya, serta memberikan umpan balik.", style: "OTORITER" },
-      { text: "Memberikan tanggung jawab penuh sejak awal agar ia cepat belajar dari pengalaman langsung.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-03",
-    title: "Anggota Berpengalaman dan Konsisten",
-    scenario: "Seorang anggota tim telah bekerja di posisinya selama bertahun-tahun dengan hasil yang konsisten dan dapat diandalkan.",
-    options: [
-      { text: "Memberikan keleluasaan penuh dalam menentukan cara kerja dan hanya meminta laporan pada titik-titik tertentu.", style: "LAISSEZ_FAIRE" },
-      { text: "Mengurangi pemantauan rutin tetapi tetap melakukan pemeriksaan berkala untuk memastikan kualitas.", style: "SITUASIONAL" },
-      { text: "Mengajaknya berdiskusi mengenai pengembangan peran atau tanggung jawab baru yang sesuai dengan kemampuannya.", style: "DEMOKRATIS" },
-      { text: "Mempertahankan prosedur yang sama untuk semua anggota agar standar tetap konsisten.", style: "OTORITER" }
-    ]
-  },
-  {
-    id: "LSJT-04",
-    title: "Target Jauh di Bawah Ekspektasi",
-    scenario: "Pencapaian tim Anda selama dua bulan terakhir berada jauh di bawah target. Beberapa anggota menyebutkan beban kerja yang meningkat sebagai penyebabnya.",
-    options: [
-      { text: "Menganalisis ulang target dan sumber daya, kemudian menetapkan penyesuaian yang diperlukan tanpa mengurangi akuntabilitas.", style: "SITUASIONAL" },
-      { text: "Meminta anggota secara individu menyusun rencana perbaikan dan menyampaikannya kepada Anda.", style: "LAISSEZ_FAIRE" },
-      { text: "Mengadakan pertemuan tim untuk mendiskusikan penyebab dan menyusun strategi perbaikan bersama.", style: "DEMOKRATIS" },
-      { text: "Menetapkan langkah-langkah korektif spesifik dan jadwal pemantauan yang lebih ketat hingga target kembali tercapai.", style: "OTORITER" }
-    ]
-  },
-  {
-    id: "LSJT-05",
-    title: "Konflik yang Mengganggu Koordinasi",
-    scenario: "Dua anggota yang perannya saling terkait mengalami perselisihan yang mulai memengaruhi koordinasi dan hasil kerja tim.",
-    options: [
-      { text: "Mengajak keduanya bertemu untuk mendiskusikan perbedaan dan mencari solusi yang dapat diterima bersama.", style: "DEMOKRATIS" },
-      { text: "Mengambil alih koordinasi antara keduanya untuk sementara waktu agar pekerjaan tetap berjalan.", style: "OTORITER" },
-      { text: "Mengingatkan keduanya tentang tanggung jawab masing-masing dan meminta mereka menyelesaikan perbedaan secara profesional.", style: "SITUASIONAL" },
-      { text: "Mendelegasikan penyelesaian konflik kepada atasan langsung mereka atau pihak ketiga yang netral.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-06",
-    title: "Gangguan Operasional Mendadak",
-    scenario: "Sebuah gangguan operasional terjadi dan memerlukan keputusan segera. Beberapa anggota tim tersedia, tetapi informasi yang ada terbatas.",
-    options: [
-      { text: "Mengambil keputusan sendiri berdasarkan penilaian terhadap informasi yang tersedia.", style: "OTORITER" },
-      { text: "Mengumpulkan masukan singkat dari anggota yang tersedia sebelum memutuskan.", style: "DEMOKRATIS" },
-      { text: "Meminta anggota yang paling berpengalaman di bidang tersebut untuk merekomendasikan tindakan.", style: "SITUASIONAL" },
-      { text: "Menentukan bahwa keputusan ditunda sebentar hingga informasi tambahan dapat dikumpulkan.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-07",
-    title: "Usulan Inovasi dari Anggota Tim",
-    scenario: "Seorang anggota mengusulkan pendekatan baru yang berpotensi meningkatkan efisiensi secara signifikan, tetapi risikonya belum sepenuhnya terukur.",
-    options: [
-      { text: "Mengizinkan anggota tersebut mengembangkan usulannya dalam skala kecil dengan batasan dan indikator yang jelas.", style: "SITUASIONAL" },
-      { text: "Membahas usulan tersebut dalam rapat tim sebelum memutuskan apakah akan diuji coba.", style: "DEMOKRATIS" },
-      { text: "Menentukan sendiri bahwa usulan tersebut layak diuji coba berdasarkan penilaian risiko yang Anda lakukan.", style: "OTORITER" },
-      { text: "Meminta anggota tersebut menyusun analisis risiko lengkap sebelum Anda memberikan persetujuan.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-08",
-    title: "Tim yang Terbukti Mandiri",
-    scenario: "Sebagian besar anggota tim telah menunjukkan kemampuan bekerja secara mandiri dengan kualitas hasil yang konsisten.",
-    options: [
-      { text: "Memberikan kepercayaan lebih besar dan mengurangi keterlibatan langsung dalam pekerjaan rutin.", style: "SITUASIONAL" },
-      { text: "Mempertahankan mekanisme pelaporan dan pemantauan yang sama untuk semua pekerjaan.", style: "OTORITER" },
-      { text: "Mengadakan pertemuan berkala untuk membahas perkembangan dan tantangan yang dihadapi tim.", style: "DEMOKRATIS" },
-      { text: "Mendelegasikan tanggung jawab pengambilan keputusan operasional sepenuhnya kepada tim.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-09",
-    title: "Perubahan Prioritas dari Manajemen",
-    scenario: "Manajemen mengumumkan perubahan prioritas yang signifikan di tengah periode berjalan, dan beberapa pekerjaan yang sedang berjalan harus dihentikan.",
-    options: [
-      { text: "Menentukan sendiri pekerjaan mana yang dihentikan dan mana yang dilanjutkan berdasarkan penilaian Anda.", style: "OTORITER" },
-      { text: "Mengadakan pertemuan tim untuk mendiskusikan perubahan dan menyusun rencana penyesuaian bersama.", style: "DEMOKRATIS" },
-      { text: "Meminta setiap anggota menilai dampak perubahan terhadap pekerjaan mereka dan menyampaikan rekomendasi.", style: "LAISSEZ_FAIRE" },
-      { text: "Menetapkan ulang prioritas berdasarkan urgensi dan dampak, kemudian mengomunikasikannya dengan jelas kepada tim.", style: "SITUASIONAL" }
-    ]
-  },
-  {
-    id: "LSJT-10",
-    title: "Anggota Berpengalaman Menolak Keputusan",
-    scenario: "Seorang anggota yang berpengalaman dan dihormati menyampaikan keberatan terhadap keputusan yang baru saja Anda tetapkan.",
-    options: [
-      { text: "Mendengarkan alasan keberatannya dan mempertimbangkan apakah keputusan perlu ditinjau ulang.", style: "SITUASIONAL" },
-      { text: "Menjelaskan dasar keputusan dan meminta anggota tersebut menjalankannya meskipun ada perbedaan pendapat.", style: "OTORITER" },
-      { text: "Mengajak anggota tersebut mendiskusikan alternatif dan kemungkinan modifikasi keputusan.", style: "DEMOKRATIS" },
-      { text: "Memintanya menuliskan keberatan secara tertulis beserta alternatif yang diusulkan untuk dipertimbangkan.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-11",
-    title: "Proyek Baru Tanpa Prosedur Baku",
-    scenario: "Tim Anda menerima proyek baru yang belum pernah dikerjakan sebelumnya, sehingga belum ada prosedur standar yang dapat diikuti.",
-    options: [
-      { text: "Menyusun kerangka kerja awal dan memberikan arahan yang cukup jelas untuk memulai.", style: "SITUASIONAL" },
-      { text: "Mengumpulkan tim untuk mengeksplorasi berbagai pendekatan sebelum menentukan langkah.", style: "DEMOKRATIS" },
-      { text: "Memberikan kebebasan kepada tim untuk mengembangkan metode pelaksanaan sesuai kreativitas mereka.", style: "LAISSEZ_FAIRE" },
-      { text: "Menugaskan satu atau dua anggota yang paling senior untuk menyusun rencana awal bagi tim.", style: "OTORITER" }
-    ]
-  },
-  {
-    id: "LSJT-12",
-    title: "Anggota Berkinerja Sangat Tinggi",
-    scenario: "Seorang anggota konsisten mencapai hasil di atas target dan menunjukkan kapasitas untuk tanggung jawab yang lebih besar.",
-    options: [
-      { text: "Memberikan proyek atau tanggung jawab tambahan yang lebih menantang sebagai bentuk pengembangan.", style: "SITUASIONAL" },
-      { text: "Mengajaknya berdiskusi mengenai minat pengembangan dan jalur karier yang diinginkan.", style: "DEMOKRATIS" },
-      { text: "Memberikan keleluasaan penuh dalam menentukan cara mencapai target yang telah ditetapkan.", style: "LAISSEZ_FAIRE" },
-      { text: "Menyesuaikan targetnya menjadi lebih tinggi dan mengaitkannya dengan insentif atau penghargaan.", style: "OTORITER" }
-    ]
-  },
-  {
-    id: "LSJT-13",
-    title: "Peningkatan Target yang Signifikan",
-    scenario: "Unit Anda menerima peningkatan target yang cukup besar, sementara sumber daya yang tersedia relatif tidak berubah.",
-    options: [
-      { text: "Menganalisis kesenjangan antara target dan kapasitas, lalu menentukan strategi pencapaian.", style: "SITUASIONAL" },
-      { text: "Mengadakan pertemuan untuk membahas strategi dan membagi target secara merata sesuai kapasitas anggota.", style: "DEMOKRATIS" },
-      { text: "Menetapkan target yang lebih tinggi kepada masing-masing anggota dan meminta mereka menyesuaikan cara kerja.", style: "OTORITER" },
-      { text: "Memberikan kebebasan kepada tim untuk menentukan sendiri cara mencapai target yang ditetapkan.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-14",
-    title: "Delegasi Tanggung Jawab Penting",
-    scenario: "Anda perlu mendelegasikan tanggung jawab penting kepada anggota yang kompeten untuk mengembangkan kapasitasnya.",
-    options: [
-      { text: "Menjelaskan hasil yang diharapkan, memberikan kewenangan penuh, dan meminta laporan pada titik-titik tertentu.", style: "SITUASIONAL" },
-      { text: "Mendiskusikan batasan kewenangan dan tingkat dukungan yang akan diberikan sebelum delegasi dilakukan.", style: "OTORITER" },
-      { text: "Memberikan tanggung jawab penuh dan membiarkan anggota menentukan seluruh aspek pelaksanaan.", style: "LAISSEZ_FAIRE" },
-      { text: "Menentukan secara spesifik apa yang boleh dan tidak boleh dilakukan dalam tanggung jawab yang didelegasikan.", style: "DEMOKRATIS" }
-    ]
-  },
-  {
-    id: "LSJT-15",
-    title: "Penurunan Motivasi Tim",
-    scenario: "Beberapa anggota tim menunjukkan penurunan motivasi dan antusiasme setelah beberapa bulan menghadapi tekanan pekerjaan yang tinggi.",
-    options: [
-      { text: "Mengadakan pertemuan individual untuk memahami penyebab dan mencari solusi bersama.", style: "DEMOKRATIS" },
-      { text: "Menegaskan kembali target dan standar kinerja yang tetap harus dipenuhi.", style: "OTORITER" },
-      { text: "Memberikan lebih banyak kelonggaran dan fleksibilitas dalam cara kerja untuk mengurangi tekanan.", style: "SITUASIONAL" },
-      { text: "Mendelegasikan penyusunan strategi peningkatan motivasi kepada salah satu anggota senior.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-16",
-    title: "Pekerjaan dengan Risiko Tinggi",
-    scenario: "Sebuah pekerjaan memiliki risiko signifikan jika terjadi kesalahan, tetapi penting untuk diselesaikan tepat waktu.",
-    options: [
-      { text: "Menetapkan prosedur yang jelas dan melakukan pemantauan lebih ketat pada titik-titik kritis.", style: "OTORITER" },
-      { text: "Memilih anggota yang paling kompeten dan memberikan kepercayaan penuh dalam pelaksanaannya.", style: "LAISSEZ_FAIRE" },
-      { text: "Mengadakan diskusi risiko dengan tim untuk mengidentifikasi potensi masalah dan mitigasinya.", style: "DEMOKRATIS" },
-      { text: "Melibatkan diri secara langsung dalam koordinasi dan pengambilan keputusan selama proses berlangsung.", style: "SITUASIONAL" }
-    ]
-  },
-  {
-    id: "LSJT-17",
-    title: "Implementasi Sistem Kerja Baru",
-    scenario: "Organisasi menerapkan sistem dan prosedur kerja baru. Sebagian anggota sudah siap, tetapi sebagian lainnya mengalami kesulitan adaptasi.",
-    options: [
-      { text: "Menyesuaikan pendekatan Anda: memberikan dukungan lebih kepada anggota yang kesulitan dan keleluasaan lebih kepada yang sudah siap.", style: "SITUASIONAL" },
-      { text: "Memberikan pelatihan dan waktu adaptasi yang sama kepada semua anggota untuk memastikan standar yang konsisten.", style: "OTORITER" },
-      { text: "Meminta anggota yang sudah menguasai untuk membantu anggota yang masih kesulitan.", style: "DEMOKRATIS" },
-      { text: "Memastikan semua anggota mengikuti prosedur yang ditetapkan dengan jadwal yang sama.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-18",
-    title: "Konflik Prioritas Antar-Pihak",
-    scenario: "Dua pihak atau unit lain meminta tim Anda memprioritaskan pekerjaan mereka masing-masing dalam waktu yang bersamaan.",
-    options: [
-      { text: "Menentukan prioritas sendiri berdasarkan kepentingan organisasi secara keseluruhan.", style: "OTORITER" },
-      { text: "Mengumpulkan informasi dari kedua pihak dan memutuskan berdasarkan pertimbangan yang objektif.", style: "SITUASIONAL" },
-      { text: "Memfasilitasi diskusi antara kedua pihak untuk mencapai kesepakatan bersama.", style: "DEMOKRATIS" },
-      { text: "Menyesuaikan alokasi sumber daya sehingga kedua pekerjaan dapat diproses secara paralel.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-19",
-    title: "Kegagalan Anggota dalam Pekerjaan Penting",
-    scenario: "Seorang anggota gagal menyelesaikan pekerjaan penting yang dipercayakan kepadanya, dan hal ini berdampak pada hasil tim.",
-    options: [
-      { text: "Membahas kegagalan secara langsung, mengidentifikasi penyebab, dan menyusun rencana perbaikan.", style: "DEMOKRATIS" },
-      { text: "Memberikan arahan yang lebih rinci untuk pekerjaan berikutnya dan melakukan pemantauan lebih ketat.", style: "SITUASIONAL" },
-      { text: "Memberikan kesempatan kepada anggota tersebut untuk menjelaskan dan mengusulkan rencana perbaikannya sendiri.", style: "LAISSEZ_FAIRE" },
-      { text: "Mengevaluasi kembali kesesuaian penugasan dan menyesuaikan tanggung jawab jika diperlukan.", style: "OTORITER" }
-    ]
-  },
-  {
-    id: "LSJT-20",
-    title: "Kinerja Tercapai tetapi Perilaku Bermasalah",
-    scenario: "Seorang anggota mencapai target kinerja, tetapi perilakunya sering mengganggu kerja sama tim dan hubungan dengan anggota lain.",
-    options: [
-      { text: "Mempertemukan anggota tersebut dengan tim untuk mendiskusikan dampak perilakunya secara terbuka.", style: "DEMOKRATIS" },
-      { text: "Memberikan umpan balik langsung secara tertutup mengenai perilaku yang perlu diperbaiki.", style: "OTORITER" },
-      { text: "Menyesuaikan pendekatan pembinaan dengan mempertimbangkan kekuatan kinerja dan area perilaku yang perlu dikembangkan.", style: "SITUASIONAL" },
-      { text: "Memberikan tanggung jawab yang lebih bersifat individual untuk mengurangi interaksi yang mengganggu.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-21",
-    title: "Keputusan Strategis dengan Informasi Tidak Pasti",
-    scenario: "Organisasi perlu mengambil keputusan strategis yang berdampak jangka panjang, tetapi informasi yang tersedia masih terbatas dan tidak pasti.",
-    options: [
-      { text: "Mengambil keputusan berdasarkan analisis terbaik yang dapat dilakukan dengan informasi yang ada.", style: "SITUASIONAL" },
-      { text: "Membentuk tim kecil untuk mengumpulkan informasi tambahan sebelum keputusan dibuat.", style: "LAISSEZ_FAIRE" },
-      { text: "Mengundang berbagai pihak untuk memberikan perspektif sebelum menentukan arah.", style: "DEMOKRATIS" },
-      { text: "Menentukan bahwa keputusan akan dibuat setelah informasi lebih lengkap tersedia, meskipun itu berarti menunda.", style: "OTORITER" }
-    ]
-  },
-  {
-    id: "LSJT-22",
-    title: "Anggota yang Mampu Bekerja Tanpa Supervisi",
-    scenario: "Seorang anggota telah menunjukkan kemampuan bekerja secara mandiri dengan kualitas yang sangat baik tanpa perlu supervisi rutin.",
-    options: [
-      { text: "Memberikan kewenangan penuh dalam area tanggung jawabnya dan mengurangi pengawasan secara signifikan.", style: "SITUASIONAL" },
-      { text: "Mempertahankan pertemuan rutin untuk memantau perkembangan dan memberikan umpan balik.", style: "OTORITER" },
-      { text: "Memberikan proyek khusus yang memanfaatkan kemampuannya dan mengembangkan kapasitasnya lebih lanjut.", style: "DEMOKRATIS" },
-      { text: "Meminta anggota tersebut mengambil peran mentor bagi anggota yang lebih junior.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-23",
-    title: "Anggota Berpotensi tetapi Belum Konsisten",
-    scenario: "Seorang anggota memiliki potensi besar, tetapi pengambilan keputusannya masih belum konsisten dan terkadang kurang tepat.",
-    options: [
-      { text: "Memberikan proyek yang lebih menantang dengan dukungan dan pemantauan yang lebih dekat untuk mengembangkan kemampuannya.", style: "SITUASIONAL" },
-      { text: "Mendiskusikan pola pengambilan keputusannya, mengidentifikasi area perbaikan, dan menyepakati langkah pengembangan.", style: "DEMOKRATIS" },
-      { text: "Memberikan tanggung jawab yang sama seperti anggota lain dan membiarkannya belajar dari pengalaman.", style: "OTORITER" },
-      { text: "Menunda pemberian tanggung jawab yang lebih besar sampai konsistensinya meningkat.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-24",
-    title: "Tekanan dari Atasan untuk Keputusan Cepat",
-    scenario: "Pimpinan Anda meminta keputusan segera mengenai suatu masalah yang masih memiliki beberapa alternatif, dan waktu sangat terbatas.",
-    options: [
-      { text: "Memberikan keputusan sendiri berdasarkan informasi yang tersedia untuk memenuhi permintaan pimpinan.", style: "OTORITER" },
-      { text: "Meminta waktu singkat untuk berkonsultasi dengan pihak terkait sebelum memberikan keputusan.", style: "DEMOKRATIS" },
-      { text: "Menyampaikan beberapa alternatif beserta rekomendasi Anda kepada pimpinan untuk diputuskan.", style: "SITUASIONAL" },
-      { text: "Menyerahkan keputusan sepenuhnya kepada pimpinan dengan menyampaikan informasi yang ada.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-25",
-    title: "Tim dengan Tingkat Pengalaman Beragam",
-    scenario: "Tim Anda terdiri dari anggota dengan tingkat pengalaman yang sangat bervariasi, dari yang baru bergabung hingga yang sangat senior.",
-    options: [
-      { text: "Menyesuaikan pendekatan, arahan, dan dukungan berdasarkan tingkat kemampuan dan kesiapan masing-masing anggota.", style: "SITUASIONAL" },
-      { text: "Memberikan tanggung jawab yang sama kepada semua anggota dengan standar yang sama untuk memastikan konsistensi.", style: "OTORITER" },
-      { text: "Mengelompokkan anggota berdasarkan tingkat pengalaman dan memberikan penugasan yang sesuai dengan kapasitasnya.", style: "DEMOKRATIS" },
-      { text: "Memasangkan anggota junior dengan anggota senior untuk mempercepat pembelajaran dan memastikan kualitas.", style: "LAISSEZ_FAIRE" }
-    ]
-  },
-  {
-    id: "LSJT-26",
-    title: "Masalah Berulang yang Belum Terselesaikan",
-    scenario: "Masalah operasional yang sama muncul berulang kali meskipun sudah beberapa kali dilakukan perbaikan.",
-    options: [
-      { text: "Membentuk tim kecil untuk menganalisis akar masalah secara mendalam dan mengusulkan solusi jangka panjang.", style: "DEMOKRATIS" },
-      { text: "Menetapkan prosedur yang lebih ketat dan memastikan kepatuhan terhadap prosedur tersebut.", style: "OTORITER" },
-      { text: "Memberikan kepercayaan kepada anggota yang menangani pekerjaan untuk mencari solusi yang menurut mereka paling tepat.", style: "LAISSEZ_FAIRE" },
-      { text: "Mengadakan pertemuan khusus untuk mendiskusikan pola masalah dan mencari solusi bersama.", style: "SITUASIONAL" }
-    ]
-  },
-  {
-    id: "LSJT-27",
-    title: "Krisis yang Berdampak pada Pelanggan",
-    scenario: "Terjadi gangguan besar yang berpotensi berdampak negatif pada pelanggan jika tidak segera ditangani.",
-    options: [
-      { text: "Mengambil alih koordinasi langsung dan memberikan arahan yang jelas kepada tim.", style: "OTORITER" },
-      { text: "Mengumpulkan tim untuk membahas situasi dan menentukan respons bersama.", style: "DEMOKRATIS" },
-      { text: "Mendelegasikan penanganan kepada anggota yang paling kompeten di bidang tersebut.", style: "LAISSEZ_FAIRE" },
-      { text: "Menghubungi pelanggan terlebih dahulu untuk memberikan informasi, kemudian menentukan langkah penanganan.", style: "SITUASIONAL" }
-    ]
-  },
-  {
-    id: "LSJT-28",
-    title: "Tim yang Mulai Matang",
-    scenario: "Tim Anda, yang sebelumnya membutuhkan banyak arahan, kini menunjukkan kemampuan yang lebih baik dan mulai mampu bekerja lebih mandiri.",
-    options: [
-      { text: "Mengurangi arahan secara bertahap dan memberikan lebih banyak kewenangan kepada tim.", style: "SITUASIONAL" },
-      { text: "Mempertahankan tingkat arahan yang sama untuk menjaga konsistensi hasil.", style: "OTORITER" },
-      { text: "Mengajak tim mendiskusikan perubahan pola kerja dan pembagian tanggung jawab.", style: "DEMOKRATIS" },
-      { text: "Mempertahankan pemantauan yang sama tetapi memberikan lebih banyak kebebasan dalam cara kerja.", style: "LAISSEZ_FAIRE" }
-    ]
-  }
+  {id:"LSJT-01",title:"Keputusan di Bawah Tekanan Waktu",scenario:"Anda dan tim harus menyelesaikan keputusan penting dalam waktu yang sangat terbatas. Beberapa anggota memiliki pandangan berbeda, dan tenggat waktu tidak dapat ditunda.",options:[{text:"Mengambil keputusan sendiri berdasarkan informasi yang tersedia dan meminta tim menjalankannya segera.",style:"OTORITER"},{text:"Mengumpulkan tim untuk membahas pilihan secara singkat, kemudian mengambil keputusan berdasarkan masukan yang diperoleh.",style:"DEMOKRATIS"},{text:"Meminta setiap anggota menuliskan rekomendasi mereka dan memilih opsi yang paling banyak didukung sebelum mengambil keputusan.",style:"LAISSEZ_FAIRE"},{text:"Menentukan bahwa keputusan akan diambil setelah setiap anggota menyampaikan pandangannya, meskipun itu berarti sedikit melampaui tenggat.",style:"SITUASIONAL"}]},
+  {id:"LSJT-02",title:"Anggota Baru dengan Kemampuan Dasar Baik",scenario:"Seorang anggota baru memiliki pengetahuan dan keterampilan dasar yang baik untuk pekerjaannya, tetapi belum terbiasa dengan prosedur dan dinamika tim.",options:[{text:"Memberikan panduan langkah demi langkah pada awalnya dan secara bertahap mengurangi arahan seiring dengan peningkatan kemampuannya.",style:"SITUASIONAL"},{text:"Menugaskan anggota senior untuk mendampinginya dan hanya terlibat jika ada masalah signifikan.",style:"DEMOKRATIS"},{text:"Mengajaknya berdiskusi secara teratur mengenai kemajuan dan hambatan yang dihadapinya, serta memberikan umpan balik.",style:"OTORITER"},{text:"Memberikan tanggung jawab penuh sejak awal agar ia cepat belajar dari pengalaman langsung.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-03",title:"Anggota Berpengalaman dan Konsisten",scenario:"Seorang anggota tim telah bekerja di posisinya selama bertahun-tahun dengan hasil yang konsisten dan dapat diandalkan.",options:[{text:"Memberikan keleluasaan penuh dalam menentukan cara kerja dan hanya meminta laporan pada titik-titik tertentu.",style:"LAISSEZ_FAIRE"},{text:"Mengurangi pemantauan rutin tetapi tetap melakukan pemeriksaan berkala untuk memastikan kualitas.",style:"SITUASIONAL"},{text:"Mengajaknya berdiskusi mengenai pengembangan peran atau tanggung jawab baru yang sesuai dengan kemampuannya.",style:"DEMOKRATIS"},{text:"Mempertahankan prosedur yang sama untuk semua anggota agar standar tetap konsisten.",style:"OTORITER"}]},
+  {id:"LSJT-04",title:"Target Jauh di Bawah Ekspektasi",scenario:"Pencapaian tim Anda selama dua bulan terakhir berada jauh di bawah target. Beberapa anggota menyebutkan beban kerja yang meningkat sebagai penyebabnya.",options:[{text:"Menganalisis ulang target dan sumber daya, kemudian menetapkan penyesuaian yang diperlukan tanpa mengurangi akuntabilitas.",style:"SITUASIONAL"},{text:"Meminta anggota secara individu menyusun rencana perbaikan dan menyampaikannya kepada Anda.",style:"LAISSEZ_FAIRE"},{text:"Mengadakan pertemuan tim untuk mendiskusikan penyebab dan menyusun strategi perbaikan bersama.",style:"DEMOKRATIS"},{text:"Menetapkan langkah-langkah korektif spesifik dan jadwal pemantauan yang lebih ketat hingga target kembali tercapai.",style:"OTORITER"}]},
+  {id:"LSJT-05",title:"Konflik yang Mengganggu Koordinasi",scenario:"Dua anggota yang perannya saling terkait mengalami perselisihan yang mulai memengaruhi koordinasi dan hasil kerja tim.",options:[{text:"Mengajak keduanya bertemu untuk mendiskusikan perbedaan dan mencari solusi yang dapat diterima bersama.",style:"DEMOKRATIS"},{text:"Mengambil alih koordinasi antara keduanya untuk sementara waktu agar pekerjaan tetap berjalan.",style:"OTORITER"},{text:"Mengingatkan keduanya tentang tanggung jawab masing-masing dan meminta mereka menyelesaikan perbedaan secara profesional.",style:"SITUASIONAL"},{text:"Mendelegasikan penyelesaian konflik kepada atasan langsung mereka atau pihak ketiga yang netral.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-06",title:"Gangguan Operasional Mendadak",scenario:"Sebuah gangguan operasional terjadi dan memerlukan keputusan segera. Beberapa anggota tim tersedia, tetapi informasi yang ada terbatas.",options:[{text:"Mengambil keputusan sendiri berdasarkan penilaian terhadap informasi yang tersedia.",style:"OTORITER"},{text:"Mengumpulkan masukan singkat dari anggota yang tersedia sebelum memutuskan.",style:"DEMOKRATIS"},{text:"Meminta anggota yang paling berpengalaman di bidang tersebut untuk merekomendasikan tindakan.",style:"SITUASIONAL"},{text:"Menentukan bahwa keputusan ditunda sebentar hingga informasi tambahan dapat dikumpulkan.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-07",title:"Usulan Inovasi dari Anggota Tim",scenario:"Seorang anggota mengusulkan pendekatan baru yang berpotensi meningkatkan efisiensi secara signifikan, tetapi risikonya belum sepenuhnya terukur.",options:[{text:"Mengizinkan anggota tersebut mengembangkan usulannya dalam skala kecil dengan batasan dan indikator yang jelas.",style:"SITUASIONAL"},{text:"Membahas usulan tersebut dalam rapat tim sebelum memutuskan apakah akan diuji coba.",style:"DEMOKRATIS"},{text:"Menentukan sendiri bahwa usulan tersebut layak diuji coba berdasarkan penilaian risiko yang Anda lakukan.",style:"OTORITER"},{text:"Meminta anggota tersebut menyusun analisis risiko lengkap sebelum Anda memberikan persetujuan.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-08",title:"Tim yang Terbukti Mandiri",scenario:"Sebagian besar anggota tim telah menunjukkan kemampuan bekerja secara mandiri dengan kualitas hasil yang konsisten.",options:[{text:"Memberikan kepercayaan lebih besar dan mengurangi keterlibatan langsung dalam pekerjaan rutin.",style:"SITUASIONAL"},{text:"Mempertahankan mekanisme pelaporan dan pemantauan yang sama untuk semua pekerjaan.",style:"OTORITER"},{text:"Mengadakan pertemuan berkala untuk membahas perkembangan dan tantangan yang dihadapi tim.",style:"DEMOKRATIS"},{text:"Mendelegasikan tanggung jawab pengambilan keputusan operasional sepenuhnya kepada tim.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-09",title:"Perubahan Prioritas dari Manajemen",scenario:"Manajemen mengumumkan perubahan prioritas yang signifikan di tengah periode berjalan, dan beberapa pekerjaan yang sedang berjalan harus dihentikan.",options:[{text:"Menentukan sendiri pekerjaan mana yang dihentikan dan mana yang dilanjutkan berdasarkan penilaian Anda.",style:"OTORITER"},{text:"Mengadakan pertemuan tim untuk mendiskusikan perubahan dan menyusun rencana penyesuaian bersama.",style:"DEMOKRATIS"},{text:"Meminta setiap anggota menilai dampak perubahan terhadap pekerjaan mereka dan menyampaikan rekomendasi.",style:"LAISSEZ_FAIRE"},{text:"Menetapkan ulang prioritas berdasarkan urgensi dan dampak, kemudian mengomunikasikannya dengan jelas kepada tim.",style:"SITUASIONAL"}]},
+  {id:"LSJT-10",title:"Anggota Berpengalaman Menolak Keputusan",scenario:"Seorang anggota yang berpengalaman dan dihormati menyampaikan keberatan terhadap keputusan yang baru saja Anda tetapkan.",options:[{text:"Mendengarkan alasan keberatannya dan mempertimbangkan apakah keputusan perlu ditinjau ulang.",style:"SITUASIONAL"},{text:"Menjelaskan dasar keputusan dan meminta anggota tersebut menjalankannya meskipun ada perbedaan pendapat.",style:"OTORITER"},{text:"Mengajak anggota tersebut mendiskusikan alternatif dan kemungkinan modifikasi keputusan.",style:"DEMOKRATIS"},{text:"Memintanya menuliskan keberatan secara tertulis beserta alternatif yang diusulkan untuk dipertimbangkan.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-11",title:"Proyek Baru Tanpa Prosedur Baku",scenario:"Tim Anda menerima proyek baru yang belum pernah dikerjakan sebelumnya, sehingga belum ada prosedur standar yang dapat diikuti.",options:[{text:"Menyusun kerangka kerja awal dan memberikan arahan yang cukup jelas untuk memulai.",style:"SITUASIONAL"},{text:"Mengumpulkan tim untuk mengeksplorasi berbagai pendekatan sebelum menentukan langkah.",style:"DEMOKRATIS"},{text:"Memberikan kebebasan kepada tim untuk mengembangkan metode pelaksanaan sesuai kreativitas mereka.",style:"LAISSEZ_FAIRE"},{text:"Menugaskan satu atau dua anggota yang paling senior untuk menyusun rencana awal bagi tim.",style:"OTORITER"}]},
+  {id:"LSJT-12",title:"Anggota Berkinerja Sangat Tinggi",scenario:"Seorang anggota konsisten mencapai hasil di atas target dan menunjukkan kapasitas untuk tanggung jawab yang lebih besar.",options:[{text:"Memberikan proyek atau tanggung jawab tambahan yang lebih menantang sebagai bentuk pengembangan.",style:"SITUASIONAL"},{text:"Mengajaknya berdiskusi mengenai minat pengembangan dan jalur karier yang diinginkan.",style:"DEMOKRATIS"},{text:"Memberikan keleluasaan penuh dalam menentukan cara mencapai target yang telah ditetapkan.",style:"LAISSEZ_FAIRE"},{text:"Menyesuaikan targetnya menjadi lebih tinggi dan mengaitkannya dengan insentif atau penghargaan.",style:"OTORITER"}]},
+  {id:"LSJT-13",title:"Peningkatan Target yang Signifikan",scenario:"Unit Anda menerima peningkatan target yang cukup besar, sementara sumber daya yang tersedia relatif tidak berubah.",options:[{text:"Menganalisis kesenjangan antara target dan kapasitas, lalu menentukan strategi pencapaian.",style:"SITUASIONAL"},{text:"Mengadakan pertemuan untuk membahas strategi dan membagi target secara merata sesuai kapasitas anggota.",style:"DEMOKRATIS"},{text:"Menetapkan target yang lebih tinggi kepada masing-masing anggota dan meminta mereka menyesuaikan cara kerja.",style:"OTORITER"},{text:"Memberikan kebebasan kepada tim untuk menentukan sendiri cara mencapai target yang ditetapkan.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-14",title:"Delegasi Tanggung Jawab Penting",scenario:"Anda perlu mendelegasikan tanggung jawab penting kepada anggota yang kompeten untuk mengembangkan kapasitasnya.",options:[{text:"Menjelaskan hasil yang diharapkan, memberikan kewenangan penuh, dan meminta laporan pada titik-titik tertentu.",style:"SITUASIONAL"},{text:"Mendiskusikan batasan kewenangan dan tingkat dukungan yang akan diberikan sebelum delegasi dilakukan.",style:"OTORITER"},{text:"Memberikan tanggung jawab penuh dan membiarkan anggota menentukan seluruh aspek pelaksanaan.",style:"LAISSEZ_FAIRE"},{text:"Menentukan secara spesifik apa yang boleh dan tidak boleh dilakukan dalam tanggung jawab yang didelegasikan.",style:"DEMOKRATIS"}]},
+  {id:"LSJT-15",title:"Penurunan Motivasi Tim",scenario:"Beberapa anggota tim menunjukkan penurunan motivasi dan antusiasme setelah beberapa bulan menghadapi tekanan pekerjaan yang tinggi.",options:[{text:"Mengadakan pertemuan individual untuk memahami penyebab dan mencari solusi bersama.",style:"DEMOKRATIS"},{text:"Menegaskan kembali target dan standar kinerja yang tetap harus dipenuhi.",style:"OTORITER"},{text:"Memberikan lebih banyak kelonggaran dan fleksibilitas dalam cara kerja untuk mengurangi tekanan.",style:"SITUASIONAL"},{text:"Mendelegasikan penyusunan strategi peningkatan motivasi kepada salah satu anggota senior.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-16",title:"Pekerjaan dengan Risiko Tinggi",scenario:"Sebuah pekerjaan memiliki risiko signifikan jika terjadi kesalahan, tetapi penting untuk diselesaikan tepat waktu.",options:[{text:"Menetapkan prosedur yang jelas dan melakukan pemantauan lebih ketat pada titik-titik kritis.",style:"OTORITER"},{text:"Memilih anggota yang paling kompeten dan memberikan kepercayaan penuh dalam pelaksanaannya.",style:"LAISSEZ_FAIRE"},{text:"Mengadakan diskusi risiko dengan tim untuk mengidentifikasi potensi masalah dan mitigasinya.",style:"DEMOKRATIS"},{text:"Melibatkan diri secara langsung dalam koordinasi dan pengambilan keputusan selama proses berlangsung.",style:"SITUASIONAL"}]},
+  {id:"LSJT-17",title:"Implementasi Sistem Kerja Baru",scenario:"Organisasi menerapkan sistem dan prosedur kerja baru. Sebagian anggota sudah siap, tetapi sebagian lainnya mengalami kesulitan adaptasi.",options:[{text:"Menyesuaikan pendekatan Anda: memberikan dukungan lebih kepada anggota yang kesulitan dan keleluasaan lebih kepada yang sudah siap.",style:"SITUASIONAL"},{text:"Memberikan pelatihan dan waktu adaptasi yang sama kepada semua anggota untuk memastikan standar yang konsisten.",style:"OTORITER"},{text:"Meminta anggota yang sudah menguasai untuk membantu anggota yang masih kesulitan.",style:"DEMOKRATIS"},{text:"Memastikan semua anggota mengikuti prosedur yang ditetapkan dengan jadwal yang sama.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-18",title:"Konflik Prioritas Antar-Pihak",scenario:"Dua pihak atau unit lain meminta tim Anda memprioritaskan pekerjaan mereka masing-masing dalam waktu yang bersamaan.",options:[{text:"Menentukan prioritas sendiri berdasarkan kepentingan organisasi secara keseluruhan.",style:"OTORITER"},{text:"Mengumpulkan informasi dari kedua pihak dan memutuskan berdasarkan pertimbangan yang objektif.",style:"SITUASIONAL"},{text:"Memfasilitasi diskusi antara kedua pihak untuk mencapai kesepakatan bersama.",style:"DEMOKRATIS"},{text:"Menyesuaikan alokasi sumber daya sehingga kedua pekerjaan dapat diproses secara paralel.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-19",title:"Kegagalan Anggota dalam Pekerjaan Penting",scenario:"Seorang anggota gagal menyelesaikan pekerjaan penting yang dipercayakan kepadanya, dan hal ini berdampak pada hasil tim.",options:[{text:"Membahas kegagalan secara langsung, mengidentifikasi penyebab, dan menyusun rencana perbaikan.",style:"DEMOKRATIS"},{text:"Memberikan arahan yang lebih rinci untuk pekerjaan berikutnya dan melakukan pemantauan lebih ketat.",style:"SITUASIONAL"},{text:"Memberikan kesempatan kepada anggota tersebut untuk menjelaskan dan mengusulkan rencana perbaikannya sendiri.",style:"LAISSEZ_FAIRE"},{text:"Mengevaluasi kembali kesesuaian penugasan dan menyesuaikan tanggung jawab jika diperlukan.",style:"OTORITER"}]},
+  {id:"LSJT-20",title:"Kinerja Tercapai tetapi Perilaku Bermasalah",scenario:"Seorang anggota mencapai target kinerja, tetapi perilakunya sering mengganggu kerja sama tim dan hubungan dengan anggota lain.",options:[{text:"Mempertemukan anggota tersebut dengan tim untuk mendiskusikan dampak perilakunya secara terbuka.",style:"DEMOKRATIS"},{text:"Memberikan umpan balik langsung secara tertutup mengenai perilaku yang perlu diperbaiki.",style:"OTORITER"},{text:"Menyesuaikan pendekatan pembinaan dengan mempertimbangkan kekuatan kinerja dan area perilaku yang perlu dikembangkan.",style:"SITUASIONAL"},{text:"Memberikan tanggung jawab yang lebih bersifat individual untuk mengurangi interaksi yang mengganggu.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-21",title:"Keputusan Strategis dengan Informasi Tidak Pasti",scenario:"Organisasi perlu mengambil keputusan strategis yang berdampak jangka panjang, tetapi informasi yang tersedia masih terbatas dan tidak pasti.",options:[{text:"Mengambil keputusan berdasarkan analisis terbaik yang dapat dilakukan dengan informasi yang ada.",style:"SITUASIONAL"},{text:"Membentuk tim kecil untuk mengumpulkan informasi tambahan sebelum keputusan dibuat.",style:"LAISSEZ_FAIRE"},{text:"Mengundang berbagai pihak untuk memberikan perspektif sebelum menentukan arah.",style:"DEMOKRATIS"},{text:"Menentukan bahwa keputusan akan dibuat setelah informasi lebih lengkap tersedia, meskipun itu berarti menunda.",style:"OTORITER"}]},
+  {id:"LSJT-22",title:"Anggota yang Mampu Bekerja Tanpa Supervisi",scenario:"Seorang anggota telah menunjukkan kemampuan bekerja secara mandiri dengan kualitas yang sangat baik tanpa perlu supervisi rutin.",options:[{text:"Memberikan kewenangan penuh dalam area tanggung jawabnya dan mengurangi pengawasan secara signifikan.",style:"SITUASIONAL"},{text:"Mempertahankan pertemuan rutin untuk memantau perkembangan dan memberikan umpan balik.",style:"OTORITER"},{text:"Memberikan proyek khusus yang memanfaatkan kemampuannya dan mengembangkan kapasitasnya lebih lanjut.",style:"DEMOKRATIS"},{text:"Meminta anggota tersebut mengambil peran mentor bagi anggota yang lebih junior.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-23",title:"Anggota Berpotensi tetapi Belum Konsisten",scenario:"Seorang anggota memiliki potensi besar, tetapi pengambilan keputusannya masih belum konsisten dan terkadang kurang tepat.",options:[{text:"Memberikan proyek yang lebih menantang dengan dukungan dan pemantauan yang lebih dekat untuk mengembangkan kemampuannya.",style:"SITUASIONAL"},{text:"Mendiskusikan pola pengambilan keputusannya, mengidentifikasi area perbaikan, dan menyepakati langkah pengembangan.",style:"DEMOKRATIS"},{text:"Memberikan tanggung jawab yang sama seperti anggota lain dan membiarkannya belajar dari pengalaman.",style:"OTORITER"},{text:"Menunda pemberian tanggung jawab yang lebih besar sampai konsistensinya meningkat.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-24",title:"Tekanan dari Atasan untuk Keputusan Cepat",scenario:"Pimpinan Anda meminta keputusan segera mengenai suatu masalah yang masih memiliki beberapa alternatif, dan waktu sangat terbatas.",options:[{text:"Memberikan keputusan sendiri berdasarkan informasi yang tersedia untuk memenuhi permintaan pimpinan.",style:"OTORITER"},{text:"Meminta waktu singkat untuk berkonsultasi dengan pihak terkait sebelum memberikan keputusan.",style:"DEMOKRATIS"},{text:"Menyampaikan beberapa alternatif beserta rekomendasi Anda kepada pimpinan untuk diputuskan.",style:"SITUASIONAL"},{text:"Menyerahkan keputusan sepenuhnya kepada pimpinan dengan menyampaikan informasi yang ada.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-25",title:"Tim dengan Tingkat Pengalaman Beragam",scenario:"Tim Anda terdiri dari anggota dengan tingkat pengalaman yang sangat bervariasi, dari yang baru bergabung hingga yang sangat senior.",options:[{text:"Menyesuaikan pendekatan, arahan, dan dukungan berdasarkan tingkat kemampuan dan kesiapan masing-masing anggota.",style:"SITUASIONAL"},{text:"Memberikan tanggung jawab yang sama kepada semua anggota dengan standar yang sama untuk memastikan konsistensi.",style:"OTORITER"},{text:"Mengelompokkan anggota berdasarkan tingkat pengalaman dan memberikan penugasan yang sesuai dengan kapasitasnya.",style:"DEMOKRATIS"},{text:"Memasangkan anggota junior dengan anggota senior untuk mempercepat pembelajaran dan memastikan kualitas.",style:"LAISSEZ_FAIRE"}]},
+  {id:"LSJT-26",title:"Masalah Berulang yang Belum Terselesaikan",scenario:"Masalah operasional yang sama muncul berulang kali meskipun sudah beberapa kali dilakukan perbaikan.",options:[{text:"Membentuk tim kecil untuk menganalisis akar masalah secara mendalam dan mengusulkan solusi jangka panjang.",style:"DEMOKRATIS"},{text:"Menetapkan prosedur yang lebih ketat dan memastikan kepatuhan terhadap prosedur tersebut.",style:"OTORITER"},{text:"Memberikan kepercayaan kepada anggota yang menangani pekerjaan untuk mencari solusi yang menurut mereka paling tepat.",style:"LAISSEZ_FAIRE"},{text:"Mengadakan pertemuan khusus untuk mendiskusikan pola masalah dan mencari solusi bersama.",style:"SITUASIONAL"}]},
+  {id:"LSJT-27",title:"Krisis yang Berdampak pada Pelanggan",scenario:"Terjadi gangguan besar yang berpotensi berdampak negatif pada pelanggan jika tidak segera ditangani.",options:[{text:"Mengambil alih koordinasi langsung dan memberikan arahan yang jelas kepada tim.",style:"OTORITER"},{text:"Mengumpulkan tim untuk membahas situasi dan menentukan respons bersama.",style:"DEMOKRATIS"},{text:"Mendelegasikan penanganan kepada anggota yang paling kompeten di bidang tersebut.",style:"LAISSEZ_FAIRE"},{text:"Menghubungi pelanggan terlebih dahulu untuk memberikan informasi, kemudian menentukan langkah penanganan.",style:"SITUASIONAL"}]},
+  {id:"LSJT-28",title:"Tim yang Mulai Matang",scenario:"Tim Anda, yang sebelumnya membutuhkan banyak arahan, kini menunjukkan kemampuan yang lebih baik dan mulai mampu bekerja lebih mandiri.",options:[{text:"Mengurangi arahan secara bertahap dan memberikan lebih banyak kewenangan kepada tim.",style:"SITUASIONAL"},{text:"Mempertahankan tingkat arahan yang sama untuk menjaga konsistensi hasil.",style:"OTORITER"},{text:"Mengajak tim mendiskusikan perubahan pola kerja dan pembagian tanggung jawab.",style:"DEMOKRATIS"},{text:"Mempertahankan pemantauan yang sama tetapi memberikan lebih banyak kebebasan dalam cara kerja.",style:"LAISSEZ_FAIRE"}]}
 ];
 
 /* =========================================================
@@ -535,17 +256,17 @@ let participant = {name:"", id:"", project:"", date:""},
     assessmentStarted = false,
     heartbeatTimer = null;
 
-const responses = {}; // { itemId: { most: "A"/"B"/..., least: "A"/... } }
+const responses = {};
 
-/* =========================================================
-   HELPERS
-========================================================= */
 function el(id){ return document.getElementById(id); }
 function fmt(sec){ sec = Math.max(0, Math.ceil(sec)); return String(Math.floor(sec/60)).padStart(2,"0") + ":" + String(sec%60).padStart(2,"0"); }
 
 /* =========================================================
-   IDENTITY & CONTEXT (sama seperti VAP)
+   PATCH: Ambil assessmentId dari URL
 ========================================================= */
+const _urlParams = new URLSearchParams(location.search);
+const assessmentIdFromUrl = String(_urlParams.get("assessmentId") || "").trim();
+
 function getAssessmentIdentity(){
   const params = new URLSearchParams(location.search);
   let session = {};
@@ -639,9 +360,6 @@ function syncAssessmentActivity(activity, historyType){
   }catch(e){ console.warn("Assessment activity sync gagal:", e); }
 }
 
-/* =========================================================
-   AUTO LOGOUT (sama seperti VAP)
-========================================================= */
 let assessmentLogoutRecorded = false;
 function recordAssessmentLogout(reason){
   if(assessmentLogoutRecorded) return;
@@ -720,6 +438,10 @@ function getContext(){
 }
 
 function init(){
+  if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
+    window.TabSwitchWarning.init({ context: "LSJT" });
+  }
+
   const c = getContext();
   participant.name = c.name; participant.id = c.id; participant.project = c.project;
   participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
@@ -736,9 +458,6 @@ function backToDashboard(e){
   }
 }
 
-/* =========================================================
-   TEST FLOW
-========================================================= */
 function heartbeat(){
   if(!assessmentStarted || totalRemaining <= 0) return;
   syncAssessmentActivity("Sedang mengerjakan tes (" + getAssessmentDisplayName() + ")" + getAssessmentSequenceLabel(), null);
@@ -776,18 +495,15 @@ function updateTimer(){
 function renderCurrentItem(){
   const item = ITEMS[currentIndex];
   el("qNum").textContent = "ITEM " + String(currentIndex + 1).padStart(2, "0") + " / 28";
-  el("qTitle").textContent = "Situasi " + String(currentIndex + 1).padStart(2, "0");   // ← NETRAL
+  el("qTitle").textContent = "Situasi " + String(currentIndex + 1).padStart(2, "0");
   el("scenarioText").textContent = item.scenario;
-  
 
-  // Progress
   const pct = ((currentIndex + 1) / ITEMS.length) * 100;
   el("progressFill").style.width = pct + "%";
   el("progressLabel").textContent = "Item " + (currentIndex + 1) + " dari " + ITEMS.length;
   const answeredCount = Object.keys(responses).length;
   el("answeredLabel").textContent = "Terjawab: " + answeredCount + " / " + ITEMS.length;
 
-  // Options
   const resp = responses[item.id] || { most: null, least: null };
   const letters = ["A", "B", "C", "D"];
   const optionsHTML = item.options.map((opt, i) => {
@@ -807,13 +523,11 @@ function renderCurrentItem(){
   }).join("");
   el("optionsContainer").innerHTML = optionsHTML;
 
-  // Nav buttons
   el("prevBtn").disabled = currentIndex === 0;
   const isLast = currentIndex === ITEMS.length - 1;
   el("nextBtn").textContent = isLast ? "Selesai ✓" : "Selanjutnya →";
   el("nextBtn").className = "nav-btn " + (isLast ? "primary" : "");
 
-  // Nav hint
   if(!resp.most || !resp.least){
     el("navHint").textContent = "⚠ Anda belum memilih MOST dan LEAST untuk item ini.";
     el("navHint").style.color = "#d97706";
@@ -828,7 +542,6 @@ function renderCurrentItem(){
 function selectMost(letter){
   const item = ITEMS[currentIndex];
   if(!responses[item.id]) responses[item.id] = { most: null, least: null };
-  // Jika letter yang sama sudah jadi LEAST, hapus dulu
   if(responses[item.id].least === letter) responses[item.id].least = null;
   responses[item.id].most = letter;
   renderCurrentItem();
@@ -858,7 +571,6 @@ function nextItem(){
     currentIndex++;
     renderCurrentItem();
   } else {
-    // Item terakhir — cek semua sudah dijawab
     const unanswered = ITEMS.filter(it => {
       const r = responses[it.id] || {};
       return !r.most || !r.least;
@@ -886,9 +598,6 @@ function saveDraft(){
   }catch(e){}
 }
 
-/* =========================================================
-   SCORING — Ipsatif (4 dimensi)
-========================================================= */
 function calcScores(){
   const counts = {
     OTORITER: { most: 0, least: 0 },
@@ -907,9 +616,6 @@ function calcScores(){
     if(leastIdx >= 0) counts[item.options[leastIdx].style].least++;
   });
 
-  // Total skor ipsatif = 28 MOST + 28 LEAST = 56
-  // Skor bersih per gaya = MOST - LEAST (range -28 sampai +28)
-  // Konversi ke skala 0-100: (most_frac * 100) - (least_frac * 100) + 50
   const total = ITEMS.length;
   const result = {};
   Object.keys(STYLES).forEach(key => {
@@ -918,8 +624,8 @@ function calcScores(){
     const least = counts[key].least;
     const mostPct = (most / total) * 100;
     const leastPct = (least / total) * 100;
-    const netScore = mostPct - leastPct; // range -100 sampai +100
-    const normalized = Math.max(0, Math.min(100, 50 + netScore / 2)); // 0-100
+    const netScore = mostPct - leastPct;
+    const normalized = Math.max(0, Math.min(100, 50 + netScore / 2));
     result[key] = {
       style: style,
       most: most,
@@ -934,9 +640,6 @@ function calcScores(){
   return result;
 }
 
-/* =========================================================
-   FINISH ASSESSMENT
-========================================================= */
 async function finishAssessment(){
   clearInterval(sessionTimer);
   clearInterval(heartbeatTimer);
@@ -949,12 +652,12 @@ async function finishAssessment(){
   const ids = getAssessmentIdentity();
   const params = new URLSearchParams(location.search);
   const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
-  const assessmentCodeStr = String(params.get("assessmentCode") || "LSJT").trim();
+  const assessmentCodeStr = "lsjt";
   const assessmentNameStr = getAssessmentDisplayName();
 
   let lsjtResult = null;
 
-  /* ---- Simpan ke localStorage ---- */
+  /* ---- Simpan ke localStorage (dual-write: UUID + index) ---- */
   try{
     if(ids.projectId && ids.participantId){
       const submittedAt = new Date().toISOString();
@@ -965,6 +668,7 @@ async function finishAssessment(){
         participantId: ids.participantId,
         participantName: participant.name || "",
         assessmentIndex: assessmentIndexNum,
+        assessmentId: assessmentIdFromUrl,
         assessmentCode: assessmentCodeStr,
         assessmentName: assessmentNameStr,
         responses: responses,
@@ -973,7 +677,18 @@ async function finishAssessment(){
         answeredItems: Object.keys(responses).length,
         submittedAt
       };
+
+      // Simpan dengan UUID (BARU)
+      if (assessmentIdFromUrl) {
+        localStorage.setItem(`lsjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(lsjtResult));
+        localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(lsjtResult));
+        console.log("[LSJT] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+      }
+
+      // Tetap simpan dengan index (KOMPATIBILITAS)
+      localStorage.setItem(`lsjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(lsjtResult));
       localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(lsjtResult));
+
       let allResults = [];
       try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
       if(!Array.isArray(allResults)) allResults = [];
@@ -1076,9 +791,6 @@ async function finishAssessment(){
   setTimeout(goToNextOrDashboard, 1500);
 }
 
-/* =========================================================
-   INIT
-========================================================= */
 init();
 console.log("[LSJT] Ready. Total items:", ITEMS.length);
 </script>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPDK Report — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="js/report-access-control.js"></script>
+<style>
+*{box-sizing:border-box}
+:root{--blue:#2563eb;--blue2:#1d4ed8;--navy:#0f172a;--muted:#64748b;--line:#e2e8f0;--soft:#f8fafc;--ok:#16a34a;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed;--teal:#0891b2}
+body{margin:0;background:#f4f7fb;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px;position:sticky;top:0;z-index:30;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+header h1{margin:0;font-size:18px}
+header small{color:#64748b;display:block;font-size:11px;margin-top:2px}
+.wrap{max-width:1200px;margin:auto;padding:22px 20px 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;margin-bottom:16px;box-shadow:0 4px 14px #0f172a06}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+select,input,button{padding:10px 14px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff;font-size:13px}
+button{background:#2563eb;color:#fff;border:0;font-weight:800;cursor:pointer;transition:.15s}
+button:hover{background:#1d4ed8}
+button.ghost{background:#f1f5f9;color:#334155}
+button.ghost:hover{background:#e2e8f0}
+button.danger{background:#dc2626}
+button.danger:hover{background:#b91c1c}
+button:disabled{opacity:.5;cursor:not-allowed}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar select{min-width:320px;flex:1}
+.badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800}
+.badge-source{background:#e0e7ff;color:#3730a3}
+.badge-local{background:#f1f5f9;color:#475569}
+
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 60%,#0891b2 100%);color:#fff;border-radius:18px;padding:28px 32px;margin-bottom:18px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;width:300px;height:300px;border:1px solid #ffffff15;border-radius:50%;right:-80px;top:-100px}
+.hero-label{font-size:10px;font-weight:900;letter-spacing:2px;color:#93c5fd;margin-bottom:10px;position:relative;z-index:1}
+.hero-title{font-size:30px;font-weight:900;margin:0 0 6px;position:relative;z-index:1}
+.hero-sub{color:#cbd5e1;font-size:13px;position:relative;z-index:1;margin:0}
+.overall-panel{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-top:20px;position:relative;z-index:1}
+.overall-stat{background:#ffffff12;border:1px solid #ffffff20;border-radius:12px;padding:14px 16px}
+.overall-stat .lbl{font-size:10px;font-weight:800;letter-spacing:.7px;color:#93c5fd;text-transform:uppercase}
+.overall-stat .val{font-size:26px;font-weight:900;margin-top:6px;color:#fff;font-variant-numeric:tabular-nums}
+.overall-stat .unit{font-size:12px;color:#cbd5e1;font-weight:600;margin-left:4px}
+
+/* G-SCORE CARD */
+.gscore-section{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;border-radius:18px;padding:36px 32px;margin-bottom:18px;position:relative;overflow:hidden}
+.gscore-section::before{content:'';position:absolute;width:400px;height:400px;left:-100px;bottom:-200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.gscore-section::after{content:'';position:absolute;width:300px;height:300px;right:-80px;top:-100px;border-radius:50%;background:rgba(255,255,255,.05)}
+.gscore-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:32px;align-items:center;position:relative;z-index:1}
+@media(max-width:768px){.gscore-grid{grid-template-columns:1fr}}
+.gscore-value-wrap{text-align:center;padding:20px;background:rgba(255,255,255,.1);border-radius:16px;border:1px solid rgba(255,255,255,.15)}
+.gscore-label{font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;opacity:.85;margin-bottom:10px}
+.gscore-value{font-size:88px;font-weight:900;line-height:1;letter-spacing:-4px}
+.gscore-value small{font-size:22px;font-weight:600;opacity:.7;letter-spacing:0}
+.gscore-category{display:inline-block;padding:8px 20px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);border-radius:99px;font-size:14px;font-weight:800;margin-top:14px}
+.gscore-percentile{font-size:13px;opacity:.85;margin-top:10px}
+.gscore-info h3{font-size:18px;font-weight:900;margin:0 0 12px}
+.gscore-info p{font-size:14px;line-height:1.7;margin:0;opacity:.95}
+
+/* DIMENSION */
+.dim-block{padding:16px 0;border-bottom:1px solid var(--line)}
+.dim-block:last-child{border-bottom:0}
+.dim-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:10px}
+.dim-name{font-size:15px;font-weight:850;color:#0f172a}
+.dim-cat{font-size:11px;color:#64748b;margin-top:3px;font-weight:600}
+.dim-score-wrap{text-align:right;flex-shrink:0}
+.dim-score{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
+.dim-badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800;margin-top:6px}
+.dim-bar-track{height:14px;background:#e2e8f0;border-radius:99px;position:relative;overflow:visible;margin-top:14px;margin-bottom:8px}
+.dim-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#0891b2);transition:width .8s ease}
+.dim-bar-marker{position:absolute;top:-6px;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.dim-bar-marker:after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#0f172a}
+.dim-bar-scale{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;font-weight:600;margin-top:6px}
+.dim-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:#94a3b8;font-weight:700;margin-bottom:6px}
+
+.hex-badge{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;font-size:18px;font-weight:900;flex-shrink:0;position:relative;color:#fff}
+.hex-badge.sangat-kuat{background:linear-gradient(135deg,#16a34a,#22c55e)}
+.hex-badge.kuat{background:linear-gradient(135deg,#2563eb,#3b82f6)}
+.hex-badge.cukup{background:linear-gradient(135deg,#7c3aed,#8b5cf6)}
+.hex-badge.perlu-penguatan{background:linear-gradient(135deg,#d97706,#f59e0b)}
+.hex-badge.perlu-perhatian{background:linear-gradient(135deg,#dc2626,#ef4444)}
+
+.b-sangat-kuat{background:#dcfce7;color:#166534}
+.b-kuat{background:#dbeafe;color:#1e40af}
+.b-cukup{background:#ede9fe;color:#5b21b6}
+.b-perlu-penguatan{background:#fef3c7;color:#92400e}
+.b-perlu-perhatian{background:#fee2e2;color:#991b1b}
+
+.narrative{background:#f8fafc;border-left:4px solid var(--blue);border-radius:8px;padding:16px 18px;font-size:13px;line-height:1.75;color:#334155;margin-top:12px}
+.insight{background:#eff6ff;border-left:4px solid #2563eb;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px}
+.insight b{color:#1e40af}
+.warning{background:#fef3c7;border-left:4px solid #d97706;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.7;margin-top:12px}
+.disclaimer{margin-top:18px;padding:18px 20px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;font-size:12px;line-height:1.75;color:#78350f}
+.disclaimer b{color:#92400e}
+.disclaimer-icon{font-size:18px;margin-right:6px;vertical-align:middle}
+.section-title{font-size:18px;font-weight:900;margin:0 0 4px;color:#0f172a}
+.section-sub{font-size:12px;color:#64748b;margin:0 0 16px}
+.empty{text-align:center;color:#94a3b8;padding:60px 20px}
+.empty h3{color:#64748b;margin:0 0 8px}
+.chart-container{position:relative;height:300px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left}
+th{background:#f8fafc;color:#64748b;font-weight:800;font-size:11px;letter-spacing:.5px;text-transform:uppercase}
+tr:hover td{background:#f8fafc}
+.pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:800}
+.p-completed{background:#dcfce7;color:#166534}
+.p-bad{background:#fee2e2;color:#991b1b}
+
+.cta-summary{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.cta-box{border-radius:12px;padding:18px;border:1px solid}
+.cta-box h4{margin:0 0 8px;font-size:14px;font-weight:900}
+.cta-box ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.8}
+.cta-box li{margin-bottom:4px}
+.cta-box.green{background:#f0fdf4;border-color:#bbf7d0}
+.cta-box.green h4{color:#166534}
+.cta-box.amber{background:#fffbeb;border-color:#fde68a}
+.cta-box.amber h4{color:#92400e}
+.cta-box.red{background:#fef2f2;border-color:#fecaca}
+.cta-box.red h4{color:#991b1b}
+
+@media(max-width:900px){
+  .grid-2,.grid-3,.overall-panel,.cta-summary{grid-template-columns:1fr}
+  header{flex-direction:column;align-items:flex-start}
+  .toolbar select{min-width:100%}
+  .hero{padding:20px}
+  .hero-title{font-size:22px}
+  .gscore-value{font-size:64px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 TPDK Report</h1>
+    <small>Tes Penalaran Dunia Kerja — Admin Dashboard</small>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <span id="sourceBadge" class="badge badge-local">📦 LocalStorage</span>
+    <button class="ghost" onclick="refreshList()">🔄 Refresh</button>
+    <button class="ghost" onclick="exportAll()">⬇ Export Semua</button>
+    <button class="danger" onclick="clearAll()">🗑 Hapus Semua</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="card" style="padding:16px">
+    <div class="toolbar" style="margin:0">
+      <select id="resultSelect" onchange="loadResult()">
+        <option value="">— Pilih peserta —</option>
+      </select>
+      <input id="searchInput" placeholder="🔍 Cari nama / ID / project..." oninput="filterList()" style="min-width:240px">
+      <button onclick="exportCurrent()">⬇ Export Hasil Ini</button>
+    </div>
+  </div>
+
+  <div id="reportContainer">
+    <div class="card empty">
+      <h3>Belum ada hasil dipilih</h3>
+      <p>Pilih peserta dari dropdown di atas untuk melihat laporan.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   TPDK REPORT VIEWER v2.0 — With General Intelligence Score
+========================================================= */
+let allResults = [];
+let filteredResults = [];
+let currentResult = null;
+let charts = {};
+let dataSource = "local";
+
+const SUPABASE_TABLE = "tpdk_results";
+
+function el(id){ return document.getElementById(id); }
+function fmtDate(iso){ if(!iso) return "-"; try{ return new Date(iso).toLocaleString("id-ID",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); }catch(e){ return iso; } }
+function mean(a){ return a.length ? a.reduce((x,y)=>x+y,0)/a.length : 0; }
+function clamp(x,a=0,b=100){ return Math.max(a,Math.min(b,x)); }
+function pct(x,max){ return max>0 ? (x/max)*100 : 0; }
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
+
+function cls(x){
+  if(x >= 85) return "Sangat Kuat";
+  if(x >= 70) return "Kuat";
+  if(x >= 55) return "Cukup";
+  if(x >= 40) return "Perlu Penguatan";
+  return "Perlu Perhatian";
+}
+function clsClass(x){
+  if(x >= 85) return "b-sangat-kuat";
+  if(x >= 70) return "b-kuat";
+  if(x >= 55) return "b-cukup";
+  if(x >= 40) return "b-perlu-penguatan";
+  return "b-perlu-perhatian";
+}
+function clsHexClass(x){
+  if(x >= 85) return "sangat-kuat";
+  if(x >= 70) return "kuat";
+  if(x >= 55) return "cukup";
+  if(x >= 40) return "perlu-penguatan";
+  return "perlu-perhatian";
+}
+
+// =========================================================
+// HITUNG G-SCORE (jika belum ada di scores)
+// =========================================================
+function computeGScore(scores) {
+  // Jika sudah ada gScore tersimpan, pakai itu
+  if (scores && scores.gScore !== undefined && scores.gScore !== null) {
+    return {
+      value: scores.gScore,
+      category: scores.gCategory || "Rata-rata",
+      percentile: scores.gPercentile || "-",
+      description: scores.gDescription || "-"
+    };
+  }
+  
+  // Fallback: hitung dari total
+  const total = scores?.total || 0;
+  const maxTotal = scores?.maxTotal || 30;
+  const percentage = (total / maxTotal) * 100;
+  const gScore = Math.round(100 + ((percentage - 50) / 50) * 50);
+  
+  let category, percentile, description;
+  if (gScore >= 140) {
+    category = "Sangat Superior"; percentile = "≥ 99.6";
+    description = "Kemampuan penalaran jauh di atas rata-rata. Cocok untuk peran strategis & analitis.";
+  } else if (gScore >= 130) {
+    category = "Sangat Superior"; percentile = "≥ 98";
+    description = "Kemampuan penalaran sangat tinggi. Potensi kepemimpinan & inovasi.";
+  } else if (gScore >= 120) {
+    category = "Superior"; percentile = "91-97";
+    description = "Kemampuan penalaran di atas rata-rata. Cocok untuk peran profesional.";
+  } else if (gScore >= 110) {
+    category = "Di Atas Rata-rata"; percentile = "75-90";
+    description = "Kemampuan penalaran baik. Mampu menangani tugas kompleks.";
+  } else if (gScore >= 100) {
+    category = "Rata-rata"; percentile = "50-74";
+    description = "Kemampuan penalaran rata-rata. Cocok untuk peran umum.";
+  } else if (gScore >= 90) {
+    category = "Rata-rata"; percentile = "25-49";
+    description = "Kemampuan penalaran rata-rata bawah. Perlu pengembangan.";
+  } else if (gScore >= 80) {
+    category = "Di Bawah Rata-rata"; percentile = "9-24";
+    description = "Kemampuan penalaran di bawah rata-rata. Perlu pelatihan.";
+  } else if (gScore >= 70) {
+    category = "Borderline"; percentile = "2-8";
+    description = "Kemampuan penalaran borderline. Disarankan pendampingan.";
+  } else {
+    category = "Rendah"; percentile = "< 2";
+    description = "Kemampuan penalaran rendah. Perlu intervensi khusus.";
+  }
+  
+  return { value: gScore, category, percentile, description };
+}
+
+/* LOAD DATA */
+async function loadFromSupabase(){
+  try {
+    let sb = window.supabaseClient || window.supabase || null;
+    if (!sb) return null;
+    const { data, error } = await sb.from(SUPABASE_TABLE).select("*").eq("result_type", "TPDK").order("submitted_at", { ascending: false }).limit(500);
+    if (error) { console.warn("[TPDK] Supabase error:", error.message); return null; }
+    if (!Array.isArray(data) || data.length === 0) return null;
+    return data.map(row => ({
+      version: row.version || 1,
+      resultType: "TPDK",
+      projectId: row.project_id,
+      participantId: row.participant_id,
+      assessmentIndex: row.assessment_index,
+      assessmentCode: row.assessment_code,
+      assessmentName: row.assessment_name,
+      participantName: row.participant_name || "",
+      scores: typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores,
+      answers: typeof row.raw_data === "string" ? JSON.parse(row.raw_data) : row.raw_data,
+      submittedAt: row.submitted_at,
+      _source: "supabase"
+    }));
+  } catch(e) { console.warn("[TPDK] Gagal load Supabase:", e); return null; }
+}
+
+function loadFromLocal(){
+  try {
+    return JSON.parse(localStorage.getItem("talent_scope_results") || "[]")
+      .filter(x => x.resultType === "TPDK")
+      .map(r => ({ ...r, _source: "local" }));
+  } catch(e) { return []; }
+}
+
+async function refreshList(){
+  el("reportContainer").innerHTML = `<div class="card empty"><h3>⏳ Memuat data...</h3></div>`;
+  try {
+    let results = await loadFromSupabase();
+    if (results && results.length > 0) {
+      allResults = results;
+      dataSource = "supabase";
+      el("sourceBadge").textContent = "☁ Supabase";
+      el("sourceBadge").className = "badge badge-source";
+    } else {
+      allResults = loadFromLocal();
+      dataSource = "local";
+      el("sourceBadge").textContent = "📦 LocalStorage";
+      el("sourceBadge").className = "badge badge-local";
+    }
+    allResults.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+    filteredResults = [...allResults];
+    renderDropdown();
+    autoSelectFromUrl();
+    if (allResults.length === 0) {
+      el("reportContainer").innerHTML = `<div class="card empty"><h3>Belum ada hasil</h3><p>Belum ada peserta yang menyelesaikan TPDK.</p></div>`;
+    } else {
+      el("reportContainer").innerHTML = `<div class="card empty"><h3>Pilih peserta</h3><p>Pilih peserta dari dropdown di atas.</p></div>`;
+    }
+  } catch(err) {
+    console.error("[TPDK] Refresh error:", err);
+    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${err.message}</p></div>`;
+  }
+}
+
+function renderDropdown(){
+  const sel = el("resultSelect");
+  sel.innerHTML = '<option value="">— Pilih peserta (' + filteredResults.length + ') —</option>';
+  filteredResults.forEach((r) => {
+    const opt = document.createElement("option");
+    opt.value = allResults.indexOf(r);
+    opt.textContent = `${r.participantName || r.participantId || "Unknown"} • ${fmtDate(r.submittedAt)}`;
+    sel.appendChild(opt);
+  });
+}
+
+function filterList(){
+  const q = el("searchInput").value.toLowerCase().trim();
+  filteredResults = !q ? [...allResults] : allResults.filter(r =>
+    String(r.participantId || "").toLowerCase().includes(q) ||
+    String(r.participantName || "").toLowerCase().includes(q) ||
+    String(r.projectId || "").toLowerCase().includes(q)
+  );
+  renderDropdown();
+}
+
+function loadResult(){
+  const idx = el("resultSelect").value;
+  if(idx === ""){
+    el("reportContainer").innerHTML = `<div class="card empty"><h3>Pilih peserta</h3></div>`;
+    currentResult = null;
+    return;
+  }
+  currentResult = allResults[Number(idx)];
+  renderReport(currentResult);
+}
+
+function autoSelectFromUrl(){
+  const params = new URLSearchParams(window.location.search);
+  const targetParticipantId = params.get("participantId");
+  const targetProjectId = params.get("projectId");
+  if (!targetParticipantId) return;
+  const index = allResults.findIndex(r => {
+    const rPid = String(r.participantId || r.participant_id || "");
+    const rProj = String(r.projectId || r.project_id || "");
+    return rPid === String(targetParticipantId) && (!targetProjectId || rProj === String(targetProjectId));
+  });
+  if (index === -1) return;
+  const select = el("resultSelect");
+  if (select) {
+    select.value = String(index);
+    setTimeout(() => { if (typeof loadResult === "function") loadResult(); }, 100);
+  }
+}
+
+/* RENDER REPORT */
+function renderReport(r){
+  const s = r.scores || {};
+  const perSub = s.perSubtest || { A:0, B:0, C:0, D:0 };
+  const maxSub = s.maxPerSubtest || { A:10, B:5, C:5, D:10 };
+  const total = s.total || 0;
+  const maxTotal = s.maxTotal || 30;
+  const totalPct = pct(total, maxTotal);
+  
+  // Hitung G-Score
+  const g = computeGScore(s);
+
+  const dims = [
+    { code: "A", name: "Penalaran Verbal", desc: "Logika verbal & pemahaman situasi kerja", score: perSub.A, max: maxSub.A },
+    { code: "B", name: "Kuantitatif", desc: "Aritmatika & analisis angka dunia kerja", score: perSub.B, max: maxSub.B },
+    { code: "C", name: "Spasial", desc: "Rotasi mental & visualisasi ruang", score: perSub.C, max: maxSub.C },
+    { code: "D", name: "Logika Praktis", desc: "Analisis kasus & pengambilan keputusan", score: perSub.D, max: maxSub.D }
+  ];
+
+  const dimsHTML = dims.map(d => {
+    const p = pct(d.score, d.max);
+    const clsName = clsHexClass(p);
+    return `
+      <div class="dim-block">
+        <div class="dim-head">
+          <div style="display:flex;gap:14px;align-items:center;flex:1">
+            <div class="hex-badge ${clsName}">${d.code}</div>
+            <div>
+              <div class="dim-name">${d.name}</div>
+              <div class="dim-cat">${d.desc}</div>
+            </div>
+          </div>
+          <div class="dim-score-wrap">
+            <div class="dim-score">${d.score}<span style="font-size:14px;color:#94a3b8">/${d.max}</span></div>
+            <span class="dim-badge ${clsClass(p)}">${cls(p)}</span>
+          </div>
+        </div>
+        <div class="dim-bar-labels"><span>Rendah</span><span>Sedang</span><span>Tinggi</span></div>
+        <div class="dim-bar-track">
+          <div class="dim-bar-fill" style="width:${p}%"></div>
+          <div class="dim-bar-marker" style="left:${p}%">${p.toFixed(0)}%</div>
+        </div>
+        <div class="dim-bar-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+      </div>
+    `;
+  }).join("");
+
+  const cta = buildSummary(dims, totalPct);
+
+  el("reportContainer").innerHTML = `
+    <div class="hero">
+      <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
+      <h2 class="hero-title">TPDK — Tes Penalaran Dunia Kerja</h2>
+      <p class="hero-sub">${escapeHtml(r.participantName || r.participantId)} • ${fmtDate(r.submittedAt)}</p>
+      <div class="overall-panel">
+        <div class="overall-stat"><div class="lbl">Total Score</div><div class="val">${total}<span class="unit">/${maxTotal}</span></div></div>
+        <div class="overall-stat"><div class="lbl">Persentase</div><div class="val">${totalPct.toFixed(1)}<span class="unit">%</span></div></div>
+        <div class="overall-stat"><div class="lbl">Kategori</div><div class="val" style="font-size:16px;margin-top:12px">${cls(totalPct)}</div></div>
+        <div class="overall-stat"><div class="lbl">Sumber</div><div class="val" style="font-size:14px;margin-top:14px">${r._source === "supabase" ? "☁ Supabase" : "📦 Local"}</div></div>
+      </div>
+    </div>
+
+    <!-- G-SCORE (SKOR KECERDASAN UMUM) -->
+    <div class="gscore-section">
+      <div class="gscore-grid">
+        <div class="gscore-value-wrap">
+          <div class="gscore-label">SKOR KECERDASAN UMUM</div>
+          <div class="gscore-value">${g.value}<small>/150</small></div>
+          <div class="gscore-category">${escapeHtml(g.category)}</div>
+          <div class="gscore-percentile">Persentil: ${escapeHtml(g.percentile)}</div>
+        </div>
+        <div class="gscore-info">
+          <h3>📌 Interpretasi Skor</h3>
+          <p>${escapeHtml(g.description)}</p>
+          <p style="margin-top:14px;font-size:13px;opacity:.85">
+            <strong>Skor ini adalah ESTIMASI kecerdasan umum</strong> berdasarkan tes penalaran dunia kerja, 
+            <strong>BUKAN diagnosis IQ klinis</strong>. Untuk diagnosis resmi, konsultasikan dengan psikolog berlisensi.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">📌 Ringkasan Profil</h3>
+      <p class="section-sub">Kekuatan, area pengembangan, dan rekomendasi berdasarkan hasil asesmen.</p>
+      ${cta}
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">📊 Profil Per Subtes</h3>
+      <p class="section-sub">Empat dimensi utama dengan skala 0–100% per subtes.</p>
+      <div class="grid-2" style="gap:14px">${dimsHTML}</div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">🕸 Radar Profil</h3>
+      <div class="chart-container"><canvas id="radarChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">📄 Detail Jawaban</h3>
+      <div style="overflow:auto;max-height:500px">
+        <table>
+          <thead><tr><th>#</th><th>Subtes</th><th>Tipe</th><th>Jawaban</th><th>Kunci</th><th>Status</th></tr></thead>
+          <tbody>
+            ${(r.answers || []).map((a, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${a.subtest}</td>
+                <td>${a.type}</td>
+                <td>${a.selected || "—"}</td>
+                <td>${a.correct}</td>
+                <td><span class="pill ${a.isCorrect ? 'p-completed' : 'p-bad'}">${a.isCorrect ? "BENAR" : "SALAH"}</span></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="disclaimer">
+      <span class="disclaimer-icon">⚠️</span>
+      <b>Disclaimer & Batasan Interpretasi:</b><br><br>
+      • Skor Kecerdasan Umum di atas adalah <b>ESTIMASI</b> berdasarkan hasil tes penalaran dunia kerja, <b>BUKAN diagnosis IQ klinis</b>.<br>
+      • Skor ini merupakan indikator kemampuan penalaran dalam konteks tugas terstruktur, bukan pengukuran kecerdasan menyeluruh.<br>
+      • Norma masih menggunakan distribusi referensi teoretis; <b>norma populasi final menunggu studi validasi</b> (N ≥ 200).<br>
+      • Untuk keputusan seleksi/penempatan strategis, diperlukan <b>konfirmasi melalui metode asesmen lain</b> (wawancara, kerja sampel, referensi).<br>
+      • Untuk diagnosis resmi kecerdasan, konsultasikan dengan <b>psikolog berlisensi</b>.
+    </div>
+  `;
+
+  requestAnimationFrame(() => renderRadar(dims));
+}
+
+function buildSummary(dims, totalPct){
+  const sorted = [...dims].sort((a,b) => pct(b.score,b.max) - pct(a.score,a.max));
+  const strengths = sorted.filter(d => pct(d.score,d.max) >= 70);
+  const develop = sorted.filter(d => pct(d.score,d.max) >= 40 && pct(d.score,d.max) < 70);
+  const risk = sorted.filter(d => pct(d.score,d.max) < 40);
+
+  let strengthHTML = "";
+  if(strengths.length){
+    strengthHTML = `<div class="cta-box green"><h4>✓ Kekuatan Utama</h4><ul>${strengths.slice(0,3).map(d => `<li><b>${d.name}</b> (${pct(d.score,d.max).toFixed(0)}%): ${shortNarrative(d.code, "high")}</li>`).join("")}</ul></div>`;
+  } else {
+    strengthHTML = `<div class="cta-box amber"><h4>ℹ Belum Ada Kekuatan Dominan</h4><p style="font-size:13px;line-height:1.7;margin:8px 0 0">Belum ada subtes dengan skor di atas 70%. Disarankan pengembangan menyeluruh pada semua aspek penalaran.</p></div>`;
+  }
+
+  let focusHTML = "";
+  if(risk.length){
+    focusHTML = `<div class="cta-box red"><h4>⚠ Area Perlu Perhatian</h4><ul>${risk.map(d => `<li><b>${d.name}</b> (${pct(d.score,d.max).toFixed(0)}%): ${shortNarrative(d.code, "low")}</li>`).join("")}</ul></div>`;
+  } else if(develop.length){
+    focusHTML = `<div class="cta-box amber"><h4>⚠ Area Pengembangan</h4><ul>${develop.slice(0,3).map(d => `<li><b>${d.name}</b> (${pct(d.score,d.max).toFixed(0)}%): ${shortNarrative(d.code, "mid")}</li>`).join("")}</ul></div>`;
+  } else {
+    focusHTML = `<div class="cta-box green"><h4>✓ Profil Merata</h4><p style="font-size:13px;line-height:1.7;margin:8px 0 0">Seluruh subtes berada pada kategori Kuat atau Sangat Kuat.</p></div>`;
+  }
+
+  return `
+    <div class="cta-summary">${strengthHTML}${focusHTML}</div>
+    <div class="insight" style="margin-top:16px">
+      <b>📈 Kesimpulan Umum</b>
+      <p style="margin:8px 0 0;font-size:13px;line-height:1.75">
+        Skor total <b>${totalPct.toFixed(1)}%</b> — kategori <b>${cls(totalPct)}</b>.
+        ${totalPct >= 70 ? "Kandidat menunjukkan kemampuan penalaran yang kuat di berbagai konteks dunia kerja." : totalPct >= 55 ? "Kandidat menunjukkan kemampuan penalaran yang cukup untuk peran profesional umum." : totalPct >= 40 ? "Kandidat memerlukan pengembangan pada beberapa aspek penalaran." : "Kandidat memerlukan pengembangan signifikan pada aspek penalaran dasar."}
+      </p>
+    </div>
+  `;
+}
+
+function shortNarrative(code, level){
+  const map = {
+    A: { high: "Logika verbal kuat; mampu menganalisis situasi kerja kompleks.", mid: "Logika verbal cukup; perlu penguatan pada analisis situasi.", low: "Logika verbal perlu dikembangkan." },
+    B: { high: "Kuantitatif kuat; mampu menganalisis angka bisnis dengan baik.", mid: "Kuantitatif cukup; perlu penguatan pada aritmatika bisnis.", low: "Kuantitatif perlu dikembangkan." },
+    C: { high: "Spasial kuat; mampu visualisasi ruang dan rotasi mental.", mid: "Spasial cukup; perlu latihan visualisasi.", low: "Spasial perlu dikembangkan." },
+    D: { high: "Logika praktis kuat; mampu analisis kasus dan pengambilan keputusan.", mid: "Logika praktis cukup; perlu penguatan analisis strategis.", low: "Logika praktis perlu dikembangkan." }
+  };
+  return (map[code] || {})[level] || "";
+}
+
+function renderRadar(dims){
+  const ctx = el("radarChart");
+  if(!ctx) return;
+  if(charts.radar) charts.radar.destroy();
+  charts.radar = new Chart(ctx, {
+    type: "radar",
+    data: {
+      labels: dims.map(d => d.name),
+      datasets: [{
+        label: "Skor Peserta",
+        data: dims.map(d => pct(d.score, d.max)),
+        borderColor: "#2563eb",
+        backgroundColor: "rgba(37,99,235,.18)",
+        pointBackgroundColor: "#2563eb",
+        pointRadius: 5
+      }, {
+        label: "Benchmark 60%",
+        data: [60, 60, 60, 60],
+        borderColor: "#94a3b8",
+        backgroundColor: "rgba(148,163,184,.08)",
+        borderDash: [4, 4],
+        pointRadius: 0
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } }, scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 25 } } } }
+  });
+}
+
+function exportCurrent(){
+  if(!currentResult) return alert("Pilih hasil dulu.");
+  const blob = new Blob([JSON.stringify(currentResult, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `TPDK_${currentResult.participantId}_${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function exportAll(){
+  if(!allResults.length) return alert("Belum ada data.");
+  const blob = new Blob([JSON.stringify(allResults, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `TPDK_all_${Date.now()}.json`; a.click();
+  URL.revokeObjectURL(url);
+}
+function clearAll(){
+  if(!confirm("Hapus SEMUA hasil TPDK dari localStorage?")) return;
+  const kept = JSON.parse(localStorage.getItem("talent_scope_results") || "[]").filter(x => x.resultType !== "TPDK");
+  localStorage.setItem("talent_scope_results", JSON.stringify(kept));
+  refreshList();
+}
+
+refreshList();
+console.log("[TPDK Report v2.0] Ready — with General Intelligence Score.");
+</script>
+
+<script>
+(function () {
+    "use strict";
+    var params = new URLSearchParams(window.location.search);
+    if (params.get("embed") === "1") {
+        document.querySelectorAll("header").forEach(function (el) { el.style.display = "none"; });
+        var resultSelect = document.getElementById("resultSelect");
+        if (resultSelect) {
+            var toolbarCard = resultSelect.closest(".card");
+            if (toolbarCard) toolbarCard.style.display = "none";
+        }
+        var wrap = document.querySelector(".wrap");
+        if (wrap) wrap.style.paddingTop = "0px";
+    }
+})();
+</script>
+</body>
+</html>

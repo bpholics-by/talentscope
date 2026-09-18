@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Login | TalentScope</title>
-
+<!-- ⚠️ WAJIB PALING ATAS -->
+<script src="js/config.js"></script>
 <style>
 *{box-sizing:border-box;}
 html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;}
@@ -169,11 +170,12 @@ function getSupabaseClient() {
        Gunakan URL dan ANON KEY project Anda
     ============================================ */
 
-    const SUPABASE_URL =
-        "https://nixmychfhsnsvymkuxtm.supabase.co";
+    // FIX: Baca dari config global
+const SUPABASE_URL = 
+    (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_URL) || "";
 
-    const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peG15Y2hmaHNuc3Z5bWt1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NzU0MzMsImV4cCI6MjEwMzA1MTQzM30.Ak9SMJkhwtTlo8zIcHha8uecF4ayz172zIwGbdliNm4";
+const SUPABASE_ANON_KEY = 
+    (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY) || "";
 
 
     /* ============================================
@@ -2483,17 +2485,39 @@ const {
 
                             try {
 
-                                const {
-                                    error: updateError
-                                } = await supabaseClient
+                                const loginNowISO = new Date().toISOString();
+
+const {
+    error: updateError
+} = await supabaseClient
     .from("participants")
     .update({
-        is_logged_in: true
+        is_logged_in: true,
+        login_at: loginNowISO,              // ← TAMBAH
+        last_login_at: loginNowISO,          // ← TAMBAH
+        logout_at: null,                     // ← Reset logout (login baru)
+        last_logout_at: null,                // ← Reset
+        raw_data: Object.assign(
+            {},
+            matchedParticipant.raw_data || {},
+            {
+                isLoggedIn: true,
+                loginAt: loginNowISO,
+                lastLoginAt: loginNowISO,
+                logoutAt: null,
+                lastLogoutAt: null,
+                onlineStatus: "Online",
+                currentActivity: "Online",
+                lastSeen: loginNowISO,
+                lastSeenAt: loginNowISO,
+                activityUpdatedAt: loginNowISO
+            }
+        )
     })
-                                    .eq(
-                                        "id",
-                                        matchedParticipant.id
-                                    );
+    .eq(
+        "id",
+        matchedParticipant.id
+    );
 
 
                                 if (updateError) {

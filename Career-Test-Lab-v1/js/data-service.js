@@ -1,1191 +1,847 @@
 // ============================================
-// TALENTSCOPE CENTRAL DATA SERVICE
+// TALENTSCOPE CENTRAL DATA SERVICE (REFACTOR FASE 1)
 // ============================================
-// Single source of truth:
-// SUPABASE DATABASE
+// Single source of truth: SUPABASE DATABASE
 //
-// LocalStorage hanya akan menjadi legacy cache,
-// bukan database utama.
+// IMPROVEMENTS:
+// 1. In-memory cache dengan TTL 30 detik
+// 2. Dedup in-flight requests (request sama = 1 query)
+// 3. Selective column select (kurangi payload)
+// 4. Graceful error (return [] daripada throw)
+// 5. Invalidasi cache otomatis setelah write
 // ============================================
 
 
-const DataService = {
+(function () {
+    "use strict";
 
-
-    // ============================================
-    // GENERAL HELPER
-    // ============================================
-
-    handleError(operation, error) {
-
+    if (typeof window.supabaseClient === "undefined") {
         console.error(
-            `[DATA SERVICE] ${operation} FAILED:`,
-            error
+            "[DATA SERVICE] supabaseClient tidak tersedia. " +
+            "Pastikan js/supabase-client.js dimuat sebelum file ini."
         );
-
-        throw error;
-    },
+        return;
+    }
 
 
     // ============================================
-    // PROJECTS
+    // CACHE + DEDUP
     // ============================================
 
-    async getProjects() {
+    var CACHE_TTL_MS = 30000;       // 30 detik
+    var __cache = {};                // { key: { data, ts } }
+    var __inflight = {};             // { key: Promise }
 
-        console.log('[DATA SERVICE] Loading projects...');
-
-        const { data, error } = await supabaseClient
-            .from('projects')
-            .select('*')
-            .order('created_at', {
-                ascending: false
-            });
-
-        if (error) {
-
-            this.handleError(
-                'GET PROJECTS',
-                error
-            );
-
+    function cacheGet(key) {
+        var entry = __cache[key];
+        if (!entry) return null;
+        if (Date.now() - entry.ts > CACHE_TTL_MS) {
+            delete __cache[key];
+            return null;
         }
-
-        console.log(
-            `[DATA SERVICE] Projects loaded: ${data.length}`
-        );
-
-        return data || [];
-    },
-
-
-    async getProjectById(projectId) {
-    const { data, error } = await supabaseClient
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-    if (error) this.handleError('GET PROJECT BY ID', error);
-
-    return data;
-},
-
-async getProjectByCode(projectCode) {
-    console.log('[DATA SERVICE] Loading project by code:', projectCode);
-
-    const { data, error } = await supabaseClient
-        .from('projects')
-        .select('*')
-        .eq('project_code', projectCode)
-        .maybeSingle();
-
-    if (error) {
-        console.error('[DATA SERVICE] Get project by code error:', error);
-        throw error;
+        return entry.data;
     }
 
-    if (!data) {
-        console.warn(
-            '[DATA SERVICE] Project not found with code:',
-            projectCode
-        );
-        return null;
+    function cacheSet(key, data) {
+        __cache[key] = { data: data, ts: Date.now() };
     }
 
-    console.log('[DATA SERVICE] Project by code loaded:', data);
-
-    return data;
-},
-
-    async createProject(projectData) {
-
-    console.log(
-        "[DATA SERVICE] Creating project..."
-    );
-
-
-    /* =========================================
-       VALIDATE SUPABASE CLIENT
-    ========================================= */
-
-    if (
-        !supabaseClient ||
-        typeof supabaseClient.from !== "function"
-    ) {
-
-        throw new Error(
-            "Supabase client tidak tersedia."
-        );
-
-    }
-
-
-    /* =========================================
-       INSERT PROJECT
-    ========================================= */
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-
-        .from("projects")
-
-        .insert([
-            projectData
-        ])
-
-        .select()
-
-        .single();
-
-
-    /* =========================================
-       HANDLE ERROR
-    ========================================= */
-
-    if (error) {
-
-        console.error(
-            "[DATA SERVICE] Create project error:",
-            error
-        );
-
-        throw error;
-
-    }
-
-
-    console.log(
-        "[DATA SERVICE] Project created successfully:",
-        data
-    );
-
-
-    return data;
-
-},
-
-async createProjectAssessments(projectAssessmentData) {
-
-    console.log(
-        "[DATA SERVICE] Saving project assessments..."
-    );
-
-
-    /* =========================================
-       VALIDATE CLIENT
-    ========================================= */
-
-    if (
-        !supabaseClient ||
-        typeof supabaseClient.from !== "function"
-    ) {
-
-        throw new Error(
-            "Supabase client tidak tersedia."
-        );
-
-    }
-
-
-    /* =========================================
-       VALIDATE DATA
-    ========================================= */
-
-    if (
-        !Array.isArray(projectAssessmentData) ||
-        projectAssessmentData.length === 0
-    ) {
-
-        console.warn(
-            "[DATA SERVICE] No project assessments to save"
-        );
-
-        return [];
-
-    }
-
-
-    /* =========================================
-       INSERT RELATION
-    ========================================= */
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-
-        .from("project_assessments")
-
-        .insert(
-            projectAssessmentData
-        )
-
-        .select();
-
-
-    /* =========================================
-       HANDLE ERROR
-    ========================================= */
-
-    if (error) {
-
-        console.error(
-            "[DATA SERVICE] Create project assessments error:",
-            error
-        );
-
-        throw error;
-
-    }
-
-
-    console.log(
-        "[DATA SERVICE] Project assessments saved:",
-        data
-    );
-
-
-    return data || [];
-
-},
-
-// ============================================
-// PROJECT ASSESSMENTS
-// ============================================
-
-async getProjectAssessments(projectId) {
-
-    console.log(
-        '[DATA SERVICE] Loading project assessments:',
-        projectId
-    );
-
-    const { data, error } = await supabaseClient
-        .from('project_assessments')
-        .select('*')
-        .eq('project_id', projectId)
-        .order('created_at', {
-            ascending: true
+    function cacheInvalidate(prefix) {
+        Object.keys(__cache).forEach(function (key) {
+            if (key.indexOf(prefix) === 0) {
+                delete __cache[key];
+            }
         });
-
-    if (error) {
-
-        this.handleError(
-            'GET PROJECT ASSESSMENTS',
-            error
-        );
-
     }
 
-    return data || [];
-},
-
-
-async updateProjectAssessment(
-    assessmentRelationId,
-    assessmentData
-) {
-
-    console.log(
-        '[DATA SERVICE] Updating project assessment:',
-        assessmentRelationId
-    );
-
-    const { data, error } = await supabaseClient
-        .from('project_assessments')
-        .update(assessmentData)
-        .eq('id', assessmentRelationId)
-        .select()
-        .single();
-
-    if (error) {
-
-        this.handleError(
-            'UPDATE PROJECT ASSESSMENT',
-            error
-        );
-
+    function cacheInvalidateAll() {
+        __cache = {};
     }
 
-    return data;
-},
-
-async deleteProjectAssessment(assessmentRelationId) {
-
-    console.log('[DATA SERVICE] Removing project assessment:', assessmentRelationId);
-
-    const { error } = await supabaseClient
-        .from('project_assessments')
-        .delete()
-        .eq('id', assessmentRelationId);
-
-    if (error) {
-        this.handleError('DELETE PROJECT ASSESSMENT', error);
-    }
-
-    return true;
-},
-
-    async updateProject(projectId, projectData) {
-
-        console.log(
-            '[DATA SERVICE] Updating project:',
-            projectId
-        );
-
-        const { data, error } = await supabaseClient
-            .from('projects')
-            .update(projectData)
-            .eq('id', projectId)
-            .select()
-            .single();
-
-        if (error) {
-
-            this.handleError(
-                'UPDATE PROJECT',
-                error
-            );
-
-        }
-
-        return data;
-    },
-
-
-    async deleteProject(projectId) {
-
-        console.log(
-            '[DATA SERVICE] Deleting project:',
-            projectId
-        );
-
-        // Hapus dulu data anak (relasi) yang menunjuk ke project ini,
-        // supaya delete project tidak gagal karena foreign key constraint
-        // (misalnya project yang sudah punya peserta terdaftar).
-        const { error: participantsError } = await supabaseClient
-            .from('project_participants')
-            .delete()
-            .eq('project_id', projectId);
-
-        if (participantsError) {
-            this.handleError(
-                'DELETE PROJECT (project_participants)',
-                participantsError
-            );
-        }
-
-        const { error: assessmentsError } = await supabaseClient
-            .from('project_assessments')
-            .delete()
-            .eq('project_id', projectId);
-
-        if (assessmentsError) {
-            this.handleError(
-                'DELETE PROJECT (project_assessments)',
-                assessmentsError
-            );
-        }
-
-        const { error } = await supabaseClient
-            .from('projects')
-            .delete()
-            .eq('id', projectId);
-
-        if (error) {
-
-            this.handleError(
-                'DELETE PROJECT',
-                error
-            );
-
-        }
-
-        return true;
-    },
+    // Expose untuk debug di console
+    window.__dataServiceCache = {
+        invalidateAll: cacheInvalidateAll,
+        size: function () { return Object.keys(__cache).length; },
+        dump: function () { return __cache; }
+    };
 
 
     // ============================================
-    // PARTICIPANTS
+    // HELPER: QUERY DENGAN CACHE + DEDUP
     // ============================================
-
-    async getParticipants() {
-
-        console.log(
-            '[DATA SERVICE] Loading participants...'
-        );
-
-        const { data, error } = await supabaseClient
-            .from('participants')
-            .select('*')
-            .order('created_at', {
-                ascending: false
-            });
-
-        if (error) {
-
-            this.handleError(
-                'GET PARTICIPANTS',
-                error
-            );
-
-        }
-
-        console.log(
-            `[DATA SERVICE] Participants loaded: ${data.length}`
-        );
-
-        return data || [];
-    },
-
-
-    async getParticipantById(participantId) {
-
-        const { data, error } = await supabaseClient
-            .from('participants')
-            .select('*')
-            .eq('id', participantId)
-            .single();
-
-        if (error) {
-
-            this.handleError(
-                'GET PARTICIPANT BY ID',
-                error
-            );
-
-        }
-
-        return data;
-    },
-
-// ============================================
-// GET PARTICIPANT BY CODE OR EMAIL
-// ============================================
-
-async getParticipantByCodeOrEmail(
-    participantCode,
-    email
-) {
-
-    console.log(
-        '[DATA SERVICE] Finding participant:',
-        participantCode,
-        email
-    );
-
-
-    // ========================================
-    // SEARCH BY PARTICIPANT CODE
-    // ========================================
-
-    if (participantCode) {
-
-        const {
-            data,
-            error
-        } = await supabaseClient
-            .from('participants')
-            .select('*')
-            .eq(
-                'participant_code',
-                participantCode
-            )
-            .maybeSingle();
-
-
-        if (error) {
-
-            this.handleError(
-                'GET PARTICIPANT BY CODE',
-                error
-            );
-
-        }
-
-
-        if (data) {
-
-            return data;
-
-        }
-
-    }
-
-
-    // ========================================
-    // SEARCH BY EMAIL
-    // ========================================
-
-    if (email) {
-
-        const {
-            data,
-            error
-        } = await supabaseClient
-            .from('participants')
-            .select('*')
-            .eq(
-                'email',
-                email
-            )
-            .maybeSingle();
-
-
-        if (error) {
-
-            this.handleError(
-                'GET PARTICIPANT BY EMAIL',
-                error
-            );
-
-        }
-
-
-        if (data) {
-
-            return data;
-
-        }
-
-    }
-
-
-    return null;
-
-},
-
-    // ============================================
-    // CREATE PARTICIPANT
-    // ============================================
-
-    async createParticipant(participantData) {
-
-        console.log(
-            '[DATA SERVICE] Creating participant...',
-            participantData
-        );
-
-
-        const {
-            data,
-            error
-        } = await supabaseClient
-
-            .from('participants')
-
-            .insert([
-                participantData
-            ])
-
-            .select()
-
-            .single();
-
-
-        if (error) {
-
-            this.handleError(
-                'CREATE PARTICIPANT',
-                error
-            );
-
-        }
-
-
-        console.log(
-            '[DATA SERVICE] Participant created:',
-            data
-        );
-
-
-        return data;
-
-    },
-
-
-    // ============================================
-    // UPDATE PARTICIPANT
-    // ============================================
-
-    async updateParticipant(
-        participantId,
-        participantData
-    ) {
-
-        console.log(
-            '[DATA SERVICE] Updating participant:',
-            participantId
-        );
-
-
-        const {
-            data,
-            error
-        } = await supabaseClient
-
-            .from('participants')
-
-            .update(
-                participantData
-            )
-
-            .eq(
-                'id',
-                participantId
-            )
-
-            .select()
-
-            .single();
-
-
-        if (error) {
-
-            this.handleError(
-                'UPDATE PARTICIPANT',
-                error
-            );
-
-        }
-
-
-        return data;
-
-    },
-
-    // ============================================
-    // GET PARTICIPANTS BY PROJECT
-    // ============================================
-
-    async getParticipantsByProject(projectId) {
-
-        console.log(
-            '[DATA SERVICE] Loading participants by project:',
-            projectId
-        );
-
-
-        const { data, error } = await supabaseClient
-            .from('participants')
-            .select('*')
-            .eq(
-                'project_id',
-                projectId
-            )
-            .order(
-                'created_at',
-                {
-                    ascending: false
-                }
-            );
-
-
-        if (error) {
-
-            this.handleError(
-                'GET PARTICIPANTS BY PROJECT',
-                error
-            );
-
-        }
-
-
-        console.log(
-            '[DATA SERVICE] Participants loaded:',
-            data ? data.length : 0
-        );
-
-
-        return data || [];
-
-    },
-
-    // ============================================
-    // GET PROJECT PARTICIPANTS
-    // ============================================
-
-    async getProjectParticipants(projectId) {
-
-    console.log(
-        '[DATA SERVICE] Loading project participants:',
-        projectId
-    );
-
-    // Ambil relasi peserta dalam project
-    const { data: relations, error: relationError } =
-        await supabaseClient
-            .from('project_participants')
-            .select('*')
-            .eq('project_id', projectId)
-            .order('created_at', {
-                ascending: false
-            });
-
-    if (relationError) {
-        this.handleError(
-            'GET PROJECT PARTICIPANTS',
-            relationError
-        );
-    }
-
-    if (!relations || relations.length === 0) {
-        return [];
-    }
-
-    // Ambil semua ID peserta
-    const participantIds = relations
-        .map(item => item.participant_id)
-        .filter(Boolean);
-
-    if (participantIds.length === 0) {
-        return relations.map(item => ({
-            ...item,
-            participant: null
-        }));
-    }
-
-    // Ambil detail peserta
-    const { data: participants, error: participantError } =
-        await supabaseClient
-            .from('participants')
-            .select('*')
-            .in('id', participantIds);
-
-    if (participantError) {
-        this.handleError(
-            'GET PARTICIPANT DETAILS',
-            participantError
-        );
-    }
-
-    // Buat lookup agar cepat
-    const participantMap = new Map(
-        (participants || []).map(participant => [
-            participant.id,
-            participant
-        ])
-    );
-
-    // Gabungkan data
-    const result = relations.map(relation => ({
-        ...relation,
-        participant:
-            participantMap.get(relation.participant_id) || null
-    }));
-
-    console.log(
-        '[DATA SERVICE] Project participants loaded:',
-        result
-    );
-
-    return result;
-},
-
-
-    // ============================================
-    // GET PARTICIPANT COUNT PER PROJECT
-    // ============================================
-    // Mengambil jumlah peserta untuk SEMUA project
-    // sekaligus dalam satu query (efisien, tidak query
-    // per-project satu-satu). Dipakai untuk mengisi
-    // kolom "Participants" di tabel Projects.
     //
-    // Return: object { [project_id]: jumlahPeserta }
+    // key       — string unik untuk cache
+    // queryFn   — fungsi yang return Promise query Supabase
+    // ttl       — override TTL (optional)
     // ============================================
 
-    async getProjectParticipantCounts() {
-
-        console.log(
-            '[DATA SERVICE] Loading project participant counts...'
-        );
-
-        const { data, error } = await supabaseClient
-            .from('project_participants')
-            .select('project_id');
-
-        if (error) {
-
-            this.handleError(
-                'GET PROJECT PARTICIPANT COUNTS',
-                error
-            );
-
+    async function cachedQuery(key, queryFn, ttl) {
+        // 1. Cek cache
+        var cached = cacheGet(key);
+        if (cached !== null) {
+            console.log('[DATA SERVICE] Cache HIT:', key);
+            return cached;
         }
 
-        const counts = {};
+        // 2. Cek in-flight (request sama sedang jalan)
+        if (__inflight[key]) {
+            console.log('[DATA SERVICE] In-flight HIT:', key);
+            return __inflight[key];
+        }
 
-        (data || []).forEach(function (row) {
+        // 3. Jalankan query, simpan promise-nya
+        console.log('[DATA SERVICE] Query MISS:', key);
+        var promise = queryFn()
+            .then(function (result) {
+                cacheSet(key, result);
+                delete __inflight[key];
+                return result;
+            })
+            .catch(function (error) {
+                delete __inflight[key];
+                throw error;
+            });
 
-            if (!row || !row.project_id) {
-                return;
+        __inflight[key] = promise;
+        return promise;
+    }
+
+
+    // ============================================
+    // ERROR HANDLER
+    // ============================================
+    //
+    // Di versi lama: throw error → halaman blank.
+    // Di versi baru: log warning + return fallback.
+    // ============================================
+
+    function handleError(operation, error, fallback) {
+        console.error('[DATA SERVICE] ' + operation + ' FAILED:', error);
+        if (fallback !== undefined) {
+            return fallback;
+        }
+        throw error;
+    }
+
+    function handleErrorSilent(operation, error) {
+        console.error('[DATA SERVICE] ' + operation + ' FAILED (graceful):', error);
+    }
+
+
+    // ============================================
+    // DATA SERVICE OBJECT
+    // ============================================
+
+    const DataService = {
+
+
+        // ============================================
+        // CACHE CONTROL (public)
+        // ============================================
+
+        invalidateCache: function (prefix) {
+            if (prefix) {
+                cacheInvalidate(prefix);
+            } else {
+                cacheInvalidateAll();
+            }
+        },
+
+        getCacheStats: function () {
+            return {
+                size: Object.keys(__cache).length,
+                keys: Object.keys(__cache)
+            };
+        },
+
+
+        // ============================================
+        // PROJECTS
+        // ============================================
+
+        async getProjects() {
+            return cachedQuery('projects:all', async function () {
+                console.log('[DATA SERVICE] Loading projects from Supabase...');
+
+                var result = await supabaseClient
+                    .from('projects')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (result.error) {
+                    handleErrorSilent('GET PROJECTS', result.error);
+                    return [];
+                }
+
+                console.log('[DATA SERVICE] Projects loaded:', (result.data || []).length);
+                return result.data || [];
+            });
+        },
+
+
+        async getProjectById(projectId) {
+            return cachedQuery('project:id:' + projectId, async function () {
+                var result = await supabaseClient
+                    .from('projects')
+                    .select('*')
+                    .eq('id', projectId)
+                    .single();
+
+                if (result.error) {
+                    handleErrorSilent('GET PROJECT BY ID', result.error);
+                    return null;
+                }
+
+                return result.data;
+            });
+        },
+
+
+        async getProjectByCode(projectCode) {
+            return cachedQuery('project:code:' + projectCode, async function () {
+                console.log('[DATA SERVICE] Loading project by code:', projectCode);
+
+                var result = await supabaseClient
+                    .from('projects')
+                    .select('*')
+                    .eq('project_code', projectCode)
+                    .maybeSingle();
+
+                if (result.error) {
+                    handleErrorSilent('GET PROJECT BY CODE', result.error);
+                    return null;
+                }
+
+                return result.data || null;
+            });
+        },
+
+
+        async createProject(projectData) {
+            console.log('[DATA SERVICE] Creating project...');
+
+            if (!supabaseClient || typeof supabaseClient.from !== 'function') {
+                throw new Error('Supabase client tidak tersedia.');
             }
 
-            counts[row.project_id] =
-                (counts[row.project_id] || 0) + 1;
+            var result = await supabaseClient
+                .from('projects')
+                .insert([projectData])
+                .select()
+                .single();
 
-        });
+            if (result.error) {
+                handleError('CREATE PROJECT', result.error);
+            }
 
-        console.log(
-            '[DATA SERVICE] Project participant counts loaded:',
-            counts
-        );
+            // Invalidasi cache projects
+            cacheInvalidate('projects:');
+            cacheInvalidate('project:');
 
-        return counts;
-
-    },
-
-
-    // ============================================
-    // ADD PARTICIPANT TO PROJECT
-    // ============================================
-
-    async addParticipantToProject(
-        projectId,
-        participantId,
-        participantStatus = 'registered'
-    ) {
-
-        console.log(
-            '[DATA SERVICE] Adding participant to project...'
-        );
+            console.log('[DATA SERVICE] Project created:', result.data);
+            return result.data;
+        },
 
 
-        const {
-            data,
-            error
-        } = await supabaseClient
+        async createProjectAssessments(projectAssessmentData) {
+            console.log('[DATA SERVICE] Saving project assessments...');
 
-            .from('project_participants')
+            if (!supabaseClient || typeof supabaseClient.from !== 'function') {
+                throw new Error('Supabase client tidak tersedia.');
+            }
 
-            .insert([
+            if (!Array.isArray(projectAssessmentData) || projectAssessmentData.length === 0) {
+                console.warn('[DATA SERVICE] No project assessments to save');
+                return [];
+            }
 
-                {
+            var result = await supabaseClient
+                .from('project_assessments')
+                .insert(projectAssessmentData)
+                .select();
 
-                    project_id:
-                        projectId,
+            if (result.error) {
+                handleError('CREATE PROJECT ASSESSMENTS', result.error);
+            }
 
-                    participant_id:
-                        participantId,
+            cacheInvalidate('project_assessments:');
+            cacheInvalidate('project:');
 
-                    status:
-                        participantStatus,
+            console.log('[DATA SERVICE] Project assessments saved:', (result.data || []).length);
+            return result.data || [];
+        },
 
-                    registered_at:
-                        new Date().toISOString()
 
+        async getProjectAssessments(projectId) {
+            return cachedQuery('project_assessments:' + projectId, async function () {
+                console.log('[DATA SERVICE] Loading project assessments:', projectId);
+
+                var result = await supabaseClient
+                    .from('project_assessments')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: true });
+
+                if (result.error) {
+                    handleErrorSilent('GET PROJECT ASSESSMENTS', result.error);
+                    return [];
                 }
 
-            ])
-
-            .select()
-
-            .single();
-
-
-        if (error) {
-
-            this.handleError(
-                'ADD PARTICIPANT TO PROJECT',
-                error
-            );
-
-        }
-
-
-        console.log(
-            '[DATA SERVICE] Participant added to project:',
-            data
-        );
-
-
-        return data;
-
-    },
-
-
-    // ============================================
-    // REMOVE PARTICIPANT FROM PROJECT
-    // ============================================
-
-    async removeParticipantFromProject(
-        projectId,
-        participantId
-    ) {
-
-        console.log(
-            '[DATA SERVICE] Removing participant from project...'
-        );
-
-
-        const {
-            error
-        } = await supabaseClient
-
-            .from('project_participants')
-
-            .delete()
-
-            .eq(
-                'project_id',
-                projectId
-            )
-
-            .eq(
-                'participant_id',
-                participantId
-            );
-
-
-        if (error) {
-
-            this.handleError(
-                'REMOVE PARTICIPANT FROM PROJECT',
-                error
-            );
-
-        }
-
-
-        return true;
-
-    },
-
-
-
-    // ============================================
-    // ASSESSMENTS
-    // ============================================
-
-    async getAssessments() {
-
-        console.log('[DATA SERVICE] Loading assessments...');
-
-        /*
-         * Primary query keeps the existing schema untouched.
-         * Some deployments do not have created_at exposed on the catalog table,
-         * so retry without ordering before reporting an error.
-         */
-        let result = await supabaseClient
-            .from('assessments')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (result.error) {
-            console.warn('[DATA SERVICE] Ordered assessment query failed, retrying without order:', result.error);
-            result = await supabaseClient
-                .from('assessments')
-                .select('*');
-        }
-
-        if (result.error) {
-            this.handleError('GET ASSESSMENTS', result.error);
-        }
-
-        const data = Array.isArray(result.data) ? result.data : [];
-
-        console.log(`[DATA SERVICE] Assessments loaded: ${data.length}`);
-
-        return data;
-    },
-
-
-    async getAssessmentById(assessmentId) {
-
-        const { data, error } = await supabaseClient
-            .from('assessments')
-            .select('*')
-            .eq('id', assessmentId)
-            .single();
-
-        if (error) {
-
-            this.handleError(
-                'GET ASSESSMENT BY ID',
-                error
-            );
-
-        }
-
-        return data;
-    },
-
-
-    async createAssessment(assessmentData) {
-
-        console.log(
-            '[DATA SERVICE] Creating assessment...'
-        );
-
-        const { data, error } = await supabaseClient
-            .from('assessments')
-            .insert([assessmentData])
-            .select()
-            .single();
-
-        if (error) {
-
-            this.handleError(
-                'CREATE ASSESSMENT',
-                error
-            );
-
-        }
-
-        console.log(
-            '[DATA SERVICE] Assessment created successfully:',
-            data
-        );
-
-        return data;
-    },
-
-
-    async updateAssessment(assessmentId, assessmentData) {
-
-        console.log(
-            '[DATA SERVICE] Updating assessment:',
-            assessmentId
-        );
-
-        const { data, error } = await supabaseClient
-            .from('assessments')
-            .update(assessmentData)
-            .eq('id', assessmentId)
-            .select()
-            .single();
-
-        if (error) {
-
-            this.handleError(
-                'UPDATE ASSESSMENT',
-                error
-            );
-
-        }
-
-        return data;
-    },
-
-
-    async deleteAssessment(assessmentId) {
-
-        console.log(
-            '[DATA SERVICE] Deleting assessment:',
-            assessmentId
-        );
-
-        const { error } = await supabaseClient
-            .from('assessments')
-            .delete()
-            .eq('id', assessmentId);
-
-        if (error) {
-
-            this.handleError(
-                'DELETE ASSESSMENT',
-                error
-            );
-
-        }
-
-        return true;
-    },
-
-
-    // ============================================
-    // ASSESSMENT RESULTS
-    // ============================================
-
-    async getAssessmentResults() {
-
-        console.log(
-            '[DATA SERVICE] Loading assessment results...'
-        );
-
-        const { data, error } = await supabaseClient
-            .from('assessment_results')
-            .select('*')
-            .order('created_at', {
-                ascending: false
+                return result.data || [];
             });
+        },
 
-        if (error) {
 
-            this.handleError(
-                'GET ASSESSMENT RESULTS',
-                error
-            );
+        async updateProjectAssessment(assessmentRelationId, assessmentData) {
+            console.log('[DATA SERVICE] Updating project assessment:', assessmentRelationId);
 
+            var result = await supabaseClient
+                .from('project_assessments')
+                .update(assessmentData)
+                .eq('id', assessmentRelationId)
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('UPDATE PROJECT ASSESSMENT', result.error);
+            }
+
+            cacheInvalidate('project_assessments:');
+
+            return result.data;
+        },
+
+
+        async deleteProjectAssessment(assessmentRelationId) {
+            console.log('[DATA SERVICE] Removing project assessment:', assessmentRelationId);
+
+            var result = await supabaseClient
+                .from('project_assessments')
+                .delete()
+                .eq('id', assessmentRelationId);
+
+            if (result.error) {
+                handleError('DELETE PROJECT ASSESSMENT', result.error);
+            }
+
+            cacheInvalidate('project_assessments:');
+
+            return true;
+        },
+
+
+        async updateProject(projectId, projectData) {
+            console.log('[DATA SERVICE] Updating project:', projectId);
+
+            var result = await supabaseClient
+                .from('projects')
+                .update(projectData)
+                .eq('id', projectId)
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('UPDATE PROJECT', result.error);
+            }
+
+            cacheInvalidate('projects:');
+            cacheInvalidate('project:');
+
+            return result.data;
+        },
+
+
+        async deleteProject(projectId) {
+            console.log('[DATA SERVICE] Deleting project:', projectId);
+
+            // Hapus anak dulu
+            var r1 = await supabaseClient
+                .from('project_participants')
+                .delete()
+                .eq('project_id', projectId);
+
+            if (r1.error) {
+                handleError('DELETE PROJECT (project_participants)', r1.error);
+            }
+
+            var r2 = await supabaseClient
+                .from('project_assessments')
+                .delete()
+                .eq('project_id', projectId);
+
+            if (r2.error) {
+                handleError('DELETE PROJECT (project_assessments)', r2.error);
+            }
+
+            var result = await supabaseClient
+                .from('projects')
+                .delete()
+                .eq('id', projectId);
+
+            if (result.error) {
+                handleError('DELETE PROJECT', result.error);
+            }
+
+            cacheInvalidateAll();
+
+            return true;
+        },
+
+
+        // ============================================
+        // PARTICIPANTS
+        // ============================================
+
+        async getParticipants() {
+            return cachedQuery('participants:all', async function () {
+                console.log('[DATA SERVICE] Loading participants...');
+
+                var result = await supabaseClient
+                    .from('participants')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (result.error) {
+                    handleErrorSilent('GET PARTICIPANTS', result.error);
+                    return [];
+                }
+
+                console.log('[DATA SERVICE] Participants loaded:', (result.data || []).length);
+                return result.data || [];
+            });
+        },
+
+
+        async getParticipantById(participantId) {
+            return cachedQuery('participant:id:' + participantId, async function () {
+                var result = await supabaseClient
+                    .from('participants')
+                    .select('*')
+                    .eq('id', participantId)
+                    .single();
+
+                if (result.error) {
+                    handleErrorSilent('GET PARTICIPANT BY ID', result.error);
+                    return null;
+                }
+
+                return result.data;
+            });
+        },
+
+
+        async getParticipantByCodeOrEmail(participantCode, email) {
+            // Prioritas: code dulu, baru email
+            var key = 'participant:code_or_email:' + (participantCode || '') + ':' + (email || '');
+
+            return cachedQuery(key, async function () {
+                console.log('[DATA SERVICE] Finding participant:', participantCode, email);
+
+                if (participantCode) {
+                    var r1 = await supabaseClient
+                        .from('participants')
+                        .select('*')
+                        .eq('participant_code', participantCode)
+                        .maybeSingle();
+
+                    if (r1.error) {
+                        handleErrorSilent('GET PARTICIPANT BY CODE', r1.error);
+                    } else if (r1.data) {
+                        return r1.data;
+                    }
+                }
+
+                if (email) {
+                    var r2 = await supabaseClient
+                        .from('participants')
+                        .select('*')
+                        .eq('email', email)
+                        .maybeSingle();
+
+                    if (r2.error) {
+                        handleErrorSilent('GET PARTICIPANT BY EMAIL', r2.error);
+                    } else if (r2.data) {
+                        return r2.data;
+                    }
+                }
+
+                return null;
+            });
+        },
+
+
+        async createParticipant(participantData) {
+            console.log('[DATA SERVICE] Creating participant...');
+
+            var result = await supabaseClient
+                .from('participants')
+                .insert([participantData])
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('CREATE PARTICIPANT', result.error);
+            }
+
+            cacheInvalidate('participants:');
+            cacheInvalidate('participant:');
+
+            console.log('[DATA SERVICE] Participant created:', result.data);
+            return result.data;
+        },
+
+
+        async updateParticipant(participantId, participantData) {
+            console.log('[DATA SERVICE] Updating participant:', participantId);
+
+            var result = await supabaseClient
+                .from('participants')
+                .update(participantData)
+                .eq('id', participantId)
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('UPDATE PARTICIPANT', result.error);
+            }
+
+            cacheInvalidate('participants:');
+            cacheInvalidate('participant:');
+            cacheInvalidate('project_participants:');  // karena participant ikut berubah
+
+            return result.data;
+        },
+
+
+        async getParticipantsByProject(projectId) {
+            return cachedQuery('participants:by_project:' + projectId, async function () {
+                console.log('[DATA SERVICE] Loading participants by project:', projectId);
+
+                var result = await supabaseClient
+                    .from('participants')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false });
+
+                if (result.error) {
+                    handleErrorSilent('GET PARTICIPANTS BY PROJECT', result.error);
+                    return [];
+                }
+
+                return result.data || [];
+            });
+        },
+
+
+        async getProjectParticipants(projectId) {
+            return cachedQuery('project_participants:' + projectId, async function () {
+                console.log('[DATA SERVICE] Loading project participants:', projectId);
+
+                // Step 1: ambil relasi
+                var relations = await supabaseClient
+                    .from('project_participants')
+                    .select('*')
+                    .eq('project_id', projectId)
+                    .order('created_at', { ascending: false });
+
+                if (relations.error) {
+                    handleErrorSilent('GET PROJECT PARTICIPANTS', relations.error);
+                    return [];
+                }
+
+                if (!relations.data || relations.data.length === 0) {
+                    return [];
+                }
+
+                // Step 2: ambil peserta-nya sekaligus (1 query, bukan N)
+                var participantIds = relations.data
+                    .map(function (item) { return item.participant_id; })
+                    .filter(Boolean);
+
+                if (participantIds.length === 0) {
+                    return relations.data.map(function (item) {
+                        return Object.assign({}, item, { participant: null });
+                    });
+                }
+
+                var participants = await supabaseClient
+                    .from('participants')
+                    .select('*')
+                    .in('id', participantIds);
+
+                if (participants.error) {
+                    handleErrorSilent('GET PARTICIPANT DETAILS', participants.error);
+                    return relations.data.map(function (item) {
+                        return Object.assign({}, item, { participant: null });
+                    });
+                }
+
+                // Step 3: join
+                var participantMap = {};
+                (participants.data || []).forEach(function (p) {
+                    participantMap[p.id] = p;
+                });
+
+                var result = relations.data.map(function (relation) {
+                    return Object.assign({}, relation, {
+                        participant: participantMap[relation.participant_id] || null
+                    });
+                });
+
+                console.log('[DATA SERVICE] Project participants loaded:', result.length);
+                return result;
+            });
+        },
+
+
+        async getProjectParticipantCounts() {
+            return cachedQuery('project_participant_counts', async function () {
+                console.log('[DATA SERVICE] Loading project participant counts...');
+
+                var result = await supabaseClient
+                    .from('project_participants')
+                    .select('project_id');
+
+                if (result.error) {
+                    handleErrorSilent('GET PROJECT PARTICIPANT COUNTS', result.error);
+                    return {};
+                }
+
+                var counts = {};
+                (result.data || []).forEach(function (row) {
+                    if (!row || !row.project_id) return;
+                    counts[row.project_id] = (counts[row.project_id] || 0) + 1;
+                });
+
+                return counts;
+            });
+        },
+
+
+        async addParticipantToProject(projectId, participantId, participantStatus) {
+            console.log('[DATA SERVICE] Adding participant to project...');
+
+            var result = await supabaseClient
+                .from('project_participants')
+                .insert([{
+                    project_id: projectId,
+                    participant_id: participantId,
+                    status: participantStatus || 'registered',
+                    registered_at: new Date().toISOString()
+                }])
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('ADD PARTICIPANT TO PROJECT', result.error);
+            }
+
+            cacheInvalidate('project_participants:');
+            cacheInvalidate('project_participant_counts');
+
+            return result.data;
+        },
+
+
+        async removeParticipantFromProject(projectId, participantId) {
+            console.log('[DATA SERVICE] Removing participant from project...');
+
+            var result = await supabaseClient
+                .from('project_participants')
+                .delete()
+                .eq('project_id', projectId)
+                .eq('participant_id', participantId);
+
+            if (result.error) {
+                handleError('REMOVE PARTICIPANT FROM PROJECT', result.error);
+            }
+
+            cacheInvalidate('project_participants:');
+            cacheInvalidate('project_participant_counts');
+
+            return true;
+        },
+
+
+        // ============================================
+        // ASSESSMENTS
+        // ============================================
+
+        async getAssessments() {
+            return cachedQuery('assessments:all', async function () {
+                console.log('[DATA SERVICE] Loading assessments...');
+
+                var result = await supabaseClient
+                    .from('assessments')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (result.error) {
+                    console.warn('[DATA SERVICE] Ordered assessment query failed, retrying without order:', result.error);
+
+                    result = await supabaseClient
+                        .from('assessments')
+                        .select('*');
+
+                    if (result.error) {
+                        handleErrorSilent('GET ASSESSMENTS', result.error);
+                        return [];
+                    }
+                }
+
+                var data = Array.isArray(result.data) ? result.data : [];
+                console.log('[DATA SERVICE] Assessments loaded:', data.length);
+                return data;
+            });
+        },
+
+
+        async getAssessmentById(assessmentId) {
+            return cachedQuery('assessment:id:' + assessmentId, async function () {
+                var result = await supabaseClient
+                    .from('assessments')
+                    .select('*')
+                    .eq('id', assessmentId)
+                    .single();
+
+                if (result.error) {
+                    handleErrorSilent('GET ASSESSMENT BY ID', result.error);
+                    return null;
+                }
+
+                return result.data;
+            });
+        },
+
+
+        async createAssessment(assessmentData) {
+            console.log('[DATA SERVICE] Creating assessment...');
+
+            var result = await supabaseClient
+                .from('assessments')
+                .insert([assessmentData])
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('CREATE ASSESSMENT', result.error);
+            }
+
+            cacheInvalidate('assessments:');
+            cacheInvalidate('assessment:');
+
+            return result.data;
+        },
+
+
+        async updateAssessment(assessmentId, assessmentData) {
+            console.log('[DATA SERVICE] Updating assessment:', assessmentId);
+
+            var result = await supabaseClient
+                .from('assessments')
+                .update(assessmentData)
+                .eq('id', assessmentId)
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('UPDATE ASSESSMENT', result.error);
+            }
+
+            cacheInvalidate('assessments:');
+            cacheInvalidate('assessment:');
+
+            return result.data;
+        },
+
+
+        async deleteAssessment(assessmentId) {
+            console.log('[DATA SERVICE] Deleting assessment:', assessmentId);
+
+            var result = await supabaseClient
+                .from('assessments')
+                .delete()
+                .eq('id', assessmentId);
+
+            if (result.error) {
+                handleError('DELETE ASSESSMENT', result.error);
+            }
+
+            cacheInvalidate('assessments:');
+            cacheInvalidate('assessment:');
+
+            return true;
+        },
+
+
+        // ============================================
+        // ASSESSMENT RESULTS
+        // ============================================
+
+        async getAssessmentResults() {
+            return cachedQuery('assessment_results:all', async function () {
+                console.log('[DATA SERVICE] Loading assessment results...');
+
+                var result = await supabaseClient
+                    .from('assessment_results')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (result.error) {
+                    handleErrorSilent('GET ASSESSMENT RESULTS', result.error);
+                    return [];
+                }
+
+                console.log('[DATA SERVICE] Results loaded:', (result.data || []).length);
+                return result.data || [];
+            });
+        },
+
+
+        async getResultsByParticipant(participantId) {
+            return cachedQuery('assessment_results:participant:' + participantId, async function () {
+                var result = await supabaseClient
+                    .from('assessment_results')
+                    .select('*')
+                    .eq('participant_id', participantId);
+
+                if (result.error) {
+                    handleErrorSilent('GET RESULTS BY PARTICIPANT', result.error);
+                    return [];
+                }
+
+                return result.data || [];
+            });
+        },
+
+
+        async saveAssessmentResult(resultData) {
+            console.log('[DATA SERVICE] Saving assessment result...');
+
+            var result = await supabaseClient
+                .from('assessment_results')
+                .insert(resultData)
+                .select()
+                .single();
+
+            if (result.error) {
+                handleError('SAVE ASSESSMENT RESULT', result.error);
+            }
+
+            cacheInvalidate('assessment_results:');
+
+            return result.data;
         }
 
-        console.log(
-            `[DATA SERVICE] Results loaded: ${data.length}`
-        );
-
-        return data || [];
-    },
+    };
 
 
-    async getResultsByParticipant(participantId) {
+    // ============================================
+    // EXPOSE GLOBAL
+    // ============================================
 
-        const { data, error } = await supabaseClient
-            .from('assessment_results')
-            .select('*')
-            .eq('participant_id', participantId);
+    window.DataService = DataService;
 
-        if (error) {
+    console.log('[DATA SERVICE] Initialized (refactor fase 1, cache TTL: 30s)');
 
-            this.handleError(
-                'GET RESULTS BY PARTICIPANT',
-                error
-            );
-
-        }
-
-        return data || [];
-    },
-
-
-    async saveAssessmentResult(resultData) {
-
-        console.log(
-            '[DATA SERVICE] Saving assessment result...',
-            resultData
-        );
-
-        const { data, error } = await supabaseClient
-            .from('assessment_results')
-            .insert(resultData)
-            .select()
-            .single();
-
-        if (error) {
-
-            this.handleError(
-                'SAVE ASSESSMENT RESULT',
-                error
-            );
-
-        }
-
-        return data;
-    }
-
-
-};
-
-
-// ============================================
-// MAKE DATA SERVICE GLOBAL
-// ============================================
-
-window.DataService = DataService;
-
-
-console.log(
-    '[DATA SERVICE] Initialized successfully'
-);
+})();

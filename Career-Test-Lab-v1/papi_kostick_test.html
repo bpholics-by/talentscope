@@ -2,12 +2,18 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <script>
+    // FIX: Matikan auto-sync di halaman tes — hemat egress
+    window.__TS_DISABLE_AUTO_SYNC = true;
+</script>
     <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
-    <script src="js/ts-supabase-sync.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/tab-switch-warning.js"></script>
     <!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/data-service.js"></script>
+    <script src="js/ts-supabase-sync.js"></script>
     <script src="js/participant-activity.js"></script>
     <script>
         if (typeof ParticipantActivity !== "undefined") {
@@ -1497,7 +1503,12 @@ function setPapiOffline(
         const PAPI_ANSWERS_KEY = `${papiStatePrefix}_answers`;
         const PAPI_TIME_KEY = `${papiStatePrefix}_time`;
         const PAPI_SUBMITTED_KEY = `${papiStatePrefix}_submitted`;
-        const PAPI_RESULT_KEY = `papi_result_${projId}_${partId}_${assessmentIndex}`;
+        /* ==========================================================
+   FIX UUID: Ambil assessmentId dari URL
+   ========================================================== */
+const assessmentIdFromUrl = String(urlParams.get("assessmentId") || "").trim();
+const resultKeySuffix = assessmentIdFromUrl || String(assessmentIndex);
+        const PAPI_RESULT_KEY = `papi_result_${projId}_${partId}_${resultKeySuffix}`;
 
         let currentQuestion = 0;
         const totalQuestions = papiItems.length;
@@ -1661,6 +1672,16 @@ window.addEventListener(
         document.addEventListener(
     "DOMContentLoaded",
     () => {
+
+// ==========================================================
+            // PATCH: Init warning pindah tab (PAPI)
+            // ==========================================================
+            if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
+                window.TabSwitchWarning.init({ context: "PAPI" });
+            }
+
+            loadParticipantInfo();
+            renderQuestions();
 
         loadParticipantInfo();
 
@@ -2263,6 +2284,7 @@ window.addEventListener(
                 projectId: projId,
                 participantId: partId,
                 assessmentIndex: Number(assessmentIndex),
+                assessmentId: assessmentIdFromUrl,
                 assessmentCode: assessmentCode,
 
                 peserta:
@@ -2286,15 +2308,35 @@ window.addEventListener(
                 scoringVersion: "PAPI-KOSTICK-TABLE-V3"
             };
 
-            localStorage.setItem(
-                PAPI_RESULT_KEY,
-                JSON.stringify(resultData)
-            );
+            /* ==========================================================
+   FIX: Simpan dengan UUID + index (dual-write)
+   ========================================================== */
+if (assessmentIdFromUrl) {
+    localStorage.setItem(
+        `papi_result_${projId}_${partId}_${assessmentIdFromUrl}`,
+        JSON.stringify(resultData)
+    );
+    localStorage.setItem(
+        `assessment_result_v3_${projId}_${partId}_${assessmentIdFromUrl}`,
+        JSON.stringify(resultData)
+    );
+    console.log("[PAPI] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+}
 
-            localStorage.setItem(
-                `assessment_result_${projId}_${partId}_${assessmentIndex}`,
-                JSON.stringify(resultData)
-            );
+localStorage.setItem(
+    PAPI_RESULT_KEY,
+    JSON.stringify(resultData)
+);
+
+localStorage.setItem(
+    `assessment_result_${projId}_${partId}_${assessmentIndex}`,
+    JSON.stringify(resultData)
+);
+
+localStorage.setItem(
+    `assessment_result_v3_${projId}_${partId}_${assessmentIndex}`,
+    JSON.stringify(resultData)
+);
 
             const allResults = JSON.parse(
                 localStorage.getItem("talent_scope_results") || "[]"
@@ -2326,6 +2368,37 @@ window.addEventListener(
             );
 
             localStorage.removeItem("papi_submitted");
+
+// ==========================================================
+// FIX: Sync PAPI ke Supabase
+// ==========================================================
+try {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === "function") {
+        const participantName = participant?.name || 
+                               document.getElementById('participant-name')?.textContent || '';
+        
+        sb.from("papi_results").upsert({
+            project_id: projId,
+            participant_id: partId,
+            assessment_index: Number(assessmentIndex),
+            assessment_code: assessmentCode,
+            assessment_name: "PAPI Kostick",
+            participant_name: participantName,
+            result_type: "PAPI",
+            scores: scores,
+            raw_data: userAnswers,
+            submitted_at: submittedAt
+        }, {
+            onConflict: "project_id,participant_id,assessment_index,assessment_code"
+        }).then(({ error }) => {
+            if (error) console.error("[PAPI] Supabase sync error:", error);
+            else console.log("[PAPI] ✓ Tersinkron ke Supabase (papi_results)");
+        });
+    }
+} catch (err) {
+    console.warn("[PAPI] Gagal sync Supabase:", err);
+}
 
 /* ==========================================
    CATAT TES PAPI SELESAI
@@ -2827,5 +2900,6 @@ function loadParticipantInfo() {
 
 }
 </script>
+
 </body>
 </html>

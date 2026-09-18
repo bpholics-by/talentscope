@@ -1,215 +1,229 @@
 // ============================================
-// SUPABASE CLIENT
-// Centralized Supabase Connection
+// SUPABASE CLIENT (REFACTOR FASE 1)
+// Centralized Supabase Connection + Resilience
+// ============================================
+//
+// IMPROVEMENTS:
+// 1. fetchWithTimeout()   — request di-abort kalau > 15 detik
+// 2. retryWithBackoff()   — auto-retry 3× dengan exponential backoff
+// 3. Custom fetch di client — semua request otomatis pakai timeout
+// 4. Compatibility check  — error jelas kalau library belum load
 // ============================================
 
-// Pastikan library Supabase sudah dimuat sebelum file ini dijalankan.
-// Contoh di HTML:
-// <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+(function () {
+    "use strict";
 
-// ============================================
-// SUPABASE CONFIGURATION
-// ============================================
+    // ============================================
+    // CONFIGURATION
+    // ============================================
 
-// GANTI dengan Project URL Supabase Anda
-const SUPABASE_URL = 'https://nixmychfhsnsvymkuxtm.supabase.co';
+    // FIX: Baca dari config global
+var SUPABASE_URL = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_URL) || '';
+var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY) || '';
 
-// GANTI dengan Supabase ANON KEY Anda
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peG15Y2hmaHNuc3Z5bWt1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NzU0MzMsImV4cCI6MjEwMzA1MTQzM30.Ak9SMJkhwtTlo8zIcHha8uecF4ayz172zIwGbdliNm4';
+// Validasi
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error("[SUPABASE] Config belum diisi! Buka js/config.js");
+}
 
-
-// ============================================
-// CREATE SUPABASE CLIENT
-// ============================================
-
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);
+    var REQUEST_TIMEOUT_MS = 15000;   // 15 detik
+    var MAX_RETRIES = 3;
+    var RETRY_BASE_DELAY_MS = 500;    // 500ms, 1s, 2s
 
 
-// ============================================
-// CONNECTION TEST
-// ============================================
+    // ============================================
+    // COMPATIBILITY CHECK
+    // ============================================
 
-async function testSupabaseConnection() {
+    if (!window.supabase || typeof window.supabase.createClient !== "function") {
+        console.error(
+            "[SUPABASE] Library @supabase/supabase-js belum dimuat. " +
+            "Pastikan <script src=\"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2\"> " +
+            "dimuat SEBELUM file ini."
+        );
+        return;
+    }
 
-    try {
 
-        const { data, error } = await supabaseClient
-            .from('projects')
-            .select('id')
-            .limit(1);
+    // ============================================
+    // FETCH WITH TIMEOUT
+    // ============================================
+    //
+    // Bungkus fetch() dengan AbortController supaya
+    // request yang hang > REQUEST_TIMEOUT_MS otomatis
+    // di-abort, tidak menggantung selamanya.
+    // ============================================
 
+    function fetchWithTimeout(input, init) {
+        init = init || {};
+
+        // Kalau caller sudah punya signal sendiri, hormati.
+        if (init.signal) {
+            return fetch(input, init);
+        }
+
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function () {
+            controller.abort();
+        }, REQUEST_TIMEOUT_MS);
+
+        init.signal = controller.signal;
+
+        return fetch(input, init).then(
+            function (response) {
+                clearTimeout(timeoutId);
+                return response;
+            },
+            function (error) {
+                clearTimeout(timeoutId);
+
+                // Custom message untuk AbortError
+                if (error && error.name === "AbortError") {
+                    var timeoutErr = new Error(
+                        "[SUPABASE] Request timeout setelah " +
+                        REQUEST_TIMEOUT_MS + "ms"
+                    );
+                    timeoutErr.name = "TimeoutError";
+                    timeoutErr.isTimeout = true;
+                    throw timeoutErr;
+                }
+
+                throw error;
+            }
+        );
+    }
+
+
+    // ============================================
+    // RETRY WITH BACKOFF
+    // ============================================
+    //
+    // Bungkus fetch dengan retry otomatis untuk error
+    // network / 5xx / 429 (rate limit). Tidak retry
+    // untuk 4xx (client error — retry tidak akan berhasil).
+    // ============================================
+
+    function shouldRetry(response, error) {
+        // Error network / timeout → retry
         if (error) {
-            console.error(
-                '[SUPABASE] Connection failed:',
-                error
-            );
-
+            if (error.isTimeout) return true;
+            // Network error biasanya TypeError: Failed to fetch
+            if (error.name === "TypeError") return true;
             return false;
         }
 
-        console.log(
-            '[SUPABASE] Connection successful'
-        );
-
-        return true;
-
-    } catch (error) {
-
-        console.error(
-            '[SUPABASE] Unexpected connection error:',
-            error
-        );
-
+        // Response error → cek status
+        if (!response) return false;
+        if (response.status === 429) return true;   // Rate limit
+        if (response.status >= 500) return true;   // Server error
         return false;
     }
-}
 
+    function fetchWithRetry(input, init) {
+        var attempt = 0;
 
-// ============================================
-// GLOBAL AVAILABILITY CHECK
-// ============================================
+        function tryOnce() {
+            attempt++;
 
-window.supabaseClient = supabaseClient;
-
-console.log(
-    '[SUPABASE] Client initialized successfully'
-);
-// ============================================
-// TEST READ SUPABASE DATA
-// ============================================
-
-async function testSupabaseData() {
-
-    try {
-
-        console.log('====================================');
-        console.log('[SUPABASE TEST] Starting data test...');
-        console.log('====================================');
-
-
-        // TEST PROJECTS
-        const { data: projects, error: projectsError } =
-            await supabaseClient
-                .from('projects')
-                .select('*');
-
-        if (projectsError) {
-            console.error(
-                '[PROJECTS ERROR]',
-                projectsError
-            );
-        } else {
-            console.log(
-                '[PROJECTS SUCCESS]',
-                projects
-            );
-
-            console.log(
-                '[PROJECTS COUNT]',
-                projects.length
+            return fetchWithTimeout(input, init).then(
+                function (response) {
+                    if (shouldRetry(response, null) && attempt < MAX_RETRIES) {
+                        var delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+                        console.warn(
+                            "[SUPABASE] Request gagal (status " + response.status +
+                            "), retry " + attempt + "/" + MAX_RETRIES +
+                            " dalam " + delay + "ms"
+                        );
+                        return new Promise(function (resolve) {
+                            setTimeout(resolve, delay);
+                        }).then(tryOnce);
+                    }
+                    return response;
+                },
+                function (error) {
+                    if (shouldRetry(null, error) && attempt < MAX_RETRIES) {
+                        var delay = RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+                        console.warn(
+                            "[SUPABASE] Request gagal (" +
+                            (error && error.message || "unknown") +
+                            "), retry " + attempt + "/" + MAX_RETRIES +
+                            " dalam " + delay + "ms"
+                        );
+                        return new Promise(function (resolve) {
+                            setTimeout(resolve, delay);
+                        }).then(tryOnce);
+                    }
+                    throw error;
+                }
             );
         }
 
-
-        // TEST PARTICIPANTS
-        const { data: participants, error: participantsError } =
-            await supabaseClient
-                .from('participants')
-                .select('*');
-
-        if (participantsError) {
-            console.error(
-                '[PARTICIPANTS ERROR]',
-                participantsError
-            );
-        } else {
-            console.log(
-                '[PARTICIPANTS SUCCESS]',
-                participants
-            );
-
-            console.log(
-                '[PARTICIPANTS COUNT]',
-                participants.length
-            );
-        }
-
-
-        // TEST ASSESSMENTS
-        const { data: assessments, error: assessmentsError } =
-            await supabaseClient
-                .from('assessments')
-                .select('*');
-
-        if (assessmentsError) {
-            console.error(
-                '[ASSESSMENTS ERROR]',
-                assessmentsError
-            );
-        } else {
-            console.log(
-                '[ASSESSMENTS SUCCESS]',
-                assessments
-            );
-
-            console.log(
-                '[ASSESSMENTS COUNT]',
-                assessments.length
-            );
-        }
-
-
-        // TEST ASSESSMENT RESULTS
-        const { data: results, error: resultsError } =
-            await supabaseClient
-                .from('assessment_results')
-                .select('*');
-
-        if (resultsError) {
-            console.error(
-                '[RESULTS ERROR]',
-                resultsError
-            );
-        } else {
-            console.log(
-                '[RESULTS SUCCESS]',
-                results
-            );
-
-            console.log(
-                '[RESULTS COUNT]',
-                results.length
-            );
-        }
-
-
-        console.log('====================================');
-        console.log('[SUPABASE TEST] Finished');
-        console.log('====================================');
-
-
-        return {
-            projects,
-            participants,
-            assessments,
-            results
-        };
-
-    } catch (error) {
-
-        console.error(
-            '[SUPABASE TEST] Unexpected error:',
-            error
-        );
-
+        return tryOnce();
     }
 
-}
+
+    // ============================================
+    // CREATE SUPABASE CLIENT
+    // ============================================
+    //
+    // Semua request lewat custom fetch (timeout + retry).
+    // ============================================
+
+    var supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY,
+        {
+            auth: {
+                persistSession: false,  // Kita tidak pakai Supabase Auth
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            },
+            global: {
+                headers: {
+                    "x-application-name": "TalentScope"
+                },
+                fetch: fetchWithRetry  // ← custom fetch
+            }
+        }
+    );
 
 
-// Make available globally for browser console
+    // ============================================
+    // CONNECTION TEST
+    // ============================================
 
-window.testSupabaseData = testSupabaseData;
+    async function testSupabaseConnection() {
+        try {
+            var result = await supabaseClient
+                .from('projects')
+                .select('id')
+                .limit(1);
+
+            if (result.error) {
+                console.error('[SUPABASE] Connection failed:', result.error);
+                return false;
+            }
+
+            console.log('[SUPABASE] Connection successful');
+            return true;
+        } catch (error) {
+            console.error('[SUPABASE] Unexpected connection error:', error);
+            return false;
+        }
+    }
+
+
+    // ============================================
+    // GLOBAL AVAILABILITY
+    // ============================================
+
+    window.supabaseClient = supabaseClient;
+    window.testSupabaseConnection = testSupabaseConnection;
+    window.fetchWithTimeout = fetchWithTimeout;   // expose untuk debug
+
+    console.log(
+        '[SUPABASE] Client initialized (timeout: ' +
+        REQUEST_TIMEOUT_MS + 'ms, retry: ' + MAX_RETRIES + '×)'
+    );
+
+})();

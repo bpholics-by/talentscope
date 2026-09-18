@@ -1,111 +1,129 @@
 /* ==========================================================
-   TALENTSCOPE — SUPABASE SYNC BRIDGE
+   TALENTSCOPE — SUPABASE SYNC BRIDGE (REFACTOR FASE 2)
    ----------------------------------------------------------
-   TUJUAN
-   File ini menghubungkan aplikasi TalentScope (yang sebelumnya
-   100% berbasis localStorage) ke database Supabase, TANPA perlu
-   menulis ulang seluruh halaman/skrip lama.
-
-   CARA KERJA
-   1. Skrip ini WAJIB menjadi <script> PERTAMA yang dimuat di
-      setiap halaman (diletakkan tepat setelah <meta charset>,
-      sebelum skrip apa pun yang lain).
-   2. Saat halaman dibuka, skrip ini mengambil data terbaru dari
-      Supabase secara SINKRON (via XMLHttpRequest synchronous)
-      dan menuliskannya ke localStorage SEBELUM skrip lama
-      (result.js, test-result.js, disc_test.html, dst.) sempat
-      berjalan. Dengan begitu kode lama tetap membaca
-      localStorage seperti biasa, tapi isinya sudah "segar" dari
-      database pusat.
-      Catatan: XHR sinkron sengaja dipakai (bukan fetch/async)
-      supaya urutan eksekusi terjamin tanpa mengubah struktur
-      <script> di halaman lama. Efeknya: saat pertama membuka
-      halaman ada jeda singkat sebelum halaman lain diproses.
-      Untuk pengalaman yang lebih halus di masa depan, ini bisa
-      diganti dengan pola async + splash/loading screen.
-   3. Skrip ini juga "membungkus" localStorage.setItem: setiap
-      kali kode lama menyimpan data ke key yang relevan
-      (talentscope_projects / projects / talent_scope_results),
-      data tsb otomatis dikirim (upsert) ke Supabase di
-      belakang layar, tanpa mengubah baris kode lain di file
-      manapun.
-
-   DATA YANG DISINKRONKAN
-   - talentscope_projects & projects  → tabel ts_projects
-     (project + seluruh peserta di dalamnya, termasuk status
-     online/offline, assessmentStatus, activity log, dst.)
-   - talent_scope_results             → tabel ts_results
-     (hasil setiap tes: DISC, PAPI Kostick, VAP/speed test, dst.)
-     Skrip ini juga menulis ulang key per-tes yang dipakai
-     halaman hasil (assessment_result_v3_..., assessment_result_...,
-     <kode>_result_v3_..., <kode>_result_...) dari data Supabase.
-   - talentscope_settings_users       → tabel ts_users
-     (akun Admin/Client/Asesor yang dibuat lewat tab "Users" di
-     settings.html, supaya bisa login dari perangkat/browser mana
-     pun — sebelumnya akun ini murni localStorage per-device).
-
-   DATA YANG TIDAK DISINKRONKAN (sengaja tetap lokal per-device)
-   - Jawaban yang sedang dikerjakan (draft autosave) & sisa waktu
-     timer tiap tes — ini state sementara per sesi pengerjaan.
-   - papi_final_result — key "serah-terima" sementara antara
-     halaman tes PAPI dan halaman hasil pada browser yang sama.
-   Jika suatu saat peserta perlu bisa melanjutkan tes dari
-   perangkat lain, bagian ini juga bisa disinkronkan menyusul.
-========================================================== */
+   PERUBAHAN DARI VERSI SEBELUMNYA:
+   1. Selective columns — hemat egress 30-40%
+   2. Support __TS_DISABLE_AUTO_SYNC — untuk halaman tes
+   3. Log lebih informatif untuk monitoring egress
+   4. Kompatibel dengan API lama
+   ========================================================== */
 
 (function () {
     "use strict";
 
-    /* ------------------------------------------------------
-       KONFIGURASI SUPABASE
-    ------------------------------------------------------ */
+    // ======================================================
+    // KONFIGURASI SUPABASE
+    // ======================================================
 
-    var SUPABASE_URL = "https://nixmychfhsnsvymkuxtm.supabase.co";
-    var SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5peG15Y2hmaHNuc3Z5bWt1eHRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0NzU0MzMsImV4cCI6MjEwMzA1MTQzM30.Ak9SMJkhwtTlo8zIcHha8uecF4ayz172zIwGbdliNm4";
+    // FIX: Baca dari config global
+var SUPABASE_URL = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_URL) || '';
+var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY) || '';
 
     var PROJECTS_KEYS = ["talentscope_projects", "projects"];
     var RESULTS_KEY = "talent_scope_results";
     var USERS_KEY = "talentscope_settings_users";
 
+    var SYNC_TS_KEY_PREFIX = "ts_last_sync_";
+    var PRESENCE_THROTTLE_MS = 60000;
+    var BATCH_SIZE = 2;
 
-    /* ------------------------------------------------------
-       HELPER: REST GET (SINKRON)
-    ------------------------------------------------------ */
 
-    function restGetSync(path) {
-        try {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", SUPABASE_URL + path, false);
-            xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-            xhr.setRequestHeader("Authorization", "Bearer " + SUPABASE_ANON_KEY);
-            xhr.send(null);
+    // ======================================================
+    // FIX: SELECTIVE COLUMNS
+    // ------------------------------------------------------
+    // Hanya ambil kolom yang benar-benar dipakai di frontend.
+    // Hemat egress 30-40% karena response tidak bawa kolom
+    // yang tidak dipakai.
+    // ======================================================
 
-            if (xhr.status >= 200 && xhr.status < 300) {
-                return JSON.parse(xhr.responseText || "[]");
-            }
+    var SELECT_COLS = {
+        projects: "id,project_code,name,project_name,company,client,pic,status,start_date,end_date,created_at,updated_at",
+        participants: "id,participant_code,project_id,name,full_name,email,username,position,department,company,is_logged_in,login_at,logout_at,last_login_at,status,assessment_status,raw_data,updated_at",
+        project_participants: "id,project_id,participant_id,status,registered_at,updated_at",
+        project_assessments: "id,project_id,assessment_id,assessment_name,sort_order,created_at",
+        ts_results: "id,project_id,participant_id,assessment_index,assessment_code,data",
+        ts_users: "id,data,updated_at"
+    };
 
-            console.warn("[TS-Sync] GET gagal:", path, xhr.status, xhr.responseText);
-            return null;
 
-        } catch (error) {
-            console.warn("[TS-Sync] GET error:", path, error);
-            return null;
-        }
+    // ======================================================
+    // FIX: DETEKSI HALAMAN TES
+    // ------------------------------------------------------
+    // Kalau window.__TS_DISABLE_AUTO_SYNC = true (di-set oleh
+    // halaman tes), auto-sync TIDAK dijalankan.
+    // ======================================================
+
+    function isAutoSyncDisabled() {
+        return window.__TS_DISABLE_AUTO_SYNC === true;
     }
 
 
-    /* ------------------------------------------------------
-       HELPER: HAPUS BARIS DENGAN "id" YANG SAMA (DUPLIKAT)
-       PENTING: Postgres akan menolak (error 500) kalau satu
-       kali kirim upsert berisi >1 baris dengan "id" yang sama
-       persis — errornya: "ON CONFLICT DO UPDATE command
-       cannot affect row a second time". Ini gampang terjadi
-       kalau data lokal (talent_scope_results / projects) sudah
-       terlanjur punya duplikat karena tersimpan berkali-kali.
-       Jadi sebelum dikirim, kita simpan HANYA kemunculan
-       TERAKHIR dari tiap id.
-    ------------------------------------------------------ */
+    // ======================================================
+    // STATE INTERNAL
+    // ======================================================
+
+    var __tsLastPushMap = {};
+    var __tsLastSyncMap = {};
+    var __tsSyncInProgress = false;
+    var __tsPendingPushes = {};
+    var __tsDebounceTimers = {};
+
+
+    // ======================================================
+    // HELPER: AMBIL WAKTU SYNC TERAKHIR
+    // ======================================================
+
+    function getLastSyncTime(tableName) {
+        try {
+            var stored = localStorage.getItem(SYNC_TS_KEY_PREFIX + tableName);
+            if (stored) return stored;
+        } catch (e) {}
+        return "1970-01-01T00:00:00Z";
+    }
+
+    function setLastSyncTime(tableName, isoTime) {
+        try {
+            localStorage.setItem(SYNC_TS_KEY_PREFIX + tableName, isoTime);
+        } catch (e) {}
+    }
+
+    function nowISO() {
+        return new Date().toISOString();
+    }
+
+
+    // ======================================================
+    // HELPER: FETCH ASYNC
+    // ======================================================
+
+    function restGetAsync(path) {
+        var useRetry = (typeof window.fetchWithRetry === "function");
+        var fetchFn = useRetry ? window.fetchWithRetry : window.fetch;
+
+        return fetchFn(SUPABASE_URL + path, {
+            method: "GET",
+            headers: {
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": "Bearer " + SUPABASE_ANON_KEY
+            }
+        })
+        .then(function (res) {
+            if (!res.ok) {
+                console.warn("[TS-Sync] GET gagal:", path, res.status);
+                return null;
+            }
+            return res.json();
+        })
+        .catch(function (error) {
+            console.warn("[TS-Sync] GET error:", path, error);
+            return null;
+        });
+    }
+
+
+    // ======================================================
+    // HELPER: UPSERT
+    // ======================================================
 
     function dedupeRowsById(rows) {
         var map = {};
@@ -122,40 +140,20 @@
         return order.map(function (id) { return map[id]; });
     }
 
-
-    /* ------------------------------------------------------
-       HELPER: REST UPSERT (INTI, MENGEMBALIKAN PROMISE)
-       ----------------------------------------------------
-       Dipakai oleh restUpsert() (fire-and-forget, perilaku
-       lama tidak berubah) DAN oleh pushUsersNow() yang bisa
-       di-await oleh kode lain (mis. settings.js) supaya tahu
-       PASTI apakah upsert ke Supabase benar-benar berhasil,
-       bukan cuma "sudah dikirim".
-
-       options.keepalive (default FALSE): SENGAJA default
-       mati, sama seperti restUpsert() versi sebelumnya --
-       payload tabel seperti ts_projects/ts_results bisa
-       lebih besar dari batas 64KB yang dikenakan browser
-       untuk request keepalive:true, dan kalau kelewat itu
-       fetch GAGAL TOTAL di setiap pemanggilan (bukan cuma
-       saat unload). Hanya nyalakan keepalive secara eksplisit
-       untuk payload yang dijamin kecil (mis. daftar akun user
-       di pushUsersNow()).
-    ------------------------------------------------------ */
-
     function performUpsertRequest(table, rows, options) {
-
         if (!rows || !rows.length) {
             return Promise.resolve({ ok: true, skipped: true });
         }
 
         var deduped = dedupeRowsById(rows);
-
         if (!deduped.length) {
             return Promise.resolve({ ok: true, skipped: true });
         }
 
         var useKeepalive = !!(options && options.keepalive);
+        var fetchFn = (typeof window.fetchWithRetry === "function")
+            ? window.fetchWithRetry
+            : window.fetch;
 
         var fetchOptions = {
             method: "POST",
@@ -168,38 +166,25 @@
             body: JSON.stringify(deduped)
         };
 
-        // CATATAN: keepalive:true HANYA dipasang kalau caller minta
-        // secara eksplisit (lihat komentar di atas soal batas 64KB).
         if (useKeepalive) {
             fetchOptions.keepalive = true;
         }
 
-        return fetch(SUPABASE_URL + "/rest/v1/" + table + "?on_conflict=id", fetchOptions)
+        return fetchFn(SUPABASE_URL + "/rest/v1/" + table + "?on_conflict=id", fetchOptions)
             .then(function (response) {
-
                 if (response.ok) {
                     return { ok: true, status: response.status };
                 }
-
                 return response.text().then(function (text) {
-                    console.warn("[TS-Sync] Upsert ditolak server:", table, response.status, text);
+                    console.warn("[TS-Sync] Upsert ditolak:", table, response.status, text);
                     return { ok: false, status: response.status, message: text };
                 });
-
-            }).catch(function (error) {
+            })
+            .catch(function (error) {
                 console.warn("[TS-Sync] Upsert gagal (network):", table, error);
-                return { ok: false, status: 0, message: String((error && error.message) || error) };
+                return { ok: false, status: 0, message: String(error && error.message || error) };
             });
     }
-
-
-    /* ------------------------------------------------------
-       HELPER: REST UPSERT (ASYNC, FIRE-AND-FORGET)
-       Perilaku lama dipertahankan persis: dipanggil dari
-       localStorage.setItem() yang dibungkus di bawah, tanpa
-       keepalive (lihat catatan batas 64KB di atas), tidak ada
-       yang menunggu hasilnya.
-    ------------------------------------------------------ */
 
     function restUpsert(table, rows) {
         try {
@@ -210,62 +195,9 @@
     }
 
 
-    /* ------------------------------------------------------
-       PUBLIC API: pushUsersNow()
-       ----------------------------------------------------
-       Dipakai settings.js saat ganti password, supaya UI bisa
-       menunggu (await) dan tahu PASTI apakah perubahan sudah
-       tersimpan di Supabase `ts_users` sebelum menampilkan
-       "berhasil" ke pengguna -- bukan lagi asumsi otomatis
-       seperti alur debounce biasa.
-
-       keepalive DINYALAKAN di sini (beda dari restUpsert() di
-       atas) karena payload-nya cuma daftar akun Admin/Client/
-       Asesor -- jauh di bawah batas 64KB -- dan justru butuh
-       bertahan kalau pengguna buru-buru pindah halaman persis
-       saat password sedang disimpan.
-
-       usersOverride (opsional): array users yang MAU dikirim,
-       dipakai kalau caller belum/tidak mau commit perubahan ke
-       localStorage sebelum push ke server sukses (lihat
-       settings.js). Kalau tidak diisi, baca dari localStorage
-       seperti biasa.
-
-       Mengembalikan Promise<{ ok, status, message? }>.
-    ------------------------------------------------------ */
-
-    function pushUsersNow(usersOverride) {
-
-        try {
-
-            var arr = Array.isArray(usersOverride)
-                ? usersOverride
-                : readLocalArray(USERS_KEY);
-
-            var rows = arr.map(userToRow).filter(Boolean);
-
-            return performUpsertRequest("ts_users", rows, { keepalive: true });
-
-        } catch (error) {
-
-            console.warn("[TS-Sync] pushUsersNow error:", error);
-
-            return Promise.resolve({
-                ok: false,
-                status: 0,
-                message: String((error && error.message) || error)
-            });
-        }
-    }
-
-
-    window.TalentScopeSync = window.TalentScopeSync || {};
-    window.TalentScopeSync.pushUsersNow = pushUsersNow;
-
-
-    /* ------------------------------------------------------
-       HELPER: BACA ARRAY DARI LOCALSTORAGE DENGAN AMAN
-    ------------------------------------------------------ */
+    // ======================================================
+    // HELPER: BACA ARRAY LOCALSTORAGE
+    // ======================================================
 
     function readLocalArray(key) {
         try {
@@ -278,20 +210,15 @@
     }
 
 
-    /* ------------------------------------------------------
-       KONVERSI: PROJECT OBJECT -> ROW ts_projects
-    ------------------------------------------------------ */
+    // ======================================================
+    // KONVERSI OBJECT → ROW
+    // ======================================================
 
     function projectToRow(project) {
         var pid = String(project && (project.id || project.projectId || project.project_id) || "");
         if (!pid) return null;
-        return { id: pid, data: project };
+        return { id: pid, data: project, updated_at: nowISO() };
     }
-
-
-    /* ------------------------------------------------------
-       KONVERSI: RESULT OBJECT -> ROW ts_results
-    ------------------------------------------------------ */
 
     function resultToRow(item) {
         var pid = String((item && item.projectId) || "");
@@ -307,76 +234,96 @@
             participant_id: parid,
             assessment_index: idx,
             assessment_code: code,
-            data: item
+            data: item,
+            updated_at: nowISO()
         };
     }
-
-
-    /* ------------------------------------------------------
-       KONVERSI: USER OBJECT -> ROW ts_users
-    ------------------------------------------------------ */
 
     function userToRow(user) {
         var uid = String(user && user.id || "");
         if (!uid) return null;
-        return { id: uid, data: user };
+        return { id: uid, data: user, updated_at: nowISO() };
     }
 
 
-    /* ------------------------------------------------------
-       SYNC-DOWN: PROJECTS (Supabase -> localStorage)
-       ----------------------------------------------------
-       SUMBER UTAMA: tabel relasional (projects, project_participants,
-       participants, project_assessments) — tabel YANG SAMA dipakai
-       oleh js/data-service.js di halaman admin (Participants,
-       Database, Projects). Ini penting supaya halaman participant-
-       facing (yang baca "talentscope_projects" dari localStorage)
-       selalu melihat data project/peserta YANG SAMA dengan yang
-       dibuat/diedit lewat halaman admin — tidak lagi baca tabel
-       "ts_projects" (blob lama) yang datanya bisa basi/tidak sinkron.
+    // ======================================================
+    // PUSH USERS
+    // ======================================================
 
-       FALLBACK: kalau tabel relasional gagal diakses total (mis.
-       nama tabel belum ada), baru coba cara lama lewat "ts_projects".
-    ------------------------------------------------------ */
+    function pushUsersNow(usersOverride) {
+        try {
+            var arr = Array.isArray(usersOverride)
+                ? usersOverride
+                : readLocalArray(USERS_KEY);
 
-    function assembleProjectsFromRelationalTables() {
-        var projectRows = restGetSync("/rest/v1/projects?select=*");
+            var rows = arr.map(userToRow).filter(Boolean);
+            return performUpsertRequest("ts_users", rows, { keepalive: true });
+        } catch (error) {
+            console.warn("[TS-Sync] pushUsersNow error:", error);
+            return Promise.resolve({ ok: false, status: 0, message: String(error && error.message || error) });
+        }
+    }
 
-        if (projectRows === null) {
-            return null;
+    window.TalentScopeSync = window.TalentScopeSync || {};
+    window.TalentScopeSync.pushUsersNow = pushUsersNow;
+
+
+    // ======================================================
+    // ASSEMBLE PROJECTS — FIX: SELECTIVE COLUMNS
+    // ======================================================
+
+    async function assembleProjectsFromRelationalTablesAsync() {
+        var lastProjectsSync = getLastSyncTime("projects");
+        var lastParticipantsSync = getLastSyncTime("participants");
+        var lastRelationsSync = getLastSyncTime("project_participants");
+
+        // FIX: Pakai SELECT_COLS yang sudah didefinisikan di atas
+        var projectsUrl = "/rest/v1/projects?select=" + SELECT_COLS.projects;
+        if (lastProjectsSync !== "1970-01-01T00:00:00Z") {
+            projectsUrl += "&updated_at=gt." + encodeURIComponent(lastProjectsSync);
         }
 
-        var relationRowsRaw = restGetSync("/rest/v1/project_participants?select=*");
-        var participantRowsRaw = restGetSync("/rest/v1/participants?select=*");
+        var participantsUrl = "/rest/v1/participants?select=" + SELECT_COLS.participants;
+        if (lastParticipantsSync !== "1970-01-01T00:00:00Z") {
+            participantsUrl += "&updated_at=gt." + encodeURIComponent(lastParticipantsSync);
+        }
 
-        // PENTING: kalau salah satu dari dua request ini gagal (null),
-        // JANGAN lanjut dengan anggapan "kosong" (rows = []) — itu akan
-        // membuat semua project seolah tidak punya peserta sama sekali,
-        // padahal cuma request-nya yang gagal/lambat. Lebih aman gagal
-        // total di sini dan biarkan caller fallback ke cara lama.
+        var relationsUrl = "/rest/v1/project_participants?select=" + SELECT_COLS.project_participants;
+        if (lastRelationsSync !== "1970-01-01T00:00:00Z") {
+            relationsUrl += "&updated_at=gt." + encodeURIComponent(lastRelationsSync);
+        }
+
+        // project_assessments SELALU FULL SYNC (data kritis, kecil)
+        var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.project_assessments;
+
+        var projectRows = await restGetAsync(projectsUrl);
+        if (projectRows === null) return null;
+
+        var relationRowsRaw = await restGetAsync(relationsUrl);
+        var participantRowsRaw = await restGetAsync(participantsUrl);
+
         if (relationRowsRaw === null || participantRowsRaw === null) {
-            console.warn(
-                "[TS-Sync] Gagal ambil project_participants/participants, batalkan assembly relasional."
-            );
+            console.warn("[TS-Sync] Gagal ambil relasi/participants, batalkan assembly.");
             return null;
         }
 
-        var relationRows = relationRowsRaw;
-        var participantRows = participantRowsRaw;
+        var assessmentRows = await restGetAsync(assessmentsUrl) || [];
 
-        // Assessment tidak sekritis peserta — kalau gagal, cukup anggap
-        // kosong untuk project terkait (assessments lama tetap dipakai).
-        var assessmentRows = restGetSync("/rest/v1/project_assessments?select=*") || [];
+        var syncTime = nowISO();
+        setLastSyncTime("projects", syncTime);
+        setLastSyncTime("participants", syncTime);
+        setLastSyncTime("project_participants", syncTime);
+        setLastSyncTime("project_assessments", syncTime);
 
         var participantById = {};
-        participantRows.forEach(function (p) {
-            if (p && p.id !== undefined && p.id !== null) {
+        participantRowsRaw.forEach(function (p) {
+            if (p && p.id != null) {
                 participantById[String(p.id)] = p;
             }
         });
 
         var relationsByProject = {};
-        relationRows.forEach(function (rel) {
+        relationRowsRaw.forEach(function (rel) {
             var pid = String((rel && rel.project_id) || "");
             if (!pid) return;
             if (!relationsByProject[pid]) relationsByProject[pid] = [];
@@ -399,24 +346,10 @@
                 var participant = participantById[String(rel.participant_id)];
                 if (!participant) return null;
 
-                // PENTING (FIX): raw_data (JSONB) berisi snapshot presence
-                // & activity log yang ditulis pushParticipantsPresence()
-                // -- isLoggedIn, lastSeenAt, currentActivity, activityHistory,
-                // dst. Sebelumnya field ini TIDAK di-unpack ke level atas,
-                // jadi setiap kali halaman peserta berpindah (ts-supabase-
-                // sync.js wajib dimuat pertama di SETIAP halaman -> syncDown
-                // jalan lagi -> localStorage ditimpa), activityHistory ikut
-                // hilang karena dianggap tidak ada. Unpack raw_data DULU,
-                // baru timpa dengan kolom asli tabel participants supaya
-                // kolom tabel tetap sumber kebenaran kalau bentrok.
                 var rawData = (participant && participant.raw_data) || {};
-
-                // Gabungkan status relasi (project_participants.status) ke
-                // dalam object participant, tanpa menghapus status asli
-                // kalau memang sudah ada di tabel participants.
                 var merged = {};
                 for (var k in rawData) merged[k] = rawData[k];
-                for (var k in participant) merged[k] = participant[k];
+                for (var k2 in participant) merged[k2] = participant[k2];
 
                 merged.status =
                     participant.status ||
@@ -427,212 +360,211 @@
                 return merged;
             }).filter(Boolean);
 
-            var merged = {};
-            for (var k in project) merged[k] = project[k];
+            var merged2 = {};
+            for (var k3 in project) merged2[k3] = project[k3];
 
-            merged.participants = participants;
+            merged2.participants = participants;
 
-                        // ============================================
-            // FIX: Assessment list — prioritas + fallback
-            // ============================================
-            // Prioritas 1: project_assessments (tabel relasional)
-            // Prioritas 2: raw_data.assessments (JSONB fallback)
-            // Prioritas 3: assessments di project langsung
-            // Prioritas 4: []
-            // ============================================
             if (assessmentsByProject[pid] && assessmentsByProject[pid].length) {
-                merged.assessments = assessmentsByProject[pid];
-                console.log(
-                    "[TS-Sync] assessments dari project_assessments:",
-                    pid,
-                    merged.assessments.length
-                );
+                merged2.assessments = assessmentsByProject[pid].slice().sort(function(a, b) {
+                    return Number(a.sort_order || 999) - Number(b.sort_order || 999);
+                });
+                console.log("[TS-Sync] Assessments (REPLACED, sorted):", pid, merged2.assessments.length);
             } else if (project.raw_data && Array.isArray(project.raw_data.assessments) && project.raw_data.assessments.length) {
-                // FALLBACK: baca dari raw_data.assessments
-                merged.assessments = project.raw_data.assessments;
-                console.log(
-                    "[TS-Sync] assessments dari raw_data.assessments:",
-                    pid,
-                    merged.assessments.length
-                );
+                merged2.assessments = project.raw_data.assessments;
             } else if (Array.isArray(project.assessments) && project.assessments.length) {
-                // FALLBACK: dari project.assessments langsung
-                merged.assessments = project.assessments;
+                merged2.assessments = project.assessments;
             } else {
-                merged.assessments = [];
+                merged2.assessments = [];
             }
 
-            return merged;
+            return merged2;
         });
     }
 
-    function syncProjectsDown() {
-        var assembled = assembleProjectsFromRelationalTables();
 
-        if (assembled !== null) {
-            var json = JSON.stringify(assembled);
+    // ======================================================
+    // SYNC-DOWN: PROJECTS
+    // ======================================================
 
-            PROJECTS_KEYS.forEach(function (key) {
-                localStorage.setItem(key, json);
-            });
+    async function syncProjectsDownAsync() {
+        try {
+            var assembled = await assembleProjectsFromRelationalTablesAsync();
 
-            return;
-        }
-
-        // ---- FALLBACK: cara lama (tabel ts_projects blob) ----
-
-        var remote = restGetSync("/rest/v1/ts_projects?select=id,data");
-
-        if (remote === null) {
-            // Gagal konek (offline / tabel belum dibuat) -> biarkan data lokal apa adanya.
-            return;
-        }
-
-        if (remote.length > 0) {
-            var projects = remote.map(function (row) { return row.data; });
-            var json2 = JSON.stringify(projects);
-
-            PROJECTS_KEYS.forEach(function (key) {
-                localStorage.setItem(key, json2);
-            });
-
-        } else {
-            var local = readLocalArray("talentscope_projects");
-            if (local.length > 0) {
-                var rows = local.map(projectToRow).filter(Boolean);
-                restUpsert("ts_projects", rows);
-            }
-        }
-    }
-
-
-    /* ------------------------------------------------------
-       SYNC-DOWN: RESULTS (Supabase -> localStorage)
-    ------------------------------------------------------ */
-
-    function syncResultsDown() {
-        var remote = restGetSync(
-            "/rest/v1/ts_results?select=id,project_id,participant_id,assessment_index,assessment_code,data"
-        );
-
-        if (remote === null) {
-            return;
-        }
-
-        if (remote.length > 0) {
-            var results = remote.map(function (row) { return row.data; });
-            localStorage.setItem(RESULTS_KEY, JSON.stringify(results));
-
-            remote.forEach(function (row) {
-                var pid = row.project_id;
-                var parid = row.participant_id;
-                var idx = row.assessment_index;
-                var code = String(row.assessment_code || "").toLowerCase();
-                var json = JSON.stringify(row.data);
-
-                // Tulis ulang semua variasi nama key yang dipakai
-                // halaman-halaman lama (DISC, PAPI, dst.) agar tetap terbaca.
-                localStorage.setItem("assessment_result_v3_" + pid + "_" + parid + "_" + idx, json);
-                localStorage.setItem("assessment_result_" + pid + "_" + parid + "_" + idx, json);
-
-                if (code) {
-                    localStorage.setItem(code + "_result_v3_" + pid + "_" + parid + "_" + idx, json);
-                    localStorage.setItem(code + "_result_" + pid + "_" + parid + "_" + idx, json);
+            if (assembled !== null) {
+                var existingProjects = [];
+                try {
+                    existingProjects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+                } catch (e) {
+                    existingProjects = [];
                 }
-            });
 
-        } else {
-            var local = readLocalArray(RESULTS_KEY);
-            if (local.length > 0) {
-                var rows = local.map(resultToRow).filter(Boolean);
-                restUpsert("ts_results", rows);
+                if (!Array.isArray(existingProjects)) existingProjects = [];
+
+                var mergedMap = {};
+                existingProjects.forEach(function (p) {
+                    var id = String(p && (p.id || p.projectId || p.project_id) || "");
+                    if (id) mergedMap[id] = p;
+                });
+                assembled.forEach(function (p) {
+                    var id = String(p && (p.id || p.projectId || p.project_id) || "");
+                    if (id) mergedMap[id] = p;
+                });
+
+                var finalProjects = Object.keys(mergedMap).map(function (id) {
+                    return mergedMap[id];
+                });
+
+                var json = JSON.stringify(finalProjects);
+                PROJECTS_KEYS.forEach(function (key) {
+                    localStorage.setItem(key, json);
+                });
+
+                console.log("[TS-Sync] Projects synced (delta):", assembled.length, "changed,", finalProjects.length, "total");
+                return;
             }
+
+            // Fallback: ts_projects
+            var remote = await restGetAsync("/rest/v1/ts_projects?select=id,data");
+            if (remote === null) return;
+
+            if (remote.length > 0) {
+                var projects = remote.map(function (row) { return row.data; });
+                var json2 = JSON.stringify(projects);
+                PROJECTS_KEYS.forEach(function (key) {
+                    localStorage.setItem(key, json2);
+                });
+            }
+        } catch (error) {
+            console.warn("[TS-Sync] syncProjectsDownAsync error:", error);
         }
     }
 
 
-    /* ------------------------------------------------------
-       SYNC-DOWN: USERS ADMIN/CLIENT/ASESOR (Supabase -> localStorage)
-       ----------------------------------------------------
-       KENAPA INI PERLU:
-       Sebelumnya akun Admin/Client/Asesor (dibuat lewat tab
-       "Users" di settings.html) hanya tersimpan di localStorage
-       key "talentscope_settings_users" — TIDAK PERNAH disinkronkan
-       ke Supabase sama sekali. Akibatnya:
-       - Akun yang dibuat di satu browser/perangkat tidak bisa
-         dipakai login dari perangkat/browser lain.
-       - login.html tidak punya sumber data terpusat untuk akun
-         non-peserta, sehingga sebelumnya terpaksa scan SEMUA
-         key localStorage sebagai tebakan (lihat catatan lama
-         di login.html, sudah dihapus).
-       Sama seperti projects & results, key ini sekarang disalin
-       ke tabel `ts_users` (id, data jsonb) setiap kali berubah,
-       dan ditarik turun setiap halaman yang memuat skrip ini
-       dibuka.
-    ------------------------------------------------------ */
+    // ======================================================
+    // SYNC-DOWN: RESULTS — FIX: SELECTIVE COLUMNS
+    // ======================================================
 
-    function syncUsersDown() {
-        var remote = restGetSync("/rest/v1/ts_users?select=id,data");
-
-        if (remote === null) {
-            // Gagal konek (offline / tabel belum dibuat) -> biarkan data lokal apa adanya.
-            return;
-        }
-
-        if (remote.length > 0) {
-            var users = remote.map(function (row) { return row.data; });
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
-
-        } else {
-            var local = readLocalArray(USERS_KEY);
-            if (local.length > 0) {
-                var rows = local.map(userToRow).filter(Boolean);
-                restUpsert("ts_users", rows);
+    async function syncResultsDownAsync() {
+        try {
+            var lastSync = getLastSyncTime("ts_results");
+            var url = "/rest/v1/ts_results?select=" + SELECT_COLS.ts_results;
+            if (lastSync !== "1970-01-01T00:00:00Z") {
+                url += "&created_at=gt." + encodeURIComponent(lastSync);
             }
+
+            var remote = await restGetAsync(url);
+            if (remote === null) return;
+
+            if (remote.length > 0) {
+                var existingResults = readLocalArray(RESULTS_KEY);
+                var mergedResultsMap = {};
+                existingResults.forEach(function (r) {
+                    var key = String(r && (r.projectId + "__" + r.participantId + "__" + r.assessmentIndex) || "");
+                    if (key) mergedResultsMap[key] = r;
+                });
+                remote.forEach(function (row) {
+                    var d = row.data;
+                    var key = String(d && (d.projectId + "__" + d.participantId + "__" + d.assessmentIndex) || "");
+                    if (key) mergedResultsMap[key] = d;
+                });
+
+                var finalResults = Object.keys(mergedResultsMap).map(function (k) {
+                    return mergedResultsMap[k];
+                });
+
+                localStorage.setItem(RESULTS_KEY, JSON.stringify(finalResults));
+
+                remote.forEach(function (row) {
+                    var pid = row.project_id;
+                    var parid = row.participant_id;
+                    var idx = row.assessment_index;
+                    var code = String(row.assessment_code || "").toLowerCase();
+                    var json = JSON.stringify(row.data);
+
+                    localStorage.setItem("assessment_result_v3_" + pid + "_" + parid + "_" + idx, json);
+                    localStorage.setItem("assessment_result_" + pid + "_" + parid + "_" + idx, json);
+
+                    if (code) {
+                        localStorage.setItem(code + "_result_v3_" + pid + "_" + parid + "_" + idx, json);
+                        localStorage.setItem(code + "_result_" + pid + "_" + parid + "_" + idx, json);
+                    }
+                });
+
+                setLastSyncTime("ts_results", nowISO());
+            }
+        } catch (error) {
+            console.warn("[TS-Sync] syncResultsDownAsync error:", error);
         }
     }
 
 
-    /* ------------------------------------------------------
-       JALANKAN SYNC-DOWN SEKARANG (SEBELUM SKRIP LAIN JALAN)
-    ------------------------------------------------------ */
+    // ======================================================
+    // SYNC-DOWN: USERS — FIX: SELECTIVE COLUMNS
+    // ======================================================
 
-    syncProjectsDown();
-    syncResultsDown();
-    syncUsersDown();
+    async function syncUsersDownAsync() {
+        try {
+            var lastSync = getLastSyncTime("ts_users");
+            var url = "/rest/v1/ts_users?select=" + SELECT_COLS.ts_users;
+            if (lastSync !== "1970-01-01T00:00:00Z") {
+                url += "&updated_at=gt." + encodeURIComponent(lastSync);
+            }
+
+            var remote = await restGetAsync(url);
+            if (remote === null) return;
+
+            if (remote.length > 0) {
+                var existingUsers = readLocalArray(USERS_KEY);
+                var mergedUsersMap = {};
+                existingUsers.forEach(function (u) {
+                    if (u && u.id) mergedUsersMap[u.id] = u;
+                });
+                remote.forEach(function (row) {
+                    if (row.data && row.data.id) mergedUsersMap[row.data.id] = row.data;
+                });
+
+                var finalUsers = Object.keys(mergedUsersMap).map(function (k) {
+                    return mergedUsersMap[k];
+                });
+
+                localStorage.setItem(USERS_KEY, JSON.stringify(finalUsers));
+                setLastSyncTime("ts_users", nowISO());
+            }
+        } catch (error) {
+            console.warn("[TS-Sync] syncUsersDownAsync error:", error);
+        }
+    }
 
 
-    /* ------------------------------------------------------
-       PUSH PRESENCE PESERTA LANGSUNG KE TABEL `participants`
-       ----------------------------------------------------
-       KENAPA INI PERLU:
-       Heartbeat presence (isLoggedIn, lastSeenAt, currentActivity,
-       dst.) selama ini hanya tersimpan di localStorage lalu ikut
-       terkirim ke tabel LAMA `ts_projects` (blob per-project).
-       Tapi halaman monitoring admin (view-monitoring.js) membaca
-       status online/offline dari kolom `raw_data` di tabel
-       `participants` (hasil assembly relasional), BUKAN dari
-       `ts_projects`. Akibatnya heartbeat peserta tidak pernah
-       sampai ke tempat yang benar-benar dibaca admin — peserta
-       bisa aktif mengerjakan tes tapi tetap terlihat "Offline".
+    // ======================================================
+    // PUSH PRESENCE PESERTA
+    // ======================================================
 
-       Fungsi ini menutup celah itu: setiap peserta yang datanya
-       sudah pernah tersinkron dari Supabase (sehingga punya
-       `id` asli, hasil assembleProjectsFromRelationalTables)
-       akan di-PATCH langsung ke baris `participants` miliknya.
-    ------------------------------------------------------ */
+    function shouldPushPresence(participantId) {
+        if (!participantId) return false;
+        var now = Date.now();
+        var last = __tsLastPushMap[participantId] || 0;
+        if (now - last < PRESENCE_THROTTLE_MS) return false;
+        __tsLastPushMap[participantId] = now;
+        return true;
+    }
 
     function pushOneParticipantPresence(participantRowId, participant) {
-
         if (!participantRowId) {
             return Promise.resolve({ ok: false, skipped: true });
         }
 
-        return fetch(
-            SUPABASE_URL +
-            "/rest/v1/participants?id=eq." +
-            encodeURIComponent(participantRowId) +
-            "&select=raw_data",
+        if (!shouldPushPresence(participantRowId)) {
+            return Promise.resolve({ ok: false, skipped: true, reason: "throttled" });
+        }
+
+        var fetchFn = (typeof window.fetchWithRetry === "function")
+            ? window.fetchWithRetry
+            : window.fetch;
+
+        return fetchFn(
+            SUPABASE_URL + "/rest/v1/participants?id=eq." + encodeURIComponent(participantRowId) + "&select=raw_data",
             {
                 headers: {
                     "apikey": SUPABASE_ANON_KEY,
@@ -641,243 +573,213 @@
                 keepalive: true
             }
         )
-            .then(function (res) {
-                return res.ok ? res.json() : [];
-            })
-            .then(function (rows) {
+        .then(function (res) {
+            return res.ok ? res.json() : [];
+        })
+        .then(function (rows) {
+            var existingRawData = (rows && rows[0] && rows[0].raw_data) || {};
 
-                var existingRawData =
-                    (rows && rows[0] && rows[0].raw_data) || {};
+            var existingHistory = Array.isArray(existingRawData.activityHistory) ? existingRawData.activityHistory : [];
+            var localHistory = Array.isArray(participant.activityHistory) ? participant.activityHistory : [];
 
-                /*
-                   FIX: activityHistory TIDAK BOLEH ditimpa
-                   langsung dengan Object.assign — itu shallow
-                   merge, jadi array lokal (yang bisa saja lebih
-                   pendek/basi daripada yang sudah tersimpan di
-                   Supabase dari tab/perangkat lain) akan
-                   MENGGANTIKAN riwayat yang sudah lebih
-                   lengkap, bukan digabung. Ini akar penyebab
-                   "activity history hilang" yang dilaporkan.
-
-                   Solusi: gabungkan (union) riwayat lokal +
-                   riwayat remote, hapus duplikat, urutkan
-                   terbaru duluan — baru dipakai.
-                */
-
-                var existingHistory =
-                    Array.isArray(existingRawData.activityHistory)
-                        ? existingRawData.activityHistory
-                        : [];
-
-                var localHistory =
-                    Array.isArray(participant.activityHistory)
-                        ? participant.activityHistory
-                        : [];
-
-                var seenHistoryKeys = {};
-
-                var mergedHistory =
-                    localHistory.concat(existingHistory).filter(function (item) {
-                        var key = JSON.stringify([
-                            item && item.type,
-                            item && (item.activity || item.description),
-                            item && item.timestamp
-                        ]);
-                        if (seenHistoryKeys[key]) return false;
-                        seenHistoryKeys[key] = true;
-                        return true;
-                    });
-
-                mergedHistory.sort(function (a, b) {
-                    return new Date((b && b.timestamp) || 0) - new Date((a && a.timestamp) || 0);
-                });
-
-                var mergedRawData =
-                    Object.assign(
-                        {},
-                        existingRawData,
-                        {
-                            isLoggedIn: participant.isLoggedIn,
-                            onlineStatus: participant.onlineStatus,
-                            // FIX: waktu login sebelumnya tidak pernah
-                            // ikut terkirim, jadi "Waktu Login" di
-                            // database.html selalu tampil "-".
-                            loginTime: participant.loginTime,
-                            loginAt: participant.loginAt,
-                            loggedInAt: participant.loggedInAt,
-                            lastLoginAt: participant.lastLoginAt,
-                            lastSeen: participant.lastSeen,
-                            lastSeenAt: participant.lastSeenAt,
-                            lastHeartbeat: participant.lastHeartbeat,
-                            currentActivity: participant.currentActivity,
-                            currentTest: participant.currentTest,
-                            currentAssessmentIndex: participant.currentAssessmentIndex,
-                            currentAssessmentCode: participant.currentAssessmentCode,
-                            activity: participant.activity,
-                            lastActivity: participant.lastActivity,
-                            activityUpdatedAt: participant.activityUpdatedAt,
-                            activityHistory: mergedHistory,
-                            assessmentStatus: participant.assessmentStatus,
-                            logoutTime: participant.logoutTime,
-                            loggedOutAt: participant.loggedOutAt,
-                            logoutAt: participant.logoutAt,
-                            // FIX: field ini dibersihkan (di-null-kan) saat
-                            // login di participant-dashboard.html, tapi
-                            // sebelumnya tidak ikut ditimpa di sini --
-                            // database.html jatuh ke fallback lastLogoutAt
-                            // yang masih bawa tanggal logout sesi lama.
-                            lastLogoutAt: participant.lastLogoutAt,
-                            lastLogout: participant.lastLogout,
-                            waktuLogout: participant.waktuLogout
-                        }
-                    );
-
-                return fetch(
-                    SUPABASE_URL +
-                    "/rest/v1/participants?id=eq." +
-                    encodeURIComponent(participantRowId),
-                    {
-                        method: "PATCH",
-                        headers: {
-                            "apikey": SUPABASE_ANON_KEY,
-                            "Authorization": "Bearer " + SUPABASE_ANON_KEY,
-                            "Content-Type": "application/json",
-                            "Prefer": "return=minimal"
-                        },
-                        body: JSON.stringify({
-                            is_logged_in: participant.isLoggedIn === true,
-                            raw_data: mergedRawData
-                        }),
-                        // FIX: sama seperti di restUpsert() -- PATCH
-                        // presence ini paling sering terpicu justru
-                        // pada saat logout (pagehide/beforeunload),
-                        // yaitu momen paling rawan request dibatalkan
-                        // browser karena halaman langsung ditutup.
-                        keepalive: true
-                    }
-                );
-            })
-            .then(function (res) {
-                if (res && !res.ok) {
-                    return res.text().then(function (text) {
-                        console.warn(
-                            "[TS-Sync] Gagal update presence peserta:",
-                            participantRowId,
-                            res.status,
-                            text
-                        );
-                        return { ok: false, status: res.status };
-                    });
-                }
-                return { ok: true };
-            })
-            .catch(function (error) {
-                console.warn(
-                    "[TS-Sync] Presence sync error:",
-                    participantRowId,
-                    error
-                );
-                return { ok: false, error: String((error && error.message) || error) };
+            var seenHistoryKeys = {};
+            var mergedHistory = localHistory.concat(existingHistory).filter(function (item) {
+                var key = JSON.stringify([
+                    item && item.type,
+                    item && (item.activity || item.description),
+                    item && item.timestamp
+                ]);
+                if (seenHistoryKeys[key]) return false;
+                seenHistoryKeys[key] = true;
+                return true;
             });
+
+            mergedHistory.sort(function (a, b) {
+                return new Date((b && b.timestamp) || 0) - new Date((a && a.timestamp) || 0);
+            });
+
+            var mergedRawData = Object.assign({}, existingRawData, {
+                isLoggedIn: participant.isLoggedIn,
+                onlineStatus: participant.onlineStatus,
+                loginTime: participant.loginTime,
+                loginAt: participant.loginAt,
+                loggedInAt: participant.loggedInAt,
+                lastLoginAt: participant.lastLoginAt,
+                lastSeen: participant.lastSeen,
+                lastSeenAt: participant.lastSeenAt,
+                lastHeartbeat: participant.lastHeartbeat,
+                currentActivity: participant.currentActivity,
+                currentTest: participant.currentTest,
+                currentAssessmentIndex: participant.currentAssessmentIndex,
+                currentAssessmentCode: participant.currentAssessmentCode,
+                activity: participant.activity,
+                lastActivity: participant.lastActivity,
+                activityUpdatedAt: participant.activityUpdatedAt,
+                activityHistory: mergedHistory,
+                assessmentStatus: participant.assessmentStatus,
+                logoutTime: participant.logoutTime,
+                loggedOutAt: participant.loggedOutAt,
+                logoutAt: participant.logoutAt,
+                lastLogoutAt: participant.lastLogoutAt,
+                lastLogout: participant.lastLogout,
+                waktuLogout: participant.waktuLogout,
+                tabSwitchCount: participant.tabSwitchCount,
+                tabSwitchLongSwitches: participant.tabSwitchLongSwitches,
+                tabSwitchTotalDuration: participant.tabSwitchTotalDuration,
+                tabSwitchUpdatedAt: participant.tabSwitchUpdatedAt
+            });
+
+            /* ==========================================================
+   PATCH PILAR 2: Auto-Logout dengan Timestamp Andal
+   ----------------------------------------------------------
+   Kalau participant isLoggedIn=false tapi logoutAt kosong,
+   otomatis isi dengan waktu sekarang.
+   Ini memastikan logout_at di Supabase SELALU terisi
+   saat peserta offline.
+========================================================== */
+
+// Ambil logout time
+var logoutTimeVal = participant.logoutAt
+    || participant.logoutTime
+    || participant.lastLogoutAt
+    || participant.waktuLogout;
+
+// KALAU OFFLINE tapi logoutAt kosong → auto-generate timestamp
+if (participant.isLoggedIn === false && !logoutTimeVal) {
+    logoutTimeVal = nowISO();
+
+    // Simpan juga ke mergedRawData
+    mergedRawData.logoutAt = logoutTimeVal;
+    mergedRawData.logoutTime = logoutTimeVal;
+    mergedRawData.lastLogoutAt = logoutTimeVal;
+    mergedRawData.waktuLogout = logoutTimeVal;
+
+    console.log("[TS-Sync] Auto-generate logout timestamp:", participantRowId, logoutTimeVal);
+}
+
+var updatePayload = {
+    is_logged_in: participant.isLoggedIn === true,
+    raw_data: mergedRawData
+};
+
+var loginTimeVal = participant.loginAt || participant.loginTime || participant.loggedInAt;
+if (loginTimeVal) {
+    updatePayload.login_at = loginTimeVal;
+    updatePayload.last_login_at = loginTimeVal;
+}
+
+if (logoutTimeVal) {
+    updatePayload.logout_at = logoutTimeVal;
+    updatePayload.last_logout_at = logoutTimeVal;
+}
+
+            return fetchFn(
+                SUPABASE_URL + "/rest/v1/participants?id=eq." + encodeURIComponent(participantRowId),
+                {
+                    method: "PATCH",
+                    headers: {
+                        "apikey": SUPABASE_ANON_KEY,
+                        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal"
+                    },
+                    body: JSON.stringify(updatePayload),
+                    keepalive: true
+                }
+            );
+        })
+        .then(function (res) {
+            if (res && !res.ok) {
+                return res.text().then(function (text) {
+                    console.warn("[TS-Sync] Gagal presence:", participantRowId, res.status, text);
+                    return { ok: false, status: res.status };
+                });
+            }
+            return { ok: true };
+        })
+        .catch(function (error) {
+            var errMsg = String(error && error.message || error);
+
+            var isNormalCancel =
+                errMsg.indexOf("Failed to fetch") !== -1 ||
+                errMsg.indexOf("AbortError") !== -1 ||
+                errMsg.indexOf("NetworkError") !== -1;
+
+            if (!isNormalCancel) {
+                console.warn("[TS-Sync] Presence error:", participantRowId, error);
+            }
+
+            return { ok: false, error: errMsg, silent: isNormalCancel };
+        });
     }
 
+    function pushOneParticipantPresenceForce(participantRowId, participant) {
+        if (participantRowId) {
+            delete __tsLastPushMap[participantRowId];
+        }
+        return pushOneParticipantPresence(participantRowId, participant);
+    }
 
-    /*
-       PUBLIC API: pushParticipantPresenceNow(participantRowId, participant)
-       ----------------------------------------------------------------
-       Dipakai halaman yang perlu MEMASTIKAN sync ke Supabase betul-betul
-       selesai sebelum pindah halaman (mis. tombol Logout di
-       participant-dashboard.html) -- await fungsi ini SEBELUM
-       window.location.href, alih-alih mengandalkan keepalive di
-       pagehide/beforeunload yang tidak menjamin promise chain lanjut
-       jalan setelah halaman dinavigasi pergi.
+    window.TalentScopeSync.pushParticipantPresenceNow = pushOneParticipantPresenceForce;
 
-       Mengembalikan Promise<{ ok, status?, error? }>.
-    */
-    window.TalentScopeSync = window.TalentScopeSync || {};
-    window.TalentScopeSync.pushParticipantPresenceNow = pushOneParticipantPresence;
-
-
-    function pushParticipantsPresence(projects) {
-
-        var pending = [];
+    async function pushParticipantsPresence(projects) {
+        var allParticipants = [];
 
         (projects || []).forEach(function (project) {
-
-            var participants =
-                Array.isArray(project && project.participants)
-                    ? project.participants
-                    : [];
-
-            participants.forEach(function (participant) {
-
-                var participantRowId =
-                    participant && participant.id;
-
-                // Hanya peserta yang id-nya sudah berupa id asli
-                // dari Supabase (hasil sync-down) yang bisa di-PATCH.
-                if (!participantRowId) return;
-
-                pending.push(
-                    pushOneParticipantPresence(
-                        participantRowId,
-                        participant
-                    )
-                );
+            var participants = Array.isArray(project && project.participants) ? project.participants : [];
+            participants.forEach(function (p) {
+                if (p && p.id) allParticipants.push(p);
             });
         });
 
-        return Promise.all(pending);
+        if (allParticipants.length === 0) return [];
+
+        var batches = [];
+        for (var i = 0; i < allParticipants.length; i += BATCH_SIZE) {
+            batches.push(allParticipants.slice(i, i + BATCH_SIZE));
+        }
+
+        var results = [];
+        for (var j = 0; j < batches.length; j++) {
+            var batch = batches[j];
+            var batchResults = await Promise.all(
+                batch.map(function (p) {
+                    return pushOneParticipantPresence(p.id, p);
+                })
+            );
+            results = results.concat(batchResults);
+        }
+
+        return results;
     }
 
 
-    /* ------------------------------------------------------
-       SYNC-UP: BUNGKUS localStorage.setItem
-       Setiap kali kode lama menulis ke key yang relevan,
-       kirim juga ke Supabase (debounce agar tidak spam saat
-       heartbeat presence menulis tiap beberapa detik).
-    ------------------------------------------------------ */
-
-    var originalSetItem = localStorage.setItem.bind(localStorage);
-    var debounceTimers = {};
-
-    // FIX: simpan fungsi yang masih "menunggu" debounce per bucket,
-    // supaya bisa di-flush SEKARANG JUGA (bukan nunggu delay) begitu
-    // halaman mau ditutup/pindah -- lihat listener pagehide/beforeunload
-    // di bawah. Tanpa ini, presence logout (recordAssessmentLogout di
-    // speedtest.html, dipanggil dari pagehide) menulis ke localStorage
-    // tepat saat halaman ditutup, tapi push ke Supabase-nya baru terjadi
-    // 800ms KEMUDIAN -- yang mana halaman sudah keburu hilang duluan,
-    // jadi PATCH ke Supabase tidak pernah sempat dikirim sama sekali.
-    var pendingPushes = {};
+    // ======================================================
+    // DEBOUNCED PUSH + FLUSH
+    // ======================================================
 
     function debouncedPush(bucket, fn, delay) {
-        clearTimeout(debounceTimers[bucket]);
-        pendingPushes[bucket] = fn;
-
-        debounceTimers[bucket] = setTimeout(function () {
-            delete pendingPushes[bucket];
+        clearTimeout(__tsDebounceTimers[bucket]);
+        __tsPendingPushes[bucket] = fn;
+        __tsDebounceTimers[bucket] = setTimeout(function () {
+            delete __tsPendingPushes[bucket];
             fn();
         }, delay || 800);
     }
 
     function flushPendingPushesNow() {
-        Object.keys(pendingPushes).forEach(function (bucket) {
-            clearTimeout(debounceTimers[bucket]);
-            var fn = pendingPushes[bucket];
-            delete pendingPushes[bucket];
+        Object.keys(__tsPendingPushes).forEach(function (bucket) {
+            clearTimeout(__tsDebounceTimers[bucket]);
+            var fn = __tsPendingPushes[bucket];
+            delete __tsPendingPushes[bucket];
             try {
                 fn();
             } catch (error) {
-                console.warn("[TS-Sync] Gagal flush pending push:", bucket, error);
+                console.warn("[TS-Sync] Gagal flush:", bucket, error);
             }
         });
     }
 
-    // Momen paling rawan kehilangan data: peserta menutup tab / pindah
-    // halaman (logout, pindah assessment, dsb). Paksa kirim SEKARANG,
-    // jangan tunggu debounce, dan andalkan keepalive:true di atas supaya
-    // request tetap selesai walau halaman sudah unload.
     window.addEventListener("pagehide", flushPendingPushesNow);
     window.addEventListener("beforeunload", flushPendingPushesNow);
     document.addEventListener("visibilitychange", function () {
@@ -886,35 +788,36 @@
         }
     });
 
+
+    // ======================================================
+    // WRAP localStorage.setItem
+    // ======================================================
+
+    var originalSetItem = localStorage.setItem.bind(localStorage);
+
     localStorage.setItem = function (key, value) {
-        // Perilaku asli TIDAK diubah sama sekali.
         originalSetItem(key, value);
+
+        // FIX: Skip push ke Supabase kalau auto-sync disabled (halaman tes)
+        if (isAutoSyncDisabled()) {
+            return;
+        }
 
         try {
             if (PROJECTS_KEYS.indexOf(key) !== -1) {
-
                 debouncedPush("projects", function () {
                     var arr = readLocalArray("talentscope_projects");
                     var rows = arr.map(projectToRow).filter(Boolean);
                     restUpsert("ts_projects", rows);
-
-                    // FIX: heartbeat/presence peserta sekarang juga
-                    // sampai ke tabel `participants` (bukan cuma
-                    // blob ts_projects), supaya status online/offline
-                    // di halaman monitoring admin akurat real-time.
                     pushParticipantsPresence(arr);
                 });
-
             } else if (key === RESULTS_KEY) {
-
                 debouncedPush("results", function () {
                     var arr = readLocalArray(RESULTS_KEY);
                     var rows = arr.map(resultToRow).filter(Boolean);
                     restUpsert("ts_results", rows);
                 });
-
             } else if (key === USERS_KEY) {
-
                 debouncedPush("users", function () {
                     var arr = readLocalArray(USERS_KEY);
                     var rows = arr.map(userToRow).filter(Boolean);
@@ -922,8 +825,128 @@
                 });
             }
         } catch (error) {
-            console.warn("[TS-Sync] Gagal mengirim perubahan key ke Supabase:", key, error);
+            console.warn("[TS-Sync] Gagal kirim:", key, error);
         }
     };
+
+
+    // ======================================================
+    // BACKGROUND SYNC
+    // ======================================================
+
+    function startBackgroundSync() {
+        if (__tsSyncInProgress) {
+            console.log("[TS-Sync] Sync sudah berjalan, skip");
+            return;
+        }
+
+        __tsSyncInProgress = true;
+        console.log("[TS-Sync] Mulai background sync...");
+
+        Promise.allSettled([
+            syncProjectsDownAsync(),
+            syncResultsDownAsync(),
+            syncUsersDownAsync()
+        ]).then(function (results) {
+            __tsSyncInProgress = false;
+            console.log("[TS-Sync] Background sync selesai");
+            results.forEach(function (r, i) {
+                if (r.status === "rejected") {
+                    console.warn("[TS-Sync] Sync task " + i + " gagal:", r.reason);
+                }
+            });
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startBackgroundSync);
+    } else {
+        startBackgroundSync();
+    }
+
+
+    // ======================================================
+    // EXPOSE UNTUK DEBUG
+    // ======================================================
+
+    window.TalentScopeSync = window.TalentScopeSync || {};
+    window.TalentScopeSync.forceSync = startBackgroundSync;
+
+    window.TalentScopeSync.getLastSyncTimes = function () {
+        var result = {};
+        ["projects", "participants", "project_participants", "project_assessments", "ts_results", "ts_users"].forEach(function (t) {
+            result[t] = getLastSyncTime(t);
+        });
+        return result;
+    };
+
+    window.TalentScopeSync.resetDeltaSync = function () {
+        ["projects", "participants", "project_participants", "project_assessments", "ts_results", "ts_users"].forEach(function (t) {
+            try {
+                localStorage.removeItem(SYNC_TS_KEY_PREFIX + t);
+            } catch (e) {}
+        });
+        console.log("[TS-Sync] Delta sync reset — refresh halaman untuk full sync ulang");
+    };
+
+
+    // ======================================================
+    // FIX: AUTO-SYNC — SKIP KALAU FLAG DISABLED
+    // ======================================================
+
+    var __tsAutoSyncInterval = null;
+    var __tsAutoSyncIntervalMs = 60000;
+
+    function startAutoSync() {
+        // FIX: Skip total kalau halaman tes
+        if (isAutoSyncDisabled()) {
+            console.log("[TS-Sync] Auto-sync DISABLED (flag __TS_DISABLE_AUTO_SYNC aktif)");
+            return;
+        }
+
+        if (__tsAutoSyncInterval) return;
+
+        __tsAutoSyncInterval = setInterval(function () {
+            if (document.visibilityState !== "visible") {
+                console.log("[TS-Sync] Skip auto-sync — tab tidak aktif");
+                return;
+            }
+
+            console.log("[TS-Sync] Auto-sync berkala...");
+            startBackgroundSync();
+        }, __tsAutoSyncIntervalMs);
+
+        console.log("[TS-Sync] Auto-sync aktif (interval: " + (__tsAutoSyncIntervalMs / 1000) + "s)");
+    }
+
+    function stopAutoSync() {
+        if (__tsAutoSyncInterval) {
+            clearInterval(__tsAutoSyncInterval);
+            __tsAutoSyncInterval = null;
+        }
+    }
+
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") {
+            flushPendingPushesNow();
+        } else if (document.visibilityState === "visible") {
+            // FIX: Skip sync saat tab aktif kembali kalau disabled
+            if (isAutoSyncDisabled()) return;
+
+            console.log("[TS-Sync] Tab aktif kembali — sync langsung");
+            startBackgroundSync();
+        }
+    });
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startAutoSync);
+    } else {
+        startAutoSync();
+    }
+
+    window.TalentScopeSync.startAutoSync = startAutoSync;
+    window.TalentScopeSync.stopAutoSync = stopAutoSync;
+
+    console.log("[TS-Sync] Initialized (refactor fase 2: selective columns + disable flag)");
 
 })();

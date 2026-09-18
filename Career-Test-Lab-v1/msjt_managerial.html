@@ -2,10 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-    <script src="js/ts-supabase-sync.js"></script>
+<script>
+    // FIX: Matikan auto-sync di halaman tes — hemat egress
+    window.__TS_DISABLE_AUTO_SYNC = true;
+</script>
+     <script src="js/config.js"></script>
+    <script src="js/tab-switch-warning.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js"></script>
+   <script src="js/supabase-client.js"></script>
     <script src="js/data-service.js"></script>
+    <script src="js/ts-supabase-sync.js"></script>
     <script src="js/participant-activity.js"></script>
     <script>
         if (typeof ParticipantActivity !== "undefined") {
@@ -733,6 +739,11 @@ function getContext(){
 }
 
 function init(){
+  // PATCH: Init warning pindah tab (MSJT)
+  if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
+    window.TabSwitchWarning.init({ context: "MSJT" });
+  }
+
   const c = getContext();
   participant.name = c.name; participant.id = c.id; participant.project = c.project;
   participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
@@ -951,7 +962,7 @@ async function finishAssessment(){
   const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
   const assessmentCodeStr = String(params.get("assessmentCode") || "MSJT").trim();
   const assessmentNameStr = getAssessmentDisplayName();
-
+const assessmentIdFromUrl = String(params.get("assessmentId") || "").trim();
   let msjtResult = null;
 
   try{
@@ -963,6 +974,7 @@ async function finishAssessment(){
         projectId: ids.projectId,
         participantId: ids.participantId,
         participantName: participant.name || "",
+        assessmentId: assessmentIdFromUrl, 
         assessmentIndex: assessmentIndexNum,
         assessmentCode: assessmentCodeStr,
         assessmentName: assessmentNameStr,
@@ -972,7 +984,16 @@ async function finishAssessment(){
         answeredItems: Object.keys(responses).length,
         submittedAt
       };
-      localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
+      // Simpan dengan UUID (BARU)
+if (assessmentIdFromUrl) {
+    localStorage.setItem(`sjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(msjtResult));
+    localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(msjtResult));
+    console.log("[MSJT] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+}
+
+// Simpan dengan index (kompatibilitas)
+localStorage.setItem(`sjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
+localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
       let allResults = [];
       try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
       if(!Array.isArray(allResults)) allResults = [];

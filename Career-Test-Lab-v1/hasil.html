@@ -82,8 +82,11 @@
 
 <meta charset="UTF-8">
     <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
-    <script src="js/ts-supabase-sync.js"></script>
-
+   <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data-service.js"></script>
+ <script src="js/ts-supabase-sync.js"></script>
 
 <meta
     name="viewport"
@@ -2419,283 +2422,86 @@ a{
    LOGOUT
 ========================================================== */
 
-const logoutBtn =
-    document.getElementById("logoutBtn");
-
-
-if(logoutBtn){
-
-    logoutBtn.addEventListener(
-        "click",
-        function(){
-
-            localStorage.removeItem(
-                "currentUser"
-            );
-
-            localStorage.removeItem(
-                "user"
-            );
-
-            localStorage.removeItem(
-                "loggedInUser"
-            );
-
-            window.location.href =
-                "login.html";
-
-        }
-    );
-
-}
-
-</script>
-
-
-<script src="js/result.js"></script>
-<!-- Panggil script kontrol akses di semua halaman -->
-<script src="app-access-control.js"></script>
-<script src="project-access-filter.js"></script>
-
-<script src="js/auth-guard.js"></script>
-
-<!-- SCRIPT STABILISASI SEMBUNYIKAN MENU SETTINGS -->
-<style id="hide-settings-style">
-  /* Sembunyikan elemen menu settings secara instan sejak CSS dimuat */
-  .dropdown-menu a[href*="setting"],
-  .dropdown-menu button[onclick*="setting"],
-  .dropdown-item[href*="setting"],
-  [class*="dropdown"] a:has(svg):first-child,
-  .user-dropdown a:first-child {
-    display: none !important;
-  }
-</style>
-
-<script>
+// Logout handler — konsisten dengan view-monitoring.html
 (function() {
-  "use strict";
-
-  function enforceHideSettings() {
-    var userRaw = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-    if (!userRaw) return;
-
-    var activeUser = JSON.parse(userRaw);
-    var isSystemAdmin = /system/i.test(activeUser.role || "");
-
-    var styleEl = document.getElementById("hide-settings-style");
-
-    // Jika user ADALAH System Admin, kembalikan tampilan menu Settings
-    if (isSystemAdmin) {
-      if (styleEl) styleEl.remove();
-      return;
-    }
-
-    // Jika BUKAN System Admin, pastikan semua elemen teks bertuliskan "Setting" tersembunyi
-    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
-    menuItems.forEach(function(item) {
-      var text = item.textContent.trim().toLowerCase();
-      if (text.includes("setting") || text.includes("pengaturan")) {
-        item.style.setProperty("display", "none", "important");
-      }
-    });
-  }
-
-  // 1. Jalankan saat DOM dan Window siap
-  document.addEventListener("DOMContentLoaded", enforceHideSettings);
-  window.addEventListener("load", enforceHideSettings);
-
-  // 2. Pantau perubahan DOM (MutationObserver) agar jika dropdown baru dirender/diklik, Settings tetap tersembunyi
-  var observer = new MutationObserver(function() {
-    enforceHideSettings();
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-})();
-</script>
-
-<script>
-(function() {
-    "use strict";
-
-    document.addEventListener("DOMContentLoaded", function() {
-
-        // =========================================================
-        // 1. AMBIL DATA USER LOGIN & KODE PROJECT DARINYA
-        // =========================================================
-        function getActiveUser() {
-            try {
-                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-                return d ? JSON.parse(d) : null;
-            } catch(e) { 
-                return null; 
-            }
-        }
-
-        var activeUser = getActiveUser();
-        if (!activeUser) return;
-
-        var username = activeUser.username || activeUser.name || "";
-        var role = String(activeUser.role || "").toLowerCase();
-
-        // Ambil prefix sebelum titik pertama (Misal: "wwweee.clientuser" -> "wwweee")
-        var projectPrefix = username.includes(".") ? username.split(".")[0].trim().toLowerCase() : username.trim().toLowerCase();
-
-        var isAdmin = role.includes("admin") || role.includes("administrator") || role.includes("system");
-
-        // =========================================================
-        // 2. FUNGSI FILTERING TABEL HASIL
-        // =========================================================
-        function filterResultsByProject() {
-            var tableBody = document.querySelector(".assessment-table tbody, tbody");
-            var rows = document.querySelectorAll("tbody tr");
-            var selectedInfo = document.querySelector(".selected-info, .showing-info, small");
-
-            // Jika role Admin/System, tampilkan semua tanpa filter
-            if (isAdmin) {
-                rows.forEach(function(row) {
-                    row.style.display = "";
-                });
-                return;
-            }
-
-            var visibleCount = 0;
-
-            rows.forEach(function(row) {
-                // Ambil teks dari baris (Project Name / Code biasanya ada di kolom pertama)
-                var rowText = row.textContent.toLowerCase();
-
-                // Cek apakah baris mengandung prefix project pengguna
-                if (rowText.includes(projectPrefix)) {
-                    row.style.display = "";
-                    visibleCount++;
-                } else {
-                    row.style.display = "none"; // Sembunyikan jika tidak cocok dengan project user
-                }
-            });
-
-            // Jika tidak ada data yang cocok dengan project user
-            if (visibleCount === 0 && tableBody) {
-                // Sembunyikan baris default atau tampilkan pesan "Tidak ada data untuk project ini"
-                var emptyMessageRow = document.getElementById("emptyProjectNotice");
-                if (!emptyMessageRow) {
-                    emptyMessageRow = document.createElement("tr");
-                    emptyMessageRow.id = "emptyProjectNotice";
-                    emptyMessageRow.innerHTML = `
-                        <td colspan="6" style="text-align: center; padding: 40px 20px; color: #64748b;">
-                            <i class="fa-solid fa-folder-open" style="font-size: 32px; color: #cbd5e1; margin-bottom: 12px; display: block;"></i>
-                            <strong style="color: #0f172a; display: block; font-size: 15px;">Tidak Ada Hasil Asesmen untuk Project (${projectPrefix.toUpperCase()})</strong>
-                            <small>Belum ada peserta yang menyelesaikan asesmen pada project ini.</small>
-                        </td>
-                    `;
-                    tableBody.appendChild(emptyMessageRow);
-                }
-            }
-        }
-
-        // =========================================================
-        // 3. JALANKAN FILTER SAAT ISI TABEL DI-RENDER
-        // =========================================================
-        // Jalankan langsung
-        setTimeout(filterResultsByProject, 300);
-
-        // Pantau jika ada perubahan data pada tabel (MutationObserver)
-        var tableBody = document.querySelector("tbody");
-        if (tableBody) {
-            var observer = new MutationObserver(function() {
-                filterResultsByProject();
-            });
-            observer.observe(tableBody, { childList: true, subtree: true });
-        }
-    });
-})();
-</script>
-
-<script>
-(function() {
-    "use strict";
-
-    // 1. Ambil URL Parameter '?id=...' jika ada
-    var urlParams = new URLSearchParams(window.location.search);
-    var projectIdFromUrl = urlParams.get('id');
-
-    // 2. Ambil data user yang sedang login
-    function getActiveUser() {
+    var btn = document.getElementById("logoutBtn");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+        if (!confirm("Apakah Anda yakin ingin logout?")) return;
         try {
-            var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-            return d ? JSON.parse(d) : null;
-        } catch(e) { 
-            return null; 
-        }
-    }
-
-    var activeUser = getActiveUser();
-
-    if (activeUser) {
-        var username = activeUser.username || activeUser.name || "";
-        // Ambil nama project sebelum titik pertama (Misal: "wwweee.clientuser" -> "wwweee")
-        var userProject = username.includes(".") ? username.split(".")[0].trim() : username.trim();
-
-        // 3. JIKA URL BELUM MEMILIKI PARAMETER '?id=...', AUTO REDIRECT DENGAN '?id=...'
-        if (!projectIdFromUrl && userProject) {
-            var newUrl = window.location.pathname + "?id=" + encodeURIComponent(userProject);
-            window.location.replace(newUrl); // Redirect otomatis tanpa reload berulang
-            return;
-        }
-    }
-})();
-</script>
-
-<script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // Tarik data hasil dari localStorage
-        const dataHasilRaw = localStorage.getItem('papi_final_result');
-        const container = document.getElementById('hasil-tabel');
-
-        if (dataHasilRaw) {
-            const dataHasil = JSON.parse(dataHasilRaw);
-            const skor = dataHasil.skorDimensi;
-            
-            let html = `
-                <p><strong>Nama Peserta:</strong> ${dataHasil.peserta}</p>
-                <p><strong>Tanggal Pengerjaan:</strong> ${dataHasil.tanggal}</p>
-                <table border="1" style="width: 100%; border-collapse: collapse; text-align: left;">
-                    <tr style="background: #f1f5f9;">
-                        <th style="padding: 8px;">Dimensi</th>
-                        <th style="padding: 8px;">Skor</th>
-                    </tr>
-            `;
-
-            // Looping untuk menampilkan skor tiap dimensi
-            for (const [dimensi, nilai] of Object.entries(skor)) {
-                html += `
-                    <tr>
-                        <td style="padding: 8px;"><strong>${dimensi}</strong></td>
-                        <td style="padding: 8px;">${nilai}</td>
-                    </tr>
-                `;
-            }
-
-            html += `</table>`;
-            container.innerHTML = html;
-        } else {
-            container.innerHTML = "<p>Belum ada data pengerjaan yang disubmit.</p>";
-        }
+            sessionStorage.removeItem("ts_admin_session");
+            localStorage.removeItem("talentscope_current_user");
+            localStorage.removeItem("currentUser");
+            localStorage.removeItem("user");
+            localStorage.removeItem("loggedInUser");
+        } catch (e) {}
+        window.location.href = "login.html";
     });
+})();
+
 </script>
 
-<!-- SCRIPT HAMBURGER MENU (SIDEBAR DRAWER UNTUK MOBILE) -->
+
+<!-- Script untuk auto-redirect dengan ?id= projectId -->
 <script>
 (function() {
     "use strict";
+    
+    // ==========================================================
+    // PATCH: Isi company dari username kalau kosong
+    // ==========================================================
+    function fixClientSessionCompany() {
+        try {
+            var sessionKey = "ts_admin_session";
+            var raw = sessionStorage.getItem(sessionKey);
+            if (!raw) {
+                // Coba localStorage juga
+                raw = localStorage.getItem("talentscope_current_user");
+                sessionKey = "talentscope_current_user";
+            }
+            if (!raw) return;
+            
+            var session = JSON.parse(raw);
+            var company = String(session.company || "").trim();
+            
+            // Kalau company kosong, extract dari username
+            if (!company && session.username) {
+                var username = String(session.username).trim();
+                // Pattern: "astra-20260911.clientuser" atau "astra.clientuser"
+                // Prefix = sebelum "-" atau "."
+                var match = username.match(/^([a-z0-9]+)/i);
+                if (match) {
+                    company = match[1].toLowerCase();
+                    session.company = company;
+                    
+                    // Simpan balik
+                    if (sessionKey === "ts_admin_session") {
+                        sessionStorage.setItem(sessionKey, JSON.stringify(session));
+                    } else {
+                        localStorage.setItem(sessionKey, JSON.stringify(session));
+                    }
+                    
+                    console.log("[hasil.html] Company di-extract dari username:", company);
+                }
+            }
+        } catch (e) {
+            console.warn("[hasil.html] Fix company error:", e);
+        }
+    }
+    
+    // Jalankan sebelum render
+    fixClientSessionCompany();
+})();
+</script>
 
+<!-- Script hamburger menu -->
+<script>
+(function() {
+    "use strict";
     function initHamburgerMenu() {
         var hamburgerBtn = document.getElementById("hamburgerBtn");
         var sidebar = document.querySelector(".sidebar");
         var overlay = document.getElementById("sidebarOverlay");
-
         if (!hamburgerBtn || !sidebar || !overlay) return;
 
         function openSidebar() {
@@ -2703,41 +2509,26 @@ if(logoutBtn){
             overlay.classList.add("active");
             hamburgerBtn.classList.add("active");
         }
-
         function closeSidebar() {
             sidebar.classList.remove("active");
             overlay.classList.remove("active");
             hamburgerBtn.classList.remove("active");
         }
-
         hamburgerBtn.addEventListener("click", function() {
-            if (sidebar.classList.contains("active")) {
-                closeSidebar();
-            } else {
-                openSidebar();
-            }
+            if (sidebar.classList.contains("active")) closeSidebar();
+            else openSidebar();
         });
-
         overlay.addEventListener("click", closeSidebar);
-
-        // Tutup sidebar otomatis saat menu di dalamnya diklik (khusus mobile)
         sidebar.querySelectorAll("a, button").forEach(function(el) {
             if (el.id === "hamburgerBtn") return;
             el.addEventListener("click", function() {
-                if (window.innerWidth <= 768) {
-                    closeSidebar();
-                }
+                if (window.innerWidth <= 768) closeSidebar();
             });
         });
-
-        // Tutup sidebar otomatis jika layar diperbesar melewati breakpoint mobile
         window.addEventListener("resize", function() {
-            if (window.innerWidth > 768) {
-                closeSidebar();
-            }
+            if (window.innerWidth > 768) closeSidebar();
         });
     }
-
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", initHamburgerMenu);
     } else {
@@ -2745,7 +2536,136 @@ if(logoutBtn){
     }
 })();
 </script>
+<!-- ==========================================================
+   PATCH: PRELOAD DARI SUPABASE — SESSION ISOLATION
+   ----------------------------------------------------------
+   Sebelum result.js baca localStorage, kita preload data
+   project + participants dari Supabase. Ini yang bikin
+   halaman ini aman di device manapun.
+========================================================== -->
+<script>
+(function () {
+    "use strict";
 
+    // Ambil projectId dari URL (?id=xxx) atau session
+    function getProjectIdFromUrl() {
+        try {
+            var params = new URLSearchParams(window.location.search);
+            var id = params.get("id");
+            if (id) return String(id).trim();
+        } catch (e) {}
+        return "";
+    }
+
+    function getProjectIdFromSession() {
+        try {
+            var raw = sessionStorage.getItem("ts_admin_session") ||
+                      localStorage.getItem("talentscope_current_user");
+            if (!raw) return "";
+            var session = JSON.parse(raw);
+            return String(
+                session.projectId ||
+                session.project_id ||
+                ""
+            ).trim();
+        } catch (e) { return ""; }
+    }
+
+    async function preloadFromSupabase() {
+        try {
+            var projectId = getProjectIdFromUrl() || getProjectIdFromSession();
+            if (!projectId || projectId === "ALL") {
+                console.log("[HASIL-PRELOAD] Tidak ada projectId spesifik, skip preload");
+                return;
+            }
+
+            var sb = window.supabaseClient || window.supabase;
+            if (!sb || typeof sb.from !== "function") {
+                console.warn("[HASIL-PRELOAD] Supabase client tidak tersedia");
+                return;
+            }
+
+            console.log("[HASIL-PRELOAD] Query Supabase untuk project:", projectId);
+
+            // 1. Query project
+            var projRes = await sb.from("projects").select("*").eq("id", projectId).single();
+            if (projRes.error || !projRes.data) {
+                console.warn("[HASIL-PRELOAD] Project tidak ada di Supabase");
+                return;
+            }
+            var project = projRes.data;
+
+            // 2. Query participants
+            var relationsRes = await sb
+                .from("project_participants")
+                .select("*")
+                .eq("project_id", projectId);
+
+            var participants = [];
+            if (Array.isArray(relationsRes.data) && relationsRes.data.length > 0) {
+                var pids = relationsRes.data.map(function (r) { return r.participant_id; }).filter(Boolean);
+                var partsRes = await sb.from("participants").select("*").in("id", pids);
+
+                if (Array.isArray(partsRes.data)) {
+                    participants = partsRes.data.map(function (p) {
+                        var rawData = p.raw_data || {};
+                        var merged = Object.assign({}, rawData, p);
+                        var rel = relationsRes.data.find(function (r) {
+                            return String(r.participant_id) === String(p.id);
+                        });
+                        if (rel) {
+                            merged.status = p.status || rel.status || rel.participant_status || "Not Started";
+                        }
+                        return merged;
+                    });
+                }
+            }
+
+            // 3. Merge ke localStorage
+            var projects = [];
+            try {
+                projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+            } catch (e) { projects = []; }
+            if (!Array.isArray(projects)) projects = [];
+
+            var existingIdx = projects.findIndex(function (p) {
+                return String(p.id) === String(projectId);
+            });
+
+            var freshProject = Object.assign({}, project, {
+                participants: participants
+            });
+
+            if (existingIdx >= 0) {
+                projects[existingIdx] = Object.assign({}, projects[existingIdx], freshProject);
+            } else {
+                projects.push(freshProject);
+            }
+
+            localStorage.setItem("talentscope_projects", JSON.stringify(projects));
+            console.log("[HASIL-PRELOAD] ✅ Berhasil:", participants.length, "peserta");
+
+        } catch (error) {
+            console.warn("[HASIL-PRELOAD] Gagal:", error);
+        }
+    }
+
+    // Jalankan preload SEBELUM result.js
+    // Cara: kita "tahan" event load — result.js menunggu preload selesai
+    var __preloadPromise = preloadFromSupabase();
+
+    // Expose ke window supaya result.js bisa tunggu
+    window.__tsHasilPreload = __preloadPromise;
+
+})();
+</script>
+
+<script src="js/result.js" defer></script>
+<script src="js/access-control.js" defer></script>
+<script src="js/auth-guard.js" defer></script>
+
+</body>
+</html>
 </body>
 
 </html>

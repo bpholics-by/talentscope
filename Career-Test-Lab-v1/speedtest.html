@@ -2,10 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-    <script src="js/ts-supabase-sync.js"></script>
+<script>
+    // FIX: Matikan auto-sync di halaman tes — hemat egress
+    window.__TS_DISABLE_AUTO_SYNC = true;
+</script>
+    <script src="js/config.js"></script>
+    <script src="js/tab-switch-warning.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/data-service.js"></script>
+    <script src="js/ts-supabase-sync.js"></script>
     <script src="js/participant-activity.js"></script>
     <script>
         if (typeof ParticipantActivity !== "undefined") {
@@ -367,6 +373,13 @@ function getContext(){
   return {id: participantId, name: participantName, project: projectName, projectId: projectId, participant: participantObject, projectData: projectObject};
 }
 function init(){
+  // ==========================================================
+  // PATCH: Init warning pindah tab (VAP)
+  // ==========================================================
+  if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
+    window.TabSwitchWarning.init({ context: "VAP" });
+  }
+
   const c = getContext();
   participant.name = c.name; participant.id = c.id; participant.project = c.project;
   participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
@@ -633,28 +646,70 @@ async function finishAssessment(){
   const ids = getAssessmentIdentity();
   const params = new URLSearchParams(location.search);
   const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
-  const assessmentCodeStr = String(params.get("assessmentCode") || "VAP").trim();
+  function normalizeAssessmentCode(code, fallback) {
+    var c = String(code || "").trim().toLowerCase();
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)) {
+        return fallback;
+    }
+    return c || fallback;
+}
+
+const assessmentCodeStr = normalizeAssessmentCode(
+    params.get("assessmentCode"),
+    "vap"
+);
   const assessmentNameStr = getAssessmentDisplayName();
+  const assessmentIdFromUrl = String(params.get("assessmentId") || "").trim();
   let vapResult = null;
 
   try{
     if(ids.projectId && ids.participantId && result){
       const submittedAt = new Date().toISOString();
-      vapResult = {
-        version: 3,
-        resultType: "VAP",
-        projectId: ids.projectId,
-        participantId: ids.participantId,
-        participantName: participant.name || "",
-        assessmentIndex: assessmentIndexNum,
-        assessmentCode: assessmentCodeStr,
-        assessmentName: assessmentNameStr,
-        scores: result,
-        sessions: sessions,
-        submittedAt
-      };
+      // PATCH: Kalau participant.name kosong, ambil dari Supabase
+let participantName = participant.name || "";
+
+if (!participantName) {
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (sb) {
+            const { data: pData } = await sb
+                .from("participants")
+                .select("name, full_name, raw_data")
+                .eq("id", ids.participantId)
+                .single();
+            
+            if (pData) {
+                participantName = pData.name || 
+                                   pData.full_name || 
+                                   (pData.raw_data && pData.raw_data.name) || 
+                                   "";
+                console.log("[VAP] Nama dari Supabase:", participantName);
+            }
+        }
+    } catch (e) {
+        console.warn("[VAP] Gagal fetch nama:", e);
+    }
+}
+
+vapResult = {
+    version: 3,
+    resultType: "VAP",
+    projectId: ids.projectId,
+    participantId: ids.participantId,
+    participantName: participantName,   // ← pakai variabel
+    assessmentId: assessmentIdFromUrl, 
+    // ...
+};
+            // Simpan dengan UUID (BARU)
+      if (assessmentIdFromUrl) {
+          localStorage.setItem(`vap_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(vapResult));
+          localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(vapResult));
+          console.log("[VAP] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+      }
+
+      // Simpan dengan index (kompatibilitas)
+      localStorage.setItem(`vap_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(vapResult));
       localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(vapResult));
-      let allResults = [];
       try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
       if(!Array.isArray(allResults)) allResults = [];
       allResults = allResults.filter(item => !(String(item?.projectId || "") === ids.projectId && String(item?.participantId || "") === ids.participantId && String(item?.assessmentIndex ?? "") === String(assessmentIndexNum) && String(item?.assessmentCode || "").toUpperCase() === "VAP"));

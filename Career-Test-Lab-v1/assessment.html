@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<script src="js/ts-supabase-sync.js"></script>
+<script src="js/config.js"></script>                   
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js"></script>
-<script src="js/data-service.js"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/data-service.js?v=1"></script>
+<script src="js/ts-supabase-sync.js?v=1"></script>     
 <script src="js/participant-activity.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -270,7 +271,7 @@ body{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#2563eb 100%);back
     ========================================================= */
     document.getElementById('btnMulaiUjian').addEventListener('click', function () {
 
-        var targetTestUrl = "disc_test.html"; // fallback
+        var targetTestUrl = ""; // akan di-resolve di bawah
 
         if (!projectId || !participantId) {
             alert('Identitas project atau peserta tidak valid. Silakan login ulang.');
@@ -307,46 +308,84 @@ body{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#2563eb 100%);back
         }
 
         /* ============================================
-           RESOLVE TARGET TEST URL
-           Prioritas 1: nextTestUrl dari dashboard
-           Prioritas 2: fallback berdasarkan code/name
-        ============================================ */
-        if (nextTestUrlParam) {
-            targetTestUrl = nextTestUrlParam;
-        } else {
-            var codeLower = assessmentCode.toLowerCase();
-            var pkgLower = assessmentName.toLowerCase();
+   RESOLVE TARGET TEST URL
+   Prioritas 1: nextTestUrl dari dashboard
+   Prioritas 2: fallback berdasarkan code/name
+============================================ */
+if (nextTestUrlParam) {
+    targetTestUrl = nextTestUrlParam;
+} else {
+    var codeLower = assessmentCode.toLowerCase();
+    var pkgLower = assessmentName.toLowerCase();
+    
+    console.log("[ASSESSMENT] Resolving route:", {
+        code: assessmentCode,
+        name: assessmentName,
+        codeLower: codeLower,
+        pkgLower: pkgLower
+    });
 
-            // Match CODE dulu
-            if (codeLower.includes("lsjt") || codeLower.includes("leadership")) {
-                targetTestUrl = "sjt_leadership.html";
-            } else if (codeLower.includes("msjt") || codeLower.includes("managerial")) {
-                targetTestUrl = "msjt_managerial.html";
-            } else if (codeLower.includes("vap") || codeLower.includes("visual") || codeLower.includes("performance")) {
-                targetTestUrl = "speedtest.html";
-            } else if (codeLower.includes("papi") || codeLower.includes("kostick")) {
-                targetTestUrl = "papi_kostick_test.html";
-            } else if (codeLower.includes("disc")) {
-                targetTestUrl = "disc_test.html";
-            }
-            // Match NAME
-            else if (pkgLower.includes("lsjt") || pkgLower.includes("leadership")) {
-                targetTestUrl = "sjt_leadership.html";
-            } else if (pkgLower.includes("msjt") || pkgLower.includes("managerial")) {
-                targetTestUrl = "msjt_managerial.html";
-            } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("work performance") || pkgLower.includes("sustained attention")) {
-                targetTestUrl = "speedtest.html";
-            } else if (pkgLower.includes("papi") || pkgLower.includes("kostick")) {
-                targetTestUrl = "papi_kostick_test.html";
-            } else if (pkgLower.includes("disc")) {
-                targetTestUrl = "disc_test.html";
-            }
-            // Fallback
-            else {
-                console.warn("Tipe assessment tidak dikenali:", assessmentCode, assessmentName);
-                targetTestUrl = "disc_test.html";
-            }
+    // ============================================
+    // PRIORITAS 1: Match CODE
+    // ============================================
+    if (codeLower.includes("tpdk") || codeLower.includes("penalaran")) {
+        targetTestUrl = "tpdk_test.html";
+    } else if (codeLower.includes("lsjt") || codeLower.includes("leadership")) {
+        targetTestUrl = "sjt_leadership.html";
+    } else if (codeLower.includes("msjt") || codeLower.includes("managerial")) {
+        targetTestUrl = "msjt_managerial.html";
+    } else if (codeLower.includes("vap") || codeLower.includes("visual") || codeLower.includes("performance")) {
+        targetTestUrl = "speedtest.html";
+    } else if (codeLower.includes("papi") || codeLower.includes("kostick")) {
+        targetTestUrl = "papi_kostick_test.html";
+    } else if (codeLower.includes("disc")) {
+        targetTestUrl = "disc_test.html";
+    }
+    
+    // ============================================
+    // PRIORITAS 2: Match NAME
+    // ============================================
+    else if (pkgLower.includes("tpdk") || pkgLower.includes("penalaran") || pkgLower.includes("tes penalaran")) {
+        targetTestUrl = "tpdk_test.html";
+    } else if (pkgLower.includes("lsjt") || pkgLower.includes("leadership")) {
+        targetTestUrl = "sjt_leadership.html";
+    } else if (pkgLower.includes("msjt") || pkgLower.includes("managerial")) {
+        targetTestUrl = "msjt_managerial.html";
+    } else if (pkgLower.includes("vap") || pkgLower.includes("visual") || pkgLower.includes("performance") || pkgLower.includes("work performance") || pkgLower.includes("sustained attention")) {
+        targetTestUrl = "speedtest.html";
+    } else if (pkgLower.includes("papi") || pkgLower.includes("kostick")) {
+        targetTestUrl = "papi_kostick_test.html";
+    } else if (pkgLower.includes("disc")) {
+        targetTestUrl = "disc_test.html";
+    }
+    
+    // ============================================
+    // FALLBACK: Error — jangan silent ke DISC!
+    // ============================================
+    else {
+        console.error("❌ Tipe assessment tidak dikenali!");
+        console.error("   Code:", assessmentCode);
+        console.error("   Name:", assessmentName);
+        
+        alert(
+            "⚠ Tipe assessment tidak dikenali:\n\n" +
+            "Code: " + (assessmentCode || "(kosong)") + "\n" +
+            "Name: " + (assessmentName || "(kosong)") + "\n\n" +
+            "Silakan hubungi administrator."
+        );
+        
+        // Re-enable button
+        var btn = document.getElementById('btnMulaiUjian');
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('loading');
         }
+        
+        return;
+    }
+    
+    console.log("[ASSESSMENT] Target URL resolved:", targetTestUrl);
+}
 
         /* ============================================
            RECORD ACTIVITY (non-blocking)

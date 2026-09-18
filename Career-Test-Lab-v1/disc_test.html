@@ -1,10 +1,16 @@
 <!doctype html><html lang="id"><head><meta charset="utf-8">
+    <script>
+    // FIX: Matikan auto-sync di halaman tes — hemat egress
+    window.__TS_DISABLE_AUTO_SYNC = true;
+</script>
     <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
-    <script src="js/ts-supabase-sync.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/tab-switch-warning.js"></script>
     <!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/data-service.js"></script>
+    <script src="js/ts-supabase-sync.js"></script>
     <script src="js/participant-activity.js"></script>
     <script>
         if (typeof ParticipantActivity !== "undefined") {
@@ -396,9 +402,33 @@ const p=new URLSearchParams(location.search);
 const projectId=(p.get('projectId')||p.get('project')||'').trim();
 const participantId=(p.get('participantId')||p.get('participant')||'').trim();
 const assessmentIndex=Number(p.get('assessmentIndex')??p.get('step')??0);
-const assessmentCode=(p.get('assessmentCode')||'DISC').toUpperCase();
+
+// ==========================================================
+// FIX: Ambil assessmentId (UUID) dari URL
+// ==========================================================
+const assessmentIdFromUrl = String(p.get('assessmentId') || "").trim();
+
+function normalizeAssessmentCode(code, fallback) {
+    var c = String(code || "").trim().toLowerCase();
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)) {
+        return fallback;
+    }
+    return c || fallback;
+}
+
+const assessmentCode = normalizeAssessmentCode(
+    p.get("assessmentCode"),
+    "disc"
+).toUpperCase();
+
 const answerKey=`ts_disc_${encodeURIComponent(projectId)}_${encodeURIComponent(participantId)}_${assessmentIndex}_answers`;
-const resultKey=`disc_result_v3_${projectId}_${participantId}_${assessmentIndex}`;
+
+// ==========================================================
+// FIX: Key pakai UUID kalau ada, fallback ke index
+// ==========================================================
+const resultKeySuffix = assessmentIdFromUrl || String(assessmentIndex);
+const resultKey=`disc_result_v3_${projectId}_${participantId}_${resultKeySuffix}`;
+
 let answers=[];try{answers=JSON.parse(localStorage.getItem(answerKey)||'[]')}catch(e){answers=[]}
 answers=Array.from({length:questions.length},(_,i)=>({M:answers[i]?.M??null,L:answers[i]?.L??null}));
 let current=0,seconds=30*60,timerId=null,sending=false;
@@ -456,10 +486,22 @@ function pick(kind,i){
  answers[current][kind]=i;save();render();
 }
 function go(i){current=Math.max(0,Math.min(questions.length-1,i));render();window.scrollTo({top:document.querySelector('.quiz-card').offsetTop-82,behavior:'smooth'})}
-function startQuiz(){
- if(!projectId||!participantId){alert('Identitas project atau peserta tidak valid. Silakan kembali dan login ulang.');return}
- updateParticipantAssessmentStatus('Ongoing', 'Sedang mengerjakan tes (DISC Personality)'+getAssessmentSequenceLabel(), 'Memulai tes DISC Personality', 'test-start');
- document.getElementById('instruction').style.display='none';document.getElementById('quiz').style.display='block';render();startTimer();window.scrollTo({top:0,behavior:'smooth'});
+function startQuiz() {
+    if (!projectId || !participantId) {
+        alert('Identitas project atau peserta tidak valid. Silakan kembali dan login ulang.');
+        return;
+    }
+
+    if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
+        window.TabSwitchWarning.init({ context: "DISC" });
+    }
+
+    updateParticipantAssessmentStatus('Ongoing', 'Sedang mengerjakan tes (DISC Personality)' + getAssessmentSequenceLabel(), 'Memulai tes DISC Personality', 'test-start');
+    document.getElementById('instruction').style.display = 'none';
+    document.getElementById('quiz').style.display = 'block';
+    render();
+    startTimer();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function startTimer(){
  if(timerId)return;
@@ -483,15 +525,58 @@ function finalize(auto){
  });
  const least={D:-leastCount.D,I:-leastCount.I,S:-leastCount.S,C:-leastCount.C};
  const change={D:most.D+least.D,I:most.I+least.I,S:most.S+least.S,C:most.C+least.C};
- const result={version:3,resultType:'DISC',projectId,participantId,assessmentIndex,assessmentCode,scores:{most,least,change},answers:stored,submittedAt:new Date().toISOString()};
- localStorage.setItem(resultKey,JSON.stringify(result));
- localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`,JSON.stringify(result));
+ const result={version:3,resultType:'DISC',projectId,participantId,assessmentIndex,assessmentId:assessmentIdFromUrl,assessmentCode,scores:{most,least,change},answers:stored,submittedAt:new Date().toISOString()};
+
+ // ==========================================================
+ // FIX: Simpan dengan UUID + index (dual-write)
+ // ==========================================================
+ if (assessmentIdFromUrl) {
+     // Simpan dengan UUID (BARU)
+     localStorage.setItem(`disc_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
+     localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
+     console.log("[DISC] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+ }
+
+ // Tetap simpan dengan index (KOMPATIBILITAS dengan data lama)
+ localStorage.setItem(resultKey, JSON.stringify(result));
+ localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`, JSON.stringify(result));
+
  let all=[];try{all=JSON.parse(localStorage.getItem('talent_scope_results')||'[]')}catch(e){}
  if(!Array.isArray(all))all=[];
  all=all.filter(x=>!(String(x?.projectId||'')===projectId&&String(x?.participantId||'')===participantId&&String(x?.assessmentIndex??'')===String(assessmentIndex)&&String(x?.assessmentCode||'').toUpperCase()==='DISC'));
  all.push(result);localStorage.setItem('talent_scope_results',JSON.stringify(all));localStorage.removeItem(answerKey);
+
+ // ==========================================================
+ // Sync DISC ke Supabase
+ // ==========================================================
+ try {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === "function") {
+        const participantName = document.getElementById('participant')?.textContent || '';
+
+        sb.from("disc_results").upsert({
+            project_id: projectId,
+            participant_id: participantId,
+            assessment_index: assessmentIndex,
+            assessment_code: assessmentCode,
+            assessment_name: "DISC Personality",
+            participant_name: participantName,
+            result_type: "DISC",
+            scores: result.scores,
+            raw_data: result.answers,
+            submitted_at: result.submittedAt
+        }, {
+            onConflict: "project_id,participant_id,assessment_index,assessment_code"
+        }).then(({ error }) => {
+            if (error) console.error("[DISC] Supabase sync error:", error);
+            else console.log("[DISC] ✓ Tersinkron ke Supabase (disc_results)");
+        });
+    }
+ } catch (err) {
+    console.warn("[DISC] Gagal sync Supabase:", err);
+ }
+
  updateParticipantAssessmentStatus('Completed', 'Tes DISC telah selesai — peserta masih aktif dalam sesi'+getAssessmentSequenceLabel(), 'Menyelesaikan tes DISC Personality', 'test-complete');
- // IMPORTANT: selesai tes ≠ logout. Presence/session tetap ONLINE sampai peserta klik Logout atau menutup tab/window.
  document.getElementById('modal').classList.remove('show');document.getElementById('quiz').style.display='none';document.getElementById('finish').style.display='block';
 }
 function packageCodeOf(item){
@@ -535,12 +620,8 @@ function nextTest(){
  const nextRoute=resolveAssessmentRoute(nextCode,nextName);
 
  if(nextRoute){
-  // Langsung ke tes berikutnya, tanpa halaman petunjuk umum lagi.
   location.href=`${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
  }else{
-  // Tidak bisa dipastikan jenis tesnya dari code/name yang ada —
-  // lewat halaman petunjuk dulu sebagai jalan aman, supaya tidak
-  // salah meloncat ke tes yang keliru (mis. balik ke DISC).
   console.warn('[DISC] Tidak bisa menentukan tes berikutnya dari code/name:',nextCode,nextName);
   location.href=`assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
  }
@@ -562,11 +643,7 @@ loadMeta();
 
 /* ==========================================================
    TALENTSCOPE PARTICIPANT PRESENCE & ASSESSMENT SYNC
-   FULL FIX:
-   - Sinkron ke talentscope_projects (Database Peserta)
-   - Sinkron legacy projects (kompatibilitas Monitoring lama)
-   - Status assessment + activity log direkam langsung
-========================================================== */
+   ========================================================== */
 
 const HEARTBEAT_INTERVAL = 5000;
 
@@ -612,20 +689,17 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
         const participant = project.participants[participantIndex];
         const now = new Date().toISOString();
 
-        // Presence
         participant.isLoggedIn = true;
         participant.onlineStatus = "online";
         participant.lastSeen = now;
         participant.lastSeenAt = now;
         participant.lastHeartbeat = now;
 
-        // Jangan reset waktu login setiap heartbeat.
         if (!participant.loginTime) participant.loginTime = now;
         if (!participant.loggedInAt) participant.loggedInAt = participant.loginTime;
         if (!participant.loginAt) participant.loginAt = participant.loginTime;
         if (!participant.lastLoginAt) participant.lastLoginAt = participant.loginTime;
 
-        // Assessment status - simpan seluruh alias agar Database lama/baru terbaca.
         if (status) {
             participant.assessmentStatus = status;
             participant.statusAsesmen = status;
@@ -643,7 +717,6 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
 
         participant.disconnectDetectedAt = null;
 
-        // Tambah history hanya untuk event penting, bukan setiap heartbeat.
         if (forceHistory && historyText) {
             if (!Array.isArray(participant.activityHistory)) {
                 participant.activityHistory = [];
@@ -676,7 +749,6 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
 }
 
 function updateParticipantAssessmentStatus(status, activity, historyText, historyType) {
-    // Database Peserta memakai talentscope_projects sebagai sumber utama.
     const primary = updateStore(
         "talentscope_projects",
         status,
@@ -686,7 +758,6 @@ function updateParticipantAssessmentStatus(status, activity, historyText, histor
         true
     );
 
-    // Legacy compatibility untuk halaman lama.
     updateStore(
         "projects",
         status,
@@ -700,9 +771,6 @@ function updateParticipantAssessmentStatus(status, activity, historyText, histor
 }
 
 function updateParticipantHeartbeat() {
-    // Saat halaman DISC terbuka tetapi belum mulai:
-    // peserta tetap online, tetapi status assessment belum dipaksa Ongoing.
-    // Setelah tombol Kerjakan Tes ditekan, startQuiz mengubah menjadi Ongoing.
     updateStore(
         "talentscope_projects",
         null,
@@ -721,14 +789,6 @@ function updateParticipantHeartbeat() {
         false
     );
 }
-
-/* ==========================================================
-   SESSION / LOGOUT CONTROL
-   Prinsip:
-   1. Selesai assessment TIDAK berarti logout.
-   2. Pindah ke tes berikutnya/dashboard TIDAK berarti logout.
-   3. Logout hanya dicatat saat tombol Logout atau tab/window benar-benar ditutup.
-========================================================== */
 
 const NAVIGATION_FLAG = `talentscope_internal_navigation_${projectId}_${participantId}`;
 
@@ -808,8 +868,6 @@ function setParticipantOffline(storeKey, reason, historyText) {
 }
 
 function recordParticipantLogout(reason, historyText) {
-    // Jangan mengubah assessmentStatus.
-    // Jika DISC sudah Completed, status Completed tetap tersimpan.
     setParticipantOffline(
         "talentscope_projects",
         reason,
@@ -830,10 +888,8 @@ function handleExplicitLogout() {
     );
 }
 
-// Reset flag jika halaman berhasil dimuat setelah perpindahan internal.
 consumeInternalNavigation();
 
-// Tangkap tombol logout bila tombol tersebut tersedia pada halaman ini.
 document.addEventListener("click", function(event) {
     const button = event.target.closest(
         '[data-action="logout"], #logout, #logoutBtn, .logout-btn, .btn-logout'
@@ -841,9 +897,6 @@ document.addEventListener("click", function(event) {
     if (button) handleExplicitLogout();
 });
 
-// pagehide digunakan untuk close tab/window.
-// Pindah ke tes lain atau dashboard tidak dicatat sebagai logout karena
-// sebelumnya sudah diberi markInternalNavigation().
 window.addEventListener("pagehide", function(event) {
     if (event.persisted) return;
 
@@ -860,11 +913,6 @@ window.addEventListener("pagehide", function(event) {
     }
 });
 
-/* ==========================================================
-   INITIALIZE
-========================================================== */
-
-// Catat peserta sedang membuka halaman DISC.
 updateParticipantAssessmentStatus(
     "Ongoing",
     "Sedang berada pada halaman tes (DISC Personality)" + getAssessmentSequenceLabel(),
@@ -872,7 +920,6 @@ updateParticipantAssessmentStatus(
     "test-open"
 );
 
-// Heartbeat setiap 5 detik.
 updateParticipantHeartbeat();
 
 const participantHeartbeatInterval = setInterval(

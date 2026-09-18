@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="js/config.js"></script>  
 <!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
     <script>
     (function() {
@@ -227,7 +228,7 @@
     })();
     </script>
 
-<script src="js/ts-supabase-sync.js"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link
@@ -3393,6 +3394,192 @@ a{
 .assessment-package-header{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}.assessment-package-header h2{margin:0;font-size:18px}.assessment-package-header .desc{margin:5px 0 0}.assessment-package-edit-btn{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:10px 15px;border-radius:10px}.assessment-package-modal{width:min(760px,calc(100vw - 32px));max-height:min(78vh,760px);display:flex;flex-direction:column}.assessment-package-modal .modal-head{flex:0 0 auto}.assessment-package-editor-body{overflow:auto;padding:4px 2px 4px}.assessment-package-editor-note{font-size:13px;color:#667085;margin:0 0 14px;line-height:1.5}.assessment-picker-list{display:grid;gap:10px}.assessment-picker-item{display:flex;align-items:center;gap:13px;border:1px solid #e2e8f0;border-radius:12px;padding:13px 14px;cursor:pointer;transition:.18s ease;background:#fff}.assessment-picker-item:hover{border-color:#b8c7df;box-shadow:0 4px 14px rgba(16,24,40,.06)}.assessment-picker-item.is-selected{border-color:#4d7fc3;background:#f6f9ff}.assessment-picker-check{width:19px;height:19px;accent-color:#2b72c5;flex:0 0 auto}.assessment-picker-main{min-width:0;flex:1}.assessment-picker-name{font-size:14px;font-weight:700;color:#24364b;line-height:1.35}.assessment-picker-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;color:#728096;font-size:12px}.assessment-picker-count{display:inline-flex;align-items:center;gap:7px;margin-bottom:13px;padding:7px 10px;border-radius:999px;background:#edf4ff;color:#2d62a4;font-size:12px;font-weight:700}.assessment-picker-empty{padding:28px;text-align:center;color:#7a8798;border:1px dashed #d7dee8;border-radius:12px}.assessment-package-modal .modal-actions{flex:0 0 auto;margin-top:18px}@media(max-width:640px){.assessment-package-header{align-items:stretch;flex-direction:column}.assessment-package-edit-btn{justify-content:center;width:100%}}
 .assessment-empty-state{display:flex;align-items:center;gap:14px;padding:22px;border:1px dashed #d6dee8;border-radius:14px;background:#fafbfd;color:#667085}.assessment-empty-state strong{display:block;color:#344054;margin-bottom:3px}.assessment-empty-state span{font-size:12px}.assessment-empty-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#f1f4f8;color:#7b8798}
 @media(max-width:640px){.assessment-premium-card{align-items:stretch;flex-direction:column;padding:16px}.assessment-title-row{align-items:flex-start;flex-direction:column;gap:7px}.assessment-card-actions{width:100%}.assessment-edit-btn{width:100%}}
+
+/* ==========================================================
+   PATCH: Assessment Package Reorder UI
+========================================================== */
+.assessment-package-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.assessment-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    cursor: grab;
+    user-select: none;
+}
+
+.assessment-item:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.assessment-item.dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+    background: #e0f2fe;
+    border-color: #0ea5e9;
+}
+
+.assessment-item.drag-over {
+    border-color: #0ea5e9;
+    background: #e0f2fe;
+    transform: scale(1.02);
+}
+
+.assessment-drag-handle {
+    width: 24px;
+    height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    color: #94a3b8;
+    flex: 0 0 24px;
+}
+
+.assessment-drag-handle::before,
+.assessment-drag-handle::after {
+    content: "";
+    width: 14px;
+    height: 2px;
+    background: currentColor;
+    border-radius: 2px;
+    box-shadow: 0 -5px 0 currentColor, 0 5px 0 currentColor;
+}
+
+.assessment-number {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 10px;
+    background: #e0f2fe;
+    color: #0284c7;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.assessment-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.assessment-info h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.assessment-info small {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    color: #64748b;
+}
+
+.assessment-status-badge {
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 11px;
+    font-weight: 700;
+    flex: 0 0 auto;
+}
+
+.assessment-actions {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.assessment-action-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.assessment-action-btn:hover:not(:disabled) {
+    background: #0ea5e9;
+    border-color: #0ea5e9;
+    color: #fff;
+}
+
+.assessment-action-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.reorder-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #1e40af;
+}
+
+.reorder-toolbar strong {
+    font-weight: 700;
+}
+
+.reorder-save-btn {
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: #0ea5e9;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.reorder-save-btn:hover {
+    background: #0284c7;
+}
+
+.reorder-save-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.reorder-save-btn.saved {
+    background: #16a34a;
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
@@ -3762,21 +3949,36 @@ a{
     </div>
 
     <div class="tab-panel hidden" id="tab-assessment">
-      <div class="assessment-package-header">
+    <div class="assessment-package-header">
         <div>
-          <h2>Assessment Package</h2>
-          <p class="desc">Assessment instruments assigned to this project.</p>
+            <h2>Assessment Package</h2>
+            <p class="desc">Assessment instruments assigned to this project.</p>
         </div>
-        <button type="button" class="btn btn-primary assessment-package-edit-btn" onclick="openAssessmentPackageEditor()">
-          <i class="fa-solid fa-pen-to-square"></i>
-          <span>Edit Assessment Package</span>
-        </button>
-      </div>
-      <div id="assessmentList">
-        <p style="color:var(--muted)">1. Verbal Reasoning Test (30 Min)</p>
-        <p style="color:var(--muted)">2. Personality & Behavioral Profile (45 Min)</p>
-      </div>
+        <div style="display:flex;gap:10px;">
+            <button type="button" class="btn btn-secondary" onclick="toggleReorderMode()" id="reorderToggleBtn">
+                <i class="fa-solid fa-arrows-up-down"></i>
+                <span id="reorderBtnLabel">Atur Urutan</span>
+            </button>
+            <button type="button" class="btn btn-primary assessment-package-edit-btn" onclick="openAssessmentPackageEditor()">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Edit Assessment Package</span>
+            </button>
+        </div>
     </div>
+
+    <!-- PATCH: Toolbar Reorder -->
+    <div class="reorder-toolbar" id="reorderToolbar" style="display:none;">
+        <span><strong>💡 Mode Atur Urutan Aktif</strong> — Drag kartu atau gunakan tombol ↑↓ untuk memindahkan. Klik "Simpan Urutan" untuk menyimpan.</span>
+        <button class="reorder-save-btn" id="reorderSaveBtn" onclick="saveAssessmentOrder()">
+            <i class="fa-solid fa-check"></i> Simpan Urutan
+        </button>
+    </div>
+
+    <!-- PATCH: Container untuk list assessment yang bisa di-reorder -->
+    <div class="assessment-package-list" id="assessmentPackageList">
+        <p style="color:var(--muted);padding:20px;text-align:center;">Memuat assessment…</p>
+    </div>
+</div>
 
     <div class="tab-panel hidden" id="tab-schedule">
       <h2 style="margin:0;font-size:18px">Project Schedule</h2>
@@ -6188,19 +6390,16 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <!-- SUPABASE LIBRARY -->
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
 <!-- SUPABASE CLIENT -->
-
+<script src="js/config.js"></script>
 <script src="js/supabase-client.js"></script>
 
-
 <!-- CENTRAL DATA SERVICE -->
-
 <script src="js/data-service.js"></script>
 <script src="js/role-permissions.js"></script>
+<script src="js/ts-supabase-sync.js"></script>   <!-- ⬅️ TAMBAH INI DI SINI -->
 
 <!-- LSJT CATALOG SEED -->
 <script src="js/lsjt-catalog-seed.js"></script>
@@ -7537,25 +7736,45 @@ async function saveAssessmentPackageEditor() {
         if (id) catalogById[id] = item;
     });
 
-    await DataService.createProjectAssessments(
-        toAdd.map(function(assessmentId) {
-            const catalogItem = catalogById[assessmentId] || {};
-            return {
-                project_id: window.project.id,
-                assessment_id: assessmentId,
-                assessment_name:
-                    catalogItem.assessment_name ||
-                    catalogItem.name ||
-                    catalogItem.assessment_code ||
-                    "",
-                assessment_code:
-                    catalogItem.assessment_code ||
-                    catalogItem.code ||
-                    ""
-            };
-        })
-    );
-}
+    // ==========================================================
+// PATCH: HAPUS createProjectAssessments di sini
+// ----------------------------------------------------------
+// Kenapa:
+// - project_assessments punya UNIQUE(project_id, assessment_id)
+// - Data sudah sering ada di Supabase (dari AUTO-SYNC)
+// - INSERT manual di sini = error 400 duplikat
+//
+// Solusi:
+// - Simpan pilihan assessment ke project.raw_data.assessments
+// - Biarkan AUTO-SYNC yang handle sync ke project_assessments
+// - AUTO-SYNC lebih pintar: cek existing dulu, baru insert yang kurang
+// ==========================================================
+
+try {
+    // Update raw_data.assessments di project
+    if (!window.project.raw_data) window.project.raw_data = {};
+    window.project.raw_data.assessments = toAdd.map(function(assessmentId) {
+        const catalogItem = catalogById[assessmentId] || {};
+        return {
+            assessment_id: assessmentId,
+            assessment_name: catalogItem.assessment_name || catalogItem.name || "",
+            assessment_code: catalogItem.assessment_code || catalogItem.code || "",
+            status: "Active"
+        };
+    });
+
+    // Simpan ke Supabase (project raw_data)
+    await supabaseClient
+        .from('projects')
+        .update({ raw_data: window.project.raw_data })
+        .eq('id', window.project.id);
+
+    console.log("[Save Package] Pilihan assessment disimpan ke project.raw_data");
+
+} catch (saveErr) {
+    console.error("[Save Package] Gagal simpan:", saveErr);
+    throw saveErr;
+}}
         const refreshed = await DataService.getProjectAssessments(window.project.id);
         window.project.assessments = Array.isArray(refreshed) ? refreshed : window.project.assessments;
         const assessmentList = document.getElementById("assessmentList");
@@ -8016,6 +8235,235 @@ async function saveEditAssessment() {
         setTimeout(syncAssessmentsToTable, 1500);
     }
 })();
+
+/* ==========================================================
+   PATCH: Assessment Package Reorder
+   ========================================================== */
+
+let reorderMode = false;
+let assessmentList = [];
+
+// Load assessments dari Supabase & render
+async function loadAssessmentPackage() {
+    const params = new URLSearchParams(window.location.search);
+    const projectId = params.get("id");
+    if (!projectId) return;
+
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (!sb) {
+            console.warn("[Reorder] Supabase client tidak tersedia");
+            return;
+        }
+
+        const { data, error } = await sb
+            .from("project_assessments")
+            .select("*")
+            .eq("project_id", projectId)
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("[Reorder] Gagal load:", error);
+            return;
+        }
+
+        assessmentList = Array.isArray(data) ? data : [];
+        renderAssessmentPackage();
+    } catch (e) {
+        console.error("[Reorder] Error:", e);
+    }
+}
+
+// Render list assessment
+function renderAssessmentPackage() {
+    const container = document.getElementById("assessmentPackageList");
+    if (!container) return;
+
+    if (assessmentList.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">Belum ada assessment. Klik "Edit Assessment Package" untuk menambahkan.</div>';
+        return;
+    }
+
+    container.innerHTML = assessmentList.map((item, idx) => {
+        const name = item.assessment_name || "Assessment " + (idx + 1);
+        const code = item.assessment_code || "";
+        const isFirst = idx === 0;
+        const isLast = idx === assessmentList.length - 1;
+
+        return `
+            <div class="assessment-item"
+                 draggable="${reorderMode}"
+                 data-id="${escapeHtmlReorder(item.id)}"
+                 data-index="${idx}">
+                <div class="assessment-drag-handle" ${reorderMode ? '' : 'style="opacity:0.3;"'}>
+                    <i class="fa-solid fa-grip-vertical"></i>
+                </div>
+                <div class="assessment-number">${String(idx + 1).padStart(2, '0')}</div>
+                <div class="assessment-info">
+                    <h4>${escapeHtmlReorder(name)}</h4>
+                    <small>${escapeHtmlReorder(code || "Assessment instrument")}</small>
+                </div>
+                <div class="assessment-status-badge">Active</div>
+                ${reorderMode ? `
+                    <div class="assessment-actions">
+                        <button type="button"
+                                class="assessment-action-btn"
+                                onclick="moveAssessment(${idx}, -1)"
+                                ${isFirst ? 'disabled' : ''}
+                                title="Naik">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button type="button"
+                                class="assessment-action-btn"
+                                onclick="moveAssessment(${idx}, 1)"
+                                ${isLast ? 'disabled' : ''}
+                                title="Turun">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join("");
+
+    if (reorderMode) {
+        attachDragHandlers();
+    }
+}
+
+// Toggle mode reorder
+function toggleReorderMode() {
+    reorderMode = !reorderMode;
+
+    const toolbar = document.getElementById("reorderToolbar");
+    const btnLabel = document.getElementById("reorderBtnLabel");
+
+    if (toolbar) toolbar.style.display = reorderMode ? "flex" : "none";
+    if (btnLabel) btnLabel.textContent = reorderMode ? "Selesai Atur" : "Atur Urutan";
+
+    renderAssessmentPackage();
+}
+
+// Pindah item naik/turun
+function moveAssessment(index, direction) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= assessmentList.length) return;
+
+    const temp = assessmentList[index];
+    assessmentList[index] = assessmentList[newIndex];
+    assessmentList[newIndex] = temp;
+
+    renderAssessmentPackage();
+}
+
+// Attach drag & drop handler
+function attachDragHandlers() {
+    const items = document.querySelectorAll(".assessment-item");
+    let draggedIndex = null;
+
+    items.forEach(function (item) {
+        item.addEventListener("dragstart", function (e) {
+            draggedIndex = parseInt(item.dataset.index);
+            item.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", draggedIndex);
+        });
+
+        item.addEventListener("dragend", function () {
+            item.classList.remove("dragging");
+            document.querySelectorAll(".assessment-item").forEach(i => i.classList.remove("drag-over"));
+        });
+
+        item.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            item.classList.add("drag-over");
+        });
+
+        item.addEventListener("dragleave", function () {
+            item.classList.remove("drag-over");
+        });
+
+        item.addEventListener("drop", function (e) {
+            e.preventDefault();
+            item.classList.remove("drag-over");
+
+            if (draggedIndex === null) return;
+            const targetIndex = parseInt(item.dataset.index);
+            if (draggedIndex === targetIndex) return;
+
+            const [moved] = assessmentList.splice(draggedIndex, 1);
+            assessmentList.splice(targetIndex, 0, moved);
+
+            renderAssessmentPackage();
+        });
+    });
+}
+
+// Simpan urutan ke Supabase
+async function saveAssessmentOrder() {
+    const btn = document.getElementById("reorderSaveBtn");
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (!sb) throw new Error("Supabase client tidak tersedia");
+
+        for (let i = 0; i < assessmentList.length; i++) {
+            const item = assessmentList[i];
+            const { error } = await sb
+                .from("project_assessments")
+                .update({ sort_order: i + 1 })
+                .eq("id", item.id);
+
+            if (error) {
+                console.error("[Reorder] Update gagal:", item.id, error);
+                throw error;
+            }
+        }
+
+        btn.classList.add("saved");
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan!';
+
+        setTimeout(function () {
+            btn.classList.remove("saved");
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Simpan Urutan';
+            btn.disabled = false;
+
+            reorderMode = false;
+            const toolbar = document.getElementById("reorderToolbar");
+            const btnLabel = document.getElementById("reorderBtnLabel");
+            if (toolbar) toolbar.style.display = "none";
+            if (btnLabel) btnLabel.textContent = "Atur Urutan";
+
+            renderAssessmentPackage();
+        }, 1500);
+
+    } catch (e) {
+        console.error("[Reorder] Gagal simpan:", e);
+        alert("Gagal menyimpan urutan: " + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Simpan Urutan';
+    }
+}
+
+function escapeHtmlReorder(value) {
+    return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// Panggil saat halaman load
+document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(loadAssessmentPackage, 500);
+});
 </script>
 
 </body>

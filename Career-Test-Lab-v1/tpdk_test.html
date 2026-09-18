@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<script>
+    // FIX: Matikan auto-sync di halaman tes — hemat egress
+    window.__TS_DISABLE_AUTO_SYNC = true;
+</script>
+<!-- SUPABASE SYNC BRIDGE -->
+<script src="js/config.js"></script>
+<script src="js/tab-switch-warning.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js"></script>
+<script src="js/participant-activity.js"></script>
+<script>
+    if (typeof ParticipantActivity !== "undefined") {
+        ParticipantActivity.trackPageEntry("Tes Penalaran Dunia Kerja (TPDK)");
+        ParticipantActivity.trackTabSwitch("Tes Penalaran Dunia Kerja (TPDK)");
+    }
+</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentScope Enterprise — Tes Penalaran Dunia Kerja</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<style>
+:root{--p:#2563eb;--pd:#1d4ed8;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--bg:#f7f9fc;--soft:#eff6ff;--ok:#10b981;--warn:#d97706;--danger:#dc2626;--purple:#7c3aed}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',sans-serif}
+.top{height:66px;position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;padding:0 28px}
+.back{color:var(--muted);text-decoration:none;font-size:13px;font-weight:700}.back:hover{color:var(--p)}
+.timer{display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;background:var(--soft);border:1px solid #dbeafe;color:var(--p);font-weight:800;font-size:13px}
+.wrap{max-width:980px;margin:28px auto 60px;padding:0 18px}
+.hero{position:relative;overflow:hidden;padding:34px 36px;border-radius:24px;color:#fff;background:linear-gradient(135deg,#0f4ccf,#2563eb 65%,#3b82f6);box-shadow:0 18px 45px rgba(37,99,235,.18);margin-bottom:20px}
+.hero:after{content:'';position:absolute;width:300px;height:300px;right:-90px;top:-150px;border-radius:50%;background:rgba(255,255,255,.09)}
+.eyebrow{display:inline-flex;padding:7px 11px;border-radius:9px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase}
+.hero h1{margin:14px 0 7px;font-size:29px}.hero p{margin:0;max-width:720px;color:#dbeafe;font-size:13px;line-height:1.7}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:14px;margin-bottom:20px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 5px 18px rgba(15,23,42,.035)}
+.info-item{display:flex;gap:12px;align-items:center;padding:7px}
+.ico{width:42px;height:42px;border-radius:12px;background:#eff6ff;color:var(--p);display:grid;place-items:center}
+.label{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:#94a3b8;font-weight:800}
+.value{font-size:13px;font-weight:800;margin-top:3px}
+.instruction,.quiz-card,.finish{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 26px rgba(15,23,42,.045)}
+.instruction{padding:30px}
+.instruction-head{display:flex;gap:14px;align-items:flex-start}
+.badge{width:45px;height:45px;border-radius:13px;background:#eff6ff;color:var(--p);display:grid;place-items:center}
+.instruction h2{margin:0;font-size:21px}
+.lead{margin:5px 0 0;color:var(--muted);font-size:12px}
+.instruction ol{margin:20px 0 0;padding-left:22px;color:#334155;font-size:13px;line-height:1.75}
+.instruction li{margin-bottom:10px}
+.confirm{margin-top:22px;border-top:1px solid var(--line);padding-top:20px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:12px;font-weight:600;line-height:1.55;color:#334155}
+.check input{width:17px;height:17px;margin-top:3px;accent-color:var(--p)}
+.start,.btn{border:0;border-radius:12px;font-family:inherit;font-weight:800;cursor:pointer}
+.start{width:100%;margin-top:17px;padding:14px;background:linear-gradient(135deg,var(--p),var(--pd));color:#fff;font-size:13px;box-shadow:0 8px 20px rgba(37,99,235,.22)}
+.start:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.quiz{display:none}
+.quiz-card{padding:28px}
+.progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.progress strong{font-size:11px;color:var(--p);text-transform:uppercase;letter-spacing:.7px}
+.progress span{font-size:12px;color:var(--muted);font-weight:700}
+.bar{height:7px;background:#eef2f7;border-radius:99px;overflow:hidden;margin-bottom:25px}
+.bar i{display:block;height:100%;width:4%;background:linear-gradient(90deg,var(--p),#60a5fa);border-radius:99px;transition:.25s}
+.q-title{font-size:18px;font-weight:800;margin-bottom:6px}
+.q-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.options{display:flex;flex-direction:column;gap:11px}
+.option{border:1px solid var(--line);border-radius:15px;padding:15px;background:#fbfcfe;transition:.2s;cursor:pointer}
+.option:hover{border-color:#93c5fd;background:#f8fbff}
+.option.selected{border-color:#60a5fa;background:#eff6ff}
+.opt{display:flex;gap:12px;align-items:flex-start}
+.letter{width:30px;height:30px;flex:0 0 30px;border-radius:9px;background:#f1f5f9;display:grid;place-items:center;font-size:11px;font-weight:800;color:#64748b}
+.option.selected .letter{background:#dbeafe;color:#1d4ed8}
+.text{font-size:13px;line-height:1.55;font-weight:650;padding-top:4px}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.btn{padding:11px 17px;border:1px solid var(--line);background:#fff;color:#334155;font-size:12px}
+.btn.primary{background:var(--p);border-color:var(--p);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.pages{margin-top:18px;padding:20px;background:#fbfcfe;border:1px solid var(--line);border-radius:18px}
+.pages-head{display:flex;justify-content:space-between;margin-bottom:12px;font-size:11px;font-weight:800;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:7px}
+.page{height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;color:#64748b;font-size:10px;font-weight:800;cursor:pointer}
+.page.current{background:var(--p);border-color:var(--p);color:#fff}
+.page.done{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.finish{display:none;text-align:center;padding:42px}
+.finish-icon{width:62px;height:62px;margin:0 auto 16px;border-radius:50%;display:grid;place-items:center;background:#ecfdf5;color:#059669;font-size:25px}
+.finish h2{margin:0 0 8px}.finish p{max-width:520px;margin:0 auto 22px;color:var(--muted);font-size:13px;line-height:1.7}
+.modal{display:none;position:fixed;inset:0;z-index:100;background:rgba(15,23,42,.52);backdrop-filter:blur(7px);align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal-card{width:100%;max-width:420px;padding:30px;border-radius:22px;background:#fff;text-align:center;box-shadow:0 24px 70px rgba(15,23,42,.22)}
+.modal-card i{font-size:40px;color:#10b981}
+.modal-card h3{margin:14px 0 7px}.modal-card p{font-size:12px;color:var(--muted);line-height:1.6}
+.modal-card .btn{width:100%;margin-top:10px}
+.toast{display:none;position:fixed;right:18px;bottom:18px;z-index:120;padding:11px 14px;border-radius:10px;background:#0f172a;color:#fff;font-size:11px;font-weight:700}
+.toast.show{display:block}
+.subtest-badge{display:inline-block;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:800;background:#eff6ff;color:#1d4ed8;margin-bottom:10px}
+@media(max-width:700px){.top{padding:0 14px}.wrap{margin-top:18px}.hero{padding:25px 22px}.hero h1{font-size:24px}.info{grid-template-columns:1fr}.instruction,.quiz-card{padding:21px}.grid{grid-template-columns:repeat(8,1fr)}.finish{padding:32px 20px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="back" id="back" href="#"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a>
+  <div class="timer"><i class="fa-regular fa-clock"></i><span id="timer">47:00</span></div>
+</header>
+
+<main class="wrap">
+
+<section class="hero">
+  <span class="eyebrow">TalentScope Enterprise</span>
+  <h1>Tes Penalaran Dunia Kerja</h1>
+  <p>Asesmen terintegrasi untuk mengukur penalaran verbal, kuantitatif, spasial, dan logika praktis dalam konteks dunia kerja profesional.</p>
+</section>
+
+<section class="info">
+  <div class="info-item"><div class="ico"><i class="fa-solid fa-user"></i></div><div><div class="label">Peserta</div><div class="value" id="participant">-</div></div></div>
+  <div class="info-item"><div class="ico"><i class="fa-solid fa-folder"></i></div><div><div class="label">Proyek</div><div class="value" id="project">-</div></div></div>
+  <div class="info-item"><div class="ico"><i class="fa-solid fa-calendar"></i></div><div><div class="label">Tanggal</div><div class="value" id="date">-</div></div></div>
+</section>
+
+<section class="instruction" id="instruction">
+  <div class="instruction-head">
+    <div class="badge"><i class="fa-solid fa-clipboard-check"></i></div>
+    <div>
+      <span class="eyebrow" style="background:#eff6ff;color:#1d4ed8;border:0">PERSIAPAN TES</span>
+      <h2>Petunjuk Tes Penalaran Dunia Kerja</h2>
+      <p class="lead">Mohon baca seluruh petunjuk dengan teliti sebelum mulai mengerjakan.</p>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px">
+    <div style="padding:14px;border:1px solid var(--line);border-radius:14px;background:#f8fafc;text-align:center">
+      <strong style="font-size:22px;color:var(--p)">30</strong>
+      <div style="font-size:11px;color:var(--muted);font-weight:700">Total Item</div>
+    </div>
+    <div style="padding:14px;border:1px solid var(--line);border-radius:14px;background:#f8fafc;text-align:center">
+      <strong style="font-size:22px;color:var(--p)">47</strong>
+      <div style="font-size:11px;color:var(--muted);font-weight:700">Menit</div>
+    </div>
+    <div style="padding:14px;border:1px solid var(--line);border-radius:14px;background:#f8fafc;text-align:center">
+      <strong style="font-size:22px;color:var(--p)">4</strong>
+      <div style="font-size:11px;color:var(--muted);font-weight:700">Subtes</div>
+    </div>
+  </div>
+
+  <ol style="margin-top:20px">
+    <li>Tes ini terdiri dari <strong>4 bagian</strong>: Penalaran Verbal, Kuantitatif, Spasial, dan Logika Praktis.</li>
+    <li>Setiap bagian memiliki <strong>jenis soal yang berbeda</strong>. Bacalah petunjuk per bagian dengan teliti.</li>
+    <li>Pilih <strong>satu jawaban yang paling tepat</strong> untuk setiap soal.</li>
+    <li>Kerjakan sesuai kemampuan Anda sendiri. Tidak ada jawaban benar atau salah yang mutlak.</li>
+    <li>Jika menemukan soal yang sulit, <strong>lanjutkan ke soal berikutnya</strong> dan kembali lagi jika masih ada waktu.</li>
+    <li>Pastikan seluruh soal telah dijawab sebelum mengirimkan jawaban.</li>
+  </ol>
+
+  <div class="confirm">
+    <label class="check">
+      <input type="checkbox" id="confirm">
+      <span><strong>Saya telah membaca dan memahami seluruh petunjuk tes.</strong><br><small style="color:#64748b">Centang kotak ini untuk mengaktifkan tombol pengerjaan tes.</small></span>
+    </label>
+    <button type="button" id="start" class="start" disabled>Kerjakan Tes</button>
+  </div>
+</section>
+
+<section class="quiz" id="quiz">
+  <div class="quiz-card">
+    <div class="progress">
+      <strong id="subtestLabel">Subtes A — Penalaran Verbal</strong>
+      <span id="count">1 / 30</span>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div id="host"></div>
+    <div class="nav">
+      <button class="btn" id="prev"><i class="fa-solid fa-chevron-left"></i> Sebelumnya</button>
+      <div>
+        <button class="btn primary" id="next">Selanjutnya <i class="fa-solid fa-chevron-right"></i></button>
+        <button class="btn ok" id="submit" style="display:none"><i class="fa-solid fa-check"></i> Kirim Jawaban</button>
+      </div>
+    </div>
+  </div>
+  <div class="pages">
+    <div class="pages-head">
+      <span>Navigasi Soal</span>
+      <span id="answered">0 / 30 terjawab</span>
+    </div>
+    <div class="grid" id="pages"></div>
+  </div>
+</section>
+
+<section class="finish" id="finish">
+  <div class="finish-icon"><i class="fa-solid fa-check"></i></div>
+  <h2>Terima Kasih</h2>
+  <p>Jawaban Tes Penalaran Dunia Kerja Anda telah berhasil direkam dan disimpan.</p>
+  <button class="btn primary" id="nextTest">Lanjut ke Tes Berikutnya <i class="fa-solid fa-arrow-right"></i></button>
+</section>
+
+</main>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <i class="fa-solid fa-circle-check"></i>
+    <h3>Konfirmasi Pengiriman</h3>
+    <p>Pastikan seluruh soal sudah dijawab. Jawaban tidak dapat diubah setelah dikirim.</p>
+    <button class="btn ok" id="confirmSubmit">Ya, Kirim Jawaban</button>
+    <button class="btn" id="cancelSubmit">Periksa Kembali</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   TPDK — TES PENALARAN DUNIA KERJA
+   30 Item | 4 Subtes | 47 Menit
+========================================================= */
+
+const TPDK_CERITA = `PT Nusantara Jaya adalah perusahaan distribusi barang konsumsi yang telah beroperasi selama 25 tahun. Perusahaan memiliki 12 cabang di seluruh Indonesia dengan total 850 karyawan. Selama ini, proses pencatatan stok masih dilakukan secara manual menggunakan buku besar dan spreadsheet.
+
+Pada awal tahun, Direktur Utama menunjuk Andi sebagai Project Manager untuk memimpin transformasi digital. Andi diberi target: mengimplementasikan sistem ERP (Enterprise Resource Planning) dalam 12 bulan dengan anggaran Rp4,5 miliar.
+
+Andi membentuk tim inti:
+• Budi (IT Manager) — berpengalaman 10 tahun, konservatif dan skeptis terhadap perubahan
+• Citra (Finance Manager) — detail-oriented, khawatir dengan biaya implementasi
+• Dewi (Operations Manager) — berpengalaman lapangan, dekat dengan karyawan cabang
+• Eko (Marketing Manager) — visioner, kurang memahami aspek teknis
+
+Pada bulan ke-3, Andi menemukan:
+1. Biaya lisensi ERP 30% lebih mahal dari perkiraan awal
+2. Karyawan cabang menolak perubahan karena takut kehilangan pekerjaan
+3. Infrastruktur jaringan di 5 cabang tidak memadai
+4. Cash flow perusahaan ketat karena piutang macet
+5. Eko mengusulkan membangun aplikasi mobile untuk pelanggan
+
+Pada bulan ke-6, Andi menemukan:
+• Hanya 3 dari 12 cabang yang siap secara infrastruktur
+• Tingkat adopsi sistem baru di cabang pilot hanya 40%
+• Biaya sudah terpakai 60% dari anggaran, tetapi progress baru 35%
+• Pelanggan mulai mengeluh tentang layanan yang lambat
+
+Opsi strategi:
+• Opsi A: Lanjutkan sesuai rencana awal, tambah anggaran, percepat implementasi
+• Opsi B: Hentikan sementara, fokus pada perbaikan infrastruktur dan pelatihan
+• Opsi C: Ubah pendekatan menjadi bertahap (phased), mulai dari cabang yang siap
+• Opsi D: Batalkan proyek ERP, fokus pada solusi digital yang lebih sederhana
+
+Andi juga mempertimbangkan masukan tim:
+• Budi: "Lebih baik kita tunda dulu, perbaiki infrastruktur."
+• Citra: "Kita harus efisien. Jangan sampai proyek ini mengganggu cash flow."
+• Dewi: "Karyawan butuh dilibatkan. Kalau tidak, mereka akan menolak."
+• Eko: "Ini momentum untuk inovasi. Jangan hanya ERP, tapi juga mobile app."`;
+
+const QUESTIONS = [
+  // ============ SUBTES A — VERBAL DUNIA KERJA (10 item) ============
+  { subtest: "A", type: "paling_mendukung", text: "Di sebuah perusahaan logistik, manajemen ingin meningkatkan kecepatan pengiriman tanpa menambah jumlah armada. Salah satu supervisor mengusulkan penggunaan sistem penjadwalan berbasis data agar rute pengiriman lebih efisien. Manakah pernyataan berikut yang paling mendukung gagasan supervisor tersebut?", options: ["Penambahan armada akan mempercepat pengiriman walaupun biaya meningkat.", "Keterlambatan pengiriman umumnya disebabkan oleh jadwal yang tumpang tindih dan rute yang tidak optimal.", "Sopir berpengalaman tidak memerlukan sistem baru karena sudah hafal semua rute.", "Sistem berbasis data membutuhkan pelatihan tambahan sebelum digunakan.", "Efisiensi waktu pengiriman lebih dipengaruhi oleh kondisi jalan dibandingkan sistem yang digunakan."], answer: "B" },
+  { subtest: "A", type: "paling_mendukung", text: "Divisi pemasaran meluncurkan kampanye digital baru untuk menarik segmen pelanggan muda. Setelah dua minggu, kunjungan ke situs meningkat 40%, tetapi angka pembelian tidak berubah. Manakah pernyataan berikut yang paling mendukung perlunya evaluasi terhadap isi kampanye?", options: ["Mayoritas pengunjung baru berhenti di halaman utama tanpa melanjutkan ke halaman produk.", "Tim pemasaran menargetkan jumlah pengunjung situs, bukan angka penjualan.", "Kampanye digital baru difokuskan untuk memperkenalkan merek, bukan meningkatkan transaksi.", "Angka kunjungan tinggi menunjukkan keberhasilan strategi digital.", "Sebagian pengunjung mengakses situs hanya karena promosi hadiah, bukan minat membeli produk."], answer: "A" },
+  { subtest: "A", type: "paling_mendukung", text: "Dalam sebuah evaluasi kinerja, ditemukan bahwa tingkat kehadiran karyawan menurun selama dua bulan terakhir, tetapi hasil pekerjaan secara keseluruhan tetap stabil. Pernyataan manakah yang PALING MENDUKUNG temuan tersebut?", options: ["Sebagian karyawan tetap menyelesaikan tugasnya meskipun tidak selalu hadir di kantor.", "Penurunan tingkat kehadiran menyebabkan keterlambatan penyelesaian proyek.", "Produktivitas menurun karena pengawasan terhadap karyawan berkurang.", "Semua karyawan yang hadir setiap hari menunjukkan hasil kerja lebih baik.", "Sistem kerja jarak jauh membuat koordinasi antarpegawai menjadi tidak efektif."], answer: "A" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "\"Perencanaan tanpa fleksibilitas membuat organisasi kaku menghadapi perubahan; sedangkan fleksibilitas tanpa perencanaan membuat arah kerja mudah bergeser.\" Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Keduanya saling bertentangan sehingga harus dipilih salah satu.", "Fleksibilitas diperlukan untuk menjaga efektivitas perencanaan.", "Perencanaan lebih penting daripada fleksibilitas dalam kondisi stabil.", "Fleksibilitas hanya dibutuhkan jika rencana yang disusun tidak realistis.", "Keduanya tidak relevan karena perubahan tidak dapat direncanakan."], answer: "B" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "Semua karyawan yang memiliki sertifikasi layanan pelanggan mendapat kesempatan promosi. Sebagian besar peserta pelatihan tahun ini belum memiliki sertifikasi. Dimas mengikuti pelatihan tahun ini dan menunjukkan performa tinggi. Manakah dari pernyataan berikut yang PALING MUNGKIN BENAR?", options: ["Dimas pasti tidak akan mendapat promosi.", "Pelatihan tahun ini tidak berpengaruh terhadap promosi.", "Dimas belum tentu mendapat promosi karena belum disebut memiliki sertifikasi.", "Semua peserta pelatihan akan segera disertifikasi.", "Kinerja tinggi menjamin promosi tanpa sertifikasi."], answer: "C" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "Semua karyawan yang berpikir kritis dapat mengidentifikasi risiko dalam proyek. Sebagian karyawan yang mampu mengidentifikasi risiko memberikan masukan strategis kepada pimpinan. Dewa adalah karyawan yang berpikir kritis. Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Dewa pasti memberikan masukan strategis kepada pimpinan.", "Dewa mungkin mampu mengidentifikasi risiko proyek.", "Semua karyawan yang berpikir kritis pasti memberikan masukan strategis.", "Hanya karyawan berpikir kritis yang bisa mengidentifikasi risiko.", "Dewa tidak termasuk karyawan yang mampu memberikan masukan strategis."], answer: "B" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "Dalam proyek pengembangan aplikasi, Tim A menggunakan sistem komunikasi yang terbuka dan evaluasi rutin mingguan. Tim B menggunakan sistem tertutup dengan laporan hanya setiap akhir bulan. Hasilnya, Tim A menyelesaikan proyek lebih cepat dan menghasilkan lebih sedikit kesalahan. Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Evaluasi rutin berperan dalam meningkatkan kualitas hasil kerja.", "Sistem terbuka selalu menghasilkan efisiensi tertinggi.", "Frekuensi laporan tidak berpengaruh terhadap hasil kerja.", "Jumlah anggota tim menentukan tingkat kesalahan.", "Tim B memiliki anggota dengan kemampuan teknis rendah."], answer: "A" },
+  { subtest: "A", type: "asumsi", text: "Seorang pemimpin tim berkata kepada anggotanya: \"Kalau saja laporan bulan lalu selesai lebih cepat, kita tidak akan dikejar tenggat waktu minggu ini.\" Apa asumsi yang mendasari agar pernyataan tersebut benar?", options: ["Keterlambatan pekerjaan sebelumnya memengaruhi jadwal pekerjaan berikutnya.", "Tenggat waktu minggu ini ditetapkan tanpa memperhatikan kondisi kerja tim.", "Laporan bulan lalu memiliki tingkat kesulitan yang lebih tinggi dari biasanya.", "Tim tidak mampu menyesuaikan diri dengan perubahan prioritas pekerjaan.", "Hasil laporan lebih penting dibanding waktu penyelesaiannya."], answer: "A" },
+  { subtest: "A", type: "asumsi", text: "\"Karyawan yang sering bekerja lembur menunjukkan loyalitas tinggi terhadap perusahaan. Oleh karena itu, perusahaan seharusnya memberi penghargaan khusus bagi mereka yang paling sering lembur.\" Apa asumsi yang mendukung agar kesimpulan tersebut benar?", options: ["Semua karyawan yang lembur melakukannya karena dedikasi terhadap perusahaan.", "Lembur selalu terjadi karena beban kerja yang tidak seimbang.", "Loyalitas karyawan hanya bisa diukur dari lamanya bekerja.", "Perusahaan tidak memiliki cara lain untuk menilai loyalitas.", "Karyawan yang jarang lembur tidak loyal terhadap perusahaan."], answer: "A" },
+  { subtest: "A", type: "asumsi", text: "Seorang manajer proyek mengatakan, \"Jika seluruh anggota tim disiplin mengisi laporan harian proyek, keterlambatan pekerjaan dapat diminimalkan.\" Asumsi yang mendasari pernyataan tersebut adalah...", options: ["Laporan harian dapat digunakan untuk memantau progres pekerjaan dengan akurat.", "Semua anggota tim memiliki kemampuan yang sama dalam menyelesaikan tugas.", "Setiap keterlambatan disebabkan oleh kurangnya laporan dari anggota tim.", "Tim proyek selalu membaca dan menindaklanjuti laporan yang telah dikirimkan.", "Disiplin mengisi laporan menunjukkan tingkat kepatuhan terhadap arahan manajer."], answer: "A" },
+
+  // ============ SUBTES B — KUANTITATIF (5 item) ============
+  { subtest: "B", type: "aritmatika", text: "Tim logistik mencatat bahwa kendaraan pengiriman pertama menempuh rute sejauh 126 km dalam waktu 1 jam 45 menit. Kendaraan kedua menempuh rute yang sama tetapi membutuhkan waktu 15% lebih lama. Waktu tempuh kendaraan kedua adalah ...", options: ["1 jam 52 menit", "1 jam 55 menit", "2 jam 00 menit", "2 jam 01 menit", "2 jam 05 menit"], answer: "C" },
+  { subtest: "B", type: "perbandingan", text: "Dalam laporan kinerja, bagian keuangan mencatat tingkat penyelesaian proyek beberapa divisi sebagai berikut: Divisi A: 1 2/5 proyek dari target; Divisi B: 95% dari target; Divisi C: 0,63 dari target; Divisi D: 25/40 dari target; Divisi E: 25/50 dari target. Urutan tingkat penyelesaian dari yang tertinggi hingga terendah adalah ...", options: ["A, B, C, D, E", "A, B, C, E, D", "D, E, C, B, A", "E, D, C, B, A", "D, E, B, C, A"], answer: "A" },
+  { subtest: "B", type: "geometri", text: "Bagian pemeliharaan gedung akan memasang pagar baja ringan mengelilingi area gudang berbentuk persegi panjang berukuran 60 meter × 40 meter. Tiang pancang dipasang setiap 2 meter termasuk di setiap sudut. Berapa banyak tiang pancang yang dibutuhkan?", options: ["48 buah", "49 buah", "50 buah", "51 buah", "52 buah"], answer: "D" },
+  { subtest: "B", type: "deret", text: "Sebuah perusahaan manufaktur mencatat jumlah unit produk yang dihasilkan selama lima minggu berturut-turut sebagai berikut: Minggu 1: 120; Minggu 2: 128; Minggu 3: 141; Minggu 4: 159; Minggu 5: 182. Manajer produksi memperkirakan peningkatan produktivitas mengikuti pola kenaikan bertingkat dua yang konstan (second order difference tetap). Berdasarkan pola tersebut, perkiraan jumlah unit yang akan dihasilkan pada minggu ke-7 adalah ...", options: ["210", "216", "222", "229", "243"], answer: "E" },
+  { subtest: "B", type: "aritmatika_bisnis", text: "Sebuah perusahaan retail mencatat penjualan sebagai berikut: Bulan Januari: Rp250.000.000; Bulan Februari: Rp275.000.000; Bulan Maret: Rp300.000.000. Jika tren kenaikan ini berlanjut secara konstan, berapa total penjualan selama 6 bulan pertama (Januari–Juni)?", options: ["Rp1.650.000.000", "Rp1.725.000.000", "Rp1.800.000.000", "Rp1.875.000.000", "Rp1.950.000.000"], answer: "D" },
+
+  // ============ SUBTES C — SPASIAL (5 item) ============
+  { subtest: "C", type: "rotasi", text: "Perhatikan denah ruang kantor berikut. Denah diputar 90° searah jarum jam. Pilih denah yang paling sesuai dengan hasil rotasi tersebut.", options: ["Pintu masuk di Timur", "Pintu masuk di Barat", "Pintu masuk di Selatan", "Pintu masuk di Utara"], answer: "B", image: "c01_denah_kantor.png" },
+  { subtest: "C", type: "rotasi", text: "Sebuah gedung kantor menghadap ke Utara. Di sisi kiri gedung terdapat parkiran, di sisi kanan terdapat taman, dan di belakang gedung terdapat gudang. Jika gedung diputar 180°, di manakah posisi taman?", options: ["Utara", "Timur", "Selatan", "Barat"], answer: "D", image: "c02_orientasi_bangunan.png" },
+  { subtest: "C", type: "visualisasi", text: "Perhatikan susunan kardus di rak gudang berikut. Rak dilihat dari depan. Jika rak diputar 90° ke kiri, bagaimana susunan yang terlihat?", options: ["Kardus besar di kiri, kardus kecil di kanan", "Kardus besar di kanan, kardus kecil di kiri", "Susunan tidak berubah", "Semua kardus terlihat sama"], answer: "A", image: "c03_rak_gudang.png" },
+  { subtest: "C", type: "pencerminan", text: "Perhatikan layout kantor berikut. Layout dilihat dari atas. Jika layout dicerminkan secara horizontal (kiri-ke-kanan), di manakah posisi meja manajer?", options: ["Tetap di kiri", "Pindah ke kanan", "Pindah ke atas", "Pindah ke bawah"], answer: "B", image: "c04_layout_kantor.png" },
+  { subtest: "C", type: "analisis_ruang", text: "Sebuah truk pengiriman berada di titik A. Truk bergerak: 10 km ke Utara, 5 km ke Timur, 10 km ke Selatan, 5 km ke Barat. Di manakah posisi truk sekarang relatif terhadap titik A?", options: ["5 km di Utara", "5 km di Timur", "10 km di Selatan", "Kembali ke titik A"], answer: "D", image: "c05_rute_pengiriman.png" },
+
+  // ============ SUBTES D — LOGIKA PRAKTIS (10 item) ============
+  { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita di atas, apa akar masalah utama dari keterlambatan proyek ERP?", options: ["Anggaran tidak cukup", "Infrastruktur tidak siap dan resistensi karyawan", "Tim tidak kompeten", "Direktur terlalu ambisius"], answer: "B" },
+  { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi memilih Opsi A (lanjutkan sesuai rencana awal), apa konsekuensi paling mungkin yang terjadi?", options: ["Proyek selesai tepat waktu", "Biaya membengkak dan resistensi meningkat", "Karyawan puas", "Pelanggan senang"], answer: "B" },
+  { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Andi mempertimbangkan Opsi C (phased implementation). Apa keunggulan utama pendekatan ini dibanding Opsi A?", options: ["Lebih murah", "Lebih cepat selesai", "Mengurangi risiko dan memungkinkan pembelajaran bertahap", "Tidak perlu pelatihan"], answer: "C" },
+  { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika di tengah proyek terjadi perubahan regulasi yang mewajibkan sistem keuangan baru, apa yang sebaiknya Andi lakukan?", options: ["Tetap lanjutkan rencana awal", "Hentikan proyek", "Evaluasi ulang dan integrasikan regulasi baru ke dalam rencana", "Serahkan ke tim IT"], answer: "C" },
+  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur → Pelatihan → Implementasi → Evaluasi", "Implementasi → Infrastruktur → Pelatihan → Evaluasi", "Pelatihan → Implementasi → Infrastruktur → Evaluasi", "Evaluasi → Implementasi → Pelatihan → Infrastruktur"], answer: "A" },
+  { subtest: "D", type: "conceptual", text: TPDK_CERITA + "\n\nPERTANYAAN: Apa pola besar (big picture) yang sebenarnya sedang dihadapi PT Nusantara Jaya?", options: ["Masalah teknis semata", "Transformasi organisasi dari manual ke digital", "Masalah keuangan", "Konflik antar manajer"], answer: "B" },
+  { subtest: "D", type: "digital_mindset", text: TPDK_CERITA + "\n\nPERTANYAAN: Eko mengusulkan aplikasi mobile untuk pelanggan. Jika Andi ingin menerapkan digital mindset, apa yang paling tepat dilakukan?", options: ["Tolak karena tidak ada di rencana awal", "Setujui tanpa analisis", "Analisis data pelanggan dan nilai bisnisnya sebelum memutuskan", "Serahkan ke vendor"], answer: "C" },
+  { subtest: "D", type: "strategis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir strategis, apa yang harus ia pertimbangkan selain target 12 bulan?", options: ["Hanya anggaran", "Hanya kepuasan karyawan", "Sustainability, competitive advantage, dan kesiapan organisasi jangka panjang", "Hanya kepuasan Direktur"], answer: "C" },
+  { subtest: "D", type: "bisnis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir bisnis, apa nilai utama yang harus ia kejar dari proyek ERP?", options: ["Sekadar mengikuti tren digital", "Efisiensi operasional dan peningkatan layanan pelanggan", "Memenuhi target Direktur", "Menghabiskan anggaran"], answer: "B" },
+  { subtest: "D", type: "keputusan_kompleks", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi harus memutuskan dalam 1 jam, informasi mana yang paling kritis untuk dikumpulkan?", options: ["Pendapat semua manajer", "Data biaya, kesiapan infrastruktur, dan tingkat adopsi karyawan", "Berita industri terbaru", "Opini konsultan eksternal"], answer: "B" }
+];
+
+const SUBTESTS = {
+  A: { name: "Penalaran Verbal Dunia Kerja", duration: 15 * 60 },
+  B: { name: "Kuantitatif Dunia Kerja", duration: 10 * 60 },
+  C: { name: "Spasial Dunia Kerja", duration: 7 * 60 },
+  D: { name: "Logika Praktis Dunia Kerja", duration: 15 * 60 }
+};
+
+// =========================================================
+// SVG GENERATOR UNTUK SUBTES C — SPASIAL
+// =========================================================
+function renderSVG(imageId) {
+    const svgs = {
+        // =========================================================
+        // C01 — Denah Ruang Kantor
+        // =========================================================
+        "c01_denah_kantor.png": `
+            <svg viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
+                <defs>
+                    <style>
+                        .room-label { font-size: 11px; font-weight: 800; fill: #1e293b; text-anchor: middle; }
+                        .room-sub { font-size: 9px; fill: #64748b; text-anchor: middle; }
+                        .north-label { font-size: 12px; font-weight: 800; fill: #2563eb; text-anchor: middle; }
+                        .door-label { font-size: 10px; font-weight: 800; fill: #2563eb; text-anchor: middle; }
+                    </style>
+                </defs>
+                <rect x="0" y="0" width="500" height="420" fill="#f8fafc"/>
+                
+                <text x="250" y="24" class="north-label">↑ UTARA ↑</text>
+                <text x="250" y="408" class="north-label" style="fill:#94a3b8">↓ SELATAN ↓</text>
+                
+                <!-- Ruang Meeting (Kiri Atas) -->
+                <rect x="30" y="45" width="215" height="145" fill="#eff6ff" stroke="#334155" stroke-width="2" rx="4"/>
+                <text x="137" y="72" class="room-label">RUANG MEETING</text>
+                <ellipse cx="137" cy="118" rx="48" ry="22" fill="#8B4513" opacity="0.9"/>
+                <circle cx="105" cy="110" r="4" fill="#334155"/>
+                <circle cx="169" cy="110" r="4" fill="#334155"/>
+                <circle cx="105" cy="128" r="4" fill="#334155"/>
+                <circle cx="169" cy="128" r="4" fill="#334155"/>
+                <text x="137" y="178" class="room-sub">Meja oval + 6 kursi</text>
+                
+                <!-- Ruang Istirahat (Kanan Atas) -->
+                <rect x="255" y="45" width="215" height="145" fill="#f0fdf4" stroke="#334155" stroke-width="2" rx="4"/>
+                <text x="362" y="72" class="room-label">RUANG ISTIRAHAT</text>
+                <rect x="280" y="98" width="65" height="22" fill="#64748b" rx="3"/>
+                <rect x="280" y="120" width="24" height="32" fill="#64748b" rx="3"/>
+                <rect x="320" y="132" width="45" height="16" fill="#8B4513" rx="2"/>
+                <circle cx="435" cy="103" r="11" fill="#22c55e" opacity="0.8"/>
+                <rect x="435" y="114" width="7" height="16" fill="#8B4513"/>
+                <text x="362" y="178" class="room-sub">Sofa L + dispenser</text>
+                
+                <!-- Toilet (Kiri Bawah) -->
+                <rect x="30" y="200" width="215" height="145" fill="#f1f5f9" stroke="#334155" stroke-width="2" rx="4"/>
+                <text x="137" y="227" class="room-label">TOILET</text>
+                <ellipse cx="110" cy="268" rx="13" ry="16" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+                <ellipse cx="110" cy="280" rx="16" ry="7" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+                <rect x="175" y="258" width="34" height="24" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5" rx="2"/>
+                <text x="137" y="332" class="room-sub">Toilet + wastafel</text>
+                
+                <!-- Resepsionis (Kanan Bawah) -->
+                <rect x="255" y="200" width="215" height="145" fill="#fef3c7" stroke="#334155" stroke-width="2" rx="4"/>
+                <text x="362" y="227" class="room-label">RESEPSIONIS</text>
+                <path d="M 290 270 Q 362 250 434 270 L 434 290 L 290 290 Z" fill="#8B4513"/>
+                <rect x="290" y="290" width="144" height="6" fill="#6B3410"/>
+                <circle cx="312" cy="260" r="9" fill="#334155"/>
+                <circle cx="412" cy="260" r="9" fill="#334155"/>
+                <text x="362" y="332" class="room-sub">Meja resepsionis</text>
+                
+                <!-- Pintu Masuk (Bawah Tengah) -->
+                <rect x="200" y="355" width="100" height="30" fill="#e0ffff" stroke="#2563eb" stroke-width="2" rx="4"/>
+                <text x="250" y="375" class="door-label">PINTU MASUK</text>
+            </svg>
+        `,
+        
+        // =========================================================
+        // C02 — Orientasi Bangunan
+        // =========================================================
+        "c02_orientasi_bangunan.png": `
+            <svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
+                <defs>
+                    <style>
+                        .label-white { font-size: 11px; font-weight: 800; fill: #ffffff; text-anchor: middle; }
+                        .label-dark { font-size: 11px; font-weight: 800; fill: #065f46; text-anchor: middle; }
+                        .sublabel-white { font-size: 9px; fill: #cbd5e1; text-anchor: middle; }
+                        .sublabel-dark { font-size: 9px; fill: #065f46; text-anchor: middle; }
+                        .north { font-size: 12px; font-weight: 800; fill: #2563eb; text-anchor: middle; }
+                    </style>
+                </defs>
+                <rect x="0" y="0" width="500" height="430" fill="#f8fafc"/>
+                
+                <text x="250" y="24" class="north">↑ UTARA (Depan Gedung) ↑</text>
+                <text x="250" y="418" class="north" style="fill:#94a3b8">↓ SELATAN (Belakang) ↓</text>
+                
+                <!-- Parkiran (Kiri) -->
+                <rect x="30" y="80" width="130" height="230" fill="#2f2f2f" rx="6"/>
+                <text x="95" y="106" class="label-white">PARKIRAN</text>
+                <rect x="42" y="125" width="34" height="20" fill="#ef4444" rx="2"/>
+                <rect x="82" y="125" width="34" height="20" fill="#3b82f6" rx="2"/>
+                <rect x="122" y="125" width="26" height="20" fill="#10b981" rx="2"/>
+                <rect x="42" y="152" width="34" height="20" fill="#f59e0b" rx="2"/>
+                <rect x="82" y="152" width="34" height="20" fill="#8b5cf6" rx="2"/>
+                <rect x="122" y="152" width="26" height="20" fill="#6b7280" rx="2"/>
+                <rect x="42" y="182" width="18" height="24" fill="#374151" rx="2"/>
+                <rect x="65" y="182" width="18" height="24" fill="#374151" rx="2"/>
+                <text x="95" y="265" class="sublabel-white">🚗 🏍️</text>
+                
+                <!-- Gedung Kantor (Tengah) -->
+                <rect x="185" y="70" width="130" height="240" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
+                <text x="250" y="100" style="font-size:13px;font-weight:800;fill:#1e293b;text-anchor:middle">GEDUNG KANTOR</text>
+                <text x="250" y="118" style="font-size:10px;fill:#64748b;text-anchor:middle">3 Lantai</text>
+                <rect x="205" y="138" width="90" height="24" fill="#87CEEB" stroke="#2563eb" rx="2"/>
+                <rect x="205" y="170" width="90" height="24" fill="#87CEEB" stroke="#2563eb" rx="2"/>
+                <rect x="205" y="202" width="90" height="24" fill="#87CEEB" stroke="#2563eb" rx="2"/>
+                <rect x="232" y="235" width="36" height="45" fill="#e0ffff" stroke="#2563eb" stroke-width="2" rx="2"/>
+                <text x="250" y="263" style="font-size:8px;text-anchor:middle;fill:#2563eb;font-weight:800">PINTU</text>
+                <text x="250" y="298" style="font-size:9px;fill:#64748b;text-anchor:middle">↑ Menghadap Utara</text>
+                
+                <!-- Taman (Kanan) -->
+                <rect x="340" y="80" width="130" height="230" fill="#dcfce7" stroke="#10b981" stroke-width="2" rx="6"/>
+                <text x="405" y="106" class="label-dark">TAMAN</text>
+                <circle cx="375" cy="150" r="15" fill="#006400"/>
+                <circle cx="405" cy="142" r="13" fill="#15803d"/>
+                <circle cx="435" cy="150" r="15" fill="#006400"/>
+                <circle cx="380" cy="195" r="10" fill="#22c55e"/>
+                <circle cx="415" cy="200" r="12" fill="#16a34a"/>
+                <circle cx="440" cy="190" r="9" fill="#4ade80"/>
+                <rect x="370" y="230" width="65" height="12" fill="#8B4513" rx="2"/>
+                <text x="405" y="265" class="sublabel-dark">🌳 🌸 🪑</text>
+                
+                <!-- Gudang (Bawah) -->
+                <rect x="185" y="325" width="130" height="70" fill="#f1f5f9" stroke="#64748b" stroke-width="2" rx="4"/>
+                <text x="250" y="352" style="font-size:11px;font-weight:800;fill:#1e293b;text-anchor:middle">GUDANG</text>
+                <rect x="205" y="362" width="90" height="22" fill="#94a3b8" rx="2"/>
+                <line x1="218" y1="362" x2="218" y2="384" stroke="#ffffff" stroke-width="1"/>
+                <line x1="238" y1="362" x2="238" y2="384" stroke="#ffffff" stroke-width="1"/>
+                <line x1="258" y1="362" x2="258" y2="384" stroke="#ffffff" stroke-width="1"/>
+                <line x1="278" y1="362" x2="278" y2="384" stroke="#ffffff" stroke-width="1"/>
+            </svg>
+        `,
+        
+        // =========================================================
+        // C03 — Susunan Kardus di Rak Gudang
+        // LEGEND DI LUAR KANAN
+        // =========================================================
+                "c03_rak_gudang.png": `
+            <svg viewBox="0 0 560 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:640px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
+                <defs>
+                    <style>
+                        .title { font-size: 12px; font-weight: 800; fill: #1e293b; text-anchor: middle; }
+                        .tingkat-label { font-size: 10px; font-weight: 800; fill: #2563eb; text-anchor: middle; }
+                        .box-label-white { font-size: 9px; font-weight: 800; fill: #ffffff; text-anchor: middle; }
+                        .box-label-brown { font-size: 9px; font-weight: 800; fill: #78350f; text-anchor: middle; }
+                        .legend-text { font-size: 11px; font-weight: 700; fill: #334155; }
+                    </style>
+                </defs>
+                <rect x="0" y="0" width="560" height="460" fill="#f8fafc"/>
+                <text x="240" y="24" class="title">RAK GUDANG (Tampak Depan)</text>
+                
+                <!-- Rack frame (EXTENDED) -->
+                <rect x="40" y="42" width="400" height="395" fill="none" stroke="#64748b" stroke-width="3" rx="4"/>
+                
+                <!-- Tingkat 4 (Atas) — 4 besar -->
+                <rect x="45" y="47" width="390" height="80" fill="#f8fafc"/>
+                <rect x="58" y="57" width="80" height="50" fill="#8B4513" rx="3"/>
+                <rect x="148" y="57" width="80" height="50" fill="#8B4513" rx="3"/>
+                <rect x="238" y="57" width="80" height="50" fill="#8B4513" rx="3"/>
+                <rect x="328" y="57" width="80" height="50" fill="#8B4513" rx="3"/>
+                <text x="98" y="87" class="box-label-white">BESAR</text>
+                <text x="188" y="87" class="box-label-white">BESAR</text>
+                <text x="278" y="87" class="box-label-white">BESAR</text>
+                <text x="368" y="87" class="box-label-white">BESAR</text>
+                
+                <!-- Label TINGKAT 4 (DI BAWAH kardus, di area putih) -->
+                <text x="240" y="120" class="tingkat-label">TINGKAT 4 (Atas) — 4 Kardus Besar</text>
+                
+                <!-- Tingkat 3 — 2 kecil -->
+                <rect x="45" y="128" width="390" height="80" fill="#f1f5f9"/>
+                <rect x="105" y="138" width="65" height="50" fill="#F5DEB3" stroke="#94a3b8" stroke-width="1" rx="3"/>
+                <rect x="180" y="138" width="65" height="50" fill="#F5DEB3" stroke="#94a3b8" stroke-width="1" rx="3"/>
+                <text x="137" y="168" class="box-label-brown">KECIL</text>
+                <text x="212" y="168" class="box-label-brown">KECIL</text>
+                
+                <!-- Label TINGKAT 3 (DI BAWAH kardus) -->
+                <text x="240" y="201" class="tingkat-label">TINGKAT 3 — 2 Kardus Kecil</text>
+                
+                <!-- Tingkat 2 — 5 sedang -->
+                <rect x="45" y="209" width="390" height="80" fill="#f8fafc"/>
+                <rect x="52" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
+                <rect x="127" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
+                <rect x="202" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
+                <rect x="277" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
+                <rect x="352" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
+                <text x="84" y="249" class="box-label-white">SEDANG</text>
+                <text x="159" y="249" class="box-label-white">SEDANG</text>
+                <text x="234" y="249" class="box-label-white">SEDANG</text>
+                <text x="309" y="249" class="box-label-white">SEDANG</text>
+                <text x="384" y="249" class="box-label-white">SEDANG</text>
+                
+                <!-- Label TINGKAT 2 (DI BAWAH kardus) -->
+                <text x="240" y="282" class="tingkat-label">TINGKAT 2 — 5 Kardus Sedang</text>
+                
+                <!-- Tingkat 1 (Bawah) — 3 besar -->
+                <rect x="45" y="290" width="390" height="80" fill="#f1f5f9"/>
+                <rect x="105" y="300" width="80" height="50" fill="#8B4513" rx="3"/>
+                <rect x="195" y="300" width="80" height="50" fill="#8B4513" rx="3"/>
+                <rect x="285" y="300" width="80" height="50" fill="#8B4513" rx="3"/>
+                <text x="145" y="330" class="box-label-white">BESAR</text>
+                <text x="235" y="330" class="box-label-white">BESAR</text>
+                <text x="325" y="330" class="box-label-white">BESAR</text>
+                
+                <!-- Label TINGKAT 1 (DI BAWAH kardus, lebih jauh) -->
+                <text x="240" y="390" class="tingkat-label">TINGKAT 1 (Bawah) — 3 Kardus Besar</text>
+                
+                <!-- LEGEND DI LUAR KANAN -->
+                <text x="460" y="120" style="font-size:11px;font-weight:800;fill:#1e293b;text-anchor:start">KETERANGAN:</text>
+                
+                <rect x="460" y="135" width="28" height="20" fill="#8B4513" rx="2"/>
+                <text x="495" y="150" class="legend-text">Besar</text>
+                
+                <rect x="460" y="170" width="28" height="20" fill="#D2691E" rx="2"/>
+                <text x="495" y="185" class="legend-text">Sedang</text>
+                
+                <rect x="460" y="205" width="28" height="20" fill="#F5DEB3" stroke="#94a3b8" stroke-width="1" rx="2"/>
+                <text x="495" y="220" class="legend-text">Kecil</text>
+                
+                <text x="460" y="260" style="font-size:9px;fill:#64748b;text-anchor:start">(50×40×40 cm)</text>
+                <text x="460" y="275" style="font-size:9px;fill:#64748b;text-anchor:start">(40×30×30 cm)</text>
+                <text x="460" y="290" style="font-size:9px;fill:#64748b;text-anchor:start">(30×20×20 cm)</text>
+            </svg>
+        `,
+        
+        // =========================================================
+        // C04 — Layout Kantor (Tampak Atas)
+        // =========================================================
+                       "c04_layout_kantor.png": `
+            <svg viewBox="0 0 500 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
+                <defs>
+                    <style>
+                        .title { font-size: 12px; font-weight: 800; fill: #1e293b; text-anchor: middle; }
+                        .desk-label { font-size: 11px; font-weight: 800; text-anchor: middle; fill: #ffffff; }
+                    </style>
+                </defs>
+                <rect x="0" y="0" width="500" height="460" fill="#f8fafc"/>
+                <text x="250" y="22" class="title">LAYOUT KANTOR (Tampak Atas)</text>
+                
+                <!-- Office outline -->
+                <rect x="30" y="42" width="440" height="400" fill="#e2e8f0" stroke="#475569" stroke-width="3" rx="6"/>
+                
+                <!-- Meja Manajer (Kiri Atas) -->
+                <rect x="55" y="65" width="185" height="150" fill="#4A2C2A" stroke="#1f1412" stroke-width="2" rx="6"/>
+                <rect x="80" y="100" width="135" height="70" fill="#6B3410" rx="3"/>
+                <text x="147" y="130" class="desk-label">MEJA</text>
+                <text x="147" y="152" class="desk-label">MANAJER</text>
+                <circle cx="147" cy="192" r="10" fill="#334155"/>
+                <circle cx="205" cy="110" r="4" fill="#3b82f6"/>
+                <circle cx="205" cy="130" r="4" fill="#64748b"/>
+                <circle cx="205" cy="150" r="4" fill="#10b981"/>
+                
+                <!-- Meja Staf 1 (Kanan Atas) -->
+                <rect x="260" y="65" width="185" height="150" fill="#A0522D" stroke="#5a2e18" stroke-width="2" rx="6"/>
+                <rect x="285" y="100" width="135" height="70" fill="#c4713d" rx="3"/>
+                <text x="352" y="130" class="desk-label">MEJA</text>
+                <text x="352" y="152" class="desk-label">STAF 1</text>
+                <circle cx="352" cy="192" r="10" fill="#334155"/>
+                
+                <!-- Meja Staf 2 (Kiri Bawah) -->
+                <rect x="55" y="245" width="185" height="150" fill="#A0522D" stroke="#5a2e18" stroke-width="2" rx="6"/>
+                <rect x="80" y="280" width="135" height="70" fill="#c4713d" rx="3"/>
+                <text x="147" y="310" class="desk-label">MEJA</text>
+                <text x="147" y="332" class="desk-label">STAF 2</text>
+                <circle cx="147" cy="372" r="10" fill="#334155"/>
+                
+                <!-- Meja Staf 3 (Kanan Bawah) -->
+                <rect x="260" y="245" width="185" height="150" fill="#A0522D" stroke="#5a2e18" stroke-width="2" rx="6"/>
+                <rect x="285" y="280" width="135" height="70" fill="#c4713d" rx="3"/>
+                <text x="352" y="310" class="desk-label">MEJA</text>
+                <text x="352" y="332" class="desk-label">STAF 3</text>
+                <circle cx="352" cy="372" r="10" fill="#334155"/>
+                
+                <!-- Pintu Masuk (DI DALAM garis office, tengah bawah) -->
+                <rect x="195" y="405" width="110" height="24" fill="#e0ffff" stroke="#2563eb" stroke-width="2" rx="3"/>
+                <text x="250" y="422" style="font-size:10px;font-weight:800;fill:#2563eb;text-anchor:middle">PINTU MASUK</text>
+            </svg>
+        `,
+        
+        // =========================================================
+        // C05 — Rute Pengiriman
+        // =========================================================
+                                "c05_rute_pengiriman.png": `
+            <svg viewBox="0 0 500 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
+                <defs>
+                    <style>
+                        .direction { font-size: 12px; font-weight: 800; fill: #2563eb; text-anchor: middle; }
+                        .direction-muted { font-size: 12px; font-weight: 800; fill: #94a3b8; text-anchor: middle; }
+                        .location-label-white { font-size: 10px; font-weight: 800; fill: #ffffff; text-anchor: middle; }
+                        .location-label-dark { font-size: 10px; font-weight: 800; fill: #065f46; text-anchor: middle; }
+                        .distance-label-white { font-size: 8.5px; fill: #cbd5e1; text-anchor: middle; }
+                        .distance-label-dark { font-size: 8.5px; fill: #065f46; text-anchor: middle; }
+                    </style>
+                </defs>
+                <rect x="0" y="0" width="500" height="480" fill="#f8fafc"/>
+                
+                <!-- Compass TOP -->
+                <text x="250" y="24" class="direction">↑ UTARA ↑</text>
+                
+                <!-- Compass BARAT (Y=145, di atas perumahan) -->
+                <text x="30" y="145" class="direction-muted" style="text-anchor:start">← BARAT</text>
+                
+                <!-- Compass TIMUR (Y=145, sejajar dengan BARAT) -->
+                <text x="470" y="145" class="direction-muted" style="text-anchor:end">TIMUR →</text>
+                
+                <!-- Roads -->
+                <line x1="250" y1="42" x2="250" y2="400" stroke="#2f2f2f" stroke-width="24"/>
+                <line x1="45" y1="230" x2="455" y2="230" stroke="#2f2f2f" stroke-width="24"/>
+                <line x1="250" y1="42" x2="250" y2="400" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="10,8"/>
+                <line x1="45" y1="230" x2="455" y2="230" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="10,8"/>
+                
+                <!-- Titik A (Center) -->
+                <circle cx="250" cy="230" r="32" fill="#2563eb" stroke="#1e40af" stroke-width="3"/>
+                <circle cx="250" cy="230" r="26" fill="#3b82f6"/>
+                <text x="250" y="240" style="font-size:20px;font-weight:900;fill:#ffffff;text-anchor:middle">A</text>
+                
+                <!-- Label TITIK AWAL -->
+                <rect x="200" y="178" width="100" height="20" fill="#ffffff" rx="4"/>
+                <text x="250" y="192" style="font-size:10px;font-weight:800;fill:#2563eb;text-anchor:middle">TITIK AWAL</text>
+                
+                <!-- Building Utara -->
+                <rect x="195" y="60" width="110" height="60" fill="#94a3b8" rx="3"/>
+                <text x="250" y="85" class="location-label-white">🏢 GEDUNG</text>
+                <text x="250" y="103" class="distance-label-white">10 km ke Utara</text>
+                
+                <!-- Factory Timur -->
+                <rect x="360" y="195" width="95" height="70" fill="#808080" rx="3"/>
+                <rect x="415" y="170" width="10" height="25" fill="#B22222"/>
+                <text x="407" y="220" class="location-label-white">🏭 PABRIK</text>
+                <text x="407" y="238" class="distance-label-white">5 km ke Timur</text>
+                
+                <!-- Shop Selatan -->
+                <rect x="195" y="320" width="110" height="60" fill="#f59e0b" rx="3"/>
+                <text x="250" y="345" class="location-label-white">🏬 TOKO</text>
+                <text x="250" y="363" class="distance-label-white">10 km ke Selatan</text>
+                
+                <!-- Houses Barat -->
+                <rect x="45" y="195" width="95" height="70" fill="#dcfce7" stroke="#10b981" stroke-width="1" rx="3"/>
+                <text x="92" y="220" class="location-label-dark">🏠 PERUMAHAN</text>
+                <text x="92" y="238" class="distance-label-dark">5 km ke Barat</text>
+                
+                <!-- Route arrows -->
+                <text x="275" y="165" style="font-size:18px;fill:#dc2626;font-weight:800">↑</text>
+                <text x="325" y="238" style="font-size:18px;fill:#dc2626;font-weight:800">→</text>
+                <text x="275" y="310" style="font-size:18px;fill:#dc2626;font-weight:800">↓</text>
+                <text x="200" y="238" style="font-size:18px;fill:#dc2626;font-weight:800">←</text>
+                
+                <!-- Caption ROUTE -->
+                <text x="250" y="418" style="font-size:10px;font-weight:800;fill:#dc2626;text-anchor:middle">Rute: 10 km Utara → 5 km Timur → 10 km Selatan → 5 km Barat</text>
+                
+                <!-- Label SELATAN di bawah caption -->
+                <text x="250" y="455" class="direction-muted">↓ SELATAN ↓</text>
+            </svg>
+        `
+    };
+    return svgs[imageId] || `<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px">⚠ SVG untuk "${imageId}" belum tersedia</div>`;
+}
+
+const TOTAL_SECONDS = 47 * 60;
+const TOTAL_ITEMS = QUESTIONS.length;
+
+const p = new URLSearchParams(location.search);
+const projectId = (p.get('projectId') || p.get('project') || '').trim();
+const participantId = (p.get('participantId') || p.get('participant') || '').trim();
+const assessmentIndex = Number(p.get('assessmentIndex') ?? p.get('step') ?? 0);
+
+function normalizeAssessmentCode(code, fallback) {
+  var c = String(code || "").trim().toLowerCase();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(c)) return fallback;
+  return c || fallback;
+}
+const assessmentCode = normalizeAssessmentCode(p.get("assessmentCode"), "tpdk").toUpperCase();
+/* ==========================================================
+   FIX UUID: Ambil assessmentId dari URL
+   ========================================================== */
+const assessmentIdFromUrl = String(p.get("assessmentId") || "").trim();
+const resultKeySuffix = assessmentIdFromUrl || String(assessmentIndex);
+
+const answerKey = `ts_tpdk_${encodeURIComponent(projectId)}_${encodeURIComponent(participantId)}_${assessmentIndex}_answers`;
+const resultKey = `tpdk_result_v1_${projectId}_${participantId}_${resultKeySuffix}`;
+
+let answers = [];
+try { answers = JSON.parse(localStorage.getItem(answerKey) || '[]'); } catch(e) { answers = []; }
+answers = Array.from({ length: TOTAL_ITEMS }, (_, i) => answers[i] ?? null);
+
+let current = 0, seconds = TOTAL_SECONDS, timerId = null, sending = false;
+
+function el(id){ return document.getElementById(id); }
+function toast(s){ const t = el('toast'); t.textContent = s; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2300); }
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];
+  });
+}
+
+function loadMeta(){
+  try{
+    const ps = JSON.parse(localStorage.getItem('talentscope_projects') || '[]');
+    const proj = ps.find(x => String(x.id || x.projectId || x.project_id || '') === projectId);
+    const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || '') === participantId);
+    el('participant').textContent = part?.name || part?.fullName || participantId || '-';
+    el('project').textContent = proj?.projectName || proj?.name || proj?.title || projectId || '-';
+    const dv = proj?.startDate || proj?.start || new Date(), d = new Date(dv);
+    el('date').textContent = Number.isNaN(d.getTime()) ? String(dv) : d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+  }catch(e){ console.warn('TPDK metadata:', e); }
+}
+
+function save(){ localStorage.setItem(answerKey, JSON.stringify(answers)); }
+
+function renderPages(){
+  const n = answers.filter(a => a !== null).length;
+  el('answered').textContent = `${n} / ${TOTAL_ITEMS} terjawab`;
+  el('pages').innerHTML = QUESTIONS.map((_, i) => {
+    const cls = `page ${i === current ? 'current' : ''} ${answers[i] !== null ? 'done' : ''}`;
+    return `<button type="button" class="${cls}" onclick="go(${i})">${i+1}</button>`;
+  }).join('');
+}
+
+function render(){
+  const q = QUESTIONS[current];
+  const sub = SUBTESTS[q.subtest];
+  el('subtestLabel').textContent = `Subtes ${q.subtest} — ${sub.name}`;
+  el('count').textContent = `${current + 1} / ${TOTAL_ITEMS}`;
+  el('bar').style.width = `${((current + 1) / TOTAL_ITEMS) * 100}%`;
+
+  let h = `<div class="subtest-badge">Subtes ${q.subtest} · ${sub.name}</div>`;
+
+  // SVG Inline untuk subtes C
+  if (q.image) {
+    const svgContent = renderSVG(q.image);
+    h += `<div style="margin-bottom:20px;padding:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 2px 8px rgba(15,23,42,0.04);overflow-x:auto">
+      <div style="min-width:0;width:100%">${svgContent}</div>
+    </div>`;
+  }
+
+  h += `<div class="q-title">Soal ${current + 1}</div>`;
+
+  // Text soal (dengan white-space: pre-line untuk D)
+  const questionText = q.text || q.question || q.scenario || q.description || "";
+  if (questionText) {
+    h += `<div class="q-text" style="font-size:15px;line-height:1.75;color:#334155;margin:12px 0 20px;padding:16px 18px;background:#f8fafc;border-radius:12px;border-left:4px solid #2563eb;font-weight:500;white-space:pre-line">${escapeHtml(questionText)}</div>`;
+  } else {
+    h += `<div class="q-text" style="color:#dc2626;font-size:13px;padding:12px;background:#fee2e2;border-radius:8px;margin:12px 0">⚠ Text soal tidak tersedia (Soal ${current + 1})</div>`;
+  }
+
+  h += `<div class="q-sub" style="font-size:12px;color:#64748b;margin-bottom:16px;font-weight:600">Pilih satu jawaban yang paling tepat.</div>`;
+
+  h += `<div class="options">`;
+  q.options.forEach((opt, i) => {
+    const letter = String.fromCharCode(65 + i);
+    const sel = answers[current] === letter;
+    h += `<div class="option ${sel ? 'selected' : ''}" onclick="pick('${letter}')">
+      <div class="opt">
+        <div class="letter">${letter}</div>
+        <div class="text">${escapeHtml(opt)}</div>
+      </div>
+    </div>`;
+  });
+  h += `</div>`;
+
+  el('host').innerHTML = h;
+
+  el('prev').disabled = current === 0;
+  el('next').style.display = current === TOTAL_ITEMS - 1 ? 'none' : 'inline-block';
+  el('submit').style.display = current === TOTAL_ITEMS - 1 ? 'inline-block' : 'none';
+  renderPages();
+}
+
+function pick(letter){
+  answers[current] = letter;
+  save();
+  render();
+}
+
+function go(i){
+  current = Math.max(0, Math.min(TOTAL_ITEMS - 1, i));
+  render();
+  window.scrollTo({ top: document.querySelector('.quiz-card').offsetTop - 82, behavior: 'smooth' });
+}
+
+function startQuiz(){
+  if(!projectId || !participantId){
+    alert('Identitas project atau peserta tidak valid. Silakan kembali dan login ulang.');
+    return;
+  }
+  if(window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function"){
+    window.TabSwitchWarning.init({ context: "TPDK" });
+  }
+  updateParticipantAssessmentStatus('Ongoing', 'Sedang mengerjakan tes (TPDK)', 'Memulai tes TPDK', 'test-start');
+  el('instruction').style.display = 'none';
+  el('quiz').style.display = 'block';
+  render();
+  startTimer();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startTimer(){
+  if(timerId) return;
+  timerId = setInterval(() => {
+    seconds--;
+    if(seconds <= 0){ clearInterval(timerId); timerId = null; finalize(true); return; }
+    const m = Math.floor(seconds / 60), s = seconds % 60;
+    el('timer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function requestSubmit(){
+  const missing = answers.findIndex(a => a === null);
+  if(missing >= 0){ go(missing); toast(`Soal ${missing + 1} belum dijawab.`); return; }
+  el('modal').classList.add('show');
+}
+
+function calculateScores(){
+  const perSubtest = { A: 0, B: 0, C: 0, D: 0 };
+  const perType = {};
+  QUESTIONS.forEach((q, i) => {
+    const isCorrect = answers[i] === q.answer;
+    if(isCorrect) perSubtest[q.subtest]++;
+    const key = `${q.subtest}_${q.type}`;
+    if(!perType[key]) perType[key] = { correct: 0, total: 0 };
+    perType[key].total++;
+    if(isCorrect) perType[key].correct++;
+  });
+  
+  const total = perSubtest.A + perSubtest.B + perSubtest.C + perSubtest.D;
+  const maxPerSubtest = { A: 10, B: 5, C: 5, D: 10 };
+  const maxTotal = TOTAL_ITEMS;
+  const percentage = (total / maxTotal) * 100;
+  
+  // =========================================================
+  // SKOR KECERDASAN UMUM (G-SCORE)
+  // Skala: 100 ± 15 (mirip IQ, tapi bukan diagnosis klinis)
+  // =========================================================
+  // Konversi: persentase 0-100% → G-Score 50-150
+  const gScore = Math.round(100 + ((percentage - 50) / 50) * 50);
+  
+  // Kategori G-Score
+  let gCategory, gPercentile, gDesc;
+  if (gScore >= 140) {
+    gCategory = "Sangat Superior";
+    gPercentile = "≥ 99.6";
+    gDesc = "Kemampuan penalaran jauh di atas rata-rata. Cocok untuk peran strategis & analitis.";
+  } else if (gScore >= 130) {
+    gCategory = "Sangat Superior";
+    gPercentile = "≥ 98";
+    gDesc = "Kemampuan penalaran sangat tinggi. Potensi kepemimpinan & inovasi.";
+  } else if (gScore >= 120) {
+    gCategory = "Superior";
+    gPercentile = "91-97";
+    gDesc = "Kemampuan penalaran di atas rata-rata. Cocok untuk peran profesional.";
+  } else if (gScore >= 110) {
+    gCategory = "Di Atas Rata-rata";
+    gPercentile = "75-90";
+    gDesc = "Kemampuan penalaran baik. Mampu menangani tugas kompleks.";
+  } else if (gScore >= 100) {
+    gCategory = "Rata-rata";
+    gPercentile = "50-74";
+    gDesc = "Kemampuan penalaran rata-rata. Cocok untuk peran umum.";
+  } else if (gScore >= 90) {
+    gCategory = "Rata-rata";
+    gPercentile = "25-49";
+    gDesc = "Kemampuan penalaran rata-rata bawah. Perlu pengembangan.";
+  } else if (gScore >= 80) {
+    gCategory = "Di Bawah Rata-rata";
+    gPercentile = "9-24";
+    gDesc = "Kemampuan penalaran di bawah rata-rata. Perlu pelatihan.";
+  } else if (gScore >= 70) {
+    gCategory = "Borderline";
+    gPercentile = "2-8";
+    gDesc = "Kemampuan penalaran borderline. Disarankan pendampingan.";
+  } else {
+    gCategory = "Rendah";
+    gPercentile = "< 2";
+    gDesc = "Kemampuan penalaran rendah. Perlu intervensi khusus.";
+  }
+  
+  // =========================================================
+  // SKOR PER SUBTES
+  // =========================================================
+  const subtestDetails = {
+    A: {
+      code: "A",
+      name: "Penalaran Verbal",
+      desc: "Logika verbal & pemahaman situasi kerja",
+      score: perSubtest.A,
+      max: maxPerSubtest.A,
+      percentage: (perSubtest.A / maxPerSubtest.A) * 100
+    },
+    B: {
+      code: "B",
+      name: "Kuantitatif",
+      desc: "Aritmatika & analisis angka dunia kerja",
+      score: perSubtest.B,
+      max: maxPerSubtest.B,
+      percentage: (perSubtest.B / maxPerSubtest.B) * 100
+    },
+    C: {
+      code: "C",
+      name: "Spasial",
+      desc: "Rotasi mental & visualisasi ruang",
+      score: perSubtest.C,
+      max: maxPerSubtest.C,
+      percentage: (perSubtest.C / maxPerSubtest.C) * 100
+    },
+    D: {
+      code: "D",
+      name: "Logika Praktis",
+      desc: "Analisis kasus & pengambilan keputusan",
+      score: perSubtest.D,
+      max: maxPerSubtest.D,
+      percentage: (perSubtest.D / maxPerSubtest.D) * 100
+    }
+  };
+  
+  // Kategori per subtes
+  Object.keys(subtestDetails).forEach(key => {
+    const s = subtestDetails[key];
+    if (s.percentage >= 85) s.category = "Sangat Kuat";
+    else if (s.percentage >= 70) s.category = "Kuat";
+    else if (s.percentage >= 55) s.category = "Cukup";
+    else if (s.percentage >= 40) s.category = "Perlu Penguatan";
+    else s.category = "Perlu Perhatian";
+  });
+  
+  return {
+    perSubtest,
+    perType,
+    total,
+    maxTotal,
+    percentage,
+    maxPerSubtest,
+    // Output Baru
+    gScore: gScore,
+    gCategory: gCategory,
+    gPercentile: gPercentile,
+    gDescription: gDesc,
+    subtestDetails: subtestDetails,
+    // Disclaimer
+    disclaimer: "Skor ini adalah ESTIMASI kecerdasan umum berdasarkan tes penalaran dunia kerja, BUKAN diagnosis IQ klinis. Untuk diagnosis resmi, konsultasikan dengan psikolog berlisensi."
+  };
+}
+
+function finalize(auto){
+  if(sending) return;
+  const missing = answers.findIndex(a => a === null);
+  if(missing >= 0 && !auto){ go(missing); return; }
+  sending = true;
+  clearInterval(timerId);
+
+  const scores = calculateScores();
+  const submittedAt = new Date().toISOString();
+  const result = {
+    version: 1,
+    resultType: 'TPDK',
+    projectId,
+    participantId,
+    assessmentId: assessmentIdFromUrl, 
+    assessmentIndex,
+    assessmentCode,
+    assessmentName: 'Tes Penalaran Dunia Kerja',
+    scores,
+    // Output tambahan
+    generalScore: {
+        value: scores.gScore,
+        category: scores.gCategory,
+        percentile: scores.gPercentile,
+        description: scores.gDescription
+    },
+    subtestScores: scores.subtestDetails,
+    disclaimer: scores.disclaimer,
+    answers: answers.map((a, i) => ({ 
+        index: i, 
+        subtest: QUESTIONS[i].subtest, 
+        type: QUESTIONS[i].type, 
+        selected: a, 
+        correct: QUESTIONS[i].answer, 
+        isCorrect: a === QUESTIONS[i].answer 
+    })),
+    submittedAt
+};
+
+    /* ==========================================================
+     FIX: Simpan dengan UUID + index (dual-write)
+     ========================================================== */
+  if (assessmentIdFromUrl) {
+    localStorage.setItem(`tpdk_result_v1_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
+    localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
+    console.log("[TPDK] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+  }
+
+  // Simpan dengan index (kompatibilitas)
+  localStorage.setItem(resultKey, JSON.stringify(result));
+  localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`, JSON.stringify(result));
+  let all = [];
+  try { all = JSON.parse(localStorage.getItem('talent_scope_results') || '[]'); } catch(e){}
+  if(!Array.isArray(all)) all = [];
+  all = all.filter(x => !(String(x?.projectId||'') === projectId && String(x?.participantId||'') === participantId && String(x?.assessmentIndex??'') === String(assessmentIndex) && String(x?.assessmentCode||'').toUpperCase() === 'TPDK'));
+  all.push(result);
+  localStorage.setItem('talent_scope_results', JSON.stringify(all));
+  localStorage.removeItem(answerKey);
+
+  try {
+    const sb = window.supabaseClient || window.supabase;
+    if(sb && typeof sb.from === 'function'){
+      const participantName = el('participant')?.textContent || '';
+      sb.from('tpdk_results').upsert({
+        project_id: projectId,
+        participant_id: participantId,
+        assessment_index: assessmentIndex,
+        assessment_code: assessmentCode,
+        assessment_name: 'Tes Penalaran Dunia Kerja',
+        participant_name: participantName,
+        result_type: 'TPDK',
+        scores: scores,
+        raw_data: result.answers,
+        submitted_at: submittedAt
+      }, {
+        onConflict: 'project_id,participant_id,assessment_index,assessment_code'
+      }).then(({ error }) => {
+        if(error) console.error('[TPDK] Supabase sync error:', error);
+        else console.log('[TPDK] ✓ Tersinkron ke Supabase (tpdk_results)');
+      });
+    }
+  } catch(err){ console.warn('[TPDK] Gagal sync Supabase:', err); }
+
+  updateParticipantAssessmentStatus('Completed', 'Tes TPDK telah selesai', 'Menyelesaikan tes TPDK', 'test-complete');
+  el('modal').classList.remove('show');
+  el('quiz').style.display = 'none';
+  el('finish').style.display = 'block';
+}
+
+function packageCodeOf(item){ if(!item||typeof item!=='object')return''; return String(item.code||item.assessmentCode||item.assessment_code||item.id||item.assessmentId||item.testId||'').trim(); }
+function packageNameOf(item){ if(typeof item==='string')return item.trim(); if(!item||typeof item!=='object')return''; return String(item.name||item.title||item.assessmentName||item.assessment_name||item.testName||item.label||item.code||'').trim(); }
+function resolveAssessmentRoute(code,name){
+  const c=String(code||'').toLowerCase(),n=String(name||'').toLowerCase();
+  if(c.includes('disc')||n.includes('disc'))return'disc_test.html';
+  if(c.includes('papi')||n.includes('papi')||n.includes('kostick'))return'papi_kostick_test.html';
+  if(c.includes('vap')||n.includes('vap')||n.includes('visual')||n.includes('performance')||n.includes('sustained attention')||n.includes('speed'))return'speedtest.html';
+  if(c.includes('lsjt')||n.includes('lsjt')||n.includes('leadership'))return'sjt_leadership.html';
+  if(c.includes('msjt')||n.includes('msjt')||n.includes('managerial'))return'msjt_managerial.html';
+  if(c.includes('tpdk')||n.includes('tpdk')||n.includes('penalaran'))return'tpdk_test.html';
+  return'';
+}
+function nextTest(){
+  const next = assessmentIndex + 1;
+  let packs = [];
+  try{
+    const ps = JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
+    const proj = ps.find(x => String(x.id||x.projectId||x.project_id||'') === projectId);
+    const part = proj?.participants?.find(x => String(x.id||x.participantId||x.employeeId||x.employee_id||'') === participantId);
+    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
+  }catch(e){ packs = []; }
+  markInternalNavigation();
+  if(next >= packs.length){ location.href = 'participant-dashboard.html?completed=true'; return; }
+  const nextPkg = packs[next];
+  const nextCode = packageCodeOf(nextPkg);
+  const nextName = packageNameOf(nextPkg) || 'Assessment';
+  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
+  if(nextRoute){
+    location.href = `${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  } else {
+    location.href = `assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+  }
+}
+
+el('confirm').addEventListener('change', e => el('start').disabled = !e.target.checked);
+el('start').addEventListener('click', startQuiz);
+el('prev').addEventListener('click', () => go(current - 1));
+el('next').addEventListener('click', () => go(current + 1));
+el('submit').addEventListener('click', requestSubmit);
+el('cancelSubmit').addEventListener('click', () => el('modal').classList.remove('show'));
+el('confirmSubmit').addEventListener('click', () => finalize(false));
+el('nextTest').addEventListener('click', nextTest);
+el('back').addEventListener('click', e => { e.preventDefault(); markInternalNavigation(); location.href = 'participant-dashboard.html'; });
+
+loadMeta();
+
+const HEARTBEAT_INTERVAL = 5000;
+const NAVIGATION_FLAG = `talentscope_internal_navigation_${projectId}_${participantId}`;
+
+function findProjectIndex(projects){ return projects.findIndex(project => { const ids=[project?.id,project?.projectId,project?.projectID,project?.project_id].filter(v=>v!==undefined&&v!==null&&v!==""); return ids.some(id=>String(id)===String(projectId)); }); }
+function findParticipantIndex(participants){ return participants.findIndex(person => { const ids=[person?.id,person?.participantId,person?.participantID,person?.employeeId,person?.employee_id].filter(v=>v!==undefined&&v!==null&&v!==""); return ids.some(id=>String(id)===String(participantId)); }); }
+
+function updateStore(storeKey, status, activity, historyText, historyType, forceHistory){
+  try{
+    const projects = JSON.parse(localStorage.getItem(storeKey)||'[]');
+    if(!Array.isArray(projects)||!projects.length) return false;
+    const pi = findProjectIndex(projects); if(pi<0) return false;
+    const project = projects[pi]; if(!Array.isArray(project.participants)) return false;
+    const pai = findParticipantIndex(project.participants); if(pai<0) return false;
+    const participant = project.participants[pai];
+    const now = new Date().toISOString();
+    participant.isLoggedIn = true; participant.onlineStatus = 'online'; participant.lastSeen = now; participant.lastSeenAt = now; participant.lastHeartbeat = now;
+    if(!participant.loginTime) participant.loginTime = now;
+    if(!participant.loggedInAt) participant.loggedInAt = participant.loginTime;
+    if(!participant.loginAt) participant.loginAt = participant.loginTime;
+    if(!participant.lastLoginAt) participant.lastLoginAt = participant.loginTime;
+    if(status){ participant.assessmentStatus=status; participant.statusAsesmen=status; participant.assessment_status=status; participant.status=status; }
+    if(activity){ participant.currentActivity=activity; participant.currentTest='Tes Penalaran Dunia Kerja'; participant.activity=activity; participant.lastActivity=activity; participant.activityUpdatedAt=now; }
+    participant.disconnectDetectedAt = null;
+    if(forceHistory && historyText){
+      if(!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+      const dup = participant.activityHistory.some(item => String(item?.type||'')===String(historyType||'') && String(item?.activity||item?.description||'')===String(historyText));
+      if(!dup) participant.activityHistory.unshift({ activity:historyText, description:historyText, type:historyType||'assessment', timestamp:now });
+    }
+    project.participants[pai] = participant; projects[pi] = project;
+    localStorage.setItem(storeKey, JSON.stringify(projects));
+    return true;
+  } catch(error){ console.warn('Gagal sync ke '+storeKey+':', error); return false; }
+}
+function updateParticipantAssessmentStatus(status, activity, historyText, historyType){
+  const primary = updateStore('talentscope_projects', status, activity, historyText, historyType, true);
+  updateStore('projects', status, activity, historyText, historyType, false);
+  return primary;
+}
+function updateParticipantHeartbeat(){
+  updateStore('talentscope_projects', null, null, null, null, false);
+  updateStore('projects', null, null, null, null, false);
+}
+function markInternalNavigation(){ try{ sessionStorage.setItem(NAVIGATION_FLAG, '1'); }catch(e){} }
+function consumeInternalNavigation(){ try{ const v = sessionStorage.getItem(NAVIGATION_FLAG)==='1'; sessionStorage.removeItem(NAVIGATION_FLAG); return v; }catch(e){ return false; } }
+
+function setParticipantOffline(storeKey, reason, historyText){
+  try{
+    const projects = JSON.parse(localStorage.getItem(storeKey)||'[]');
+    if(!Array.isArray(projects)) return false;
+    const pi = findProjectIndex(projects); if(pi<0) return false;
+    const project = projects[pi]; if(!Array.isArray(project.participants)) return false;
+    const pai = findParticipantIndex(project.participants); if(pai<0) return false;
+    const participant = project.participants[pai];
+    const now = new Date().toISOString();
+    participant.isLoggedIn=false; participant.onlineStatus='offline'; participant.lastSeen=now; participant.lastSeenAt=now;
+    participant.logoutTime=now; participant.loggedOutAt=now; participant.logoutAt=now; participant.lastLogoutAt=now;
+    participant.currentActivity='Offline'; participant.activity='Offline'; participant.lastActivity='Offline';
+    participant.disconnectReason = reason||'logout';
+    if(historyText){
+      if(!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
+      const recentDup = participant.activityHistory.some(item => String(item?.type||'')==='logout' && String(item?.activity||item?.description||'')===String(historyText) && Math.abs(new Date(item?.timestamp||0).getTime()-new Date(now).getTime())<10000);
+      if(!recentDup) participant.activityHistory.unshift({ activity:historyText, description:historyText, type:'logout', timestamp:now });
+    }
+    project.participants[pai]=participant; projects[pi]=project;
+    localStorage.setItem(storeKey, JSON.stringify(projects));
+    return true;
+  }catch(error){ console.warn('Gagal catat logout di '+storeKey+':', error); return false; }
+}
+function recordParticipantLogout(reason, historyText){
+  setParticipantOffline('talentscope_projects', reason, historyText||'Peserta logout / menutup sesi');
+  setParticipantOffline('projects', reason, null);
+}
+function handleExplicitLogout(){ recordParticipantLogout('manual-logout','Peserta logout dari sistem'); }
+consumeInternalNavigation();
+document.addEventListener('click', function(event){
+  const button = event.target.closest('[data-action="logout"], #logout, #logoutBtn, .logout-btn, .btn-logout');
+  if(button) handleExplicitLogout();
+});
+window.addEventListener('pagehide', function(event){
+  if(event.persisted) return;
+  let internalNavigation = false;
+  try{ internalNavigation = sessionStorage.getItem(NAVIGATION_FLAG)==='1'; }catch(e){}
+  if(!internalNavigation) recordParticipantLogout('tab-window-closed','Peserta keluar / menutup tab atau window');
+});
+
+updateParticipantAssessmentStatus('Ongoing','Sedang berada pada halaman tes (TPDK)','Membuka halaman tes TPDK','test-open');
+updateParticipantHeartbeat();
+setInterval(updateParticipantHeartbeat, HEARTBEAT_INTERVAL);
+</script>
+</body>
+</html>

@@ -494,44 +494,113 @@
 
     function trackTabSwitch(pageLabel) {
 
-        document.addEventListener(
-            "visibilitychange",
-            function () {
+    /* ==========================================================
+       PATCH PILAR 1: Counter Tab Switch (Real-time)
+       ----------------------------------------------------------
+       Setiap pindah tab:
+       1. Increment tabSwitchCount
+       2. Kalau durasi > 30 detik, increment tabSwitchLongSwitches
+       3. Akumulasi total duration
+       4. Simpan ke participant object → otomatis sync via wrapper
+    ========================================================== */
 
-                var hidden =
-                    document.hidden;
+    var tabHiddenAt = null;
 
-                recordActivity({
+    document.addEventListener(
+        "visibilitychange",
+        function () {
 
-                    type:
-                        hidden
-                            ? "tab-hidden"
-                            : "tab-visible",
+            var hidden = document.hidden;
 
-                    label:
-                        hidden
-                            ? "Berpindah tab / minimize"
-                            : "Kembali ke tab TalentScope",
+            /* ==================================================
+               HITUNG DURASI KETIKA KEMBALI KE TAB
+            ================================================== */
+            var durationSeconds = 0;
 
-                    description:
-                        (
-                            hidden
-                                ? "Peserta berpindah dari tab/window "
-                                : "Peserta kembali ke tab/window "
-                        ) +
-                        pageLabel +
-                        ".",
-
-                    extra: {
-                        page: pageLabel
-                    }
-
-                });
-
+            if (!hidden && tabHiddenAt) {
+                durationSeconds = Math.round((Date.now() - tabHiddenAt) / 1000);
+                tabHiddenAt = null;
             }
-        );
 
-    }
+            if (hidden) {
+                tabHiddenAt = Date.now();
+            }
+
+            /* ==================================================
+               AMBIL PARTICIPANT DARI LOCALSTORAGE
+            ================================================== */
+            var identity = resolveIdentity();
+            var projects = readProjects();
+            var participant = findParticipant(projects, identity);
+
+            if (participant) {
+
+                /* ==============================================
+                   INCREMENT COUNTER
+                ============================================== */
+                var currentCount = Number(participant.tabSwitchCount) || 0;
+                var currentLong = Number(participant.tabSwitchLongSwitches) || 0;
+                var currentDuration = Number(participant.tabSwitchTotalDuration) || 0;
+
+                if (hidden) {
+                    // Pindah dari tab → increment count
+                    participant.tabSwitchCount = currentCount + 1;
+                } else {
+                    // Kembali ke tab → update total duration
+                    participant.tabSwitchTotalDuration = currentDuration + durationSeconds;
+
+                    // Kalau durasi > 30 detik, increment long switch
+                    if (durationSeconds > 30) {
+                        participant.tabSwitchLongSwitches = currentLong + 1;
+                    }
+                }
+
+                participant.tabSwitchUpdatedAt = new Date().toISOString();
+
+                /* ==============================================
+                   SIMPAN KE LOCALSTORAGE
+                   → otomatis trigger sync ke Supabase
+                ============================================== */
+                writeProjects(projects);
+
+                console.log("[PARTICIPANT ACTIVITY] Tab counter:", {
+                    count: participant.tabSwitchCount,
+                    long: participant.tabSwitchLongSwitches,
+                    totalDuration: participant.tabSwitchTotalDuration
+                });
+            }
+
+            /* ==================================================
+               CATAT KE ACTIVITY HISTORY (untuk log)
+            ================================================== */
+            recordActivity({
+
+                type: hidden ? "tab-hidden" : "tab-visible",
+
+                label: hidden
+                    ? "Berpindah tab / minimize"
+                    : "Kembali ke tab TalentScope",
+
+                description: (hidden
+                    ? "Peserta berpindah dari tab/window "
+                    : "Peserta kembali ke tab/window "
+                ) + pageLabel + (
+                    !hidden && durationSeconds > 0
+                        ? " (" + durationSeconds + " detik)"
+                        : ""
+                ) + ".",
+
+                extra: {
+                    page: pageLabel,
+                    durationSeconds: durationSeconds
+                }
+
+            });
+
+        }
+    );
+
+}
 
 
     /* =====================================================
