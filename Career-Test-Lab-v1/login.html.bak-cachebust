@@ -6,9 +6,9 @@
 <title>Login | TalentScope</title>
 
 <!-- WAJIB PALING ATAS -->
-<script src="js/debug-redirect.js?v=8"></script>
-<script src="js/config.js?v=8"></script>
-<script src="js/auth-guard.js?v=8"></script>
+<script src="js/debug-redirect.js"></script>
+<script src="js/config.js"></script>
+<script src="js/auth-guard.js"></script>
 
 <style>
 *{box-sizing:border-box;}
@@ -60,44 +60,12 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
   animation:btn-spin .7s linear infinite;display:none;flex:0 0 auto;
 }
 .btn.loading .spinner{display:inline-block;}
-.btn.success{
-  background:linear-gradient(135deg,#10b981,#059669);
-  cursor:default;
-  box-shadow:0 8px 20px rgba(16,185,129,.32);
-  transform:none;
-}
-.btn.success:hover{transform:none;box-shadow:0 8px 20px rgba(16,185,129,.32);}
-.btn.success .spinner{display:none;}
-.btn.error{
-  background:linear-gradient(135deg,#ef4444,#dc2626);
-  cursor:default;
-  box-shadow:0 8px 20px rgba(239,68,68,.32);
-  transform:none;
-}
-.btn.error:hover{transform:none;box-shadow:0 8px 20px rgba(239,68,68,.32);}
-.btn.error .spinner{display:none;}
-@keyframes ts-success-pulse {
-    0%, 100% { box-shadow: 0 8px 20px rgba(16,185,129,.32); }
-    50%      { box-shadow: 0 8px 30px rgba(16,185,129,.55); }
-}
-.btn.success {
-    /* ... kode sebelumnya ... */
-    animation: ts-success-pulse 1s ease-in-out infinite;
-}
 @keyframes btn-spin{to{transform:rotate(360deg);}}
 .message{display:none;margin:0 0 14px;padding:10px 11px;border-radius:8px;font-size:11px;}
 .message.show{display:block;}
 .message.error{background:#fff3f3;border:1px solid #efcccc;color:#b33d3d;}
 .message.success{background:#f2fbf5;border:1px solid #cfeada;color:#2c7a4b;}
 .footer{text-align:center;color:rgba(255,255,255,.68);font-size:9px;margin-top:14px;}
-.btn.error{
-  background:linear-gradient(135deg,#ef4444,#dc2626);
-  cursor:default;
-  box-shadow:0 8px 20px rgba(239,68,68,.32);
-  transform:none;
-}
-.btn.error:hover{transform:none;box-shadow:0 8px 20px rgba(239,68,68,.32);}
-.btn.error .spinner{display:none;}
 </style>
 </head>
 
@@ -160,7 +128,7 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
         messageEl.className = "message";
         messageEl.textContent = "";
     }
-        function setLoading(isLoading) {
+    function setLoading(isLoading) {
         if (!loginBtn) return;
         if (isLoading) {
             loginBtn.disabled = true;
@@ -172,30 +140,6 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
             if (loginBtnText) loginBtnText.textContent = "Login";
         }
     }
-
-    function setSuccess() {
-        if (!loginBtn) return;
-        loginBtn.disabled = true;
-        loginBtn.classList.remove("loading");
-        loginBtn.classList.add("success");
-        if (loginBtnText) loginBtnText.textContent = "✓ Berhasil Login";
-    }
-
-function setError(message) {
-    if (!loginBtn) return;
-    loginBtn.disabled = false;
-    loginBtn.classList.remove("loading");
-    loginBtn.classList.add("error");
-    if (loginBtnText) loginBtnText.textContent = "✕ " + (message || "Login Gagal");
-    
-    // Kembali ke "Login" setelah 3 detik
-    setTimeout(function () {
-        if (loginBtn) {
-            loginBtn.classList.remove("error");
-            if (loginBtnText) loginBtnText.textContent = "Login";
-        }
-    }, 3000);
-}
 
     function looksLikeAccessCode(input) {
         if (!input) return false;
@@ -267,11 +211,12 @@ function setError(message) {
             var payload = null;
             try { payload = await res.json(); } catch (err) { payload = null; }
 
-                        if (!res.ok || !payload || !payload.success) {
-    var errMsg = (payload && payload.error) || ("Login gagal");
-    setError(errMsg);
-    return;
-}
+            if (!res.ok || !payload || !payload.success) {
+                var errMsg = (payload && payload.error) || ("Login gagal (HTTP " + res.status + ")");
+                showMessage(errMsg, "error");
+                setLoading(false);
+                return;
+            }
 
             if (!window.TS_AUTH) {
                 showMessage("Auth library tidak tersedia. Refresh halaman.", "error");
@@ -279,18 +224,18 @@ function setError(message) {
                 return;
             }
 
-                        window.TS_AUTH.saveSession(payload.token, payload.user, payload.expiresAt);
+            window.TS_AUTH.saveSession(payload.token, payload.user, payload.expiresAt);
 
-            // Ganti tombol jadi "Berhasil Login"
-            setSuccess();
+            showMessage("Login berhasil. Mengarahkan...", "success");
 
             var role = (payload.user && payload.user.role) || "";
-            setTimeout(function () { redirectByRole(role); }, 800);
+            setTimeout(function () { redirectByRole(role); }, 250);
 
         } catch (err) {
-    console.error("[LOGIN] Error:", err);
-    setError("Koneksi gagal. Coba lagi.");
-}
+            console.error("[LOGIN] Error:", err);
+            showMessage("Koneksi ke server gagal. Cek internet & coba lagi.", "error");
+            setLoading(false);
+        }
     });
 
 })();

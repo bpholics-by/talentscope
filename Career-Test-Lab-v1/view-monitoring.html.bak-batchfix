@@ -366,20 +366,20 @@ tbody tr:hover{background:#fbfdff}
      ========================================================= -->
 
 <!-- 1. Library dasar -->
- <script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
+ <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/supabase-client.js"></script>
 
 <!-- 2. Data layer -->
-<script src="js/data-service.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=3"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js"></script>
 
 <!-- 3. View-monitoring logic -->
-<script src="js/view-monitoring.js?v=3"></script>
+<script src="js/view-monitoring.js"></script>
 
 <!-- 4. Access control (BARU — merge 5 script lama) -->
-<script src="js/access-control.js?v=3"></script>
+<script src="js/access-control.js"></script>
 
 <!-- Script tambahan untuk hamburger menu (kecil, tidak masalah inline) -->
 <script>

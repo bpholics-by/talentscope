@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
+<script src="js/config.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Database Peserta | TalentScope</title>
@@ -467,19 +467,19 @@
      SCRIPTS — Urutan PENTING
      ============================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=3"></script>
-<script src="js/data-service.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=3"></script>  <!-- ⬅️ TAMBAH INI -->
-<script src="js/role-permissions.js?v=3"></script>
+<script src="js/supabase-client.js?v=1"></script>
+<script src="js/data-service.js?v=1"></script>
+<script src="js/ts-supabase-sync.js?v=1"></script>  <!-- ⬅️ TAMBAH INI -->
+<script src="js/role-permissions.js"></script>
 
 <!-- Database modules (urutan PENTING: config dulu, main terakhir) -->
-<script src="js/database/config.js?v=3"></script>
-<script src="js/database/index.js?v=3"></script>
-<script src="js/database/filter.js?v=3"></script>
-<script src="js/database/hydrate.js?v=3"></script>
-<script src="js/database/sync.js?v=3"></script>
-<script src="js/database/render.js?v=3"></script>
-<script src="js/database/main.js?v=3"></script>
+<script src="js/database/config.js?v=1"></script>
+<script src="js/database/index.js?v=1"></script>
+<script src="js/database/filter.js?v=1"></script>
+<script src="js/database/hydrate.js?v=1"></script>
+<script src="js/database/sync.js?v=1"></script>
+<script src="js/database/render.js?v=1"></script>
+<script src="js/database/main.js?v=1"></script>
 
 <script>
     // Boot: tunggu DOM ready, lalu init

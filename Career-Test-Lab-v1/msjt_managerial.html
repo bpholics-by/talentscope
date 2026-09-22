@@ -1014,29 +1014,31 @@ localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}
       const sb = window.supabaseClient || window.supabase;
       if(sb && typeof sb.from === "function"){
         const { error } = await sb
-          .from("sjt_results")
-          .upsert({
-            project_id: ids.projectId,
-            participant_id: ids.participantId,
-            assessment_index: assessmentIndexNum,
-            assessment_code: assessmentCodeStr,
-            assessment_name: assessmentNameStr,
-            participant_name: participant.name || "",
-            result_type: "MSJT",
+    .from("msjt_results")              // ← FIX 1: msjt_results
+    .upsert({
+        project_id: ids.projectId,
+        participant_id: ids.participantId,
+        assessment_index: assessmentIndexNum,
+        assessment_code: assessmentCodeStr || "MSJT",
+        assessment_name: assessmentNameStr || "Managerial Situational Judgment Test",
+        participant_name: participant.name || "",
+        result_type: "MSJT",
+        raw_data: {                     // ← FIX 2: raw_data bukan responses
             responses: responses,
-            scores: scores,
             total_items: ITEMS.length,
-            answered_items: Object.keys(responses).length,
-            submitted_at: msjtResult.submittedAt
-          }, {
-            onConflict: "project_id,participant_id,assessment_index,assessment_code"
-          });
+            answered_items: Object.keys(responses).length
+        },
+        scores: scores,
+        submitted_at: msjtResult.submittedAt || new Date().toISOString()
+    }, {
+        onConflict: "project_id,participant_id,assessment_index,assessment_code"
+    });
 
-        if(error){
-          console.error("[MSJT] Supabase upsert error:", error);
-        } else {
-          console.log("[MSJT] ✓ Hasil tersinkron ke Supabase (sjt_results)");
-        }
+if(error){
+    console.error("[MSJT] Supabase upsert error:", error);
+} else {
+    console.log("[MSJT] ✅ Hasil tersinkron ke Supabase (msjt_results)");  // ← FIX 3: log
+}
       }
     }catch(err){ console.error("[MSJT] Gagal sync Supabase:", err); }
   }

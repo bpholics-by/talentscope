@@ -5,7 +5,23 @@
     "use strict";
 
     // 1. Ambil session user dari penyimpanan browser
+        // 1. Ambil session user dari penyimpanan browser
     function getActiveUser() {
+        // PRIORITAS 1: TS_AUTH (JWT baru dari login.html)
+        try {
+            if (window.TS_AUTH && typeof window.TS_AUTH.isAuthenticated === "function") {
+                if (window.TS_AUTH.isAuthenticated()) {
+                    var jwtUser = window.TS_AUTH.getUser();
+                    if (jwtUser && (jwtUser.role || jwtUser.username || jwtUser.name)) {
+                        return jwtUser;
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("[APP-ACCESS] TS_AUTH check error:", e);
+        }
+
+        // FALLBACK: session lama (backward compatibility)
         var keys = ["ts_admin_session", "talentscope_current_user", "user", "currentUser"];
         for (var i = 0; i < keys.length; i++) {
             var data = sessionStorage.getItem(keys[i]) || localStorage.getItem(keys[i]);

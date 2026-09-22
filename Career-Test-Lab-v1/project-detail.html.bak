@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>  
+    <script src="js/config.js"></script>  
 <!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
     <script>
     (function() {
@@ -16,22 +16,13 @@
 
         // 2. Ambil data user yang sedang login dari Storage
         function getActiveUser() {
-    // PRIORITAS 1: TS_AUTH
-    try {
-        if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-            var jwtUser = window.TS_AUTH.getUser();
-            if (jwtUser) return jwtUser;
+            try {
+                var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { 
+                return null; 
+            }
         }
-    } catch(e) {}
-    
-    // FALLBACK
-    try {
-        var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
-        return d ? JSON.parse(d) : null;
-    } catch(e) { 
-        return null; 
-    }
-}
 
         var activeUser = getActiveUser();
 
@@ -70,22 +61,13 @@
 
         // 1. Ambil session user asli dari login
         function getSavedUser() {
-    // PRIORITAS 1: TS_AUTH (JWT baru)
-    try {
-        if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-            var jwtUser = window.TS_AUTH.getUser();
-            if (jwtUser) return jwtUser;
+            try {
+                var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
         }
-    } catch(e) {}
-    
-    // FALLBACK: session lama
-    try {
-        var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-        return d ? JSON.parse(d) : null;
-    } catch(e) { return null; }
-}
 
-var activeUser = getSavedUser();
+        var activeUser = getSavedUser();
 
         if (activeUser) {
             // PAKSA PERTAHANKAN SESSION LOGIN (Cegah ditimpa script template lain)
@@ -6411,35 +6393,35 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- SUPABASE CLIENT -->
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
 
 <!-- CENTRAL DATA SERVICE -->
-<script src="js/data-service.js?v=3"></script>
-<script src="js/role-permissions.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=3"></script>   <!-- ⬅️ TAMBAH INI DI SINI -->
+<script src="js/data-service.js"></script>
+<script src="js/role-permissions.js"></script>
+<script src="js/ts-supabase-sync.js"></script>   <!-- ⬅️ TAMBAH INI DI SINI -->
 
 <!-- LSJT CATALOG SEED -->
-<script src="js/lsjt-catalog-seed.js?v=3"></script>
+<script src="js/lsjt-catalog-seed.js"></script>
 
 
 <!-- PROJECT DETAIL SUPABASE -->
 
-<script src="js/project-detail-data.js?v=3"></script>
+<script src="js/project-detail-data.js"></script>
 
 
 <!-- GLOBAL SEARCH -->
 
-<script src="js/global-search.js?v=3"></script>
+<script src="js/global-search.js"></script>
 
 
 <!-- ACCESS CONTROL -->
 
-<script src="js/app-access-control.js?v=3"></script>
+<script src="js/app-access-control.js"></script>
 
-<script src="js/project-access-filter.js?v=3"></script>
+<script src="js/project-access-filter.js"></script>
 
-<script src="js/access-control-ui.js?v=3"></script>
+<script src="js/auth-guard.js"></script>
 
 <!-- SCRIPT STABILISASI SEMBUNYIKAN MENU SETTINGS -->
 <style id="hide-settings-style">

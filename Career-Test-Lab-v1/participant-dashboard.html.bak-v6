@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="id">
 <head>
-<script src="js/config.js?v=6"></script>
-<script src="js/auth-guard.js?v=6"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/auth-guard.js?v=4"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=6"></script>
-<script src="js/data-service.js?v=6"></script>
-<script src="js/ts-supabase-sync.js?v=6"></script>
+<script src="js/supabase-client.js?v=4"></script>
+<script src="js/data-service.js?v=4"></script>
+<script src="js/ts-supabase-sync.js?v=4"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TalentScope — Participant Portal</title>

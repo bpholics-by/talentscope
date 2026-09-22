@@ -1,12 +1,19 @@
 /* ==========================================================
    CAREER TEST LAB — COMBINED RESULT PAGE
-   FULL FIX VERSION (v4)
+   FULL FIX VERSION (v5)
    ----------------------------------------------------------
-   Perubahan dari v3:
+   Perubahan dari v4:
+   - FIX: Skip section yang tidak ada data (tidak tampil
+     placeholder "Hasil belum ada")
+   - Tambah fungsi checkTestHasData() untuk cek data di
+     Supabase per tabel test
+   - Section kosong TIDAK di-render (hemat resource,
+     tampilan lebih profesional)
+   
+   Perubahan dari v3 (v4):
    - Fix bug route: prioritas cek assessment_id (UUID) dulu
-   - Hapus assessment.id dari candidateFields (itu UUID row, bukan assessment)
+   - Hapus assessment.id dari candidateFields
    - Tambah deteksi dari assessment_name (fallback)
-   - Log lebih jelas untuk debug
 ========================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -24,6 +31,60 @@ const COMBINED_UUID_MAP = {
     "6266a366-47c4-4d5c-9f0f-6a2984227ed1": { name: "DISC Personality", code: "DISC", route: "test-result.html" },
     "d8408a0f-55c0-4fc9-941e-bb6d48292b31": { name: "PAPI Kostick", code: "PAPI", route: "test-result.html" }
 };
+
+/* ==========================================================
+   TABLE MAP — mapping test code → tabel Supabase
+   ========================================================== */
+const COMBINED_TABLE_MAP = {
+    "TPDK": "tpdk_results",
+    "MSJT": "msjt_results",
+    "LSJT": "sjt_results",
+    "VAP":  "vap_results",
+    "DISC": "disc_results",
+    "PAPI": "papi_results"
+};
+
+/* ==========================================================
+   CHECK TEST HAS DATA — cek data di Supabase
+   Return: true kalau ada, false kalau kosong
+   ========================================================== */
+async function checkTestHasData(testCode, projectId, participantId) {
+    const code = String(testCode || "").toUpperCase().trim();
+    const table = COMBINED_TABLE_MAP[code];
+
+    if (!table) {
+        console.warn("[CHECK-DATA] Unknown test code:", code);
+        return false;
+    }
+
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (!sb || typeof sb.from !== "function") {
+            console.warn("[CHECK-DATA] Supabase client tidak tersedia");
+            return false;
+        }
+
+        const { data, error } = await sb
+            .from(table)
+            .select("id")
+            .eq("project_id", projectId)
+            .eq("participant_id", participantId)
+            .limit(1);
+
+        if (error) {
+            console.warn("[CHECK-DATA] Error query " + table + ":", error.message);
+            return false;
+        }
+
+        const hasData = Array.isArray(data) && data.length > 0;
+        console.log("[CHECK-DATA]", code, "(" + table + "):", hasData ? "ADA" : "KOSONG");
+        return hasData;
+
+    } catch (e) {
+        console.warn("[CHECK-DATA] Exception:", e);
+        return false;
+    }
+}
 
 /* ==========================================================
    ROUTE BY CODE
@@ -191,6 +252,8 @@ async function loadCombinedResult() {
 
 /* ==========================================================
    RENDER ALL TESTS
+   ----------------------------------------------------------
+   FIX v5: Skip section yang TIDAK punya data di Supabase
    ========================================================== */
 async function renderCombinedTests(assessments, projectId, participantId) {
     const container = document.getElementById("combinedDetail") ||
@@ -223,9 +286,23 @@ async function renderCombinedTests(assessments, projectId, participantId) {
     }
 
     const sectionsHtml = [];
+    let sectionNumber = 0;
 
     for (let i = 0; i < assessments.length; i++) {
         const info = await normalizeCombinedAssessmentAsync(assessments[i], i, masterAssessments);
+
+        // ============================================
+        // FIX v5: CEK DATA DULU — SKIP KALAU KOSONG
+        // ============================================
+        const hasData = await checkTestHasData(info.code, projectId, participantId);
+
+        if (!hasData) {
+            console.log("[COMBINED] ⏭️ SKIP section " + i + ": " + info.name + " (" + info.code + ") — tidak ada data");
+            continue;
+        }
+
+        // Lanjut render section (karena ada data)
+        sectionNumber++;
 
         const assessmentId = String(
             assessments[i].assessment_id ||
@@ -254,7 +331,7 @@ async function renderCombinedTests(assessments, projectId, participantId) {
             iframeSrc += "&assessmentIndex=" + encodeURIComponent(sortOrderVal);
         }
 
-        console.log("[COMBINED] Section " + i + ": " + info.name + " (" + info.code + ") → " + info.route);
+        console.log("[COMBINED] ✅ Section " + i + ": " + info.name + " (" + info.code + ") → " + info.route);
         console.log("  UUID:", assessmentId, "| sort_order:", sortOrderVal);
 
         sectionsHtml.push(`
@@ -269,7 +346,7 @@ async function renderCombinedTests(assessments, projectId, participantId) {
                             <small>${escapeCombinedHtml(info.code || "Assessment Result")}</small>
                         </div>
                     </div>
-                    <div class="combined-section-badge">${i + 1}</div>
+                    <div class="combined-section-badge">${sectionNumber}</div>
                 </div>
                 <div class="combined-frame-wrap">
                     <div class="combined-frame-loading" id="frame-loading-${i}">
@@ -290,8 +367,16 @@ async function renderCombinedTests(assessments, projectId, participantId) {
         `);
     }
 
+    // Kalau tidak ada section yang lolos (semua kosong), tampilkan pesan
+    if (sectionsHtml.length === 0) {
+        showCombinedMessage("Belum ada hasil assessment yang tersedia untuk peserta ini.");
+        return;
+    }
+
     container.innerHTML = sectionsHtml.join("");
     bindCombinedFrames();
+
+    console.log("[COMBINED] ✅ Rendered " + sectionsHtml.length + " section(s)");
 }
 
 /* ==========================================================

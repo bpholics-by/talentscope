@@ -1,12 +1,12 @@
 <!doctype html>
 <html lang="id">
 <head>
-<script src="js/config.js?v=6"></script>
-<script src="js/auth-guard.js?v=6"></script>
+<script src="js/config.js"></script>
+<script src="js/auth-guard.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=6"></script>
-<script src="js/data-service.js?v=6"></script>
-<script src="js/ts-supabase-sync.js?v=6"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js?v=1"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TalentScope — Participant Portal</title>
@@ -170,49 +170,6 @@ a{text-decoration:none;color:inherit}
   .menu-btn{display:flex}
   .main-wrap{margin-left:0 !important;width:100% !important}
 }
-/* ===== TOAST NOTIFICATION ===== */
-.ts-toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    pointer-events: none;
-}
-.ts-toast {
-    min-width: 260px;
-    max-width: 380px;
-    padding: 14px 18px;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.5;
-    box-shadow: 0 8px 24px rgba(0,0,0,.18);
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    opacity: 0;
-    transform: translateX(30px);
-    transition: opacity .25s ease, transform .25s ease;
-    pointer-events: auto;
-}
-.ts-toast.show {
-    opacity: 1;
-    transform: translateX(0);
-}
-.ts-toast-icon {
-    font-size: 16px;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-.ts-toast-body { flex: 1; }
-.ts-toast.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
-.ts-toast.error   { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.ts-toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.ts-toast.info    { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 </style>
 </head>
 <body>
@@ -516,64 +473,7 @@ if (window.TS_AUTH && typeof window.TS_AUTH.isAuthenticated === "function") {
 var rawSession = sessionStorage.getItem("ts_participant_session");
 if (!jwtUser && !rawSession) { window.location.href = "login.html"; return; }
 
-/* ===== BANGUN OBJEK s DARI JWT USER (prioritas) ATAU SESSION LAMA ===== */
-var s = {};
-if (jwtUser) {
-    s = {
-        participantId: jwtUser.id,
-        participant_id: jwtUser.id,
-        email: jwtUser.email || "",
-        username: jwtUser.username || "",
-        name: jwtUser.name || jwtUser.username || "Participant",
-        fullName: jwtUser.name || jwtUser.username || "Participant",
-        role: jwtUser.role || "Participant",
-        projectId: jwtUser.projectId || jwtUser.project_id || "",
-        project_id: jwtUser.projectId || jwtUser.project_id || "",
-        access_code: jwtUser.access_code || "",
-        participantCode: jwtUser.participant_code || jwtUser.participantCode || "",
-        assessments: []
-    };
-    console.log("[DASHBOARD] Session dari JWT user:", s.name, "| projectId:", s.projectId);
-} else if (rawSession) {
-    try { s = JSON.parse(rawSession); }
-    catch (e) { s = {}; }
-    console.log("[DASHBOARD] Session dari sessionStorage lama:", s.name);
-}
-
-/* Fallback projectId dari localStorage participant */
-if (!s.projectId && !s.project_id) {
-    try {
-        var _cp = JSON.parse(localStorage.getItem("currentParticipant") || "{}");
-        if (_cp.projectId) { s.projectId = _cp.projectId; s.project_id = _cp.projectId; }
-        if (_cp.project_id) { s.projectId = _cp.project_id; s.project_id = _cp.project_id; }
-    } catch (e) {}
-}
-
-/* Fallback projectId dari talentscope_projects */
-if (!s.projectId && !s.project_id) {
-    try {
-        var _projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
-        if (Array.isArray(_projects) && _projects.length > 0) {
-            // Ambil project pertama yang punya participant matching
-            for (var _i = 0; _i < _projects.length; _i++) {
-                var _p = _projects[_i];
-                if (Array.isArray(_p.participants)) {
-                    for (var _j = 0; _j < _p.participants.length; _j++) {
-                        var _part = _p.participants[_j];
-                        if (s.email && (_part.email || "").toLowerCase() === s.email.toLowerCase()) {
-                            s.projectId = _p.id || _p.projectId || _p.project_id || "";
-                            s.project_id = s.projectId;
-                            break;
-                        }
-                    }
-                }
-                if (s.projectId) break;
-            }
-        }
-    } catch (e) {}
-}
-
-var activeSessionId = normalize(s.activeSessionId);
+    var activeSessionId = normalize(s.activeSessionId);
     if (!activeSessionId) {
         activeSessionId = "TS-" + Date.now() + "-" + Math.random().toString(36).slice(2,10);
         s.activeSessionId = activeSessionId;
@@ -586,14 +486,14 @@ var activeSessionId = normalize(s.activeSessionId);
 
     if (!sessionProjectId) {
         console.error("Project ID missing in session.", s);
-        showToast("Session project tidak ditemukan. Silakan login kembali.");
+        alert("Session project tidak ditemukan. Silakan login kembali.");
         sessionStorage.removeItem("ts_participant_session");
         window.location.href = "login.html";
         return;
     }
     if (!sessionParticipantId && !sessionEmail) {
         console.error("Participant identity missing.", s);
-        showToast("Identitas peserta tidak ditemukan. Silakan login kembali.");
+        alert("Identitas peserta tidak ditemukan. Silakan login kembali.");
         sessionStorage.removeItem("ts_participant_session");
         window.location.href = "login.html";
         return;
@@ -858,65 +758,8 @@ if (projectAssessmentsCount > 0) {
         if (element) element.textContent = value || "";
     }
 
-    /* ===== TOAST NOTIFICATION ===== */
-function showToast(message, type) {
-    type = type || "info";
-    
-    // Container
-    var container = document.getElementById("tsToastContainer");
-    if (!container) {
-        container = document.createElement("div");
-        container.id = "tsToastContainer";
-        container.className = "ts-toast-container";
-        document.body.appendChild(container);
-    }
-    
-    // Icon per tipe
-    var icons = {
-        success: "✓",
-        error: "✕",
-        warning: "⚠",
-        info: "ℹ"
-    };
-    
-    // Buat toast
-    var toast = document.createElement("div");
-    toast.className = "ts-toast " + type;
-    toast.innerHTML = 
-        '<span class="ts-toast-icon">' + (icons[type] || icons.info) + '</span>' +
-        '<span class="ts-toast-body">' + String(message || "") + '</span>';
-    
-    container.appendChild(toast);
-    
-    // Animate in
-    setTimeout(function () { toast.classList.add("show"); }, 10);
-    
-    // Auto-dismiss 4 detik
-    setTimeout(function () {
-        toast.classList.remove("show");
-        setTimeout(function () {
-            if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 300);
-    }, 4000);
-}
-
-    // PRIORITAS 1: TS_AUTH (JWT baru)
-var _tsUser = null;
-try {
-    if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-        _tsUser = window.TS_AUTH.getUser();
-    }
-} catch (e) {}
-
-var displayName = 
-    (_tsUser && (_tsUser.name || _tsUser.username)) ||
-    s.name || s.fullName || 
-    currentParticipant.name || currentParticipant.fullName || 
-    "Participant";
-
-var displayEmail = 
-    (_tsUser && _tsUser.email) ||
-    sessionEmail || currentParticipant.email || "";
+    var displayName = s.name || s.fullName || currentParticipant.name || currentParticipant.fullName || "Participant";
+    var displayEmail = sessionEmail || currentParticipant.email || "";
 
     setText("userName", displayName);
     setText("userEmail", displayEmail);
@@ -1147,7 +990,7 @@ var displayEmail =
 if (actionButton) {
     actionButton.addEventListener("click", function () {
         if (packageStatus === "Completed") { 
-            showToast("Semua assessment telah selesai."); 
+            alert("Semua assessment telah selesai."); 
             return; 
         }
         
@@ -1162,7 +1005,7 @@ if (actionButton) {
             var assessmentName = actionButton.getAttribute("data-assessment-name") || "";
             
             if (!projectId || !participantId) {
-                showToast("Identitas peserta tidak valid. Silakan login kembali.");
+                alert("Identitas peserta tidak valid. Silakan login kembali.");
                 window.location.href = "login.html";
                 return;
             }
@@ -1178,7 +1021,7 @@ if (actionButton) {
             
             // ❌ Jika route kosong — error, jangan lanjut
             if (!resolvedTestUrl) {
-                showToast(
+                alert(
                     "⚠ Assessment tidak dikenali:\n" +
                     "Code: " + assessmentCode + "\n" +
                     "Name: " + assessmentName
@@ -1214,7 +1057,7 @@ if (actionButton) {
                 
         } catch (navErr) {
             console.error("[START ASSESSMENT] Error:", navErr);
-            showToast("Gagal memulai assessment: " + (navErr.message || navErr));
+            alert("Gagal memulai assessment: " + (navErr.message || navErr));
             actionButton.disabled = false;
             actionButton.classList.remove("loading");
         }
@@ -1309,25 +1152,8 @@ if (actionButton) {
                     ]);
                 }
             } catch (error) { console.warn("[LOGOUT] Sync gagal:", error); }
-            // Hapus session lama
-try { sessionStorage.removeItem("ts_participant_session"); } catch (error) {}
-
-// Hapus JWT (TS_AUTH) — INI YANG HILANG
-if (window.TS_AUTH && typeof window.TS_AUTH.clearSession === "function") {
-    try { window.TS_AUTH.clearSession(); } catch (e) {}
-}
-
-// Hapus juga key lain biar bersih
-try {
-    localStorage.removeItem("ts_auth_token");
-    localStorage.removeItem("ts_auth_user");
-    localStorage.removeItem("ts_auth_expires");
-    localStorage.removeItem("ts_auth_login_at");
-    localStorage.removeItem("currentParticipant");
-    localStorage.removeItem("ts_current_participant");
-} catch (e) {}
-
-window.location.href = "login.html";
+            try { sessionStorage.removeItem("ts_participant_session"); } catch (error) {}
+            window.location.href = "login.html";
         });
     }
 
@@ -1441,7 +1267,7 @@ window.location.href = "login.html";
             __tsTabSwitchStats.warningShownAt[count] = Date.now();
             saveTabSwitchStats();
             setTimeout(function () {
-                showToast(message);
+                alert(message);
                 updateParticipantStatus(function (participant) {
                     if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
                     participant.activityHistory.push({

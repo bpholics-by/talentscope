@@ -16,22 +16,13 @@
 
         // 1. Ambil session user asli dari login
         function getSavedUser() {
-    // PRIORITAS 1: TS_AUTH (JWT baru)
-    try {
-        if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-            var jwtUser = window.TS_AUTH.getUser();
-            if (jwtUser) return jwtUser;
+            try {
+                var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
         }
-    } catch(e) {}
-    
-    // FALLBACK: session lama
-    try {
-        var d = localStorage.getItem("talentscope_current_user") || sessionStorage.getItem("ts_admin_session");
-        return d ? JSON.parse(d) : null;
-    } catch(e) { return null; }
-}
 
-var activeUser = getSavedUser();
+        var activeUser = getSavedUser();
 
         if (activeUser) {
             // PAKSA PERTAHANKAN SESSION LOGIN (Cegah ditimpa script template lain)
@@ -2832,23 +2823,23 @@ function applyParticipantFilter() {
 
 <!-- SUPABASE (WAJIB DIMUAT SEBELUM participants.js, SUPAYA
      window.DataService TERSEDIA DAN TIDAK MENUNGGU TIMEOUT 10 DETIK) -->
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
+<script src="js/config.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=3"></script>
-<script src="js/data-service.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=3"></script>
-<script src="js/role-permissions.js?v=3"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js"></script>
+<script src="js/role-permissions.js"></script>
 
-<script src="js/layout/layout-loader.js?v=3"></script>
-<script src="js/participants.js?v=3"></script>
+<script src="js/layout/layout-loader.js"></script>
+<script src="js/participants.js"></script>
 <!-- GLOBAL SEARCH -->
-<script src="js/global-search.js?v=3"></script>
+<script src="js/global-search.js"></script>
 
 <!-- Panggil script kontrol akses di semua halaman -->
-<script src="js/app-access-control.js?v=3"></script>
-<script src="js/project-access-filter.js?v=3"></script>
+<script src="js/app-access-control.js"></script>
+<script src="js/project-access-filter.js"></script>
 
-<script src="js/access-control-ui.js?v=3"></script>
+<script src="js/access-control-ui.js"></script>
 
 <script>
 /* ==========================================================

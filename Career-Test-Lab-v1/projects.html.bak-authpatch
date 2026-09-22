@@ -8,20 +8,13 @@
         "use strict";
 
         function getSavedUser() {
-    // PRIORITAS 1: TS_AUTH
-    try {
-        if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-            var jwtUser = window.TS_AUTH.getUser();
-            if (jwtUser) return jwtUser;
+            try {
+                var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
+                return d ? JSON.parse(d) : null;
+            } catch(e) { return null; }
         }
-    } catch(e) {}
-    
-    // FALLBACK
-    try {
-        var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
-        return d ? JSON.parse(d) : null;
-    } catch(e) { return null; }
-}
+
+        var activeUser = getSavedUser();
 
         if (activeUser) {
             localStorage.setItem("talentscope_current_user", JSON.stringify(activeUser));
@@ -1447,33 +1440,33 @@
     </div>
 </div>
 
-<script src="js/layout/layout-loader.js?v=3"></script>
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
+<script src="js/layout/layout-loader.js"></script>
+<script src="js/config.js"></script>
 <!-- SUPABASE LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- SUPABASE CLIENT -->
 
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/supabase-client.js"></script>
 
 <!-- CENTRAL DATA SERVICE -->
-<script src="js/data-service.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=3"></script>
-<script src="js/role-permissions.js?v=3"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js"></script>
+<script src="js/role-permissions.js"></script>
 
 <!-- APPLICATION DATA -->
 
-<script src="js/projects-data.js?v=3"></script>
+<script src="js/projects-data.js"></script>
 
 <!-- APPLICATION RENDER -->
-<script src="js/projects-render.js?v=3"></script>
-<script src="js/projects-modal.js?v=3"></script>
+<script src="js/projects-render.js"></script>
+<script src="js/projects-modal.js"></script>
 
-<script src="js/global-search.js?v=3"></script>
-<script src="js/project-export.js?v=3"></script>
-<script src="js/app-access-control.js?v=3"></script>
-<script src="js/project-access-filter.js?v=3"></script>
-<script src="js/access-control-ui.js?v=3"></script>
+<script src="js/global-search.js"></script>
+<script src="js/project-export.js"></script>
+<script src="js/app-access-control.js"></script>
+<script src="js/project-access-filter.js"></script>
+<script src="js/access-control-ui.js"></script>
 
 
 <!-- SCRIPT PENGISIAN PROFIL PENGGUNA & HAMBURGER MENU MOBILE -->

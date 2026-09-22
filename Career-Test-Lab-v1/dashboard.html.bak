@@ -5,9 +5,7 @@
 <!-- ============================================================
      SCRIPT CONFIG — WAJIB PALING ATAS
      ============================================================ -->
-<script src="js/debug-redirect.js?v=5"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/auth-guard.js?v=5"></script>
+<script src="js/config.js"></script>
 
 <!-- ============================================================
      HIDE SETTINGS MENU — INSTANT HIDE
@@ -16,8 +14,8 @@
     .dropdown-menu a[href*="setting"],
     .dropdown-menu button[onclick*="setting"],
     .dropdown-item[href*="setting"],
-    .dropdown-menu a[href*="Setting"],
-    .dropdown-item a[href*="setting"] {
+    [class*="dropdown"] a:has(svg):first-child,
+    .user-dropdown a:first-child {
         display: none !important;
     }
 </style>
@@ -809,31 +807,31 @@
 ========================================================= -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=5"></script>
-<script src="js/data-service.js?v=5"></script>
-<script src="js/ts-supabase-sync.js?v=5"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js"></script>
 
 
 <!-- =========================================================
      LAYOUT LOADER (Sidebar & Header)
 ========================================================= -->
 
-<script src="js/layout/layout-loader.js?v=5"></script>
+<script src="js/layout/layout-loader.js"></script>
 
 
 <!-- =========================================================
      APPLICATION
 ========================================================= -->
 
-<script src="js/data.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
-<script src="js/dashboard.js?v=5"></script>
-<script src="js/global-search.js?v=5"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/global-search.js"></script>
 
 <!-- ACCESS CONTROL -->
-<!-- DISABLED: <script src="js/app-access-control.js?v=5"></script> -->
-<script src="js/project-access-filter.js?v=5"></script>
-<script src="js/access-control-ui.js?v=5"></script>
+<script src="js/app-access-control.js"></script>
+<script src="js/project-access-filter.js"></script>
+<script src="js/auth-guard.js"></script>
 
 
 <!-- =========================================================
@@ -1001,67 +999,55 @@
            2. HIDE SETTINGS MENU — non-System-Admin
         ===================================================== */
 
-                       function enforceHideSettings() {
+        function enforceHideSettings() {
 
-            /* PRIORITAS 1: TS_AUTH (JWT baru) */
-            var user = null;
+            var userRaw =
+                sessionStorage.getItem("ts_admin_session") ||
+                sessionStorage.getItem("ts_participant_session");
 
+            if (!userRaw) return;
+
+            var user;
             try {
-                if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-                    user = window.TS_AUTH.getUser();
-                }
+                user = JSON.parse(userRaw);
             } catch (e) {
-                console.warn("[HIDE-SETTINGS] TS_AUTH error:", e);
-            }
-
-            /* FALLBACK: session lama */
-            if (!user) {
-                var userRaw =
-                    sessionStorage.getItem("ts_admin_session") ||
-                    sessionStorage.getItem("ts_participant_session");
-                if (userRaw) {
-                    try { user = JSON.parse(userRaw); } catch (e) {}
-                }
-            }
-
-            /* Tidak ada user → JANGAN hide (default = tampil) */
-            if (!user) {
-                console.log("[HIDE-SETTINGS] No user found — skip hiding");
-                var styleElDefault = document.getElementById("hide-settings-style");
-                if (styleElDefault) styleElDefault.remove();
                 return;
             }
 
-            var userRole = String(user.role || "").trim();
-            var isSystemAdmin = /system/i.test(userRole);
+            var isSystemAdmin = /system/i.test(user.role || "");
 
-            console.log("[HIDE-SETTINGS] Role:", userRole, "| System Admin:", isSystemAdmin);
-
-            var styleEl = document.getElementById("hide-settings-style");
+            var styleEl =
+                document.getElementById("hide-settings-style");
 
             if (isSystemAdmin) {
-                /* System Admin → HAPUS CSS → tampilkan semua menu */
-                if (styleEl) {
-                    styleEl.remove();
-                    console.log("[HIDE-SETTINGS] ✅ Style removed (System Admin)");
-                }
+                if (styleEl) styleEl.remove();
                 return;
             }
 
-            /* Non-System-Admin → hide menu "setting" */
             var menuItems = document.querySelectorAll(
                 ".dropdown-menu a, .dropdown-menu button, " +
                 ".dropdown-item, li a"
             );
 
             menuItems.forEach(function (item) {
+
                 var text = item.textContent.trim().toLowerCase();
-                if (text.includes("setting") || text.includes("pengaturan")) {
-                    item.style.setProperty("display", "none", "important");
+
+                if (
+                    text.includes("setting") ||
+                    text.includes("pengaturan")
+                ) {
+                    item.style.setProperty(
+                        "display",
+                        "none",
+                        "important"
+                    );
                 }
+
             });
 
         }
+
         enforceHideSettings();
 
         window.addEventListener("load", enforceHideSettings);
@@ -1340,76 +1326,6 @@
 
 })();
 </script>
-<!-- =========================================================
-     FIX: TOMBOL LOG OUT — Hook ke TS_AUTH.logout()
-     Ditambah sementara karena app-access-control.js di-disable
-     ========================================================= -->
-<script>
-;(function () {
-    "use strict";
-
-    function attachLogoutHandlers() {
-        var selectors = [
-            ".dropdown-menu a",
-            ".dropdown-menu button",
-            ".dropdown-item",
-            "[role='menuitem']"
-        ];
-
-        var all = document.querySelectorAll(selectors.join(","));
-
-        all.forEach(function (el) {
-            var txt = (el.textContent || "").trim().toLowerCase();
-            // Match "log out", "logout", "sign out", "keluar"
-            if (
-                txt === "log out" ||
-                txt === "logout" ||
-                txt === "sign out" ||
-                txt === "keluar"
-            ) {
-                if (el.dataset.tsLogoutBound === "1") return;
-                el.dataset.tsLogoutBound = "1";
-
-                el.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    console.log("[DASHBOARD] Log Out clicked → logging out");
-
-                    if (window.TS_AUTH && typeof window.TS_AUTH.logout === "function") {
-                        window.TS_AUTH.logout();
-                    } else {
-                        // Fallback manual
-                        try {
-                            localStorage.removeItem("ts_auth_token");
-                            localStorage.removeItem("ts_auth_user");
-                            localStorage.removeItem("ts_auth_expires");
-                            localStorage.removeItem("ts_auth_login_at");
-                        } catch (err) {}
-                        window.location.replace("login.html");
-                    }
-                });
-
-                console.log("[DASHBOARD] Log Out handler bound:", txt);
-            }
-        });
-    }
-
-    // Retry berkali-kali karena dropdown mungkin dibuat JS belakangan
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", function () {
-            setTimeout(attachLogoutHandlers, 300);
-        });
-    } else {
-        setTimeout(attachLogoutHandlers, 300);
-    }
-
-    setTimeout(attachLogoutHandlers, 1000);
-    setTimeout(attachLogoutHandlers, 2000);
-    setTimeout(attachLogoutHandlers, 4000);
-})();
-</script>
-
 
 </body>
 </html>

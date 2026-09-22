@@ -4,7 +4,7 @@
 <!-- ============================================================
      SCRIPT CONFIG — WAJIB PALING ATAS
      ============================================================ -->
-<script src="js/config.js?v=3"></script>`n<script src="js/auth-guard.js?v=3"></script>
+<script src="js/config.js"></script>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -3238,28 +3238,28 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- SUPABASE CLIENT -->
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/supabase-client.js"></script>
 
 <!-- DATA SERVICE -->
-<script src="js/data-service.js?v=3"></script>
+<script src="js/data-service.js"></script>
 
 <!-- SUPABASE SYNC -->
-<script src="js/ts-supabase-sync.js?v=3"></script>
+<script src="js/ts-supabase-sync.js"></script>
 
 <!-- ROLE PERMISSIONS -->
-<script src="js/role-permissions.js?v=3"></script>
+<script src="js/role-permissions.js"></script>
 
 <!-- LSJT CATALOG SEED -->
-<script src="js/lsjt-catalog-seed.js?v=3"></script>
+<script src="js/lsjt-catalog-seed.js"></script>
 
 <!-- PROJECT CREATE (Supabase-ready, UUID-based) -->
 <script src="js/project-create.js?v=UUID-FIX-002"></script>
 
 <!-- ASSESSMENT PROJECT SUPABASE RENDER -->
-<script src="js/assessment-project-render.js?v=3"></script>
+<script src="js/assessment-project-render.js"></script>
 
 <!-- GLOBAL SEARCH -->
-<script src="js/global-search.js?v=3"></script>
+<script src="js/global-search.js"></script>
 
 
 <!-- =====================================================
