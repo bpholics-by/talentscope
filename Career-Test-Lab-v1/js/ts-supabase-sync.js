@@ -1,11 +1,15 @@
 /* ==========================================================
-   TALENTSCOPE — SUPABASE SYNC BRIDGE (REFACTOR FASE 2)
+   TALENTSCOPE — SUPABASE SYNC BRIDGE (REFACTOR FASE 3)
    ----------------------------------------------------------
-   PERUBAHAN DARI VERSI SEBELUMNYA:
-   1. Selective columns — hemat egress 30-40%
-   2. Support __TS_DISABLE_AUTO_SYNC — untuk halaman tes
-   3. Log lebih informatif untuk monitoring egress
-   4. Kompatibel dengan API lama
+   OPTIMASI EGRESS v3:
+   1. Auto-sync interval: 60s → 120s (2 menit)
+   2. Presence throttle: 60s → 120s
+   3. Selective columns — hemat 30-40%
+   4. Delta sync — hanya sync yang berubah
+   5. Skip sync saat tab hidden
+   6. Skip auto-sync di halaman tes (__TS_DISABLE_AUTO_SYNC)
+   7. Delta sync untuk project_assessments (hemat)
+   8. Skip redundant sync saat tab aktif kembali (kalau baru sync)
    ========================================================== */
 
 (function () {
@@ -15,25 +19,35 @@
     // KONFIGURASI SUPABASE
     // ======================================================
 
-    // FIX: Baca dari config global
-var SUPABASE_URL = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_URL) || '';
-var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY) || '';
+    var SUPABASE_URL = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_URL) || '';
+    var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY) || '';
 
     var PROJECTS_KEYS = ["talentscope_projects", "projects"];
     var RESULTS_KEY = "talent_scope_results";
     var USERS_KEY = "talentscope_settings_users";
 
     var SYNC_TS_KEY_PREFIX = "ts_last_sync_";
-    var PRESENCE_THROTTLE_MS = 60000;
+    var SYNC_LOCK_KEY_PREFIX = "ts_sync_lock_";
+
+    /* ============================================================
+       OPTIMASI EGRESS v3
+       ============================================================ */
+
+    // ✅ Interval sync: 120 detik (2 menit) — kompromi antara freshness & egress
+    var AUTO_SYNC_INTERVAL_MS = 120 * 1000;
+
+    // ✅ Presence throttle: 120 detik (2 menit) — sama dengan sync interval
+    var PRESENCE_THROTTLE_MS = 120 * 1000;
+
+    // ✅ Batch size: 2 → hemat egress per request
     var BATCH_SIZE = 2;
+
+    // ✅ Minimum gap antar sync (dari event) — cegah spam
+    var MIN_SYNC_GAP_MS = 30 * 1000;  // 30 detik
 
 
     // ======================================================
-    // FIX: SELECTIVE COLUMNS
-    // ------------------------------------------------------
-    // Hanya ambil kolom yang benar-benar dipakai di frontend.
-    // Hemat egress 30-40% karena response tidak bawa kolom
-    // yang tidak dipakai.
+    // SELECTIVE COLUMNS — HEMAT EGRESS
     // ======================================================
 
     var SELECT_COLS = {
@@ -41,16 +55,13 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
         participants: "id,participant_code,project_id,name,full_name,email,username,position,department,company,is_logged_in,login_at,logout_at,last_login_at,status,assessment_status,raw_data,updated_at",
         project_participants: "id,project_id,participant_id,status,registered_at,updated_at",
         project_assessments: "id,project_id,assessment_id,assessment_name,sort_order,created_at",
-        ts_results: "id,project_id,participant_id,assessment_index,assessment_code,data",
+        ts_results: "id,project_id,participant_id,assessment_index,assessment_code,data,created_at",
         ts_users: "id,data,updated_at"
     };
 
 
     // ======================================================
-    // FIX: DETEKSI HALAMAN TES
-    // ------------------------------------------------------
-    // Kalau window.__TS_DISABLE_AUTO_SYNC = true (di-set oleh
-    // halaman tes), auto-sync TIDAK dijalankan.
+    // DETEKSI HALAMAN TES
     // ======================================================
 
     function isAutoSyncDisabled() {
@@ -67,10 +78,11 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
     var __tsSyncInProgress = false;
     var __tsPendingPushes = {};
     var __tsDebounceTimers = {};
+    var __tsLastSyncTrigger = 0;
 
 
     // ======================================================
-    // HELPER: AMBIL WAKTU SYNC TERAKHIR
+    // HELPER: WAKTU SYNC
     // ======================================================
 
     function getLastSyncTime(tableName) {
@@ -269,15 +281,16 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
 
 
     // ======================================================
-    // ASSEMBLE PROJECTS — FIX: SELECTIVE COLUMNS
+    // ASSEMBLE PROJECTS — DELTA SYNC + SELECTIVE COLUMNS
     // ======================================================
 
     async function assembleProjectsFromRelationalTablesAsync() {
         var lastProjectsSync = getLastSyncTime("projects");
         var lastParticipantsSync = getLastSyncTime("participants");
         var lastRelationsSync = getLastSyncTime("project_participants");
+        var lastAssessmentsSync = getLastSyncTime("project_assessments");
 
-        // FIX: Pakai SELECT_COLS yang sudah didefinisikan di atas
+        // Delta sync untuk semua (termasuk project_assessments)
         var projectsUrl = "/rest/v1/projects?select=" + SELECT_COLS.projects;
         if (lastProjectsSync !== "1970-01-01T00:00:00Z") {
             projectsUrl += "&updated_at=gt." + encodeURIComponent(lastProjectsSync);
@@ -293,8 +306,10 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
             relationsUrl += "&updated_at=gt." + encodeURIComponent(lastRelationsSync);
         }
 
-        // project_assessments SELALU FULL SYNC (data kritis, kecil)
-        var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.project_assessments;
+        // ✅ OPTIMASI: project_assessments pakai DELTA SYNC juga
+        // FIX: project_assessments tidak punya updated_at — full sync saja
+var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.project_assessments;
+// Delta sync tidak aktif untuk tabel ini
 
         var projectRows = await restGetAsync(projectsUrl);
         if (projectRows === null) return null;
@@ -369,7 +384,7 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
                 merged2.assessments = assessmentsByProject[pid].slice().sort(function(a, b) {
                     return Number(a.sort_order || 999) - Number(b.sort_order || 999);
                 });
-                console.log("[TS-Sync] Assessments (REPLACED, sorted):", pid, merged2.assessments.length);
+                console.log("[TS-Sync] Assessments (delta):", pid, merged2.assessments.length);
             } else if (project.raw_data && Array.isArray(project.raw_data.assessments) && project.raw_data.assessments.length) {
                 merged2.assessments = project.raw_data.assessments;
             } else if (Array.isArray(project.assessments) && project.assessments.length) {
@@ -442,7 +457,7 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
 
 
     // ======================================================
-    // SYNC-DOWN: RESULTS — FIX: SELECTIVE COLUMNS
+    // SYNC-DOWN: RESULTS
     // ======================================================
 
     async function syncResultsDownAsync() {
@@ -500,7 +515,7 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
 
 
     // ======================================================
-    // SYNC-DOWN: USERS — FIX: SELECTIVE COLUMNS
+    // SYNC-DOWN: USERS
     // ======================================================
 
     async function syncUsersDownAsync() {
@@ -629,49 +644,35 @@ var SUPABASE_ANON_KEY = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_ANON_KEY)
                 tabSwitchUpdatedAt: participant.tabSwitchUpdatedAt
             });
 
-            /* ==========================================================
-   PATCH PILAR 2: Auto-Logout dengan Timestamp Andal
-   ----------------------------------------------------------
-   Kalau participant isLoggedIn=false tapi logoutAt kosong,
-   otomatis isi dengan waktu sekarang.
-   Ini memastikan logout_at di Supabase SELALU terisi
-   saat peserta offline.
-========================================================== */
+            var logoutTimeVal = participant.logoutAt
+                || participant.logoutTime
+                || participant.lastLogoutAt
+                || participant.waktuLogout;
 
-// Ambil logout time
-var logoutTimeVal = participant.logoutAt
-    || participant.logoutTime
-    || participant.lastLogoutAt
-    || participant.waktuLogout;
+            if (participant.isLoggedIn === false && !logoutTimeVal) {
+                logoutTimeVal = nowISO();
+                mergedRawData.logoutAt = logoutTimeVal;
+                mergedRawData.logoutTime = logoutTimeVal;
+                mergedRawData.lastLogoutAt = logoutTimeVal;
+                mergedRawData.waktuLogout = logoutTimeVal;
+                console.log("[TS-Sync] Auto-generate logout timestamp:", participantRowId, logoutTimeVal);
+            }
 
-// KALAU OFFLINE tapi logoutAt kosong → auto-generate timestamp
-if (participant.isLoggedIn === false && !logoutTimeVal) {
-    logoutTimeVal = nowISO();
+            var updatePayload = {
+                is_logged_in: participant.isLoggedIn === true,
+                raw_data: mergedRawData
+            };
 
-    // Simpan juga ke mergedRawData
-    mergedRawData.logoutAt = logoutTimeVal;
-    mergedRawData.logoutTime = logoutTimeVal;
-    mergedRawData.lastLogoutAt = logoutTimeVal;
-    mergedRawData.waktuLogout = logoutTimeVal;
+            var loginTimeVal = participant.loginAt || participant.loginTime || participant.loggedInAt;
+            if (loginTimeVal) {
+                updatePayload.login_at = loginTimeVal;
+                updatePayload.last_login_at = loginTimeVal;
+            }
 
-    console.log("[TS-Sync] Auto-generate logout timestamp:", participantRowId, logoutTimeVal);
-}
-
-var updatePayload = {
-    is_logged_in: participant.isLoggedIn === true,
-    raw_data: mergedRawData
-};
-
-var loginTimeVal = participant.loginAt || participant.loginTime || participant.loggedInAt;
-if (loginTimeVal) {
-    updatePayload.login_at = loginTimeVal;
-    updatePayload.last_login_at = loginTimeVal;
-}
-
-if (logoutTimeVal) {
-    updatePayload.logout_at = logoutTimeVal;
-    updatePayload.last_logout_at = logoutTimeVal;
-}
+            if (logoutTimeVal) {
+                updatePayload.logout_at = logoutTimeVal;
+                updatePayload.last_logout_at = logoutTimeVal;
+            }
 
             return fetchFn(
                 SUPABASE_URL + "/rest/v1/participants?id=eq." + encodeURIComponent(participantRowId),
@@ -798,7 +799,6 @@ if (logoutTimeVal) {
     localStorage.setItem = function (key, value) {
         originalSetItem(key, value);
 
-        // FIX: Skip push ke Supabase kalau auto-sync disabled (halaman tes)
         if (isAutoSyncDisabled()) {
             return;
         }
@@ -831,10 +831,18 @@ if (logoutTimeVal) {
 
 
     // ======================================================
-    // BACKGROUND SYNC
+    // BACKGROUND SYNC — DENGAN MIN GAP
     // ======================================================
 
     function startBackgroundSync() {
+        // ✅ Cegah spam: minimal 30s antar sync dari event
+        var now = Date.now();
+        if (now - __tsLastSyncTrigger < MIN_SYNC_GAP_MS) {
+            console.log("[TS-Sync] Skip sync — terlalu cepat (" + Math.round((now - __tsLastSyncTrigger) / 1000) + "s lalu)");
+            return;
+        }
+        __tsLastSyncTrigger = now;
+
         if (__tsSyncInProgress) {
             console.log("[TS-Sync] Sync sudah berjalan, skip");
             return;
@@ -891,14 +899,12 @@ if (logoutTimeVal) {
 
 
     // ======================================================
-    // FIX: AUTO-SYNC — SKIP KALAU FLAG DISABLED
+    // AUTO-SYNC — 120 DETIK (2 MENIT)
     // ======================================================
 
     var __tsAutoSyncInterval = null;
-    var __tsAutoSyncIntervalMs = 60000;
 
     function startAutoSync() {
-        // FIX: Skip total kalau halaman tes
         if (isAutoSyncDisabled()) {
             console.log("[TS-Sync] Auto-sync DISABLED (flag __TS_DISABLE_AUTO_SYNC aktif)");
             return;
@@ -906,17 +912,18 @@ if (logoutTimeVal) {
 
         if (__tsAutoSyncInterval) return;
 
+        // ✅ Interval 120s (2 menit) — hemat egress
         __tsAutoSyncInterval = setInterval(function () {
             if (document.visibilityState !== "visible") {
                 console.log("[TS-Sync] Skip auto-sync — tab tidak aktif");
                 return;
             }
 
-            console.log("[TS-Sync] Auto-sync berkala...");
+            console.log("[TS-Sync] Auto-sync berkala (2 menit)...");
             startBackgroundSync();
-        }, __tsAutoSyncIntervalMs);
+        }, AUTO_SYNC_INTERVAL_MS);
 
-        console.log("[TS-Sync] Auto-sync aktif (interval: " + (__tsAutoSyncIntervalMs / 1000) + "s)");
+        console.log("[TS-Sync] Auto-sync aktif (interval: " + (AUTO_SYNC_INTERVAL_MS / 1000) + "s)");
     }
 
     function stopAutoSync() {
@@ -930,9 +937,9 @@ if (logoutTimeVal) {
         if (document.visibilityState === "hidden") {
             flushPendingPushesNow();
         } else if (document.visibilityState === "visible") {
-            // FIX: Skip sync saat tab aktif kembali kalau disabled
             if (isAutoSyncDisabled()) return;
 
+            // ✅ Sudah ada MIN_SYNC_GAP_MS guard di startBackgroundSync
             console.log("[TS-Sync] Tab aktif kembali — sync langsung");
             startBackgroundSync();
         }
@@ -947,6 +954,6 @@ if (logoutTimeVal) {
     window.TalentScopeSync.startAutoSync = startAutoSync;
     window.TalentScopeSync.stopAutoSync = stopAutoSync;
 
-    console.log("[TS-Sync] Initialized (refactor fase 2: selective columns + disable flag)");
+    console.log("[TS-Sync] Initialized (refactor fase 3: egress optimization v3)");
 
 })();

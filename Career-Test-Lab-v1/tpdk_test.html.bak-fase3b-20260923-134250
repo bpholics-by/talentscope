@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script>
-    // FIX: Matikan auto-sync di halaman tes ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â hemat egress
+    // FIX: Matikan auto-sync di halaman tes — hemat egress
     window.__TS_DISABLE_AUTO_SYNC = true;
 </script>
 <!-- SUPABASE SYNC BRIDGE -->
@@ -22,7 +22,7 @@
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TalentScope Enterprise ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Tes Penalaran Dunia Kerja</title>
+<title>TalentScope Enterprise — Tes Penalaran Dunia Kerja</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <style>
@@ -166,7 +166,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sa
 <section class="quiz" id="quiz">
   <div class="quiz-card">
     <div class="progress">
-      <strong id="subtestLabel">Subtes A ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Penalaran Verbal</strong>
+      <strong id="subtestLabel">Subtes A — Penalaran Verbal</strong>
       <span id="count">1 / 30</span>
     </div>
     <div class="bar"><i id="bar"></i></div>
@@ -211,7 +211,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sa
 
 <script>
 /* =========================================================
-   TPDK ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â TES PENALARAN DUNIA KERJA
+   TPDK — TES PENALARAN DUNIA KERJA
    30 Item | 4 Subtes | 47 Menit
 ========================================================= */
 
@@ -220,10 +220,10 @@ const TPDK_CERITA = `PT Nusantara Jaya adalah perusahaan distribusi barang konsu
 Pada awal tahun, Direktur Utama menunjuk Andi sebagai Project Manager untuk memimpin transformasi digital. Andi diberi target: mengimplementasikan sistem ERP (Enterprise Resource Planning) dalam 12 bulan dengan anggaran Rp4,5 miliar.
 
 Andi membentuk tim inti:
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Budi (IT Manager) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â berpengalaman 10 tahun, konservatif dan skeptis terhadap perubahan
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Citra (Finance Manager) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â detail-oriented, khawatir dengan biaya implementasi
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dewi (Operations Manager) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â berpengalaman lapangan, dekat dengan karyawan cabang
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Eko (Marketing Manager) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â visioner, kurang memahami aspek teknis
+• Budi (IT Manager) — berpengalaman 10 tahun, konservatif dan skeptis terhadap perubahan
+• Citra (Finance Manager) — detail-oriented, khawatir dengan biaya implementasi
+• Dewi (Operations Manager) — berpengalaman lapangan, dekat dengan karyawan cabang
+• Eko (Marketing Manager) — visioner, kurang memahami aspek teknis
 
 Pada bulan ke-3, Andi menemukan:
 1. Biaya lisensi ERP 30% lebih mahal dari perkiraan awal
@@ -233,61 +233,61 @@ Pada bulan ke-3, Andi menemukan:
 5. Eko mengusulkan membangun aplikasi mobile untuk pelanggan
 
 Pada bulan ke-6, Andi menemukan:
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Hanya 3 dari 12 cabang yang siap secara infrastruktur
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Tingkat adopsi sistem baru di cabang pilot hanya 40%
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Biaya sudah terpakai 60% dari anggaran, tetapi progress baru 35%
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Pelanggan mulai mengeluh tentang layanan yang lambat
+• Hanya 3 dari 12 cabang yang siap secara infrastruktur
+• Tingkat adopsi sistem baru di cabang pilot hanya 40%
+• Biaya sudah terpakai 60% dari anggaran, tetapi progress baru 35%
+• Pelanggan mulai mengeluh tentang layanan yang lambat
 
 Opsi strategi:
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Opsi A: Lanjutkan sesuai rencana awal, tambah anggaran, percepat implementasi
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Opsi B: Hentikan sementara, fokus pada perbaikan infrastruktur dan pelatihan
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Opsi C: Ubah pendekatan menjadi bertahap (phased), mulai dari cabang yang siap
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Opsi D: Batalkan proyek ERP, fokus pada solusi digital yang lebih sederhana
+• Opsi A: Lanjutkan sesuai rencana awal, tambah anggaran, percepat implementasi
+• Opsi B: Hentikan sementara, fokus pada perbaikan infrastruktur dan pelatihan
+• Opsi C: Ubah pendekatan menjadi bertahap (phased), mulai dari cabang yang siap
+• Opsi D: Batalkan proyek ERP, fokus pada solusi digital yang lebih sederhana
 
 Andi juga mempertimbangkan masukan tim:
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Budi: "Lebih baik kita tunda dulu, perbaiki infrastruktur."
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Citra: "Kita harus efisien. Jangan sampai proyek ini mengganggu cash flow."
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Dewi: "Karyawan butuh dilibatkan. Kalau tidak, mereka akan menolak."
-ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ Eko: "Ini momentum untuk inovasi. Jangan hanya ERP, tapi juga mobile app."`;
+• Budi: "Lebih baik kita tunda dulu, perbaiki infrastruktur."
+• Citra: "Kita harus efisien. Jangan sampai proyek ini mengganggu cash flow."
+• Dewi: "Karyawan butuh dilibatkan. Kalau tidak, mereka akan menolak."
+• Eko: "Ini momentum untuk inovasi. Jangan hanya ERP, tapi juga mobile app."`;
 
 const QUESTIONS = [
-  // ============ SUBTES A ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â VERBAL DUNIA KERJA (10 item) ============
-  { subtest: "A", type: "paling_mendukung", text: "Di sebuah perusahaan logistik, manajemen ingin meningkatkan kecepatan pengiriman tanpa menambah jumlah armada. Salah satu supervisor mengusulkan penggunaan sistem penjadwalan berbasis data agar rute pengiriman lebih efisien. Manakah pernyataan berikut yang paling mendukung gagasan supervisor tersebut?", options: ["Penambahan armada akan mempercepat pengiriman walaupun biaya meningkat.", "Keterlambatan pengiriman umumnya disebabkan oleh jadwal yang tumpang tindih dan rute yang tidak optimal.", "Sopir berpengalaman tidak memerlukan sistem baru karena sudah hafal semua rute.", "Sistem berbasis data membutuhkan pelatihan tambahan sebelum digunakan.", "Efisiensi waktu pengiriman lebih dipengaruhi oleh kondisi jalan dibandingkan sistem yang digunakan."] },
-  { subtest: "A", type: "paling_mendukung", text: "Divisi pemasaran meluncurkan kampanye digital baru untuk menarik segmen pelanggan muda. Setelah dua minggu, kunjungan ke situs meningkat 40%, tetapi angka pembelian tidak berubah. Manakah pernyataan berikut yang paling mendukung perlunya evaluasi terhadap isi kampanye?", options: ["Mayoritas pengunjung baru berhenti di halaman utama tanpa melanjutkan ke halaman produk.", "Tim pemasaran menargetkan jumlah pengunjung situs, bukan angka penjualan.", "Kampanye digital baru difokuskan untuk memperkenalkan merek, bukan meningkatkan transaksi.", "Angka kunjungan tinggi menunjukkan keberhasilan strategi digital.", "Sebagian pengunjung mengakses situs hanya karena promosi hadiah, bukan minat membeli produk."] },
-  { subtest: "A", type: "paling_mendukung", text: "Dalam sebuah evaluasi kinerja, ditemukan bahwa tingkat kehadiran karyawan menurun selama dua bulan terakhir, tetapi hasil pekerjaan secara keseluruhan tetap stabil. Pernyataan manakah yang PALING MENDUKUNG temuan tersebut?", options: ["Sebagian karyawan tetap menyelesaikan tugasnya meskipun tidak selalu hadir di kantor.", "Penurunan tingkat kehadiran menyebabkan keterlambatan penyelesaian proyek.", "Produktivitas menurun karena pengawasan terhadap karyawan berkurang.", "Semua karyawan yang hadir setiap hari menunjukkan hasil kerja lebih baik.", "Sistem kerja jarak jauh membuat koordinasi antarpegawai menjadi tidak efektif."] },
-  { subtest: "A", type: "paling_mungkin_benar", text: "\"Perencanaan tanpa fleksibilitas membuat organisasi kaku menghadapi perubahan; sedangkan fleksibilitas tanpa perencanaan membuat arah kerja mudah bergeser.\" Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Keduanya saling bertentangan sehingga harus dipilih salah satu.", "Fleksibilitas diperlukan untuk menjaga efektivitas perencanaan.", "Perencanaan lebih penting daripada fleksibilitas dalam kondisi stabil.", "Fleksibilitas hanya dibutuhkan jika rencana yang disusun tidak realistis.", "Keduanya tidak relevan karena perubahan tidak dapat direncanakan."] },
-  { subtest: "A", type: "paling_mungkin_benar", text: "Semua karyawan yang memiliki sertifikasi layanan pelanggan mendapat kesempatan promosi. Sebagian besar peserta pelatihan tahun ini belum memiliki sertifikasi. Dimas mengikuti pelatihan tahun ini dan menunjukkan performa tinggi. Manakah dari pernyataan berikut yang PALING MUNGKIN BENAR?", options: ["Dimas pasti tidak akan mendapat promosi.", "Pelatihan tahun ini tidak berpengaruh terhadap promosi.", "Dimas belum tentu mendapat promosi karena belum disebut memiliki sertifikasi.", "Semua peserta pelatihan akan segera disertifikasi.", "Kinerja tinggi menjamin promosi tanpa sertifikasi."] },
-  { subtest: "A", type: "paling_mungkin_benar", text: "Semua karyawan yang berpikir kritis dapat mengidentifikasi risiko dalam proyek. Sebagian karyawan yang mampu mengidentifikasi risiko memberikan masukan strategis kepada pimpinan. Dewa adalah karyawan yang berpikir kritis. Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Dewa pasti memberikan masukan strategis kepada pimpinan.", "Dewa mungkin mampu mengidentifikasi risiko proyek.", "Semua karyawan yang berpikir kritis pasti memberikan masukan strategis.", "Hanya karyawan berpikir kritis yang bisa mengidentifikasi risiko.", "Dewa tidak termasuk karyawan yang mampu memberikan masukan strategis."] },
-  { subtest: "A", type: "paling_mungkin_benar", text: "Dalam proyek pengembangan aplikasi, Tim A menggunakan sistem komunikasi yang terbuka dan evaluasi rutin mingguan. Tim B menggunakan sistem tertutup dengan laporan hanya setiap akhir bulan. Hasilnya, Tim A menyelesaikan proyek lebih cepat dan menghasilkan lebih sedikit kesalahan. Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Evaluasi rutin berperan dalam meningkatkan kualitas hasil kerja.", "Sistem terbuka selalu menghasilkan efisiensi tertinggi.", "Frekuensi laporan tidak berpengaruh terhadap hasil kerja.", "Jumlah anggota tim menentukan tingkat kesalahan.", "Tim B memiliki anggota dengan kemampuan teknis rendah."] },
-  { subtest: "A", type: "asumsi", text: "Seorang pemimpin tim berkata kepada anggotanya: \"Kalau saja laporan bulan lalu selesai lebih cepat, kita tidak akan dikejar tenggat waktu minggu ini.\" Apa asumsi yang mendasari agar pernyataan tersebut benar?", options: ["Keterlambatan pekerjaan sebelumnya memengaruhi jadwal pekerjaan berikutnya.", "Tenggat waktu minggu ini ditetapkan tanpa memperhatikan kondisi kerja tim.", "Laporan bulan lalu memiliki tingkat kesulitan yang lebih tinggi dari biasanya.", "Tim tidak mampu menyesuaikan diri dengan perubahan prioritas pekerjaan.", "Hasil laporan lebih penting dibanding waktu penyelesaiannya."] },
-  { subtest: "A", type: "asumsi", text: "\"Karyawan yang sering bekerja lembur menunjukkan loyalitas tinggi terhadap perusahaan. Oleh karena itu, perusahaan seharusnya memberi penghargaan khusus bagi mereka yang paling sering lembur.\" Apa asumsi yang mendukung agar kesimpulan tersebut benar?", options: ["Semua karyawan yang lembur melakukannya karena dedikasi terhadap perusahaan.", "Lembur selalu terjadi karena beban kerja yang tidak seimbang.", "Loyalitas karyawan hanya bisa diukur dari lamanya bekerja.", "Perusahaan tidak memiliki cara lain untuk menilai loyalitas.", "Karyawan yang jarang lembur tidak loyal terhadap perusahaan."] },
-  { subtest: "A", type: "asumsi", text: "Seorang manajer proyek mengatakan, \"Jika seluruh anggota tim disiplin mengisi laporan harian proyek, keterlambatan pekerjaan dapat diminimalkan.\" Asumsi yang mendasari pernyataan tersebut adalah...", options: ["Laporan harian dapat digunakan untuk memantau progres pekerjaan dengan akurat.", "Semua anggota tim memiliki kemampuan yang sama dalam menyelesaikan tugas.", "Setiap keterlambatan disebabkan oleh kurangnya laporan dari anggota tim.", "Tim proyek selalu membaca dan menindaklanjuti laporan yang telah dikirimkan.", "Disiplin mengisi laporan menunjukkan tingkat kepatuhan terhadap arahan manajer."] },
+  // ============ SUBTES A — VERBAL DUNIA KERJA (10 item) ============
+  { subtest: "A", type: "paling_mendukung", text: "Di sebuah perusahaan logistik, manajemen ingin meningkatkan kecepatan pengiriman tanpa menambah jumlah armada. Salah satu supervisor mengusulkan penggunaan sistem penjadwalan berbasis data agar rute pengiriman lebih efisien. Manakah pernyataan berikut yang paling mendukung gagasan supervisor tersebut?", options: ["Penambahan armada akan mempercepat pengiriman walaupun biaya meningkat.", "Keterlambatan pengiriman umumnya disebabkan oleh jadwal yang tumpang tindih dan rute yang tidak optimal.", "Sopir berpengalaman tidak memerlukan sistem baru karena sudah hafal semua rute.", "Sistem berbasis data membutuhkan pelatihan tambahan sebelum digunakan.", "Efisiensi waktu pengiriman lebih dipengaruhi oleh kondisi jalan dibandingkan sistem yang digunakan."], answer: "B" },
+  { subtest: "A", type: "paling_mendukung", text: "Divisi pemasaran meluncurkan kampanye digital baru untuk menarik segmen pelanggan muda. Setelah dua minggu, kunjungan ke situs meningkat 40%, tetapi angka pembelian tidak berubah. Manakah pernyataan berikut yang paling mendukung perlunya evaluasi terhadap isi kampanye?", options: ["Mayoritas pengunjung baru berhenti di halaman utama tanpa melanjutkan ke halaman produk.", "Tim pemasaran menargetkan jumlah pengunjung situs, bukan angka penjualan.", "Kampanye digital baru difokuskan untuk memperkenalkan merek, bukan meningkatkan transaksi.", "Angka kunjungan tinggi menunjukkan keberhasilan strategi digital.", "Sebagian pengunjung mengakses situs hanya karena promosi hadiah, bukan minat membeli produk."], answer: "A" },
+  { subtest: "A", type: "paling_mendukung", text: "Dalam sebuah evaluasi kinerja, ditemukan bahwa tingkat kehadiran karyawan menurun selama dua bulan terakhir, tetapi hasil pekerjaan secara keseluruhan tetap stabil. Pernyataan manakah yang PALING MENDUKUNG temuan tersebut?", options: ["Sebagian karyawan tetap menyelesaikan tugasnya meskipun tidak selalu hadir di kantor.", "Penurunan tingkat kehadiran menyebabkan keterlambatan penyelesaian proyek.", "Produktivitas menurun karena pengawasan terhadap karyawan berkurang.", "Semua karyawan yang hadir setiap hari menunjukkan hasil kerja lebih baik.", "Sistem kerja jarak jauh membuat koordinasi antarpegawai menjadi tidak efektif."], answer: "A" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "\"Perencanaan tanpa fleksibilitas membuat organisasi kaku menghadapi perubahan; sedangkan fleksibilitas tanpa perencanaan membuat arah kerja mudah bergeser.\" Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Keduanya saling bertentangan sehingga harus dipilih salah satu.", "Fleksibilitas diperlukan untuk menjaga efektivitas perencanaan.", "Perencanaan lebih penting daripada fleksibilitas dalam kondisi stabil.", "Fleksibilitas hanya dibutuhkan jika rencana yang disusun tidak realistis.", "Keduanya tidak relevan karena perubahan tidak dapat direncanakan."], answer: "B" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "Semua karyawan yang memiliki sertifikasi layanan pelanggan mendapat kesempatan promosi. Sebagian besar peserta pelatihan tahun ini belum memiliki sertifikasi. Dimas mengikuti pelatihan tahun ini dan menunjukkan performa tinggi. Manakah dari pernyataan berikut yang PALING MUNGKIN BENAR?", options: ["Dimas pasti tidak akan mendapat promosi.", "Pelatihan tahun ini tidak berpengaruh terhadap promosi.", "Dimas belum tentu mendapat promosi karena belum disebut memiliki sertifikasi.", "Semua peserta pelatihan akan segera disertifikasi.", "Kinerja tinggi menjamin promosi tanpa sertifikasi."], answer: "C" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "Semua karyawan yang berpikir kritis dapat mengidentifikasi risiko dalam proyek. Sebagian karyawan yang mampu mengidentifikasi risiko memberikan masukan strategis kepada pimpinan. Dewa adalah karyawan yang berpikir kritis. Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Dewa pasti memberikan masukan strategis kepada pimpinan.", "Dewa mungkin mampu mengidentifikasi risiko proyek.", "Semua karyawan yang berpikir kritis pasti memberikan masukan strategis.", "Hanya karyawan berpikir kritis yang bisa mengidentifikasi risiko.", "Dewa tidak termasuk karyawan yang mampu memberikan masukan strategis."], answer: "B" },
+  { subtest: "A", type: "paling_mungkin_benar", text: "Dalam proyek pengembangan aplikasi, Tim A menggunakan sistem komunikasi yang terbuka dan evaluasi rutin mingguan. Tim B menggunakan sistem tertutup dengan laporan hanya setiap akhir bulan. Hasilnya, Tim A menyelesaikan proyek lebih cepat dan menghasilkan lebih sedikit kesalahan. Manakah kesimpulan yang PALING TEPAT berdasarkan paparan di atas?", options: ["Evaluasi rutin berperan dalam meningkatkan kualitas hasil kerja.", "Sistem terbuka selalu menghasilkan efisiensi tertinggi.", "Frekuensi laporan tidak berpengaruh terhadap hasil kerja.", "Jumlah anggota tim menentukan tingkat kesalahan.", "Tim B memiliki anggota dengan kemampuan teknis rendah."], answer: "A" },
+  { subtest: "A", type: "asumsi", text: "Seorang pemimpin tim berkata kepada anggotanya: \"Kalau saja laporan bulan lalu selesai lebih cepat, kita tidak akan dikejar tenggat waktu minggu ini.\" Apa asumsi yang mendasari agar pernyataan tersebut benar?", options: ["Keterlambatan pekerjaan sebelumnya memengaruhi jadwal pekerjaan berikutnya.", "Tenggat waktu minggu ini ditetapkan tanpa memperhatikan kondisi kerja tim.", "Laporan bulan lalu memiliki tingkat kesulitan yang lebih tinggi dari biasanya.", "Tim tidak mampu menyesuaikan diri dengan perubahan prioritas pekerjaan.", "Hasil laporan lebih penting dibanding waktu penyelesaiannya."], answer: "A" },
+  { subtest: "A", type: "asumsi", text: "\"Karyawan yang sering bekerja lembur menunjukkan loyalitas tinggi terhadap perusahaan. Oleh karena itu, perusahaan seharusnya memberi penghargaan khusus bagi mereka yang paling sering lembur.\" Apa asumsi yang mendukung agar kesimpulan tersebut benar?", options: ["Semua karyawan yang lembur melakukannya karena dedikasi terhadap perusahaan.", "Lembur selalu terjadi karena beban kerja yang tidak seimbang.", "Loyalitas karyawan hanya bisa diukur dari lamanya bekerja.", "Perusahaan tidak memiliki cara lain untuk menilai loyalitas.", "Karyawan yang jarang lembur tidak loyal terhadap perusahaan."], answer: "A" },
+  { subtest: "A", type: "asumsi", text: "Seorang manajer proyek mengatakan, \"Jika seluruh anggota tim disiplin mengisi laporan harian proyek, keterlambatan pekerjaan dapat diminimalkan.\" Asumsi yang mendasari pernyataan tersebut adalah...", options: ["Laporan harian dapat digunakan untuk memantau progres pekerjaan dengan akurat.", "Semua anggota tim memiliki kemampuan yang sama dalam menyelesaikan tugas.", "Setiap keterlambatan disebabkan oleh kurangnya laporan dari anggota tim.", "Tim proyek selalu membaca dan menindaklanjuti laporan yang telah dikirimkan.", "Disiplin mengisi laporan menunjukkan tingkat kepatuhan terhadap arahan manajer."], answer: "A" },
 
-  // ============ SUBTES B ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â KUANTITATIF (5 item) ============
-  { subtest: "B", type: "aritmatika", text: "Tim logistik mencatat bahwa kendaraan pengiriman pertama menempuh rute sejauh 126 km dalam waktu 1 jam 45 menit. Kendaraan kedua menempuh rute yang sama tetapi membutuhkan waktu 15% lebih lama. Waktu tempuh kendaraan kedua adalah ...", options: ["1 jam 52 menit", "1 jam 55 menit", "2 jam 00 menit", "2 jam 01 menit", "2 jam 05 menit"] },
-  { subtest: "B", type: "perbandingan", text: "Dalam laporan kinerja, bagian keuangan mencatat tingkat penyelesaian proyek beberapa divisi sebagai berikut: Divisi A: 1 2/5 proyek dari target; Divisi B: 95% dari target; Divisi C: 0,63 dari target; Divisi D: 25/40 dari target; Divisi E: 25/50 dari target. Urutan tingkat penyelesaian dari yang tertinggi hingga terendah adalah ...", options: ["A, B, C, D, E", "A, B, C, E, D", "D, E, C, B, A", "E, D, C, B, A", "D, E, B, C, A"] },
-  { subtest: "B", type: "geometri", text: "Bagian pemeliharaan gedung akan memasang pagar baja ringan mengelilingi area gudang berbentuk persegi panjang berukuran 60 meter ÃƒÆ’Ã¢â‚¬â€ 40 meter. Tiang pancang dipasang setiap 2 meter termasuk di setiap sudut. Berapa banyak tiang pancang yang dibutuhkan?", options: ["48 buah", "49 buah", "50 buah", "51 buah", "52 buah"] },
+  // ============ SUBTES B — KUANTITATIF (5 item) ============
+  { subtest: "B", type: "aritmatika", text: "Tim logistik mencatat bahwa kendaraan pengiriman pertama menempuh rute sejauh 126 km dalam waktu 1 jam 45 menit. Kendaraan kedua menempuh rute yang sama tetapi membutuhkan waktu 15% lebih lama. Waktu tempuh kendaraan kedua adalah ...", options: ["1 jam 52 menit", "1 jam 55 menit", "2 jam 00 menit", "2 jam 01 menit", "2 jam 05 menit"], answer: "C" },
+  { subtest: "B", type: "perbandingan", text: "Dalam laporan kinerja, bagian keuangan mencatat tingkat penyelesaian proyek beberapa divisi sebagai berikut: Divisi A: 1 2/5 proyek dari target; Divisi B: 95% dari target; Divisi C: 0,63 dari target; Divisi D: 25/40 dari target; Divisi E: 25/50 dari target. Urutan tingkat penyelesaian dari yang tertinggi hingga terendah adalah ...", options: ["A, B, C, D, E", "A, B, C, E, D", "D, E, C, B, A", "E, D, C, B, A", "D, E, B, C, A"], answer: "A" },
+  { subtest: "B", type: "geometri", text: "Bagian pemeliharaan gedung akan memasang pagar baja ringan mengelilingi area gudang berbentuk persegi panjang berukuran 60 meter × 40 meter. Tiang pancang dipasang setiap 2 meter termasuk di setiap sudut. Berapa banyak tiang pancang yang dibutuhkan?", options: ["48 buah", "49 buah", "50 buah", "51 buah", "52 buah"], answer: "D" },
   { subtest: "B", type: "deret", text: "Sebuah perusahaan manufaktur mencatat jumlah unit produk yang dihasilkan selama lima minggu berturut-turut sebagai berikut: Minggu 1: 120; Minggu 2: 128; Minggu 3: 141; Minggu 4: 159; Minggu 5: 182. Manajer produksi memperkirakan peningkatan produktivitas mengikuti pola kenaikan bertingkat dua yang konstan (second order difference tetap). Berdasarkan pola tersebut, perkiraan jumlah unit yang akan dihasilkan pada minggu ke-7 adalah ...", options: ["210", "216", "222", "229", "243"], answer: "E" },
-  { subtest: "B", type: "aritmatika_bisnis", text: "Sebuah perusahaan retail mencatat penjualan sebagai berikut: Bulan Januari: Rp250.000.000; Bulan Februari: Rp275.000.000; Bulan Maret: Rp300.000.000. Jika tren kenaikan ini berlanjut secara konstan, berapa total penjualan selama 6 bulan pertama (JanuariÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Juni)?", options: ["Rp1.650.000.000", "Rp1.725.000.000", "Rp1.800.000.000", "Rp1.875.000.000", "Rp1.950.000.000"] },
+  { subtest: "B", type: "aritmatika_bisnis", text: "Sebuah perusahaan retail mencatat penjualan sebagai berikut: Bulan Januari: Rp250.000.000; Bulan Februari: Rp275.000.000; Bulan Maret: Rp300.000.000. Jika tren kenaikan ini berlanjut secara konstan, berapa total penjualan selama 6 bulan pertama (Januari–Juni)?", options: ["Rp1.650.000.000", "Rp1.725.000.000", "Rp1.800.000.000", "Rp1.875.000.000", "Rp1.950.000.000"], answer: "D" },
 
-  // ============ SUBTES C ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SPASIAL (5 item) ============
-  { subtest: "C", type: "rotasi", text: "Perhatikan denah ruang kantor berikut. Denah diputar 90Ãƒâ€šÃ‚Â° searah jarum jam. Pilih denah yang paling sesuai dengan hasil rotasi tersebut.", options: ["Pintu masuk di Timur", "Pintu masuk di Barat", "Pintu masuk di Selatan", "Pintu masuk di Utara"], image: "c01_denah_kantor.png" },
-  { subtest: "C", type: "rotasi", text: "Sebuah gedung kantor menghadap ke Utara. Di sisi kiri gedung terdapat parkiran, di sisi kanan terdapat taman, dan di belakang gedung terdapat gudang. Jika gedung diputar 180Ãƒâ€šÃ‚Â°, di manakah posisi taman?", options: ["Utara", "Timur", "Selatan", "Barat"], image: "c02_orientasi_bangunan.png" },
-  { subtest: "C", type: "visualisasi", text: "Perhatikan susunan kardus di rak gudang berikut. Rak dilihat dari depan. Jika rak diputar 90Ãƒâ€šÃ‚Â° ke kiri, bagaimana susunan yang terlihat?", options: ["Kardus besar di kiri, kardus kecil di kanan", "Kardus besar di kanan, kardus kecil di kiri", "Susunan tidak berubah", "Semua kardus terlihat sama"], image: "c03_rak_gudang.png" },
-  { subtest: "C", type: "pencerminan", text: "Perhatikan layout kantor berikut. Layout dilihat dari atas. Jika layout dicerminkan secara horizontal (kiri-ke-kanan), di manakah posisi meja manajer?", options: ["Tetap di kiri", "Pindah ke kanan", "Pindah ke atas", "Pindah ke bawah"], image: "c04_layout_kantor.png" },
-  { subtest: "C", type: "analisis_ruang", text: "Sebuah truk pengiriman berada di titik A. Truk bergerak: 10 km ke Utara, 5 km ke Timur, 10 km ke Selatan, 5 km ke Barat. Di manakah posisi truk sekarang relatif terhadap titik A?", options: ["5 km di Utara", "5 km di Timur", "10 km di Selatan", "Kembali ke titik A"], image: "c05_rute_pengiriman.png" },
+  // ============ SUBTES C — SPASIAL (5 item) ============
+  { subtest: "C", type: "rotasi", text: "Perhatikan denah ruang kantor berikut. Denah diputar 90° searah jarum jam. Pilih denah yang paling sesuai dengan hasil rotasi tersebut.", options: ["Pintu masuk di Timur", "Pintu masuk di Barat", "Pintu masuk di Selatan", "Pintu masuk di Utara"], answer: "B", image: "c01_denah_kantor.png" },
+  { subtest: "C", type: "rotasi", text: "Sebuah gedung kantor menghadap ke Utara. Di sisi kiri gedung terdapat parkiran, di sisi kanan terdapat taman, dan di belakang gedung terdapat gudang. Jika gedung diputar 180°, di manakah posisi taman?", options: ["Utara", "Timur", "Selatan", "Barat"], answer: "D", image: "c02_orientasi_bangunan.png" },
+  { subtest: "C", type: "visualisasi", text: "Perhatikan susunan kardus di rak gudang berikut. Rak dilihat dari depan. Jika rak diputar 90° ke kiri, bagaimana susunan yang terlihat?", options: ["Kardus besar di kiri, kardus kecil di kanan", "Kardus besar di kanan, kardus kecil di kiri", "Susunan tidak berubah", "Semua kardus terlihat sama"], answer: "A", image: "c03_rak_gudang.png" },
+  { subtest: "C", type: "pencerminan", text: "Perhatikan layout kantor berikut. Layout dilihat dari atas. Jika layout dicerminkan secara horizontal (kiri-ke-kanan), di manakah posisi meja manajer?", options: ["Tetap di kiri", "Pindah ke kanan", "Pindah ke atas", "Pindah ke bawah"], answer: "B", image: "c04_layout_kantor.png" },
+  { subtest: "C", type: "analisis_ruang", text: "Sebuah truk pengiriman berada di titik A. Truk bergerak: 10 km ke Utara, 5 km ke Timur, 10 km ke Selatan, 5 km ke Barat. Di manakah posisi truk sekarang relatif terhadap titik A?", options: ["5 km di Utara", "5 km di Timur", "10 km di Selatan", "Kembali ke titik A"], answer: "D", image: "c05_rute_pengiriman.png" },
 
-  // ============ SUBTES D ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â LOGIKA PRAKTIS (10 item) ============
-  { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita di atas, apa akar masalah utama dari keterlambatan proyek ERP?", options: ["Anggaran tidak cukup", "Infrastruktur tidak siap dan resistensi karyawan", "Tim tidak kompeten", "Direktur terlalu ambisius"] },
-  { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi memilih Opsi A (lanjutkan sesuai rencana awal), apa konsekuensi paling mungkin yang terjadi?", options: ["Proyek selesai tepat waktu", "Biaya membengkak dan resistensi meningkat", "Karyawan puas", "Pelanggan senang"] },
-  { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Andi mempertimbangkan Opsi C (phased implementation). Apa keunggulan utama pendekatan ini dibanding Opsi A?", options: ["Lebih murah", "Lebih cepat selesai", "Mengurangi risiko dan memungkinkan pembelajaran bertahap", "Tidak perlu pelatihan"] },
-  { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika di tengah proyek terjadi perubahan regulasi yang mewajibkan sistem keuangan baru, apa yang sebaiknya Andi lakukan?", options: ["Tetap lanjutkan rencana awal", "Hentikan proyek", "Evaluasi ulang dan integrasikan regulasi baru ke dalam rencana", "Serahkan ke tim IT"] },
-  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Pelatihan ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Implementasi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Evaluasi", "Implementasi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Infrastruktur ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Pelatihan ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Evaluasi", "Pelatihan ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Implementasi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Infrastruktur ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Evaluasi", "Evaluasi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Implementasi ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Pelatihan ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Infrastruktur"] },
-  { subtest: "D", type: "conceptual", text: TPDK_CERITA + "\n\nPERTANYAAN: Apa pola besar (big picture) yang sebenarnya sedang dihadapi PT Nusantara Jaya?", options: ["Masalah teknis semata", "Transformasi organisasi dari manual ke digital", "Masalah keuangan", "Konflik antar manajer"] },
-  { subtest: "D", type: "digital_mindset", text: TPDK_CERITA + "\n\nPERTANYAAN: Eko mengusulkan aplikasi mobile untuk pelanggan. Jika Andi ingin menerapkan digital mindset, apa yang paling tepat dilakukan?", options: ["Tolak karena tidak ada di rencana awal", "Setujui tanpa analisis", "Analisis data pelanggan dan nilai bisnisnya sebelum memutuskan", "Serahkan ke vendor"] },
-  { subtest: "D", type: "strategis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir strategis, apa yang harus ia pertimbangkan selain target 12 bulan?", options: ["Hanya anggaran", "Hanya kepuasan karyawan", "Sustainability, competitive advantage, dan kesiapan organisasi jangka panjang", "Hanya kepuasan Direktur"] },
-  { subtest: "D", type: "bisnis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir bisnis, apa nilai utama yang harus ia kejar dari proyek ERP?", options: ["Sekadar mengikuti tren digital", "Efisiensi operasional dan peningkatan layanan pelanggan", "Memenuhi target Direktur", "Menghabiskan anggaran"] },
-  { subtest: "D", type: "keputusan_kompleks", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi harus memutuskan dalam 1 jam, informasi mana yang paling kritis untuk dikumpulkan?", options: ["Pendapat semua manajer", "Data biaya, kesiapan infrastruktur, dan tingkat adopsi karyawan", "Berita industri terbaru", "Opini konsultan eksternal"] }
+  // ============ SUBTES D — LOGIKA PRAKTIS (10 item) ============
+  { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita di atas, apa akar masalah utama dari keterlambatan proyek ERP?", options: ["Anggaran tidak cukup", "Infrastruktur tidak siap dan resistensi karyawan", "Tim tidak kompeten", "Direktur terlalu ambisius"], answer: "B" },
+  { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi memilih Opsi A (lanjutkan sesuai rencana awal), apa konsekuensi paling mungkin yang terjadi?", options: ["Proyek selesai tepat waktu", "Biaya membengkak dan resistensi meningkat", "Karyawan puas", "Pelanggan senang"], answer: "B" },
+  { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Andi mempertimbangkan Opsi C (phased implementation). Apa keunggulan utama pendekatan ini dibanding Opsi A?", options: ["Lebih murah", "Lebih cepat selesai", "Mengurangi risiko dan memungkinkan pembelajaran bertahap", "Tidak perlu pelatihan"], answer: "C" },
+  { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika di tengah proyek terjadi perubahan regulasi yang mewajibkan sistem keuangan baru, apa yang sebaiknya Andi lakukan?", options: ["Tetap lanjutkan rencana awal", "Hentikan proyek", "Evaluasi ulang dan integrasikan regulasi baru ke dalam rencana", "Serahkan ke tim IT"], answer: "C" },
+  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur → Pelatihan → Implementasi → Evaluasi", "Implementasi → Infrastruktur → Pelatihan → Evaluasi", "Pelatihan → Implementasi → Infrastruktur → Evaluasi", "Evaluasi → Implementasi → Pelatihan → Infrastruktur"], answer: "A" },
+  { subtest: "D", type: "conceptual", text: TPDK_CERITA + "\n\nPERTANYAAN: Apa pola besar (big picture) yang sebenarnya sedang dihadapi PT Nusantara Jaya?", options: ["Masalah teknis semata", "Transformasi organisasi dari manual ke digital", "Masalah keuangan", "Konflik antar manajer"], answer: "B" },
+  { subtest: "D", type: "digital_mindset", text: TPDK_CERITA + "\n\nPERTANYAAN: Eko mengusulkan aplikasi mobile untuk pelanggan. Jika Andi ingin menerapkan digital mindset, apa yang paling tepat dilakukan?", options: ["Tolak karena tidak ada di rencana awal", "Setujui tanpa analisis", "Analisis data pelanggan dan nilai bisnisnya sebelum memutuskan", "Serahkan ke vendor"], answer: "C" },
+  { subtest: "D", type: "strategis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir strategis, apa yang harus ia pertimbangkan selain target 12 bulan?", options: ["Hanya anggaran", "Hanya kepuasan karyawan", "Sustainability, competitive advantage, dan kesiapan organisasi jangka panjang", "Hanya kepuasan Direktur"], answer: "C" },
+  { subtest: "D", type: "bisnis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir bisnis, apa nilai utama yang harus ia kejar dari proyek ERP?", options: ["Sekadar mengikuti tren digital", "Efisiensi operasional dan peningkatan layanan pelanggan", "Memenuhi target Direktur", "Menghabiskan anggaran"], answer: "B" },
+  { subtest: "D", type: "keputusan_kompleks", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi harus memutuskan dalam 1 jam, informasi mana yang paling kritis untuk dikumpulkan?", options: ["Pendapat semua manajer", "Data biaya, kesiapan infrastruktur, dan tingkat adopsi karyawan", "Berita industri terbaru", "Opini konsultan eksternal"], answer: "B" }
 ];
 
 const SUBTESTS = {
@@ -298,12 +298,12 @@ const SUBTESTS = {
 };
 
 // =========================================================
-// SVG GENERATOR UNTUK SUBTES C ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â SPASIAL
+// SVG GENERATOR UNTUK SUBTES C — SPASIAL
 // =========================================================
 function renderSVG(imageId) {
     const svgs = {
         // =========================================================
-        // C01 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Denah Ruang Kantor
+        // C01 — Denah Ruang Kantor
         // =========================================================
         "c01_denah_kantor.png": `
             <svg viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
@@ -317,8 +317,8 @@ function renderSVG(imageId) {
                 </defs>
                 <rect x="0" y="0" width="500" height="420" fill="#f8fafc"/>
                 
-                <text x="250" y="24" class="north-label">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ UTARA ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ</text>
-                <text x="250" y="408" class="north-label" style="fill:#94a3b8">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“ SELATAN ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“</text>
+                <text x="250" y="24" class="north-label">↑ UTARA ↑</text>
+                <text x="250" y="408" class="north-label" style="fill:#94a3b8">↓ SELATAN ↓</text>
                 
                 <!-- Ruang Meeting (Kiri Atas) -->
                 <rect x="30" y="45" width="215" height="145" fill="#eff6ff" stroke="#334155" stroke-width="2" rx="4"/>
@@ -364,7 +364,7 @@ function renderSVG(imageId) {
         `,
         
         // =========================================================
-        // C02 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Orientasi Bangunan
+        // C02 — Orientasi Bangunan
         // =========================================================
         "c02_orientasi_bangunan.png": `
             <svg viewBox="0 0 500 430" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
@@ -379,8 +379,8 @@ function renderSVG(imageId) {
                 </defs>
                 <rect x="0" y="0" width="500" height="430" fill="#f8fafc"/>
                 
-                <text x="250" y="24" class="north">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ UTARA (Depan Gedung) ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ</text>
-                <text x="250" y="418" class="north" style="fill:#94a3b8">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“ SELATAN (Belakang) ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“</text>
+                <text x="250" y="24" class="north">↑ UTARA (Depan Gedung) ↑</text>
+                <text x="250" y="418" class="north" style="fill:#94a3b8">↓ SELATAN (Belakang) ↓</text>
                 
                 <!-- Parkiran (Kiri) -->
                 <rect x="30" y="80" width="130" height="230" fill="#2f2f2f" rx="6"/>
@@ -393,7 +393,7 @@ function renderSVG(imageId) {
                 <rect x="122" y="152" width="26" height="20" fill="#6b7280" rx="2"/>
                 <rect x="42" y="182" width="18" height="24" fill="#374151" rx="2"/>
                 <rect x="65" y="182" width="18" height="24" fill="#374151" rx="2"/>
-                <text x="95" y="265" class="sublabel-white">ÃƒÂ°Ã…Â¸Ã…Â¡Ã¢â‚¬â€ ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚ÂÃƒÂ¯Ã‚Â¸Ã‚Â</text>
+                <text x="95" y="265" class="sublabel-white">🚗 🏍️</text>
                 
                 <!-- Gedung Kantor (Tengah) -->
                 <rect x="185" y="70" width="130" height="240" fill="#dbeafe" stroke="#2563eb" stroke-width="2" rx="6"/>
@@ -404,7 +404,7 @@ function renderSVG(imageId) {
                 <rect x="205" y="202" width="90" height="24" fill="#87CEEB" stroke="#2563eb" rx="2"/>
                 <rect x="232" y="235" width="36" height="45" fill="#e0ffff" stroke="#2563eb" stroke-width="2" rx="2"/>
                 <text x="250" y="263" style="font-size:8px;text-anchor:middle;fill:#2563eb;font-weight:800">PINTU</text>
-                <text x="250" y="298" style="font-size:9px;fill:#64748b;text-anchor:middle">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ Menghadap Utara</text>
+                <text x="250" y="298" style="font-size:9px;fill:#64748b;text-anchor:middle">↑ Menghadap Utara</text>
                 
                 <!-- Taman (Kanan) -->
                 <rect x="340" y="80" width="130" height="230" fill="#dcfce7" stroke="#10b981" stroke-width="2" rx="6"/>
@@ -416,7 +416,7 @@ function renderSVG(imageId) {
                 <circle cx="415" cy="200" r="12" fill="#16a34a"/>
                 <circle cx="440" cy="190" r="9" fill="#4ade80"/>
                 <rect x="370" y="230" width="65" height="12" fill="#8B4513" rx="2"/>
-                <text x="405" y="265" class="sublabel-dark">ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â³ ÃƒÂ°Ã…Â¸Ã…â€™Ã‚Â¸ ÃƒÂ°Ã…Â¸Ã‚ÂªÃ¢â‚¬Ëœ</text>
+                <text x="405" y="265" class="sublabel-dark">🌳 🌸 🪑</text>
                 
                 <!-- Gudang (Bawah) -->
                 <rect x="185" y="325" width="130" height="70" fill="#f1f5f9" stroke="#64748b" stroke-width="2" rx="4"/>
@@ -430,7 +430,7 @@ function renderSVG(imageId) {
         `,
         
         // =========================================================
-        // C03 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Susunan Kardus di Rak Gudang
+        // C03 — Susunan Kardus di Rak Gudang
         // LEGEND DI LUAR KANAN
         // =========================================================
                 "c03_rak_gudang.png": `
@@ -450,7 +450,7 @@ function renderSVG(imageId) {
                 <!-- Rack frame (EXTENDED) -->
                 <rect x="40" y="42" width="400" height="395" fill="none" stroke="#64748b" stroke-width="3" rx="4"/>
                 
-                <!-- Tingkat 4 (Atas) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 4 besar -->
+                <!-- Tingkat 4 (Atas) — 4 besar -->
                 <rect x="45" y="47" width="390" height="80" fill="#f8fafc"/>
                 <rect x="58" y="57" width="80" height="50" fill="#8B4513" rx="3"/>
                 <rect x="148" y="57" width="80" height="50" fill="#8B4513" rx="3"/>
@@ -462,9 +462,9 @@ function renderSVG(imageId) {
                 <text x="368" y="87" class="box-label-white">BESAR</text>
                 
                 <!-- Label TINGKAT 4 (DI BAWAH kardus, di area putih) -->
-                <text x="240" y="120" class="tingkat-label">TINGKAT 4 (Atas) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 4 Kardus Besar</text>
+                <text x="240" y="120" class="tingkat-label">TINGKAT 4 (Atas) — 4 Kardus Besar</text>
                 
-                <!-- Tingkat 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 2 kecil -->
+                <!-- Tingkat 3 — 2 kecil -->
                 <rect x="45" y="128" width="390" height="80" fill="#f1f5f9"/>
                 <rect x="105" y="138" width="65" height="50" fill="#F5DEB3" stroke="#94a3b8" stroke-width="1" rx="3"/>
                 <rect x="180" y="138" width="65" height="50" fill="#F5DEB3" stroke="#94a3b8" stroke-width="1" rx="3"/>
@@ -472,9 +472,9 @@ function renderSVG(imageId) {
                 <text x="212" y="168" class="box-label-brown">KECIL</text>
                 
                 <!-- Label TINGKAT 3 (DI BAWAH kardus) -->
-                <text x="240" y="201" class="tingkat-label">TINGKAT 3 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 2 Kardus Kecil</text>
+                <text x="240" y="201" class="tingkat-label">TINGKAT 3 — 2 Kardus Kecil</text>
                 
-                <!-- Tingkat 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 5 sedang -->
+                <!-- Tingkat 2 — 5 sedang -->
                 <rect x="45" y="209" width="390" height="80" fill="#f8fafc"/>
                 <rect x="52" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
                 <rect x="127" y="219" width="65" height="50" fill="#D2691E" rx="3"/>
@@ -488,9 +488,9 @@ function renderSVG(imageId) {
                 <text x="384" y="249" class="box-label-white">SEDANG</text>
                 
                 <!-- Label TINGKAT 2 (DI BAWAH kardus) -->
-                <text x="240" y="282" class="tingkat-label">TINGKAT 2 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 5 Kardus Sedang</text>
+                <text x="240" y="282" class="tingkat-label">TINGKAT 2 — 5 Kardus Sedang</text>
                 
-                <!-- Tingkat 1 (Bawah) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 3 besar -->
+                <!-- Tingkat 1 (Bawah) — 3 besar -->
                 <rect x="45" y="290" width="390" height="80" fill="#f1f5f9"/>
                 <rect x="105" y="300" width="80" height="50" fill="#8B4513" rx="3"/>
                 <rect x="195" y="300" width="80" height="50" fill="#8B4513" rx="3"/>
@@ -500,7 +500,7 @@ function renderSVG(imageId) {
                 <text x="325" y="330" class="box-label-white">BESAR</text>
                 
                 <!-- Label TINGKAT 1 (DI BAWAH kardus, lebih jauh) -->
-                <text x="240" y="390" class="tingkat-label">TINGKAT 1 (Bawah) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â 3 Kardus Besar</text>
+                <text x="240" y="390" class="tingkat-label">TINGKAT 1 (Bawah) — 3 Kardus Besar</text>
                 
                 <!-- LEGEND DI LUAR KANAN -->
                 <text x="460" y="120" style="font-size:11px;font-weight:800;fill:#1e293b;text-anchor:start">KETERANGAN:</text>
@@ -514,14 +514,14 @@ function renderSVG(imageId) {
                 <rect x="460" y="205" width="28" height="20" fill="#F5DEB3" stroke="#94a3b8" stroke-width="1" rx="2"/>
                 <text x="495" y="220" class="legend-text">Kecil</text>
                 
-                <text x="460" y="260" style="font-size:9px;fill:#64748b;text-anchor:start">(50ÃƒÆ’Ã¢â‚¬â€40ÃƒÆ’Ã¢â‚¬â€40 cm)</text>
-                <text x="460" y="275" style="font-size:9px;fill:#64748b;text-anchor:start">(40ÃƒÆ’Ã¢â‚¬â€30ÃƒÆ’Ã¢â‚¬â€30 cm)</text>
-                <text x="460" y="290" style="font-size:9px;fill:#64748b;text-anchor:start">(30ÃƒÆ’Ã¢â‚¬â€20ÃƒÆ’Ã¢â‚¬â€20 cm)</text>
+                <text x="460" y="260" style="font-size:9px;fill:#64748b;text-anchor:start">(50×40×40 cm)</text>
+                <text x="460" y="275" style="font-size:9px;fill:#64748b;text-anchor:start">(40×30×30 cm)</text>
+                <text x="460" y="290" style="font-size:9px;fill:#64748b;text-anchor:start">(30×20×20 cm)</text>
             </svg>
         `,
         
         // =========================================================
-        // C04 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Layout Kantor (Tampak Atas)
+        // C04 — Layout Kantor (Tampak Atas)
         // =========================================================
                        "c04_layout_kantor.png": `
             <svg viewBox="0 0 500 460" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
@@ -575,7 +575,7 @@ function renderSVG(imageId) {
         `,
         
         // =========================================================
-        // C05 ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Rute Pengiriman
+        // C05 — Rute Pengiriman
         // =========================================================
                                 "c05_rute_pengiriman.png": `
             <svg viewBox="0 0 500 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;height:auto;font-family:system-ui,sans-serif;display:block;margin:0 auto">
@@ -592,13 +592,13 @@ function renderSVG(imageId) {
                 <rect x="0" y="0" width="500" height="480" fill="#f8fafc"/>
                 
                 <!-- Compass TOP -->
-                <text x="250" y="24" class="direction">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ UTARA ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ</text>
+                <text x="250" y="24" class="direction">↑ UTARA ↑</text>
                 
                 <!-- Compass BARAT (Y=145, di atas perumahan) -->
-                <text x="30" y="145" class="direction-muted" style="text-anchor:start">ÃƒÂ¢Ã¢â‚¬Â Ã‚Â BARAT</text>
+                <text x="30" y="145" class="direction-muted" style="text-anchor:start">← BARAT</text>
                 
                 <!-- Compass TIMUR (Y=145, sejajar dengan BARAT) -->
-                <text x="470" y="145" class="direction-muted" style="text-anchor:end">TIMUR ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</text>
+                <text x="470" y="145" class="direction-muted" style="text-anchor:end">TIMUR →</text>
                 
                 <!-- Roads -->
                 <line x1="250" y1="42" x2="250" y2="400" stroke="#2f2f2f" stroke-width="24"/>
@@ -617,40 +617,40 @@ function renderSVG(imageId) {
                 
                 <!-- Building Utara -->
                 <rect x="195" y="60" width="110" height="60" fill="#94a3b8" rx="3"/>
-                <text x="250" y="85" class="location-label-white">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¢ GEDUNG</text>
+                <text x="250" y="85" class="location-label-white">🏢 GEDUNG</text>
                 <text x="250" y="103" class="distance-label-white">10 km ke Utara</text>
                 
                 <!-- Factory Timur -->
                 <rect x="360" y="195" width="95" height="70" fill="#808080" rx="3"/>
                 <rect x="415" y="170" width="10" height="25" fill="#B22222"/>
-                <text x="407" y="220" class="location-label-white">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â­ PABRIK</text>
+                <text x="407" y="220" class="location-label-white">🏭 PABRIK</text>
                 <text x="407" y="238" class="distance-label-white">5 km ke Timur</text>
                 
                 <!-- Shop Selatan -->
                 <rect x="195" y="320" width="110" height="60" fill="#f59e0b" rx="3"/>
-                <text x="250" y="345" class="location-label-white">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â¬ TOKO</text>
+                <text x="250" y="345" class="location-label-white">🏬 TOKO</text>
                 <text x="250" y="363" class="distance-label-white">10 km ke Selatan</text>
                 
                 <!-- Houses Barat -->
                 <rect x="45" y="195" width="95" height="70" fill="#dcfce7" stroke="#10b981" stroke-width="1" rx="3"/>
-                <text x="92" y="220" class="location-label-dark">ÃƒÂ°Ã…Â¸Ã‚ÂÃ‚Â  PERUMAHAN</text>
+                <text x="92" y="220" class="location-label-dark">🏠 PERUMAHAN</text>
                 <text x="92" y="238" class="distance-label-dark">5 km ke Barat</text>
                 
                 <!-- Route arrows -->
-                <text x="275" y="165" style="font-size:18px;fill:#dc2626;font-weight:800">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Ëœ</text>
-                <text x="325" y="238" style="font-size:18px;fill:#dc2626;font-weight:800">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢</text>
-                <text x="275" y="310" style="font-size:18px;fill:#dc2626;font-weight:800">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“</text>
-                <text x="200" y="238" style="font-size:18px;fill:#dc2626;font-weight:800">ÃƒÂ¢Ã¢â‚¬Â Ã‚Â</text>
+                <text x="275" y="165" style="font-size:18px;fill:#dc2626;font-weight:800">↑</text>
+                <text x="325" y="238" style="font-size:18px;fill:#dc2626;font-weight:800">→</text>
+                <text x="275" y="310" style="font-size:18px;fill:#dc2626;font-weight:800">↓</text>
+                <text x="200" y="238" style="font-size:18px;fill:#dc2626;font-weight:800">←</text>
                 
                 <!-- Caption ROUTE -->
-                <text x="250" y="418" style="font-size:10px;font-weight:800;fill:#dc2626;text-anchor:middle">Rute: 10 km Utara ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 5 km Timur ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 10 km Selatan ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 5 km Barat</text>
+                <text x="250" y="418" style="font-size:10px;font-weight:800;fill:#dc2626;text-anchor:middle">Rute: 10 km Utara → 5 km Timur → 10 km Selatan → 5 km Barat</text>
                 
                 <!-- Label SELATAN di bawah caption -->
-                <text x="250" y="455" class="direction-muted">ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“ SELATAN ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬Å“</text>
+                <text x="250" y="455" class="direction-muted">↓ SELATAN ↓</text>
             </svg>
         `
     };
-    return svgs[imageId] || `<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px">ÃƒÂ¢Ã…Â¡Ã‚Â  SVG untuk "${imageId}" belum tersedia</div>`;
+    return svgs[imageId] || `<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px">⚠ SVG untuk "${imageId}" belum tersedia</div>`;
 }
 
 const TOTAL_SECONDS = 47 * 60;
@@ -717,11 +717,11 @@ function renderPages(){
 function render(){
   const q = QUESTIONS[current];
   const sub = SUBTESTS[q.subtest];
-  el('subtestLabel').textContent = `Subtes ${q.subtest} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â ${sub.name}`;
+  el('subtestLabel').textContent = `Subtes ${q.subtest} — ${sub.name}`;
   el('count').textContent = `${current + 1} / ${TOTAL_ITEMS}`;
   el('bar').style.width = `${((current + 1) / TOTAL_ITEMS) * 100}%`;
 
-  let h = `<div class="subtest-badge">Subtes ${q.subtest} Ãƒâ€šÃ‚Â· ${sub.name}</div>`;
+  let h = `<div class="subtest-badge">Subtes ${q.subtest} · ${sub.name}</div>`;
 
   // SVG Inline untuk subtes C
   if (q.image) {
@@ -738,7 +738,7 @@ function render(){
   if (questionText) {
     h += `<div class="q-text" style="font-size:15px;line-height:1.75;color:#334155;margin:12px 0 20px;padding:16px 18px;background:#f8fafc;border-radius:12px;border-left:4px solid #2563eb;font-weight:500;white-space:pre-line">${escapeHtml(questionText)}</div>`;
   } else {
-    h += `<div class="q-text" style="color:#dc2626;font-size:13px;padding:12px;background:#fee2e2;border-radius:8px;margin:12px 0">ÃƒÂ¢Ã…Â¡Ã‚Â  Text soal tidak tersedia (Soal ${current + 1})</div>`;
+    h += `<div class="q-text" style="color:#dc2626;font-size:13px;padding:12px;background:#fee2e2;border-radius:8px;margin:12px 0">⚠ Text soal tidak tersedia (Soal ${current + 1})</div>`;
   }
 
   h += `<div class="q-sub" style="font-size:12px;color:#64748b;margin-bottom:16px;font-weight:600">Pilih satu jawaban yang paling tepat.</div>`;
@@ -808,102 +808,144 @@ function requestSubmit(){
   el('modal').classList.add('show');
 }
 
-async function calculateScores() {
-    // ====================================================
-    // FASE 3B Ã¢â‚¬â€ HITUNG SKOR DI SERVER-SIDE (EDGE FUNCTION)
-    // ====================================================
-    const params = new URLSearchParams(window.location.search);
-    const projectId = params.get("projectId") || "";
-    const participantId = params.get("participantId") || "";
-
-    if (!projectId || !participantId) {
-        throw new Error("projectId & participantId tidak ada di URL");
+function calculateScores(){
+  const perSubtest = { A: 0, B: 0, C: 0, D: 0 };
+  const perType = {};
+  QUESTIONS.forEach((q, i) => {
+    const isCorrect = answers[i] === q.answer;
+    if(isCorrect) perSubtest[q.subtest]++;
+    const key = `${q.subtest}_${q.type}`;
+    if(!perType[key]) perType[key] = { correct: 0, total: 0 };
+    perType[key].total++;
+    if(isCorrect) perType[key].correct++;
+  });
+  
+  const total = perSubtest.A + perSubtest.B + perSubtest.C + perSubtest.D;
+  const maxPerSubtest = { A: 10, B: 5, C: 5, D: 10 };
+  const maxTotal = TOTAL_ITEMS;
+  const percentage = (total / maxTotal) * 100;
+  
+  // =========================================================
+  // SKOR KECERDASAN UMUM (G-SCORE)
+  // Skala: 100 ± 15 (mirip IQ, tapi bukan diagnosis klinis)
+  // =========================================================
+  // Konversi: persentase 0-100% → G-Score 50-150
+  const gScore = Math.round(100 + ((percentage - 50) / 50) * 50);
+  
+  // Kategori G-Score
+  let gCategory, gPercentile, gDesc;
+  if (gScore >= 140) {
+    gCategory = "Sangat Superior";
+    gPercentile = "≥ 99.6";
+    gDesc = "Kemampuan penalaran jauh di atas rata-rata. Cocok untuk peran strategis & analitis.";
+  } else if (gScore >= 130) {
+    gCategory = "Sangat Superior";
+    gPercentile = "≥ 98";
+    gDesc = "Kemampuan penalaran sangat tinggi. Potensi kepemimpinan & inovasi.";
+  } else if (gScore >= 120) {
+    gCategory = "Superior";
+    gPercentile = "91-97";
+    gDesc = "Kemampuan penalaran di atas rata-rata. Cocok untuk peran profesional.";
+  } else if (gScore >= 110) {
+    gCategory = "Di Atas Rata-rata";
+    gPercentile = "75-90";
+    gDesc = "Kemampuan penalaran baik. Mampu menangani tugas kompleks.";
+  } else if (gScore >= 100) {
+    gCategory = "Rata-rata";
+    gPercentile = "50-74";
+    gDesc = "Kemampuan penalaran rata-rata. Cocok untuk peran umum.";
+  } else if (gScore >= 90) {
+    gCategory = "Rata-rata";
+    gPercentile = "25-49";
+    gDesc = "Kemampuan penalaran rata-rata bawah. Perlu pengembangan.";
+  } else if (gScore >= 80) {
+    gCategory = "Di Bawah Rata-rata";
+    gPercentile = "9-24";
+    gDesc = "Kemampuan penalaran di bawah rata-rata. Perlu pelatihan.";
+  } else if (gScore >= 70) {
+    gCategory = "Borderline";
+    gPercentile = "2-8";
+    gDesc = "Kemampuan penalaran borderline. Disarankan pendampingan.";
+  } else {
+    gCategory = "Rendah";
+    gPercentile = "< 2";
+    gDesc = "Kemampuan penalaran rendah. Perlu intervensi khusus.";
+  }
+  
+  // =========================================================
+  // SKOR PER SUBTES
+  // =========================================================
+  const subtestDetails = {
+    A: {
+      code: "A",
+      name: "Penalaran Verbal",
+      desc: "Logika verbal & pemahaman situasi kerja",
+      score: perSubtest.A,
+      max: maxPerSubtest.A,
+      percentage: (perSubtest.A / maxPerSubtest.A) * 100
+    },
+    B: {
+      code: "B",
+      name: "Kuantitatif",
+      desc: "Aritmatika & analisis angka dunia kerja",
+      score: perSubtest.B,
+      max: maxPerSubtest.B,
+      percentage: (perSubtest.B / maxPerSubtest.B) * 100
+    },
+    C: {
+      code: "C",
+      name: "Spasial",
+      desc: "Rotasi mental & visualisasi ruang",
+      score: perSubtest.C,
+      max: maxPerSubtest.C,
+      percentage: (perSubtest.C / maxPerSubtest.C) * 100
+    },
+    D: {
+      code: "D",
+      name: "Logika Praktis",
+      desc: "Analisis kasus & pengambilan keputusan",
+      score: perSubtest.D,
+      max: maxPerSubtest.D,
+      percentage: (perSubtest.D / maxPerSubtest.D) * 100
     }
-
-    console.log("[TPDK] Hitung skor via Edge Function...");
-
-    const res = await fetch("https://nixmychfhsnsvymkuxtm.supabase.co/functions/v1/calculate-tpdk-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            projectId: projectId,
-            participantId: participantId,
-            answers: answers
-        })
-    });
-
-    if (!res.ok) {
-        const errorText = await res.text().catch(() => "");
-        console.error("[TPDK] Edge Function error:", res.status, errorText);
-        throw new Error("Gagal hitung skor: HTTP " + res.status);
-    }
-
-    const result = await res.json();
-    console.log("[TPDK] Skor dari server:", result);
-
-    if (!result.success) {
-        throw new Error(result.error || "Gagal hitung skor");
-    }
-
-    result.subtestDetails = buildSubtestDetails(result.perSubtest || { A: 0, B: 0, C: 0, D: 0 });
-    result.maxPerSubtest = { A: 10, B: 5, C: 5, D: 10 };
-    result.perType = {};
-    result.disclaimer = "Skor ini adalah ESTIMASI kecerdasan umum berdasarkan tes penalaran dunia kerja, BUKAN diagnosis IQ klinis. Untuk diagnosis resmi, konsultasikan dengan psikolog berlisensi.";
-
-    return result;
+  };
+  
+  // Kategori per subtes
+  Object.keys(subtestDetails).forEach(key => {
+    const s = subtestDetails[key];
+    if (s.percentage >= 85) s.category = "Sangat Kuat";
+    else if (s.percentage >= 70) s.category = "Kuat";
+    else if (s.percentage >= 55) s.category = "Cukup";
+    else if (s.percentage >= 40) s.category = "Perlu Penguatan";
+    else s.category = "Perlu Perhatian";
+  });
+  
+  return {
+    perSubtest,
+    perType,
+    total,
+    maxTotal,
+    percentage,
+    maxPerSubtest,
+    // Output Baru
+    gScore: gScore,
+    gCategory: gCategory,
+    gPercentile: gPercentile,
+    gDescription: gDesc,
+    subtestDetails: subtestDetails,
+    // Disclaimer
+    disclaimer: "Skor ini adalah ESTIMASI kecerdasan umum berdasarkan tes penalaran dunia kerja, BUKAN diagnosis IQ klinis. Untuk diagnosis resmi, konsultasikan dengan psikolog berlisensi."
+  };
 }
 
-function buildSubtestDetails(perSubtest) {
-    const maxPerSubtest = { A: 10, B: 5, C: 5, D: 10 };
-    const subtests = {
-        A: { code: "A", name: "Penalaran Verbal" },
-        B: { code: "B", name: "Penalaran Kuantitatif" },
-        C: { code: "C", name: "Penalaran Spasial" },
-        D: { code: "D", name: "Logika Praktis" }
-    };
-
-    const result = {};
-    Object.keys(subtests).forEach(function(code) {
-        const info = subtests[code];
-        const score = perSubtest[code] || 0;
-        const max = maxPerSubtest[code] || 1;
-        const pct = (score / max) * 100;
-
-        let category = "Perlu Perhatian";
-        if (pct >= 85) category = "Sangat Kuat";
-        else if (pct >= 70) category = "Kuat";
-        else if (pct >= 55) category = "Cukup";
-        else if (pct >= 40) category = "Perlu Penguatan";
-
-        result[info.name] = {
-            code: info.code,
-            name: info.name,
-            score: score,
-            max: max,
-            percentage: pct,
-            category: category
-        };
-    });
-
-    return result;
-}
-
-async function finalize(auto) {
+function finalize(auto){
   if(sending) return;
   const missing = answers.findIndex(a => a === null);
   if(missing >= 0 && !auto){ go(missing); return; }
   sending = true;
   clearInterval(timerId);
 
-  let scores;
-    try {
-        scores = await calculateScores();
-    } catch (err) {
-        console.error("[TPDK] Gagal hitung skor:", err);
-        alert("Gagal hitung skor: " + (err.message || err) + "\n\nCoba lagi atau hubungi admin.");
-        sending = false;
-        return;
-    }
+  const scores = calculateScores();
   const submittedAt = new Date().toISOString();
   const result = {
     version: 1,
@@ -928,7 +970,9 @@ async function finalize(auto) {
         index: i, 
         subtest: QUESTIONS[i].subtest, 
         type: QUESTIONS[i].type, 
-        selected: a,
+        selected: a, 
+        correct: QUESTIONS[i].answer, 
+        isCorrect: a === QUESTIONS[i].answer 
     })),
     submittedAt
 };
@@ -939,7 +983,7 @@ async function finalize(auto) {
   if (assessmentIdFromUrl) {
     localStorage.setItem(`tpdk_result_v1_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
     localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
-    console.log("[TPDK] ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Data disimpan dengan UUID:", assessmentIdFromUrl);
+    console.log("[TPDK] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
   }
 
   // Simpan dengan index (kompatibilitas)
@@ -972,7 +1016,7 @@ async function finalize(auto) {
         onConflict: 'project_id,participant_id,assessment_index,assessment_code'
       }).then(({ error }) => {
         if(error) console.error('[TPDK] Supabase sync error:', error);
-        else console.log('[TPDK] ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Tersinkron ke Supabase (tpdk_results)');
+        else console.log('[TPDK] ✓ Tersinkron ke Supabase (tpdk_results)');
       });
     }
   } catch(err){ console.warn('[TPDK] Gagal sync Supabase:', err); }
