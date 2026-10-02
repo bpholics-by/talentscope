@@ -207,7 +207,27 @@ Deno.serve(async (req: Request) => {
                 { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
-
+// ============================================================
+// 6b. CEK MASA BERLAKU AKUN (account expiry)
+// ============================================================
+const accountExpiresAt = userRecord.accountExpiresAt || userRecord.account_expires_at;
+if (accountExpiresAt) {
+    const now = new Date();
+    const expiresDate = new Date(accountExpiresAt);
+    
+    if (!isNaN(expiresDate.getTime()) && now > expiresDate) {
+        console.log("[AUTH-LOGIN] Account expired:", username, "| expired at:", accountExpiresAt);
+        return new Response(
+            JSON.stringify({ 
+                success: false, 
+                error: "Akun Anda sudah kadaluarsa. Hubungi administrator." 
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+    }
+    
+    console.log("[AUTH-LOGIN] Account valid until:", accountExpiresAt);
+}
         // ============================================================
         // 7. VERIFIKASI PASSWORD
         // ============================================================

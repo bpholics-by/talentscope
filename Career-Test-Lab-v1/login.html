@@ -6,9 +6,10 @@
 <title>Login | TalentScope</title>
 
 <!-- WAJIB PALING ATAS -->
-<script src="js/debug-redirect.js?v=8"></script>
-<script src="js/config.js?v=8"></script>
-<script src="js/auth-guard.js?v=8"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=12"></script>
+<script src="js/supabase-client.js?v=9"></script>
+<script src="js/auth-guard.js?v=16"></script>
 
 <style>
 *{box-sizing:border-box;}
@@ -81,7 +82,6 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
     50%      { box-shadow: 0 8px 30px rgba(16,185,129,.55); }
 }
 .btn.success {
-    /* ... kode sebelumnya ... */
     animation: ts-success-pulse 1s ease-in-out infinite;
 }
 @keyframes btn-spin{to{transform:rotate(360deg);}}
@@ -90,15 +90,8 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
 .message.error{background:#fff3f3;border:1px solid #efcccc;color:#b33d3d;}
 .message.success{background:#f2fbf5;border:1px solid #cfeada;color:#2c7a4b;}
 .footer{text-align:center;color:rgba(255,255,255,.68);font-size:9px;margin-top:14px;}
-.btn.error{
-  background:linear-gradient(135deg,#ef4444,#dc2626);
-  cursor:default;
-  box-shadow:0 8px 20px rgba(239,68,68,.32);
-  transform:none;
-}
-.btn.error:hover{transform:none;box-shadow:0 8px 20px rgba(239,68,68,.32);}
-.btn.error .spinner{display:none;}
 </style>
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=9">
 </head>
 
 <body>
@@ -141,7 +134,6 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
     "use strict";
 
     var SUPABASE_URL = (window.TS_CONFIG && window.TS_CONFIG.SUPABASE_URL) || "";
-    var AUTH_LOGIN_URL = SUPABASE_URL + "/functions/v1/auth-login";
 
     var loginForm     = document.getElementById("loginForm");
     var loginBtn      = document.getElementById("loginBtn");
@@ -160,7 +152,7 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
         messageEl.className = "message";
         messageEl.textContent = "";
     }
-        function setLoading(isLoading) {
+    function setLoading(isLoading) {
         if (!loginBtn) return;
         if (isLoading) {
             loginBtn.disabled = true;
@@ -181,21 +173,20 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
         if (loginBtnText) loginBtnText.textContent = "✓ Berhasil Login";
     }
 
-function setError(message) {
-    if (!loginBtn) return;
-    loginBtn.disabled = false;
-    loginBtn.classList.remove("loading");
-    loginBtn.classList.add("error");
-    if (loginBtnText) loginBtnText.textContent = "✕ " + (message || "Login Gagal");
-    
-    // Kembali ke "Login" setelah 3 detik
-    setTimeout(function () {
-        if (loginBtn) {
-            loginBtn.classList.remove("error");
-            if (loginBtnText) loginBtnText.textContent = "Login";
-        }
-    }, 3000);
-}
+    function setError(message) {
+        if (!loginBtn) return;
+        loginBtn.disabled = false;
+        loginBtn.classList.remove("loading");
+        loginBtn.classList.add("error");
+        if (loginBtnText) loginBtnText.textContent = "✕ " + (message || "Login Gagal");
+        
+        setTimeout(function () {
+            if (loginBtn) {
+                loginBtn.classList.remove("error");
+                if (loginBtnText) loginBtnText.textContent = "Login";
+            }
+        }, 3000);
+    }
 
     function looksLikeAccessCode(input) {
         if (!input) return false;
@@ -211,18 +202,35 @@ function setError(message) {
         });
     }
 
-    if (window.TS_AUTH && window.TS_AUTH.isAuthenticated()) {
-        var existingUser = window.TS_AUTH.getUser();
-        if (existingUser && existingUser.role) {
-            console.log("[LOGIN] Sudah login, redirect...", existingUser.role);
-            redirectByRole(existingUser.role);
-        }
-    }
+        // ============================================
+    // AUTO-REDIRECT DIMATIKAN SEMENTARA
+    // Alasan: Menyebabkan loop karena participant-dashboard
+    // menendang user keluar sebelum session tersimpan.
+    // ============================================
+    // if (window.TS_AUTH && window.TS_AUTH.isAuthenticated) {
+    //     window.TS_AUTH.isAuthenticated().then(function(isAuth) {
+    //         if (isAuth) {
+    //             window.TS_AUTH.getUser().then(function(user) {
+    //                 if (user && user.user_metadata && user.user_metadata.role) {
+    //                     console.log("[LOGIN] Sudah login, redirect...", user.user_metadata.role);
+    //                     redirectByRole(user.user_metadata.role);
+    //                 }
+    //             });
+    //         }
+    //     });
+    // }
+    console.log("[LOGIN] Auto-redirect dimatikan. Silakan login manual.");
 
     function redirectByRole(role) {
         var r = String(role || "").toLowerCase();
-        if (r === "participant") {
+        console.log("[LOGIN] Redirecting role:", r);
+        
+        if (r === "peserta" || r === "participant") {
             window.location.replace("participant-dashboard.html");
+        } else if (r === "system administrator" || r === "admin" || 
+                   r === "client" || r === "client administrator" || 
+                   r === "client user" || r === "asesor") {
+            window.location.replace("dashboard.html");
         } else {
             window.location.replace("dashboard.html");
         }
@@ -246,51 +254,225 @@ function setError(message) {
             return;
         }
 
-        var username;
-        if (usernameRaw.indexOf("@") !== -1) {
-            username = usernameRaw.toLowerCase();
-        } else if (looksLikeAccessCode(usernameRaw)) {
-            username = usernameRaw.toUpperCase().replace(/\s+/g, "");
-        } else {
-            username = usernameRaw.toLowerCase();
-        }
-
         setLoading(true);
 
         try {
-            var res = await fetch(AUTH_LOGIN_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username: username, password: passwordRaw })
-            });
+            var email;
+            var isAccessCode = false;
+            
+            if (usernameRaw.indexOf("@") !== -1) {
+                // Sudah email
+                email = usernameRaw.toLowerCase();
+            } else if (looksLikeAccessCode(usernameRaw)) {
+                // ============================================
+                // LOGIN PESERTA VIA ACCESS CODE
+                // ============================================
+                isAccessCode = true;
+                console.log("[LOGIN] Access code detected:", usernameRaw);
+                
+                var accessCode = usernameRaw.toUpperCase().replace(/\s+/g, "");
+                var sbP = window.supabaseClient;
+                
+                if (!sbP) {
+                    setError("Supabase client tidak tersedia");
+                    setLoading(false);
+                    return;
+                }
+                
+                var pesertaResult = await sbP
+                    .from("participants")
+                    .select("id, email, name, project_id, access_code, auth_user_id")
+                    .eq("access_code", accessCode)
+                    .maybeSingle();
+                
+                var peserta = pesertaResult.data;
+                
+                if (!peserta) {
+                    setError("Access code tidak valid");
+                    setLoading(false);
+                    return;
+                }
+                
+                console.log("[LOGIN] Peserta ditemukan:", peserta.name);
+                
+                // Fallback project_id jika kosong
+                var finalProjectId = peserta.project_id;
+                if (!finalProjectId) {
+                    console.warn("[LOGIN] project_id kosong, coba fallback...");
+                    try {
+                        var { data: projData } = await sbP.from("projects").select("id").eq("status", "active").limit(1).maybeSingle();
+                        if (projData && projData.id) {
+                            finalProjectId = projData.id;
+                            console.log("[LOGIN] Fallback project_id:", finalProjectId);
+                        }
+                    } catch (e) {
+                        console.warn("[LOGIN] Gagal cari project fallback:", e);
+                    }
+                }
+                
+                // SIMPAN SESSION
+                sessionStorage.setItem("ts_participant_session", JSON.stringify({
+                    participantId: peserta.id,
+                    participant_id: peserta.id,
+                    email: peserta.email || "",
+                    name: peserta.name || "Participant",
+                    fullName: peserta.name || "Participant",
+                    projectId: finalProjectId || "",
+                    project_id: finalProjectId || "",
+                    accessCode: accessCode,
+                    authUserId: peserta.auth_user_id || "",
+                    role: "Participant",
+                    loginAt: new Date().toISOString()
+                }));
+                
+                console.log("[LOGIN] ✅ Session Access Code tersimpan");
+                
+                // Login ke Supabase Auth (jika ada auth_user_id)
+                if (peserta.auth_user_id && peserta.email) {
+                    try {
+                        var authResult = await sbP.auth.signInWithPassword({
+                            email: peserta.email,
+                            password: accessCode
+                        });
+                        if (authResult.error) {
+                            console.warn("[LOGIN] Supabase Auth gagal, fallback");
+                        } else {
+                            console.log("[LOGIN] ✅ Auth success");
+                        }
+                    } catch (e) {
+                        console.warn("[LOGIN] Auth exception:", e);
+                    }
+                }
+                
+                setSuccess();
+                setTimeout(function() {
+                    window.location.replace("participant-dashboard.html");
+                }, 800);
+                return;
+                
+            } else {
+                // Username biasa → mapping ke email
+                email = usernameRaw.toLowerCase();
+                var foundEmail = null;
+                
+                try {
+                    var sb = window.supabaseClient;
+                    if (sb) {
+                        var userCheck = await sb.from("ts_users")
+                            .select("data")
+                            .eq("data->>username", email)
+                            .maybeSingle();
+                        
+                        if (userCheck && userCheck.data && userCheck.data.email) {
+                            foundEmail = userCheck.data.email;
+                            console.log("[LOGIN] Email dari ts_users:", foundEmail);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[LOGIN] Username lookup gagal:", e);
+                }
+                
+                if (foundEmail) {
+                    email = foundEmail;
+                } else {
+                    email = email + "@talentscope.local";
+                    console.log("[LOGIN] Email fallback:", email);
+                }
+            }
 
-            var payload = null;
-            try { payload = await res.json(); } catch (err) { payload = null; }
-
-                        if (!res.ok || !payload || !payload.success) {
-    var errMsg = (payload && payload.error) || ("Login gagal");
-    setError(errMsg);
-    return;
-}
-
-            if (!window.TS_AUTH) {
-                showMessage("Auth library tidak tersedia. Refresh halaman.", "error");
+            // ============================================
+            // LOGIN VIA SUPABASE AUTH (Email/Username)
+            // ============================================
+            var sb = window.supabaseClient;
+            if (!sb || !sb.auth) {
+                showMessage("Supabase client tidak tersedia. Refresh halaman.", "error");
                 setLoading(false);
                 return;
             }
-
-                        window.TS_AUTH.saveSession(payload.token, payload.user, payload.expiresAt);
-
+            
+            console.log("[LOGIN] Attempting Supabase Auth:", email);
+            
+            var result = await sb.auth.signInWithPassword({
+                email: email,
+                password: passwordRaw
+            });
+            
+            if (result.error) {
+                console.error("[LOGIN] Supabase Auth error:", result.error);
+                setError("Username atau password salah");
+                setLoading(false);
+                return;
+            }
+            
+            if (!result.data || !result.data.user) {
+                setError("Login gagal");
+                setLoading(false);
+                return;
+            }
+            
+                       var user = result.data.user;
+            var role = (user.user_metadata && user.user_metadata.role) || "Peserta";
+            var userName = (user.user_metadata && (user.user_metadata.name || user.user_metadata.username)) || user.email.split("@")[0];
+            var userProjectId = (user.user_metadata && (user.user_metadata.project_id || user.user_metadata.projectId)) || "";
+            
+                                   console.log("[LOGIN] ✅ Success:", user.email);
+            
+            // ============================================
+            // AMBIL DATA DARI user_metadata (JAUH LEBIH CEPAT!)
+            // ============================================
+            var correctParticipantId = (user.user_metadata && user.user_metadata.participant_id) || user.id;
+            var correctProjectId = (user.user_metadata && user.user_metadata.project_id) || "";
+            var correctName = (user.user_metadata && user.user_metadata.name) || userName;
+            var role = (user.user_metadata && user.user_metadata.role) || "Peserta";
+            
+            console.log("[LOGIN] Data dari user_metadata:");
+            console.log("[LOGIN]   - participant_id:", correctParticipantId);
+            console.log("[LOGIN]   - project_id:", correctProjectId);
+            console.log("[LOGIN]   - name:", correctName);
+            console.log("[LOGIN]   - role:", role);
+            
+            // ============================================
+            // SIMPAN SESSION (WAJIB! Untuk semua metode login)
+            // ============================================
+                                   var participantSession = {
+                participantId: correctParticipantId,
+                participant_id: correctParticipantId,
+                authUserId: user.id,
+                email: user.email || "",
+                name: correctName,
+                fullName: correctName,
+                role: role,
+                projectId: correctProjectId,
+                project_id: correctProjectId,
+                projectName: (user.user_metadata && user.user_metadata.project_name) || "Project",
+                project_name: (user.user_metadata && user.user_metadata.project_name) || "Project",
+                loginAt: new Date().toISOString()
+            };
+            
+            console.log("[LOGIN] Session FINAL:", participantSession);
+            
+            console.log("[LOGIN] Menyimpan session:", participantSession);
+            sessionStorage.setItem("ts_participant_session", JSON.stringify(participantSession));
+            
+            var verify = sessionStorage.getItem("ts_participant_session");
+            console.log("[LOGIN] ✅ Session tersimpan:", !!verify);
+            
             // Ganti tombol jadi "Berhasil Login"
             setSuccess();
-
-            var role = (payload.user && payload.user.role) || "";
-            setTimeout(function () { redirectByRole(role); }, 800);
+            
+            // ============================================
+            // REDIRECT BY ROLE
+            // ============================================
+            console.log("[LOGIN] ✅ LOGIN SUKSES! Redirect dalam 800ms...");
+            
+            setTimeout(function () { 
+                redirectByRole(role);
+            }, 800);
 
         } catch (err) {
-    console.error("[LOGIN] Error:", err);
-    setError("Koneksi gagal. Coba lagi.");
-}
+            console.error("[LOGIN] Error:", err);
+            setError("Koneksi gagal. Coba lagi.");
+        }
     });
 
 })();

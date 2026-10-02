@@ -5,21 +5,21 @@
 <!-- ============================================================
      SCRIPT CONFIG — WAJIB PALING ATAS
      ============================================================ -->
-<script src="js/config.js?v=9"></script><script src="js/auth-guard.js?v=9"></script>
-
-<!-- ============================================================
+<script src="js/config.js?v=11"></script><!-- ============================================================
      SUPABASE LIBRARY & DEPENDENCIES
      ------------------------------------------------------------
      URUTAN PENTING (jangan diubah):
      1. supabase-js (CDN)
-     2. supabase-client.js   (butuh config.js)
-     3. data-service.js      (butuh supabase-client.js)
+     2. supabase-client.js?v=5   (butuh config.js)
+     3. data-service.js      (butuh supabase-client.js?v=5)
      4. ts-supabase-sync.js  (butuh data-service.js)
      ============================================================ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=9"></script>
-<script src="js/data-service.js?v=9"></script>
-<script src="js/ts-supabase-sync.js?v=6"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/role-permissions.js?v=13"></script>
+<script src="js/data-service.js?v=8"></script>
+<script src="js/assessment-config.js"></script>
+<script src="js/ts-supabase-sync.js?v=14"></script>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -548,6 +548,7 @@ body {
     }
 }
 </style>
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 <body>
@@ -634,10 +635,10 @@ body {
 <!-- ============================================================
      APPLICATION
      ============================================================ -->
-<script src="js/app.js?v=9"></script>
+<script src="js/app.js?v=11"></script>
 
 <!-- COMBINED RESULT (Supabase-ready, UUID-aware) -->
-<script src="js/combined-result.js?v=9"></script>
+<script src="js/combined-result.js?v=12"></script>
 
 </body>
 

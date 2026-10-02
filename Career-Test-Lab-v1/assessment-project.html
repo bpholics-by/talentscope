@@ -4,9 +4,7 @@
 <!-- ============================================================
      SCRIPT CONFIG — WAJIB PALING ATAS
      ============================================================ -->
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
-
-<meta charset="UTF-8">
+<script src="js/config.js?v=5"></script><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
 <link
@@ -1996,6 +1994,7 @@ select{
 
 }
 </style>
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 
@@ -3238,28 +3237,28 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- SUPABASE CLIENT -->
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/supabase-client.js?v=7"></script>
 
 <!-- DATA SERVICE -->
-<script src="js/data-service.js?v=3"></script>
+<script src="js/data-service.js?v=8"></script>
 
 <!-- SUPABASE SYNC -->
-<script src="js/ts-supabase-sync.js?v=6"></script>
+<script src="js/ts-supabase-sync.js?v=15"></script>
 
 <!-- ROLE PERMISSIONS -->
-<script src="js/role-permissions.js?v=3"></script>
+<script src="js/role-permissions.js?v=13"></script>
 
 <!-- LSJT CATALOG SEED -->
-<script src="js/lsjt-catalog-seed.js?v=3"></script>
+<script src="js/lsjt-catalog-seed.js?v=5"></script>
 
 <!-- PROJECT CREATE (Supabase-ready, UUID-based) -->
 <script src="js/project-create.js?v=UUID-FIX-002"></script>
 
 <!-- ASSESSMENT PROJECT SUPABASE RENDER -->
-<script src="js/assessment-project-render.js?v=3"></script>
+<script src="js/assessment-project-render.js?v=6"></script>
 
 <!-- GLOBAL SEARCH -->
-<script src="js/global-search.js?v=3"></script>
+<script src="js/global-search.js?v=5"></script>
 
 
 <!-- =====================================================
@@ -3572,50 +3571,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    /* ==========================================
-       FILTER SIDEBAR MENU BY ROLE
-    ========================================== */
 
-    var isClient = /client/i.test(userRole);
-    var isAsesor = /asesor|assessor/i.test(userRole);
-    var isAdmin =
-        /administrator/i.test(userRole) &&
-        !/system/i.test(userRole);
-
-    var hideList = [];
-
-    if (isClient) {
-        hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
-    } else if (isAsesor) {
-        hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
-    } else if (isAdmin) {
-        hideList = ["Settings"];
-    }
-
-    if (hideList.length > 0) {
-
-        var sidebarLinks =
-            document.querySelectorAll(".sidebar .menu a, .sidebar .menu li");
-
-        sidebarLinks.forEach(function (link) {
-
-            var linkText = link.textContent.trim();
-
-            hideList.forEach(function (menuName) {
-
-                if (linkText.includes(menuName)) {
-                    link.style.setProperty(
-                        "display",
-                        "none",
-                        "important"
-                    );
-                }
-
-            });
-
-        });
-
-    }
 
 })();
 </script>

@@ -1,12 +1,13 @@
 /* ==========================================================
    TALENTSCOPE - TEST RESULT CONTROLLER
-   FULL FIX VERSION (v5)
+   FULL FIX VERSION (v6) — MIGRATION TO ASSESSMENT_CONFIG
    ----------------------------------------------------------
-   Perubahan dari v4:
-   - Tambah fallback CARI BY CODE (DISC/PAPI/VAP/MSJT/LSJT/TPDK)
-     untuk data lama yang tersimpan di index berbeda
-   - Prioritas: UUID → Supabase → by code → by index
-   - Log lebih jelas
+   Perubahan dari v5:
+   - TEST_RESULT_UUID_MAP dihapus → pakai ASSESSMENT_CONFIG
+   - Hardcoded code detection → pakai detectCodeFromName()
+   - Hardcoded table mapping → pakai getTable()
+   - Helper getAssessmentMetaTestResult() untuk lookup
+   - Fallback hardcoded tetap ada (safety net)
 ========================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -14,16 +15,47 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /* ==========================================================
-   UUID MAP
-========================================================== */
-const TEST_RESULT_UUID_MAP = {
-    "5976eef2-e7a7-43a6-8e95-90f556f9a257": { name: "Tes Penalaran", code: "TPDK" },
-    "327a8cde-c51c-4524-aae1-4d54402d772a": { name: "Managerial Situational Judgment Test", code: "MSJT" },
-    "e3026a3d-15f7-4189-b25e-8cae12968558": { name: "Leadership Situational Judgment Test", code: "LSJT" },
-    "8b0209ef-1b16-414c-b8c1-cd0e0449e7d7": { name: "Work Performance & Sustained Attention Assessment", code: "VAP" },
-    "6266a366-47c4-4d5c-9f0f-6a2984227ed1": { name: "DISC Personality", code: "DISC" },
-    "d8408a0f-55c0-4fc9-941e-bb6d48292b31": { name: "PAPI Kostick", code: "PAPI" }
-};
+   HELPER: Ambil metadata assessment dari ASSESSMENT_CONFIG
+   (pengganti TEST_RESULT_UUID_MAP)
+   ========================================================== */
+function getAssessmentMetaTestResult(codeOrUuid) {
+    if (!window.ASSESSMENT_CONFIG) {
+        console.warn("[TEST-RESULT] ASSESSMENT_CONFIG belum tersedia");
+        return null;
+    }
+    
+    const key = String(codeOrUuid || "").trim();
+    if (!key) return null;
+    
+    // 1. Coba by code (langsung)
+    try {
+        const meta = window.ASSESSMENT_CONFIG.getMetadata(key);
+        if (meta) return meta;
+    } catch (e) {}
+    
+    // 2. Coba by UUID
+    try {
+        const all = window.ASSESSMENT_CONFIG.getAll() || [];
+        const lowerKey = key.toLowerCase();
+        const found = all.find(m => {
+            const uuid = String(m.assessment_id || m.id || "").toLowerCase();
+            return uuid === lowerKey;
+        });
+        if (found) return found;
+    } catch (e) {}
+    
+    // 3. Coba by code case-insensitive
+    try {
+        const all = window.ASSESSMENT_CONFIG.getAll() || [];
+        const upperKey = key.toUpperCase();
+        const found = all.find(m => 
+            String(m.assessment_code || m.code || "").toUpperCase() === upperKey
+        );
+        if (found) return found;
+    } catch (e) {}
+    
+    return null;
+}
 
 /* ==========================================================
    MAIN CONTROLLER
@@ -168,6 +200,7 @@ async function loadTestResult() {
             if (target === "MSJT" && (nameUpper.indexOf("MANAGERIAL") !== -1 || nameUpper.indexOf("MSJT") !== -1)) return true;
             if (target === "LSJT" && (nameUpper.indexOf("LEADERSHIP") !== -1 || nameUpper.indexOf("LSJT") !== -1)) return true;
             if (target === "TPDK" && (nameUpper.indexOf("TPDK") !== -1 || nameUpper.indexOf("PENALARAN") !== -1)) return true;
+            if (target === "INTRAY" && (nameUpper.indexOf("INTRAY") !== -1 || nameUpper.indexOf("INBAKET") !== -1)) return true;
 
             return false;
         });
@@ -238,21 +271,37 @@ async function loadTestResult() {
         assessmentCode = assessmentCodeFromUrl;
     }
 
+    // Prioritas: detectCodeFromName via metadata → fallback hardcoded
     if (!assessmentCode && assessmentName) {
-        const upper = assessmentName.toUpperCase();
-        if (upper.indexOf("DISC") !== -1) assessmentCode = "DISC";
-        else if (upper.indexOf("PAPI") !== -1 || upper.indexOf("KOSTICK") !== -1) assessmentCode = "PAPI";
-        else if (upper.indexOf("VAP") !== -1 || upper.indexOf("WORK PERFORMANCE") !== -1 || upper.indexOf("SUSTAINED") !== -1) assessmentCode = "VAP";
-        else if (upper.indexOf("MANAGERIAL") !== -1 || upper.indexOf("MSJT") !== -1) assessmentCode = "MSJT";
-        else if (upper.indexOf("LEADERSHIP") !== -1 || upper.indexOf("LSJT") !== -1) assessmentCode = "LSJT";
-        else if (upper.indexOf("TPDK") !== -1 || upper.indexOf("PENALARAN") !== -1) assessmentCode = "TPDK";
+        if (window.ASSESSMENT_CONFIG?.detectCodeFromName) {
+            try {
+                const detected = window.ASSESSMENT_CONFIG.detectCodeFromName(assessmentName);
+                if (detected) assessmentCode = detected;
+            } catch (e) {}
+        }
+        
+        if (!assessmentCode) {
+            const upper = assessmentName.toUpperCase();
+            if (upper.indexOf("DISC") !== -1) assessmentCode = "DISC";
+            else if (upper.indexOf("PAPI") !== -1 || upper.indexOf("KOSTICK") !== -1) assessmentCode = "PAPI";
+            else if (upper.indexOf("VAP") !== -1 || upper.indexOf("WORK PERFORMANCE") !== -1 || upper.indexOf("SUSTAINED") !== -1) assessmentCode = "VAP";
+            else if (upper.indexOf("MANAGERIAL") !== -1 || upper.indexOf("MSJT") !== -1) assessmentCode = "MSJT";
+            else if (upper.indexOf("LEADERSHIP") !== -1 || upper.indexOf("LSJT") !== -1) assessmentCode = "LSJT";
+            else if (upper.indexOf("TPDK") !== -1 || upper.indexOf("PENALARAN") !== -1) assessmentCode = "TPDK";
+            else if (upper.indexOf("INTRAY") !== -1 || upper.indexOf("INBAKET") !== -1) assessmentCode = "INTRAY";
+        }
     }
 
-    if (!assessmentCode && assessmentId && TEST_RESULT_UUID_MAP[assessmentId]) {
-        assessmentCode = TEST_RESULT_UUID_MAP[assessmentId].code;
-        assessmentName = assessmentName || TEST_RESULT_UUID_MAP[assessmentId].name;
+    // Prioritas: metadata by UUID
+    if (!assessmentCode && assessmentId) {
+        const meta = getAssessmentMetaTestResult(assessmentId);
+        if (meta) {
+            assessmentCode = String(meta.assessment_code || meta.code || "").toUpperCase();
+            assessmentName = assessmentName || String(meta.assessment_name || meta.name || "").trim();
+        }
     }
 
+    // Prioritas: master assessments dari localStorage
     if (!assessmentCode && assessmentId) {
         const masterAssessments = readLocalStorageArray("assessments");
         const master = masterAssessments.find(function (m) {
@@ -373,7 +422,7 @@ async function loadTestResult() {
    1. Supabase: INDEX + CODE
    2. Supabase: CODE saja
    3. Supabase: INDEX saja
-   4. K1-BARU: Cari by CODE (semua key yang mengandung code)
+   4. Cari by CODE (semua key yang mengandung code)
    5. Cari by INDEX (data lama)
    6. Array talent_scope_results
    ========================================================== */
@@ -445,12 +494,24 @@ async function getAssessmentResult(
         if (sb && typeof sb.from === "function") {
             console.log("[TEST-RESULT] Query Supabase...");
 
-            let supabaseTable = "ts_results";
-            if (isDISC) supabaseTable = "disc_results";
-            else if (isPAPI) supabaseTable = "papi_results";
-            else if (isVAP) supabaseTable = "vap_results";
-            else if (assessmentCode === "MSJT" || assessmentCode === "LSJT") supabaseTable = "sjt_results";
-            else if (assessmentCode === "TPDK") supabaseTable = "tpdk_results";
+            // Prioritas 1: pakai ASSESSMENT_CONFIG.getTable()
+            let supabaseTable = null;
+            if (window.ASSESSMENT_CONFIG?.getTable) {
+                try {
+                    supabaseTable = window.ASSESSMENT_CONFIG.getTable(assessmentCode);
+                } catch (e) {}
+            }
+            
+            // Prioritas 2: fallback hardcoded
+            if (!supabaseTable) {
+                supabaseTable = "ts_results";
+                if (isDISC) supabaseTable = "disc_results";
+                else if (isPAPI) supabaseTable = "papi_results";
+                else if (isVAP) supabaseTable = "vap_results";
+                else if (assessmentCode === "MSJT" || assessmentCode === "LSJT") supabaseTable = "sjt_results";
+                else if (assessmentCode === "TPDK") supabaseTable = "tpdk_results";
+                else if (assessmentCode === "INTRAY") supabaseTable = "intray_results";
+            }
 
             console.log("[TEST-RESULT] Query tabel:", supabaseTable);
 
@@ -534,9 +595,6 @@ async function getAssessmentResult(
 
     // ==========================================================
     // FALLBACK BARU: CARI BY CODE
-    // ----------------------------------------------------------
-    // Cari SEMUA key localStorage yang mengandung code (disc/papi/vap).
-    // Ini untuk data lama yang tersimpan di index berbeda.
     // ==========================================================
     console.log("[TEST-RESULT] FALLBACK: Cari by code:", assessmentCode);
 

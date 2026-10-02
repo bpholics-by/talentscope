@@ -1151,7 +1151,80 @@ document.addEventListener(
         "talentscope_settings_users";
 
 
-    /* ======================================================
+            /* ======================================================
+       CALL EDGE FUNCTION — GENERATE CREDENTIALS
+       ----------------------------------------------------
+       Panggil Edge Function generate-credentials untuk
+       create user di Supabase Auth + insert ke project_members.
+       Backend juga auto-insert ke ts_users kalau user_id ada.
+    ====================================================== */
+    async function callEdgeGenerateCredentials(project, role, username, password) {
+        try {
+            if (!window.supabaseClient || !window.supabaseClient.auth) {
+                console.warn("[GenCred] Supabase client belum ready");
+                return { success: false, error: { message: "Supabase client belum ready" } };
+            }
+
+            var sessionResult = await window.supabaseClient.auth.getSession();
+            var session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+
+            if (!session || !session.access_token) {
+                console.warn("[GenCred] Tidak ada session — user harus login");
+                return { success: false, error: { message: "No session" } };
+            }
+
+            // Format username: {project-slug}-{yyyymmdd}.{role-slug}
+            var projectSlug = cleanCredentialText(getProjectAccessName(project));
+            var dateSlug = getProjectDateSlug(project);
+            var roleSlug = getRoleSlug(role.name);
+            var finalUsername = username || (projectSlug + "-" + dateSlug + "." + roleSlug);
+
+            // Generate user_id format: ACCESS-{project_id}-{timestamp}
+            var userId = "ACCESS-" + project.id + "-" + Date.now();
+
+            console.log("[GenCred] Calling Edge Function:", {
+                username: finalUsername,
+                role: role.name,
+                project_id: project.id
+            });
+
+            var result = await window.supabaseClient.functions.invoke("generate-credentials", {
+                body: {
+                    username: finalUsername,
+                    password: password,
+                    role: role.name,
+                    name: getProjectAccessName(project) + " — " + role.name,
+                    project_id: project.id,
+                    user_id: userId,
+                    ts_user_data: {
+                        username: finalUsername,
+                        role: role.name,
+                        projectId: project.id,
+                        projectName: getProjectAccessName(project),
+                        source: "project-access",
+                        generatedAt: new Date().toISOString()
+                    }
+                },
+                headers: {
+                    Authorization: "Bearer " + session.access_token
+                }
+            });
+
+            if (result.error) {
+                console.error("[GenCred] Edge Function error:", result.error);
+                return { success: false, error: result.error };
+            }
+
+            console.log("[GenCred] ✅ Edge Function success:", result.data);
+            return result.data;
+        } catch (e) {
+            console.error("[GenCred] Exception:", e);
+            return { success: false, error: { message: String(e && e.message || e) } };
+        }
+    }
+
+
+        /* ======================================================
        SYNC GENERATED CREDENTIAL KE USERS DIRECTORY
        ----------------------------------------------------
        Menulis/menimpa satu baris akun login di
@@ -3286,6 +3359,23 @@ existingRole.innerHTML =
             username,
             password
         );
+
+        /*
+           PANGGIL EDGE FUNCTION — Create user di Supabase Auth
+        */
+        callEdgeGenerateCredentials(project, role, username, password)
+            .then(function (edgeResult) {
+                if (edgeResult && edgeResult.success) {
+                    console.log("[GenCred] ✅ User Auth berhasil dibuat:", edgeResult.auth_user_id);
+                } else {
+                    console.warn("[GenCred] ⚠️ Edge Function gagal:", edgeResult);
+                    alert(
+                        "⚠️ Peringatan: User login belum dibuat di Supabase Auth.\n\n" +
+                        "Credentials sudah tersimpan secara lokal, tapi user mungkin TIDAK BISA LOGIN.\n\n" +
+                        "Error: " + (edgeResult && edgeResult.error ? (edgeResult.error.message || JSON.stringify(edgeResult.error)) : "Unknown")
+                    );
+                }
+            });
 
 
         /*

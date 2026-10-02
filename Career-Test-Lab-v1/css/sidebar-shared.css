@@ -1,0 +1,105 @@
+/* ============================================================
+   SIDEBAR SHARED STYLES — Font, size, weight consistency
+   FORCE override — pakai !important untuk semua halaman
+   ============================================================ */
+
+/* Font family untuk semua sidebar */
+html body .sidebar,
+html body .sidebar .menu,
+html body .sidebar nav,
+html body .sidebar .menu a,
+html body .sidebar nav a,
+html body .sidebar .menu li,
+html body .sidebar nav li,
+html body .sidebar .menu-item,
+html body .sidebar li > a {
+    font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Menu item (link) */
+html body .sidebar .menu a,
+html body .sidebar nav a,
+html body .sidebar li > a,
+html body .sidebar .menu-item {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+    letter-spacing: 0.01em !important;
+    color: #e2e8f0 !important;
+    text-decoration: none !important;
+}
+
+/* Menu item hover */
+html body .sidebar .menu a:hover,
+html body .sidebar nav a:hover,
+html body .sidebar li > a:hover {
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+/* Menu item active */
+html body .sidebar .menu a.active,
+html body .sidebar nav a.active,
+html body .sidebar li.active > a,
+html body .sidebar .menu a[aria-current="page"] {
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+/* Menu title (MAIN MENU, dll) */
+html body .sidebar .menu-title,
+html body .sidebar .menu .menu-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: #94a3b8 !important;
+}
+
+/* Brand / logo */
+html body .sidebar .brand-title {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+html body .sidebar .brand-version {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+}
+
+/* Icon */
+html body .sidebar .menu a i,
+html body .sidebar nav a i,
+html body .sidebar .menu i {
+    font-size: 16px !important;
+    width: 20px !important;
+    text-align: center !important;
+    margin-right: 12px !important;
+}
+
+/* Status Online */
+html body .sidebar .sidebar-status,
+html body .sidebar .sidebar-footer,
+html body .sidebar-footer {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+/* ============================================================
+   FORCE SHOW — "Assessment Detail" untuk clientuser/asesor
+   CSS override = zero delay
+   ============================================================ */
+html[data-ts-role="clientuser"] .sidebar li:has(a[href="project-detail.html"]),
+html[data-ts-role="clientuser"] .sidebar a[href="project-detail.html"],
+html[data-ts-role="asesor"] .sidebar li:has(a[href="project-detail.html"]),
+html[data-ts-role="asesor"] .sidebar a[href="project-detail.html"] {
+    display: list-item !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+html[data-ts-role="clientuser"] .sidebar li:has(a[href="project-detail.html"]) a,
+html[data-ts-role="asesor"] .sidebar li:has(a[href="project-detail.html"]) a {
+    display: flex !important;
+}

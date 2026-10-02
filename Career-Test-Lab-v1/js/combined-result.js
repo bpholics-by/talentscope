@@ -20,29 +20,69 @@ document.addEventListener("DOMContentLoaded", function () {
     loadCombinedResult();
 });
 
-/* ==========================================================
-   UUID MAP — mapping assessment_id → nama & kode
-   ========================================================== */
-const COMBINED_UUID_MAP = {
-    "5976eef2-e7a7-43a6-8e95-90f556f9a257": { name: "Tes Penalaran", code: "TPDK", route: "tpdk_report.html" },
-    "327a8cde-c51c-4524-aae1-4d54402d772a": { name: "Managerial Situational Judgment Test", code: "MSJT", route: "msjt_report.html" },
-    "e3026a3d-15f7-4189-b25e-8cae12968558": { name: "Leadership Situational Judgment Test", code: "LSJT", route: "sjt_report.html" },
-    "8b0209ef-1b16-414c-b8c1-cd0e0449e7d7": { name: "Work Performance & Sustained Attention Assessment", code: "VAP", route: "vap_report.html" },
-    "6266a366-47c4-4d5c-9f0f-6a2984227ed1": { name: "DISC Personality", code: "DISC", route: "test-result.html" },
-    "d8408a0f-55c0-4fc9-941e-bb6d48292b31": { name: "PAPI Kostick", code: "PAPI", route: "test-result.html" }
-};
+/* ============================================================
+   HELPER: Ambil metadata assessment dari ASSESSMENT_CONFIG
+   (pengganti COMBINED_UUID_MAP + COMBINED_TABLE_MAP)
+   ============================================================ */
+function getAssessmentMetaCombined(codeOrUuid) {
+    if (!window.ASSESSMENT_CONFIG) {
+        console.warn("[COMBINED] ASSESSMENT_CONFIG belum tersedia");
+        return null;
+    }
+    
+    const key = String(codeOrUuid || "").trim();
+    if (!key) return null;
+    
+    // 1. Coba lookup by code (langsung)
+    try {
+        const meta = window.ASSESSMENT_CONFIG.getMetadata(key);
+        if (meta) return meta;
+    } catch (e) {}
+    
+    // 2. Coba lookup by UUID (iterasi)
+    try {
+        const all = window.ASSESSMENT_CONFIG.getAll() || [];
+        const lowerKey = key.toLowerCase();
+        const found = all.find(m => {
+            const uuid = String(m.assessment_id || m.id || "").toLowerCase();
+            return uuid === lowerKey;
+        });
+        if (found) return found;
+    } catch (e) {}
+    
+    // 3. Coba lookup by code case-insensitive
+    try {
+        const all = window.ASSESSMENT_CONFIG.getAll() || [];
+        const upperKey = key.toUpperCase();
+        const found = all.find(m => 
+            String(m.assessment_code || m.code || "").toUpperCase() === upperKey
+        );
+        if (found) return found;
+    } catch (e) {}
+    
+    return null;
+}
 
-/* ==========================================================
-   TABLE MAP — mapping test code → tabel Supabase
-   ========================================================== */
-const COMBINED_TABLE_MAP = {
-    "TPDK": "tpdk_results",
-    "MSJT": "msjt_results",
-    "LSJT": "sjt_results",
-    "VAP":  "vap_results",
-    "DISC": "disc_results",
-    "PAPI": "papi_results"
-};
+// Helper: get semua assessments (untuk cari by resultType)
+function getAllAssessmentsCombined() {
+    if (!window.ASSESSMENT_CONFIG) return [];
+    try {
+        return window.ASSESSMENT_CONFIG.getAll() || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+// Helper: get table name by code
+function getTableByCode(code) {
+    if (window.ASSESSMENT_CONFIG?.getTable) {
+        try {
+            const t = window.ASSESSMENT_CONFIG.getTable(code);
+            if (t) return t;
+        } catch (e) {}
+    }
+    return null;
+}
 
 /* ==========================================================
    CHECK TEST HAS DATA — cek data di Supabase
@@ -50,7 +90,7 @@ const COMBINED_TABLE_MAP = {
    ========================================================== */
 async function checkTestHasData(testCode, projectId, participantId) {
     const code = String(testCode || "").toUpperCase().trim();
-    const table = COMBINED_TABLE_MAP[code];
+    let table = getTableByCode(code);
 
     if (!table) {
         console.warn("[CHECK-DATA] Unknown test code:", code);
@@ -90,11 +130,21 @@ async function checkTestHasData(testCode, projectId, participantId) {
    ROUTE BY CODE
    ========================================================== */
 function routeCombinedByCode(code) {
+    // Prioritas 1: pakai ASSESSMENT_CONFIG (metadata dari Supabase)
+    if (window.ASSESSMENT_CONFIG?.getRoute) {
+        try {
+            const route = window.ASSESSMENT_CONFIG.getRoute(code);
+            if (route) return route;
+        } catch (e) {}
+    }
+    
+    // Prioritas 2: fallback hardcoded (safety net)
     var c = String(code || "").trim().toLowerCase();
     if (c.includes("tpdk") || c.includes("penalaran")) return "tpdk_report.html";
     if (c.includes("msjt") || c.includes("managerial")) return "msjt_report.html";
     if (c.includes("lsjt") || c.includes("leadership")) return "sjt_report.html";
     if (c.includes("vap") || c.includes("performance") || c.includes("sustained")) return "vap_report.html";
+    if (c.includes("intray") || c.includes("inbaket") || c.includes("in-tray")) return "intray-report.html";
     if (c.includes("disc")) return "test-result.html";
     if (c.includes("papi") || c.includes("kostick")) return "test-result.html";
     return "test-result.html";
@@ -104,11 +154,21 @@ function routeCombinedByCode(code) {
    ICON BY CODE
    ========================================================== */
 function getIconFor(code) {
+    // Prioritas 1: pakai ASSESSMENT_CONFIG (metadata dari Supabase)
+    if (window.ASSESSMENT_CONFIG?.getIcon) {
+        try {
+            const icon = window.ASSESSMENT_CONFIG.getIcon(code);
+            if (icon) return icon;
+        } catch (e) {}
+    }
+    
+    // Prioritas 2: fallback hardcoded
     var c = String(code || "").trim().toLowerCase();
     if (c.includes("tpdk") || c.includes("penalaran")) return "fa-brain";
     if (c.includes("msjt") || c.includes("managerial")) return "fa-list-check";
     if (c.includes("lsjt") || c.includes("leadership")) return "fa-users";
     if (c.includes("vap") || c.includes("performance")) return "fa-eye";
+    if (c.includes("intray") || c.includes("inbaket") || c.includes("in-tray")) return "fa-chart-line";
     if (c.includes("disc")) return "fa-brain";
     if (c.includes("papi") || c.includes("kostick")) return "fa-user-tag";
     return "fa-clipboard-check";
@@ -397,11 +457,16 @@ async function normalizeCombinedAssessmentAsync(assessment, index, masterAssessm
         ""
     ).trim().toLowerCase();
 
-    if (assessmentIdVal && COMBINED_UUID_MAP[assessmentIdVal]) {
-        const mapped = COMBINED_UUID_MAP[assessmentIdVal];
-        console.log("[COMBINED] ✅ UUID match:", assessmentIdVal, "→", mapped.code);
-        return { name: mapped.name, code: mapped.code, route: mapped.route };
+    if (assessmentIdVal) {
+    const mapped = getAssessmentMetaCombined(assessmentIdVal);
+    if (mapped) {
+        const mappedCode = String(mapped.assessment_code || mapped.code || "").toUpperCase();
+        const mappedName = String(mapped.assessment_name || mapped.name || mappedCode);
+        const mappedRoute = mapped.report_page || mapped.route || routeCombinedByCode(mappedCode);
+        console.log("[COMBINED] ✅ UUID match:", assessmentIdVal, "→", mappedCode);
+        return { name: mappedName, code: mappedCode, route: mappedRoute };
     }
+}
 
     // ==== PRIORITAS 2: Cek result_type ====
     const resultType = String(
@@ -410,12 +475,15 @@ async function normalizeCombinedAssessmentAsync(assessment, index, masterAssessm
         ""
     ).trim().toUpperCase();
 
-    if (resultType && ["MSJT", "LSJT", "VAP", "DISC", "PAPI", "TPDK"].indexOf(resultType) !== -1) {
-        const mapped = Object.values(COMBINED_UUID_MAP).find(v => v.code === resultType);
-        const name = (mapped && mapped.name) ||
-                     assessment.assessment_name ||
-                     assessment.name ||
-                     resultType;
+    if (resultType) {
+    const allAssess = getAllAssessmentsCombined();
+    const mapped = allAssess.find(a => 
+        String(a.assessment_code || a.code || "").toUpperCase() === resultType
+    );
+    const name = (mapped && (mapped.assessment_name || mapped.name)) ||
+        assessment.assessment_name ||
+        assessment.name ||
+                             resultType;
         console.log("[COMBINED] ✅ result_type:", resultType);
         return {
             name: name,

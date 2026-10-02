@@ -1,8 +1,22 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<script src="js/ts-supabase-sync.js?v=6"></script>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings Center | TalentScope</title>
+
+<!-- ============================================================
+     SUPABASE CONFIG — WAJIB PALING ATAS
+     ============================================================ -->
+<script src="js/config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/role-permissions.js?v=13"></script>
+<script src="js/data-service.js"></script>
+<script src="js/ts-supabase-sync.js?v=14"></script>
+
+<!-- CSS & dependencies -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Settings Center | TalentScope</title>
@@ -13,6 +27,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 <body>
@@ -248,15 +263,15 @@
             <div class="table-card">
                 <table class="users-table">
                     <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Username</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th class="align-right">Action</th>
-                        </tr>
-                    </thead>
-
+    <tr>
+        <th>User</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Berlaku Sampai</th>
+        <th class="align-right">Action</th>
+    </tr>
+</thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
             </div>
@@ -339,7 +354,21 @@
                         <option value="Inactive">Inactive</option>
                     </select>
                 </div>
-
+<div class="field-group">
+    <label>Masa Berlaku Akun</label>
+    <select id="userExpiresIn">
+        <option value="0">Selamanya (tidak ada expiry)</option>
+        <option value="1">1 hari</option>
+        <option value="2">2 hari</option>
+        <option value="3">3 hari</option>
+        <option value="5">5 hari</option>
+        <option value="7" selected>7 hari</option>
+        <option value="14">14 hari</option>
+        <option value="30">30 hari</option>
+        <option value="60">60 hari</option>
+        <option value="90">90 hari</option>
+    </select>
+</div>
                 <div class="field-group">
                     <label>Password</label>
                     <div class="password-wrap">
@@ -428,6 +457,6 @@
 
 <div class="toast" id="settingsToast"></div>
 
-<script src="js/settings.js?v=3"></script>
+<script src="js/settings.js?v=7"></script>
 </body>
 </html>

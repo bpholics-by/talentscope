@@ -2,157 +2,6 @@
 <html lang="id">
 
 <head>
-<!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
-    <script>
-    (function() {
-        "use strict";
-
-        function getSavedUser() {
-    // PRIORITAS 1: TS_AUTH
-    try {
-        if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-            var jwtUser = window.TS_AUTH.getUser();
-            if (jwtUser) return jwtUser;
-        }
-    } catch(e) {}
-    
-    // FALLBACK
-    try {
-        var d = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
-        return d ? JSON.parse(d) : null;
-    } catch(e) { return null; }
-}
-
-        if (activeUser) {
-            localStorage.setItem("talentscope_current_user", JSON.stringify(activeUser));
-            
-            document.addEventListener("DOMContentLoaded", function() {
-                var role = String(activeUser.role || "").trim();
-
-                var allEls = document.querySelectorAll("div, span, p, strong, b, h1, h2, h3");
-                allEls.forEach(function(el) {
-                    if (el.children.length === 0) {
-                        if (el.textContent.trim() === "Administrator") {
-                            el.textContent = activeUser.name || activeUser.username || "User";
-                        }
-                        if (el.textContent.trim() === "System Admin") {
-                            el.textContent = role;
-                        }
-                    }
-                });
-
-                // FIX PENTING: role yang benar-benar tersimpan dari
-                // "Generate Credentials" cuma ada 2 nilai persis:
-                // "Client Administrator" dan "Client User" (lihat
-                // participants.js -- getSessionRoleFlags()). Tidak
-                // pernah ada role literal "Asesor"/"Assessor". "Client
-                // User" itu yang SECARA PERILAKU = Asesor (view-only).
-                //
-                // Kode lama di sini cuma cek /asesor|assessor/i, yang
-                // TIDAK PERNAH cocok dengan "Client User" -- makanya
-                // Client User selalu jatuh ke isClient (dianggap PIC
-                // pemilik project, full akses tombol).
-                var isSystemAdmin = /system/i.test(role);
-                var isAsesor =
-                    !isSystemAdmin &&
-                    (/asesor|assessor/i.test(role) ||
-                        (/client/i.test(role) && /user/i.test(role)));
-                var isClient = !isSystemAdmin && !isAsesor && /client/i.test(role);
-                var isAdmin = !isSystemAdmin && !isClient && !isAsesor && /administrator/i.test(role);
-
-                var hideList = [];
-                if (isClient) {
-                    hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAsesor) {
-                    hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAdmin) {
-                    hideList = ["Settings"];
-                }
-
-                if (hideList.length > 0) {
-                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
-                    menuLinks.forEach(function(item) {
-                        var text = item.textContent.trim();
-                        hideList.forEach(function(m) {
-                            if (text.indexOf(m) !== -1) {
-                                item.style.setProperty("display", "none", "important");
-                            }
-                        });
-                    });
-                }
-
-                // Client Administrator = PIC/pemilik project, tetap full
-                // akses tombol. Cuma Asesor (termasuk Client User) yang
-                // dibatasi view-only.
-                //
-                // FIX: kata kunci ditambah "edit", "generate", "password",
-                // "key", "credential", "import", "send", "invite"/
-                // "invitation", "kirim" -- sebelumnya cuma
-                // remove/create/add/delete/tambah.
-                //
-                // CATATAN: kalau tombol "Edit"/"Generate Password" di
-                // tabel Project Access ternyata cuma ikon tanpa teks
-                // (dirender oleh js/projects-render.js yang belum saya
-                // punya), pencarian lewat textContent di sini TIDAK akan
-                // menangkapnya -- perlu file itu untuk target yang presisi
-                // (lihat title/aria-label/data-action pada tombolnya).
-                if (isAsesor) {
-
-                    function enforceReadOnlyButtons() {
-                        document.querySelectorAll(
-                            "button, .btn, .btn-primary, a.btn, " +
-                            "[title*='edit' i], [title*='generate' i], [title*='password' i], " +
-                            "[aria-label*='edit' i], [aria-label*='generate' i], [aria-label*='password' i]"
-                        ).forEach(function(btn) {
-                            var bt = btn.textContent.toLowerCase();
-                            var titleAttr = (btn.getAttribute("title") || "").toLowerCase();
-                            var ariaAttr = (btn.getAttribute("aria-label") || "").toLowerCase();
-                            var combined = bt + " " + titleAttr + " " + ariaAttr;
-
-                            if (
-                                combined.includes("remove") ||
-                                combined.includes("create") ||
-                                combined.includes("add") ||
-                                combined.includes("delete") ||
-                                combined.includes("tambah") ||
-                                combined.includes("edit") ||
-                                combined.includes("generate") ||
-                                combined.includes("password") ||
-                                combined.includes("key") ||
-                                combined.includes("credential") ||
-                                combined.includes("import") ||
-                                combined.includes("send") ||
-                                combined.includes("invite") ||
-                                combined.includes("invitation") ||
-                                combined.includes("kirim")
-                            ) {
-                                btn.style.setProperty("display", "none", "important");
-                            }
-                        });
-
-                        document.querySelectorAll(
-                            "#selectAllProjects, input[type=checkbox].row-select, td.select-cell, th.select-header"
-                        ).forEach(function(el) {
-                            el.style.setProperty("display", "none", "important");
-                        });
-                    }
-
-                    enforceReadOnlyButtons();
-
-                    var readOnlyObserver = new MutationObserver(function() {
-                        enforceReadOnlyButtons();
-                    });
-
-                    readOnlyObserver.observe(document.body, {
-                        childList: true,
-                        subtree: true
-                    });
-                }
-            });
-        }
-    })();
-    </script>
-
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1184,6 +1033,7 @@
 
 </style>
 
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 <body>
@@ -1447,33 +1297,32 @@
     </div>
 </div>
 
-<script src="js/layout/layout-loader.js?v=3"></script>
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
-<!-- SUPABASE LIBRARY -->
+<script src="js/layout/layout-loader.js?v=12"></script>
+<script src="js/config.js?v=5"></script><!-- SUPABASE LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- SUPABASE CLIENT -->
 
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/supabase-client.js?v=7"></script>
 
 <!-- CENTRAL DATA SERVICE -->
-<script src="js/data-service.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=6"></script>
-<script src="js/role-permissions.js?v=3"></script>
+<script src="js/data-service.js?v=8"></script>
+<script src="js/ts-supabase-sync.js?v=14"></script>
+<script src="js/role-permissions.js?v=13"></script>
 
 <!-- APPLICATION DATA -->
 
-<script src="js/projects-data.js?v=3"></script>
+<script src="js/projects-data.js?v=5"></script>
 
 <!-- APPLICATION RENDER -->
-<script src="js/projects-render.js?v=3"></script>
-<script src="js/projects-modal.js?v=3"></script>
+<script src="js/projects-render.js?v=6"></script>
+<script src="js/projects-modal.js?v=5"></script>
 
-<script src="js/global-search.js?v=3"></script>
-<script src="js/project-export.js?v=3"></script>
-<script src="js/app-access-control.js?v=3"></script>
-<script src="js/project-access-filter.js?v=3"></script>
-<script src="js/access-control-ui.js?v=3"></script>
+<script src="js/global-search.js?v=5"></script>
+<script src="js/project-export.js?v=5"></script>
+<script src="js/app-access-control.js?v=6"></script>
+<script src="js/project-access-filter.js?v=5"></script>
+<script src="js/access-control-ui.js?v=5"></script>
 
 
 <!-- SCRIPT PENGISIAN PROFIL PENGGUNA & HAMBURGER MENU MOBILE -->

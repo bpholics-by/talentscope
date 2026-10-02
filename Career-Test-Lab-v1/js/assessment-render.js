@@ -272,10 +272,12 @@ function renderAssessments(data = assessments){
             <td>
 
                 <input
-                    type="checkbox"
-                    class="assessment-check"
-                    data-id="${item.id}"
-                >
+    type="checkbox"
+    class="assessment-check"
+    data-id="${item.id}"
+    data-assessment-id="${item.id}"
+    value="${item.id}"
+>
 
             </td>
 

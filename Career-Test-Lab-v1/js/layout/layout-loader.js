@@ -1,28 +1,124 @@
-document.addEventListener("DOMContentLoaded", async () => {
+/* =========================================================
+   ANTI-FLASH INIT — Set data-ts-role + inject CSS SEGERA
+   Jalan SEBELUM DOMContentLoaded untuk hilangkan flash
+   ========================================================= */
+(function initAntiFlash() {
     try {
+        var sb = window.supabaseClient;
+        if (!sb || !sb.auth) return;
+
+        var projectRef = (sb.supabaseUrl || '').split('//')[1].split('.')[0];
+        var storageKey = 'sb-' + projectRef + '-auth-token';
+        var sessionRaw = sessionStorage.getItem(storageKey) || localStorage.getItem(storageKey);
+        if (!sessionRaw) return;
+
+        var parsed = JSON.parse(sessionRaw);
+        var meta = (parsed && parsed.user && parsed.user.user_metadata) || {};
+        var rawRole = String(meta.role || "").toLowerCase().trim();
+        var role = rawRole.replace(/\s+/g, "_");
+
+        if (role === "system_administrator" || role === "system_admin") role = "system_admin";
+        else if (role === "client_administrator" || role === "client_admin" || role === "clientadmin") role = "clientadmin";
+        else if (role === "client_user" || role === "clientuser") role = "clientuser";
+        else if (role === "asesor" || role === "assessor") role = "asesor";
+        else if (role === "peserta" || role === "participant") role = "peserta";
+
+        // Set data-ts-role di <html> SEGERA
+        document.documentElement.setAttribute("data-ts-role", role);
+        console.log("[LAYOUT] Anti-flash role set:", role);
+
+        // Inject CSS anti-flash
+        if (document.getElementById("ts-anti-flash-css")) return;
+        var style = document.createElement("style");
+        style.id = "ts-anti-flash-css";
+        style.textContent = [
+            'html[data-ts-role="clientuser"] .sidebar a[href*="assessment-catalog"],',
+            'html[data-ts-role="clientuser"] .sidebar li:has(a[href*="assessment-catalog"]),',
+            'html[data-ts-role="clientuser"] .sidebar a[href*="settings"],',
+            'html[data-ts-role="clientuser"] .sidebar li:has(a[href*="settings"]),',
+
+            'html[data-ts-role="asesor"] .sidebar a[href*="assessment-catalog"],',
+            'html[data-ts-role="asesor"] .sidebar li:has(a[href*="assessment-catalog"]),',
+            'html[data-ts-role="asesor"] .sidebar a[href*="settings"],',
+            'html[data-ts-role="asesor"] .sidebar li:has(a[href*="settings"]),',
+
+            'html[data-ts-role="clientadmin"] .sidebar a[href*="settings"],',
+            'html[data-ts-role="clientadmin"] .sidebar li:has(a[href*="settings"]),',
+
+            'html[data-ts-role="clientuser"] button[data-action="create-project"],',
+            'html[data-ts-role="asesor"] button[data-action="create-project"],',
+
+            '{ display: none !important; visibility: hidden !important; }'
+        ].join("");
+        document.head.appendChild(style);
+        console.log("[LAYOUT] Anti-flash CSS injected");
+    } catch (e) {
+        console.warn("[LAYOUT] Anti-flash init error:", e);
+    }
+})();
+
+/* =========================================================
+   Existing DOMContentLoaded handler
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", async () => {
+
+    try {
+        console.log("[LAYOUT] DOMContentLoaded triggered");
         // =========================================================
         // 1. AMBIL SESSION USER TERLEBIH DAHULU
         // =========================================================
-        const keys = ["ts_admin_session", "talentscope_current_user", "user", "currentUser"];
-        let activeUser = null;
+        // =========================================================
+// 1. AMBIL SESSION DARI SUPABASE AUTH (baru)
+// =========================================================
+let activeUser = null;
 
-        for (const key of keys) {
-            const raw = sessionStorage.getItem(key) || localStorage.getItem(key);
-            if (raw) {
-                try {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && (parsed.role || parsed.name || parsed.username)) {
-                        activeUser = parsed;
-                        break;
-                    }
-                } catch (e) {}
+try {
+    const sb = window.supabaseClient;
+    if (sb && sb.auth) {
+        const projectRef = (sb.supabaseUrl || '').split('//')[1].split('.')[0];
+        const storageKey = 'sb-' + projectRef + '-auth-token';
+        const sessionRaw = localStorage.getItem(storageKey);
+
+        if (sessionRaw) {
+            const parsed = JSON.parse(sessionRaw);
+            if (parsed && parsed.user) {
+                const meta = parsed.user.user_metadata || {};
+                activeUser = {
+                    id: parsed.user.id,
+                    email: parsed.user.email,
+                    role: meta.role || "",
+                    name: meta.name || meta.username || parsed.user.email.split("@")[0]
+                };
             }
         }
+    }
+} catch (e) {
+    console.warn("[LAYOUT] Gagal baca Supabase session:", e);
+}
 
-        const role = activeUser ? String(activeUser.role || "System Administrator").trim() : "";
-        const isClient = /client/i.test(role);
-        const isAsesor = /asesor|assessor/i.test(role);
-        const isAdmin = /administrator/i.test(role) && !/system/i.test(role);
+// Fallback: coba storage lama (backward compat)
+// Fallback DISABLED — pakai Supabase Auth saja
+// (kalau ada user legacy, migrasi ke Supabase dulu)
+
+// =========================================================
+// 2. NORMALISASI ROLE — mapping konsisten
+// =========================================================
+const rawRole = activeUser ? String(activeUser.role || "").toLowerCase().trim() : "";
+
+// Normalisasi: "System Administrator" → "system_admin", "Client User" → "clientuser", dst.
+let role = rawRole.replace(/\s+/g, "_");
+if (role === "system_administrator" || role === "system_admin") role = "system_admin";
+else if (role === "client_admin" || role === "clientadmin") role = "clientadmin";
+else if (role === "client_user" || role === "clientuser") role = "clientuser";
+else if (role === "asesor" || role === "assessor") role = "asesor";
+else if (role === "peserta" || role === "participant") role = "peserta";
+
+const isSystemAdmin = role === "system_admin";
+const isClientAdmin = role === "clientadmin";
+const isClientUser  = role === "clientuser" || role === "asesor";
+const isPeserta     = role === "peserta";
+
+console.log("[LAYOUT] Role terdeteksi:", role, "| Raw:", rawRole);
 
         // =========================================================
         // 2. SIDEBAR (FETCH & FILTER MENU INSTAN)
@@ -39,14 +135,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             sidebar.innerHTML = await res.text();
 
             // --- FILTER MENU DARI HYPERLINK / TEKS SEBELUM DITAMPILKAN ---
-            let hideList = [];
-            if (isClient) {
-                hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
-            } else if (isAsesor) {
-                hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
-            } else if (isAdmin) {
-                hideList = ["Settings"];
-            }
+            // =========================================================
+// 3. FILTER MENU PER ROLE (baru — sesuai konsep bisnis)
+// =========================================================
+let hideList = [];
+if (isSystemAdmin) {
+    hideList = [];
+} else if (isClientAdmin) {
+    hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
+} else if (isClientUser) {
+    hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
+} else if (isPeserta) {
+    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail",
+                "Participants", "Project Access", "Test Builder", "Test Bank", "Settings"];
+} else {
+    // Fallback: role kosong / tidak dikenal → JANGAN hide apapun
+    console.warn("[LAYOUT] Role tidak dikenal/kosong:", role, "— skip hide");
+    hideList = [];
+}
+console.log("[LAYOUT] hideList untuk role", role, ":", hideList);
 
             if (hideList.length > 0) {
                 const links = sidebar.querySelectorAll("a, li");
@@ -78,7 +185,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
             });
         }
-
+// Hide tombol Create Project untuk client user (read-only)
+if (isClientUser) {
+    const createBtns = document.querySelectorAll(
+        'button[data-action="create-project"], ' +
+        '.btn-create-project, ' +
+        'button:has(> span:contains("Create Project"))'
+    );
+    // Fallback: cari tombol dengan teks "Create Project"
+    document.querySelectorAll("button").forEach(btn => {
+        if (btn.textContent.trim().includes("Create Project")) {
+            btn.style.setProperty("display", "none", "important");
+        }
+    });
+}
         // =========================================================
         // 3. HEADER (FETCH & UPDATE USERNAME/ROLE INSTAN)
         // =========================================================

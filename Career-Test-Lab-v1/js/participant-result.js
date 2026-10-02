@@ -40,31 +40,68 @@ const UUID_TO_ASSESSMENT = {
     }
 };
 
-/* ==========================================================
-   KATALOG FALLBACK
-   ========================================================== */
-const ASSESSMENT_FALLBACK = {
-    "VAP": {
-        name: "Work Performance & Sustained Attention Assessment",
-        route: "vap_report.html"
-    },
-    "LSJT": {
-        name: "Leadership Situational Judgment Test",
-        route: "sjt_report.html"
-    },
-    "MSJT": {
-        name: "Managerial Situational Judgment Test",
-        route: "msjt_report.html"
-    },
-    "DISC": {
-        name: "DISC Personality",
-        route: "test-result.html"
-    },
-    "PAPI": {
-        name: "PAPI Kostick",
-        route: "test-result.html"
+// ============================================
+// HELPER: Ambil metadata assessment dari ASSESSMENT_CONFIG
+// - Bisa by code (DISC/disc) atau by UUID
+// - Fallback ke null kalau tidak ada
+// ============================================
+function getAssessmentMeta(codeOrUuid) {
+    if (!window.ASSESSMENT_CONFIG) {
+        console.warn("[PARTICIPANT-RESULT] ASSESSMENT_CONFIG belum tersedia");
+        return null;
     }
-};
+    
+    const key = String(codeOrUuid || "").trim();
+    if (!key) return null;
+    
+    // 1. Coba lookup by code (langsung)
+    try {
+        const meta = window.ASSESSMENT_CONFIG.getMetadata(key);
+        if (meta) return meta;
+    } catch (e) {}
+    
+    // 2. Coba lookup by UUID — iterasi semua metadata
+    try {
+        const all = window.ASSESSMENT_CONFIG.getAll() || [];
+        const lowerKey = key.toLowerCase();
+        const found = all.find(m => {
+            const uuid = String(m.assessment_id || m.id || "").toLowerCase();
+            return uuid === lowerKey;
+        });
+        if (found) return found;
+    } catch (e) {}
+    
+    // 3. Coba lookup by code case-insensitive
+    try {
+        const all = window.ASSESSMENT_CONFIG.getAll() || [];
+        const upperKey = key.toUpperCase();
+        const found = all.find(m => 
+            String(m.assessment_code || "").toUpperCase() === upperKey
+        );
+        if (found) return found;
+    } catch (e) {}
+    
+    return null;
+}
+
+// Helper shortcut
+function getRouteByCode(code) {
+    const meta = getAssessmentMeta(code);
+    if (meta) return meta.report_page || meta.route || null;
+    if (window.ASSESSMENT_CONFIG) {
+        try { return window.ASSESSMENT_CONFIG.getRoute(code); } catch (e) {}
+    }
+    return null;
+}
+
+function getNameByCode(code) {
+    const meta = getAssessmentMeta(code);
+    if (meta) return meta.assessment_name || meta.name || null;
+    if (window.ASSESSMENT_CONFIG) {
+        try { return window.ASSESSMENT_CONFIG.getName(code); } catch (e) {}
+    }
+    return null;
+}
 
 /* ==========================================================
    LOAD PARTICIPANT RESULT — Fungsi Utama
@@ -157,18 +194,73 @@ async function loadParticipantResult() {
         return;
     }
 
-    // ==========================================================
-    // Cari participant
-    // ==========================================================
-    const participants = Array.isArray(project.participants) ? project.participants : [];
-    let participant = participants.find(function (item) {
-        return String(item.id || item.participantId) === String(participantId);
-    });
+    // ============================================
+// Cari participant
+// PRIORITAS 1: fetch dari Supabase (project_participants + participants)
+// FALLBACK:     localStorage (talentscope_projects)
+// ============================================
+let participant = null;
 
-    if (!participant) {
-        participant = { id: participantId, participantId: participantId, name: "-" };
-        console.warn("[PARTICIPANT-RESULT] Participant tidak ditemukan, pakai fallback");
+// --- Coba Supabase dulu ---
+try {
+    const sb2 = window.supabaseClient || window.supabase;
+    if (sb2 && typeof sb2.from === "function") {
+        // Ambil relasi project_participants
+        const { data: ppData, error: ppErr } = await sb2
+            .from("project_participants")
+            .select("participant_id, participants(id, name, email)")
+            .eq("project_id", projectId)
+            .eq("participant_id", participantId)
+            .maybeSingle();
+
+        if (!ppErr && ppData && ppData.participants) {
+            const p = ppData.participants;
+            participant = {
+                id: p.id,
+                participantId: p.id,
+                name: p.name,
+                email: p.email
+            };
+            console.log("[PARTICIPANT-RESULT] Participant dari Supabase:", participant.name);
+        }
     }
+} catch (e) {
+    console.warn("[PARTICIPANT-RESULT] Supabase participant fetch gagal:", e);
+}
+
+// --- Fallback: localStorage ---
+if (!participant) {
+    try {
+        const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+        const proj = projects.find(p => String(p.id) === String(projectId));
+        if (proj && Array.isArray(proj.participants)) {
+            const localP = proj.participants.find(x =>
+                String(x.id || x.participantId || x.participant_id) === String(participantId)
+            );
+            if (localP) {
+                participant = {
+                    id: localP.id || participantId,
+                    participantId: localP.participantId || participantId,
+                    name: localP.name || localP.fullName || localP.participant_name,
+                    email: localP.email
+                };
+                console.log("[PARTICIPANT-RESULT] Participant dari localStorage:", participant.name);
+            }
+        }
+    } catch (e) {
+        console.warn("[PARTICIPANT-RESULT] localStorage fallback gagal:", e);
+    }
+}
+
+// --- Final fallback ---
+if (!participant) {
+    participant = {
+        id: participantId,
+        participantId: participantId,
+        name: "Peserta-" + String(participantId).slice(0, 8)
+    };
+    console.warn("[PARTICIPANT-RESULT] Participant tidak ditemukan, pakai fallback ID");
+}
 
     // ==========================================================
     // Render info peserta
@@ -181,7 +273,12 @@ let assessmentDate = project.start_date || project.startDate || project.start ||
 if (assessmentDate && typeof assessmentDate === "string" && assessmentDate.includes("T")) {
     assessmentDate = assessmentDate.split("T")[0];  // "2026-09-11"
 }
-    const participantName = participant.name || participant.fullName || "-";
+    const participantName =
+    participant.name ||
+    participant.fullName ||
+    participant.participant_name ||
+    participant.participantName ||
+    ("Peserta-" + String(participantId).slice(0, 8));
 
     const participantNameEl = document.getElementById("participantName");
     if (participantNameEl) participantNameEl.textContent = participantName;
@@ -433,9 +530,12 @@ function resolveAssessmentInfo(assessment, index) {
 
     const isGeneric = !rawName || /^assessment\s*\d*$/i.test(rawName);
 
-    if (isGeneric && rawCode && ASSESSMENT_FALLBACK[rawCode]) {
-        rawName = ASSESSMENT_FALLBACK[rawCode].name;
+    if (isGeneric && rawCode) {
+    const metaName = getNameByCode(rawCode);
+    if (metaName) {
+        rawName = metaName;
     }
+}
 
     if (isGeneric) {
         const idxFallback = [
@@ -451,9 +551,12 @@ function resolveAssessmentInfo(assessment, index) {
     if (!rawName) rawName = "Assessment " + (index + 1);
 
     let route = "test-result.html";
-    if (rawCode && ASSESSMENT_FALLBACK[rawCode] && ASSESSMENT_FALLBACK[rawCode].route) {
-        route = ASSESSMENT_FALLBACK[rawCode].route;
-    } else {
+    if (rawCode) {
+    const metaRoute = getRouteByCode(rawCode);
+    if (metaRoute) {
+        route = metaRoute;
+    }
+} else {
         const lowerName = rawName.toLowerCase();
         if (lowerName.includes("vap") || lowerName.includes("work performance") || lowerName.includes("sustained attention")) {
             route = "vap_report.html";

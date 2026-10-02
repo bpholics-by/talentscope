@@ -8,9 +8,9 @@
     <script src="js/tab-switch-warning.js"></script>
     <!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js"></script>
+    <script src="js/supabase-client.js?v=7"></script>
     <script src="js/data-service.js"></script>
-    <script src="js/ts-supabase-sync.js?v=6"></script>
+    <script src="js/ts-supabase-sync.js?v=14"></script>
     <script src="js/participant-activity.js"></script>
     <script>
         if (typeof ParticipantActivity !== "undefined") {
@@ -307,7 +307,8 @@
     .disc-start-button{width:100%}
 }
 
-</style></head>
+</style>    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
+</head>
 <body>
 <header class="top"><a class="back" id="back" href="#"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a><div class="timer"><i class="fa-regular fa-clock"></i><span id="timer">30:00</span></div></header>
 <main class="wrap">

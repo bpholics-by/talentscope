@@ -174,10 +174,13 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
         SUPABASE_ANON_KEY,
         {
             auth: {
-                persistSession: false,  // Kita tidak pakai Supabase Auth
-                autoRefreshToken: false,
-                detectSessionInUrl: false
-            },
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.sessionStorage,
+    storageKey: 'sb-nixmychfhsnsvymkuxtm-auth-token',
+    flowType: 'implicit'
+},
             global: {
                 headers: {
                     "x-application-name": "TalentScope"
@@ -214,16 +217,57 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
 
 
     // ============================================
-    // GLOBAL AVAILABILITY
-    // ============================================
+// GLOBAL AVAILABILITY
+// ============================================
+window.supabaseClient = supabaseClient;
+window.testSupabaseConnection = testSupabaseConnection;
+window.fetchWithTimeout = fetchWithTimeout;   // expose untuk debug
 
-    window.supabaseClient = supabaseClient;
-    window.testSupabaseConnection = testSupabaseConnection;
-    window.fetchWithTimeout = fetchWithTimeout;   // expose untuk debug
+// ============================================
+// AUTH SESSION REHYDRATION (Fase D)
+// ============================================
+(async function initAuthSession() {
+    try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-    console.log(
-        '[SUPABASE] Client initialized (timeout: ' +
-        REQUEST_TIMEOUT_MS + 'ms, retry: ' + MAX_RETRIES + '×)'
-    );
+        if (error) {
+            console.warn('[SUPABASE] Session load error:', error);
+            return;
+        }
+
+        if (session) {
+            console.log('[SUPABASE] ✅ Session restored:', session.user.email);
+            console.log('[SUPABASE] Role:', session.user.user_metadata?.role);
+            console.log('[SUPABASE] Expires:', new Date(session.expires_at * 1000).toISOString());
+
+            window.__TS_AUTH_SESSION = session;
+            window.__TS_AUTH_USER = session.user;
+        } else {
+            console.log('[SUPABASE] No active session — user perlu login');
+            window.__TS_AUTH_SESSION = null;
+            window.__TS_AUTH_USER = null;
+        }
+    } catch (e) {
+        console.warn('[SUPABASE] initAuthSession error:', e);
+    }
+})();
+
+// Listen perubahan auth state
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    console.log('[SUPABASE] Auth event:', event, session?.user?.email || 'no user');
+
+    window.__TS_AUTH_SESSION = session;
+    window.__TS_AUTH_USER = session?.user || null;
+
+    if (window.__tsCachedToken !== undefined) {
+        window.__tsCachedToken = null;
+        window.__tsTokenExpiry = 0;
+    }
+});
+
+console.log(
+    '[SUPABASE] Client initialized (timeout: ' +
+    REQUEST_TIMEOUT_MS + 'ms, retry: ' + MAX_RETRIES + '×)'
+);
 
 })();

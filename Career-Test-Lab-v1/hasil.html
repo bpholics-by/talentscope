@@ -40,32 +40,7 @@
                     }
                 });
 
-                // B. Filter Menu Sidebar
-                var isClient = /client/i.test(role);
-                var isAsesor = /asesor|assessor/i.test(role);
-                var isAdmin = /administrator/i.test(role) && !/system/i.test(role);
-
-                var hideList = [];
-                if (isClient) {
-                    hideList = ["Assessment Catalog", "Participants", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAsesor) {
-                    hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail", "Participants", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAdmin) {
-                    hideList = ["Settings"];
-                }
-
-                if (hideList.length > 0) {
-                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
-                    menuLinks.forEach(function(item) {
-                        var text = item.textContent.trim();
-                        hideList.forEach(function(m) {
-                            if (text.indexOf(m) !== -1) {
-                                item.style.setProperty("display", "none", "important");
-                            }
-                        });
-                    });
-                }
-
+                
                 // C. Sembunyikan Tombol Aksi Sensitif untuk Client & Asesor
                 if (isClient || isAsesor) {
                     document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
@@ -81,12 +56,12 @@
     </script>
 
 <meta charset="UTF-8">
-    <!-- SUPABASE SYNC BRIDGE â€” WAJIB DIMUAT PALING AWAL -->
-   <script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/supabase-client.js?v=3"></script>
-    <script src="js/data-service.js?v=3"></script>
- <script src="js/ts-supabase-sync.js?v=6"></script>
+    <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
+   <script src="js/config.js?v=5"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js?v=7"></script>
+    <script src="js/role-permissions.js?v=13"></script>
+    <script src="js/data-service.js?v=8"></script>
+ <script src="js/ts-supabase-sync.js?v=14"></script>
 
 <meta
     name="viewport"
@@ -1969,6 +1944,7 @@ a{
 
 </style>
 
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 
@@ -2300,7 +2276,7 @@ a{
                 <div class="table-footer">
 
                     <span id="resultCount">
-                        Showing 0â€“0 of 0 results
+                        Showing 0–0 of 0 results
                     </span>
 
                     <strong>
@@ -2422,7 +2398,7 @@ a{
    LOGOUT
 ========================================================== */
 
-// Logout handler â€” konsisten dengan view-monitoring.html
+// Logout handler — konsisten dengan view-monitoring.html
 (function() {
     var btn = document.getElementById("logoutBtn");
     if (!btn) return;
@@ -2537,7 +2513,7 @@ a{
 })();
 </script>
 <!-- ==========================================================
-   PATCH: PRELOAD DARI SUPABASE â€” SESSION ISOLATION
+   PATCH: PRELOAD DARI SUPABASE — SESSION ISOLATION
    ----------------------------------------------------------
    Sebelum result.js baca localStorage, kita preload data
    project + participants dari Supabase. Ini yang bikin
@@ -2643,7 +2619,7 @@ a{
             }
 
             localStorage.setItem("talentscope_projects", JSON.stringify(projects));
-            console.log("[HASIL-PRELOAD] âœ… Berhasil:", participants.length, "peserta");
+            console.log("[HASIL-PRELOAD] ? Berhasil:", participants.length, "peserta");
 
         } catch (error) {
             console.warn("[HASIL-PRELOAD] Gagal:", error);
@@ -2651,7 +2627,7 @@ a{
     }
 
     // Jalankan preload SEBELUM result.js
-    // Cara: kita "tahan" event load â€” result.js menunggu preload selesai
+    // Cara: kita "tahan" event load — result.js menunggu preload selesai
     var __preloadPromise = preloadFromSupabase();
 
     // Expose ke window supaya result.js bisa tunggu
@@ -2660,9 +2636,9 @@ a{
 })();
 </script>
 
-<script src="js/result.js?v=3" defer></script>
-<script src="js/access-control.js?v=3" defer></script>
-<script src="js/access-control-ui.js?v=3" defer></script>
+<script src="js/result.js?v=5" defer></script>
+<script src="js/access-control.js?v=5" defer></script>
+<script src="js/access-control-ui.js?v=5" defer></script>
 
 </body>
 </html>

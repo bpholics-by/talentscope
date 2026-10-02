@@ -3,13 +3,11 @@
 
 <head>
 <!-- ============================================================
-     SCRIPT CONFIG â€” WAJIB PALING ATAS
+     SCRIPT CONFIG — WAJIB PALING ATAS
      ============================================================ -->
-<script src="js/config.js?v=3"></script>
-<script src="js/auth-guard.js?v=3"></script>
-
+<script src="js/config.js?v=5"></script>
 <!-- ============================================================
-     HIDE SETTINGS MENU â€” INSTANT HIDE
+     HIDE SETTINGS MENU — INSTANT HIDE
      ----------------------------------------------------------
      CSS ini menyembunyikan menu Settings sejak awal.
      Script di bawah (di akhir body) akan mengembalikannya
@@ -769,6 +767,7 @@
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 <body>
@@ -1063,7 +1062,7 @@
                                 </select>
                             </div>
 
-                            <!-- âœ… FIX: form-group ini ditutup dengan benar -->
+                            <!-- ? FIX: form-group ini ditutup dengan benar -->
                             <div class="form-group">
                                 <label>Duration (Minutes)</label>
                                 <input type="number" id="assessmentDuration" value="20" placeholder="20" />
@@ -1094,25 +1093,26 @@
 
 
             <!-- =========================================
-                 JAVASCRIPT â€” EXTERNAL LIBRARIES
+                 JAVASCRIPT — EXTERNAL LIBRARIES
                  ========================================= -->
-            <script src="js/layout/layout-loader.js?v=3"></script>
+            <script src="js/layout/layout-loader.js?v=12"></script>
             <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-            <script src="js/supabase-client.js?v=3"></script>
-            <script src="js/data-service.js?v=3"></script>
-            <script src="js/ts-supabase-sync.js?v=6"></script>
-            <script src="js/assessment-modal.js?v=3"></script>
-            <script src="js/assessment.js?v=3"></script>
-            <script src="js/lsjt-catalog-seed.js?v=3"></script>
-            <script src="js/assessment-project-selection.js?v=3"></script>
-            <script src="js/global-search.js?v=3"></script>
-            <script src="js/app-access-control.js?v=3"></script>
-            <script src="js/project-access-filter.js?v=3"></script>
-            <script src="js/access-control-ui.js?v=3"></script>
+            <script src="js/supabase-client.js?v=7"></script>
+            <script src="js/role-permissions.js?v=13"></script>
+            <script src="js/data-service.js?v=8"></script>
+            <script src="js/ts-supabase-sync.js?v=14"></script>
+            <script src="js/assessment-modal.js?v=5"></script>
+            <script src="js/assessment.js?v=5"></script>
+            <script src="js/lsjt-catalog-seed.js?v=5"></script>
+            <script src="js/assessment-project-selection.js?v=5"></script>
+            <script src="js/global-search.js?v=5"></script>
+            <script src="js/app-access-control.js?v=6"></script>
+            <script src="js/project-access-filter.js?v=5"></script>
+            <script src="js/access-control-ui.js?v=5"></script>
 
 
            <!-- =========================================
-     JAVASCRIPT â€” HALAMAN INLINE
+     JAVASCRIPT — HALAMAN INLINE
      ========================================= -->
 <script>
 
@@ -1155,7 +1155,7 @@
 
 
     /* =====================================================
-       2. SESSION & ROLE DISPLAY â€” setelah DOM siap
+       2. SESSION & ROLE DISPLAY — setelah DOM siap
     ===================================================== */
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -1190,63 +1190,7 @@
 
             });
 
-            /* B. Filter sidebar menu by role */
-            var isClient = /client/i.test(role);
-            var isAsesor = /asesor|assessor/i.test(role);
-            var isAdmin =
-                /administrator/i.test(role) &&
-                !/system/i.test(role);
-
-            var hideList = [];
-
-            if (isClient) {
-                hideList = [
-                    "Assessment Catalog",
-                    "Participants",
-                    "Test Builder",
-                    "Test Bank",
-                    "Settings"
-                ];
-            } else if (isAsesor) {
-                hideList = [
-                    "Assessment Catalog",
-                    "Assessment Project",
-                    "Assessment Detail",
-                    "Participants",
-                    "Test Builder",
-                    "Test Bank",
-                    "Settings"
-                ];
-            } else if (isAdmin) {
-                hideList = ["Settings"];
-            }
-
-            if (hideList.length > 0) {
-
-                var menuLinks = document.querySelectorAll(
-                    ".sidebar a, nav a, .sidebar li, .menu-item, a"
-                );
-
-                menuLinks.forEach(function (item) {
-
-                    var text = item.textContent.trim();
-
-                    hideList.forEach(function (m) {
-
-                        if (text.indexOf(m) !== -1) {
-                            item.style.setProperty(
-                                "display",
-                                "none",
-                                "important"
-                            );
-                        }
-
-                    });
-
-                });
-
-            }
-
+           
             /* C. Sembunyikan tombol aksi sensitif untuk Client & Asesor */
             if (isClient || isAsesor) {
 
@@ -1278,7 +1222,7 @@
 
 
         /* =====================================================
-           3. HIDE SETTINGS MENU â€” non-System-Admin
+           3. HIDE SETTINGS MENU — non-System-Admin
         ===================================================== */
 
         function enforceHideSettings() {
@@ -1301,13 +1245,13 @@
             var styleEl =
                 document.getElementById("hide-settings-style");
 
-            /* Kalau System Admin â†’ kembalikan menu Settings */
+            /* Kalau System Admin ? kembalikan menu Settings */
             if (isSystemAdmin) {
                 if (styleEl) styleEl.remove();
                 return;
             }
 
-            /* Kalau bukan â†’ pastikan semua elemen "Setting" tersembunyi */
+            /* Kalau bukan ? pastikan semua elemen "Setting" tersembunyi */
             var menuItems = document.querySelectorAll(
                 ".dropdown-menu a, .dropdown-menu button, " +
                 ".dropdown-item, li a"
@@ -1348,7 +1292,7 @@
 
 
         /* =====================================================
-           4. PROTEKSI ASESOR & CLIENT â€” blok Add/Edit/Delete
+           4. PROTEKSI ASESOR & CLIENT — blok Add/Edit/Delete
         ===================================================== */
 
         function isRestrictedRole() {
@@ -1594,7 +1538,7 @@
 
 
         /* =====================================================
-           8. TRANSFER SELECTED ASSESSMENTS â†’ PROJECT
+           8. TRANSFER SELECTED ASSESSMENTS ? PROJECT
            (Q1=A: Script A yang benar, dipertahankan)
         ===================================================== */
 
@@ -1615,44 +1559,46 @@
                 })
                 .map(function (checkbox) {
 
-                    var row = checkbox.closest("tr");
-                    if (!row) return null;
+    var row = checkbox.closest("tr");
+    if (!row) return null;
 
-                    var cells = row.querySelectorAll("td");
+    var cells = row.querySelectorAll("td");
 
-                    return {
-                        id:
-                            checkbox.value ||
-                            cells[1]?.textContent.trim(),
+    /* ============================================
+       FIX: Ambil UUID dari data-assessment-id
+       Prioritas: data-assessment-id ? data-id ? value
+    ============================================ */
+    var assessmentId = 
+        checkbox.getAttribute("data-assessment-id") ||
+        checkbox.getAttribute("data-id") ||
+        checkbox.value;
 
-                        code:
-                            cells[1]?.textContent.trim() || "",
+    /* ============================================
+       FIX: Validasi format UUID
+    ============================================ */
+    var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!assessmentId || !uuidPattern.test(assessmentId)) {
+        console.warn("[Catalog] Skip: ID bukan UUID:", {
+            id: assessmentId,
+            code: cells[1]?.textContent.trim()
+        });
+        return null;
+    }
 
-                        name:
-                            cells[2]?.textContent.trim() || "",
+    return {
+        id: assessmentId,
+        code: cells[1]?.textContent.trim() || "",
+        name: cells[2]?.textContent.trim() || "",
+        category: cells[3]?.textContent.trim() || "",
+        duration: parseInt(cells[4]?.textContent.replace(/\D/g, ""), 10) || 0,
+        questions: parseInt(cells[5]?.textContent.replace(/\D/g, ""), 10) || 0,
+        required: true,
+        active: true
+    };
 
-                        category:
-                            cells[3]?.textContent.trim() || "",
-
-                        duration:
-                            parseInt(
-                                cells[4]?.textContent.replace(/\D/g, ""),
-                                10
-                            ) || 0,
-
-                        questions:
-                            parseInt(
-                                cells[5]?.textContent.replace(/\D/g, ""),
-                                10
-                            ) || 0,
-
-                        required: true,
-                        active: true
-                    };
-
-                })
-                .filter(Boolean);
-
+})
+.filter(Boolean);
                 if (selected.length === 0) {
                     alert("Silakan pilih minimal satu assessment.");
                     return;

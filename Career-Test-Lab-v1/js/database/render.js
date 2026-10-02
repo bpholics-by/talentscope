@@ -492,9 +492,11 @@
         var participantPurpose =
             detailParticipant.tujuanTes || detailParticipant.purpose || "-";
         var participantPass =
-            detailParticipant.password ||
-            detailParticipant.accessCode ||
-            "-";
+    detailParticipant.access_code ||        // ← Snake case DULU
+    detailParticipant.accessCode ||         // ← Fallback camelCase
+    detailParticipant.password ||           // ← Fallback password
+    detailParticipant.password_hash ||      // ← Fallback hash
+    "";
 
         // Build HTML (ringkas — pakai template string)
         var detailHtml = buildDetailModalHtml({
@@ -673,37 +675,37 @@
             DB.closeModal("detailModal");
         }
 
-        function setSafeVal(elementId, value) {
+        function setsafeVal(elementId, value) {
             var el = document.getElementById(elementId);
             if (el) el.value = value || "";
         }
 
-        setSafeVal("editRowId", participant.id || id);
-        setSafeVal(
+        setsafeVal("editRowId", participant.id || id);
+        setsafeVal(
             "editProjectId",
             participant.projectId || participant.idProject || ""
         );
-        setSafeVal(
+        setsafeVal(
             "editName",
             participant.name || participant.fullName || ""
         );
-        setSafeVal(
+        setsafeVal(
             "editEmail",
             participant.email || participant.username || ""
         );
-        setSafeVal(
+        setsafeVal(
             "editPassword",
             participant.password || participant.accessCode || ""
         );
-        setSafeVal(
+        setsafeVal(
             "editEducation",
             DB.pickField(participant, ["education", "pendidikan"], "")
         );
-        setSafeVal(
+        setsafeVal(
             "editPosition",
             participant.position || participant.jobTitle || ""
         );
-        setSafeVal(
+        setsafeVal(
             "editPhone",
             DB.pickField(
                 participant,
@@ -711,18 +713,60 @@
                 ""
             )
         );
-        setSafeVal(
-            "editAssessmentDate",
-            DB.pickField(
-                participant,
-                ["assessmentDate", "assessment_date", "tanggal", "date"],
-                ""
-            )
-        );
-        setSafeVal(
-            "editAssessmentStatus",
-            participant.assessmentStatus || participant.status || "Not Started"
-        );
+setsafeVal(
+    "editPassword",
+    DB.pickField(
+        participant,
+        ["accessCode", "access_code", "password", "password_hash"],
+        ""
+    )
+);
+
+        // Convert tanggal ke format ISO (YYYY-MM-DD) untuk input type="date"
+var rawDate = DB.pickField(
+    participant,
+    ["tanggal", "assessmentDate", "assessment_date", "date",
+     "scheduleDate", "schedule_date", "testDate", "test_date"],
+    ""
+);
+
+var isoDate = "";
+if (rawDate) {
+    // Coba parse multiple format
+    var parsed = null;
+    
+    // Format ISO sudah (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}/.test(rawDate)) {
+        isoDate = rawDate.substring(0, 10);
+    } 
+    // Format "DD MMM YYYY" (25 Sep 2026)
+    else if (/^\d{1,2}\s+[A-Za-z]+\s+\d{4}$/.test(rawDate)) {
+        parsed = new Date(rawDate);
+        if (!isNaN(parsed.getTime())) {
+            isoDate = parsed.toISOString().substring(0, 10);
+        }
+    }
+    // Fallback: Date.parse
+    else {
+        parsed = new Date(rawDate);
+        if (!isNaN(parsed.getTime())) {
+            isoDate = parsed.toISOString().substring(0, 10);
+        }
+    }
+    
+    console.log("[EDIT FORM] Date conversion:", rawDate, "→", isoDate);
+}
+
+setsafeVal("editAssessmentDate", isoDate);
+
+        
+        setsafeVal(
+    "editAssessmentStatus",
+    participant.assessmentStatus ||         // ← CamelCase DULU (di object)
+    participant.assessment_status ||        // ← Fallback snake_case
+    participant.status ||
+    "Not Started"
+);
 
         var editModal = document.getElementById("editParticipantModal");
         if (editModal) editModal.style.display = "flex";
@@ -777,7 +821,8 @@
             email: getVal("editEmail"),
             username: getVal("editEmail"),
             password: getVal("editPassword"),
-            accessCode: getVal("editPassword"),
+accessCode: getVal("editPassword"),
+access_code: getVal("editPassword"),
             education: getVal("editEducation"),
             pendidikan: getVal("editEducation"),
             position: getVal("editPosition"),

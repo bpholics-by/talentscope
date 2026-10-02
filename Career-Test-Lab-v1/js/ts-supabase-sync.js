@@ -1,11 +1,11 @@
 /* ==========================================================
-   TALENTSCOPE — SUPABASE SYNC BRIDGE (REFACTOR FASE 3)
+   TALENTSCOPE â€” SUPABASE SYNC BRIDGE (REFACTOR FASE 3)
    ----------------------------------------------------------
    OPTIMASI EGRESS v3:
-   1. Auto-sync interval: 60s → 120s (2 menit)
-   2. Presence throttle: 60s → 120s
-   3. Selective columns — hemat 30-40%
-   4. Delta sync — hanya sync yang berubah
+   1. Auto-sync interval: 60s â†’ 120s (2 menit)
+   2. Presence throttle: 60s â†’ 120s
+   3. Selective columns â€” hemat 30-40%
+   4. Delta sync â€” hanya sync yang berubah
    5. Skip sync saat tab hidden
    6. Skip auto-sync di halaman tes (__TS_DISABLE_AUTO_SYNC)
    7. Delta sync untuk project_assessments (hemat)
@@ -33,21 +33,70 @@
        OPTIMASI EGRESS v3
        ============================================================ */
 
-    // ✅ Interval sync: 120 detik (2 menit) — kompromi antara freshness & egress
+    // âœ… Interval sync: 120 detik (2 menit) â€” kompromi antara freshness & egress
     var AUTO_SYNC_INTERVAL_MS = 120 * 1000;
 
-    // ✅ Presence throttle: 120 detik (2 menit) — sama dengan sync interval
+    // âœ… Presence throttle: 120 detik (2 menit) â€” sama dengan sync interval
     var PRESENCE_THROTTLE_MS = 120 * 1000;
 
-    // ✅ Batch size: 2 → hemat egress per request
+    
+    // ============================================
+    // AUTH TOKEN HELPER (Fase D — Supabase Auth)
+    // ============================================
+    // Mengambil JWT dari session Supabase Auth.
+    // Fallback ke ANON_KEY kalau tidak ada session.
+    // ============================================
+    var __tsCachedToken = null;
+    var __tsTokenExpiry = 0;
+
+    function getAuthTokenOrAnon() {
+        // Prioritas 1: cached token (masih valid)
+        if (__tsCachedToken && Date.now() < __tsTokenExpiry) {
+            return __tsCachedToken;
+        }
+
+        // Prioritas 2: session Supabase Auth dari localStorage
+        try {
+            var sb = window.supabaseClient;
+            if (sb && sb.auth) {
+                // Cari key session Supabase di localStorage
+                var projectRef = (sb.supabaseUrl || '').split('//')[1].split('.')[0];
+                var storageKey = 'sb-' + projectRef + '-auth-token';
+                var sessionRaw = localStorage.getItem(storageKey);
+
+                if (sessionRaw) {
+                    var parsed = JSON.parse(sessionRaw);
+                    if (parsed && parsed.access_token) {
+                        __tsCachedToken = parsed.access_token;
+                        // Cache sampai 5 menit sebelum expiry
+                        var expiresAt = (parsed.expires_at || 0) * 1000;
+                        __tsTokenExpiry = expiresAt - (5 * 60 * 1000);
+                        return __tsCachedToken;
+                    }
+                }
+
+                // Fallback: cek langsung ke Supabase Auth (async → return last)
+                var sessionFromAuth = sb.auth.getSession();
+                // getSession() return promise, tapi kita butuh sync.
+                // Pakai cache dulu, update cache di background.
+            }
+        } catch (e) {
+            console.warn("[TS-Sync] Gagal ambil JWT, fallback anon:", e);
+        }
+
+        // Fallback: anon key
+        return SUPABASE_ANON_KEY;
+    }
+
+    // âœ… Batch size: 2 â†’ hemat egress per request
     var BATCH_SIZE = 2;
 
-    // ✅ Minimum gap antar sync (dari event) — cegah spam
+    // âœ… Minimum gap antar sync (dari event) â€” cegah spam
     var MIN_SYNC_GAP_MS = 30 * 1000;  // 30 detik
 
 
     // ======================================================
-    // SELECTIVE COLUMNS — HEMAT EGRESS
+    // SELECTIVE COLUMNS â€” HEMAT EGRESS
     // ======================================================
 
     var SELECT_COLS = {
@@ -116,7 +165,7 @@
             method: "GET",
             headers: {
                 "apikey": SUPABASE_ANON_KEY,
-                "Authorization": "Bearer " + SUPABASE_ANON_KEY
+                "Authorization": "Bearer " + getAuthTokenOrAnon(),
             }
         })
         .then(function (res) {
@@ -151,12 +200,42 @@
 
         return order.map(function (id) { return map[id]; });
     }
-
+// ============================================
+// AUTH SESSION CHECKER
+// ============================================
+function hasActiveSession() {
+    try {
+        var sb = window.supabaseClient;
+        if (!sb || !sb.auth) return false;
+        
+        // Baca session dari localStorage (sinkron)
+        var projectRef = (sb.supabaseUrl || '').split('//')[1].split('.')[0];
+        var storageKey = 'sb-' + projectRef + '-auth-token';
+        var sessionRaw = localStorage.getItem(storageKey);
+        
+        if (!sessionRaw) return false;
+        
+        var parsed = JSON.parse(sessionRaw);
+        if (!parsed || !parsed.access_token) return false;
+        
+        // Cek expiry
+        var expiresAt = (parsed.expires_at || 0) * 1000;
+        if (expiresAt && Date.now() >= expiresAt) return false;
+        
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
     function performUpsertRequest(table, rows, options) {
         if (!rows || !rows.length) {
             return Promise.resolve({ ok: true, skipped: true });
         }
-
+    // ✅ FIX: Skip kalau tidak ada session (user belum login)
+    if (!hasActiveSession()) {
+        console.log("[TS-Sync] Skip upsert (no active session):", table);
+        return Promise.resolve({ ok: true, skipped: true, reason: "no-session" });
+    }
         var deduped = dedupeRowsById(rows);
         if (!deduped.length) {
             return Promise.resolve({ ok: true, skipped: true });
@@ -171,7 +250,7 @@
             method: "POST",
             headers: {
                 "apikey": SUPABASE_ANON_KEY,
-                "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+                "Authorization": "Bearer " + getAuthTokenOrAnon(),
                 "Content-Type": "application/json",
                 "Prefer": "resolution=merge-duplicates,return=minimal"
             },
@@ -186,6 +265,10 @@
             .then(function (response) {
                 if (response.ok) {
                     return { ok: true, status: response.status };
+                }
+                // FIX: Handle 409 Conflict (duplicate) gracefully — bukan error
+                if (response.status === 409) {
+                    return { ok: true, status: 409, reason: "duplicate-ignored" };
                 }
                 return response.text().then(function (text) {
                     console.warn("[TS-Sync] Upsert ditolak:", table, response.status, text);
@@ -206,7 +289,36 @@
         }
     }
 
-
+// ============================================
+// ROLE CHECKER — hanya admin yang boleh write ke ts_projects
+// clientuser (asesor) = read-only, skip write
+// ============================================
+function canWriteProjects() {
+    try {
+        var sb = window.supabaseClient;
+        if (!sb || !sb.auth) return false;
+        
+        // Baca session dari localStorage (sinkron)
+        var projectRef = (sb.supabaseUrl || '').split('//')[1].split('.')[0];
+        var storageKey = 'sb-' + projectRef + '-auth-token';
+        var sessionRaw = localStorage.getItem(storageKey);
+        
+        if (!sessionRaw) return false;
+        
+        var parsed = JSON.parse(sessionRaw);
+        var role = (parsed && parsed.user && parsed.user.user_metadata && 
+                    parsed.user.user_metadata.role) || "";
+        
+        var roleLower = String(role).toLowerCase();
+        
+        // Hanya system_admin & clientadmin yang boleh write
+        return roleLower === "system_admin" 
+            || roleLower === "admin"
+            || roleLower === "clientadmin";
+    } catch (e) {
+        return false;
+    }
+}
     // ======================================================
     // HELPER: BACA ARRAY LOCALSTORAGE
     // ======================================================
@@ -223,7 +335,7 @@
 
 
     // ======================================================
-    // KONVERSI OBJECT → ROW
+    // KONVERSI OBJECT â†’ ROW
     // ======================================================
 
     function projectToRow(project) {
@@ -238,7 +350,34 @@
         if (!pid || !parid) return null;
 
         var idx = String(item.assessmentIndex !== undefined && item.assessmentIndex !== null ? item.assessmentIndex : "");
-        var code = String(item.assessmentCode || "GEN").toLowerCase();
+        // ============================================
+// Normalisasi assessment_code:
+// - UUID → konversi ke kode lowercase (via map UUID → code)
+// - Teks → lowercase
+// - Kosong → "gen"
+// ============================================
+var rawCode = String(item.assessmentCode || "GEN").trim();
+var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Map UUID → lowercase code (dari tabel assessments)
+var UUID_TO_CODE_MAP = {
+    "6266a366-47c4-4d5c-9f0f-6a2984227ed1": "disc",
+    "d8408a0f-55c0-4fc9-94fe-bb6d48292b31": "papi",
+    "e3026a3d-15f7-4189-b25e-8cae12968558": "lsjt",
+    "327a8cde-c51c-4524-aae1-4d54402d772a": "msjt",
+    "8b0209ef-1b16-414c-b8c1-cd0e0449e7d7": "vap"
+    // TPDK & INTRAY: tambahkan kalau sudah tahu UUID-nya
+};
+
+var code;
+if (UUID_REGEX.test(rawCode)) {
+    code = UUID_TO_CODE_MAP[rawCode.toLowerCase()] || "gen";
+    if (code === "gen") {
+        console.warn("[TS-Sync] UUID tidak dikenal, fallback ke 'gen':", rawCode);
+    }
+} else {
+    code = rawCode.toLowerCase();
+}
 
         return {
             id: pid + "__" + parid + "__" + idx + "__" + code,
@@ -263,25 +402,40 @@
     // ======================================================
 
     function pushUsersNow(usersOverride) {
-        try {
-            var arr = Array.isArray(usersOverride)
-                ? usersOverride
-                : readLocalArray(USERS_KEY);
+    try {
+        var arr = Array.isArray(usersOverride)
+            ? usersOverride
+            : readLocalArray(USERS_KEY);
 
-            var rows = arr.map(userToRow).filter(Boolean);
-            return performUpsertRequest("ts_users", rows, { keepalive: true });
-        } catch (error) {
-            console.warn("[TS-Sync] pushUsersNow error:", error);
-            return Promise.resolve({ ok: false, status: 0, message: String(error && error.message || error) });
-        }
+        // âœ… FIX: Dedup by username (case-insensitive) sebelum push
+        // Keep LAST occurrence (yang terbaru)
+        var dedupMap = {};
+        var dedupOrder = [];
+        arr.forEach(function(user) {
+            if (!user) return;
+            var key = String(user.username || user.id || "").toLowerCase().trim();
+            if (!key) return;
+            if (!dedupMap[key]) dedupOrder.push(key);
+            dedupMap[key] = user;
+        });
+        var dedupedArr = dedupOrder.map(function(k) { return dedupMap[k]; });
+
+        console.log("[TS-Sync] pushUsersNow: " + arr.length + " â†’ " + dedupedArr.length + " (deduped)");
+
+        var rows = dedupedArr.map(userToRow).filter(Boolean);
+        return performUpsertRequest("ts_users", rows, { keepalive: true });
+    } catch (error) {
+        console.warn("[TS-Sync] pushUsersNow error:", error);
+        return Promise.resolve({ ok: false, status: 0, message: String(error && error.message || error) });
     }
+}
 
     window.TalentScopeSync = window.TalentScopeSync || {};
     window.TalentScopeSync.pushUsersNow = pushUsersNow;
 
 
     // ======================================================
-    // ASSEMBLE PROJECTS — DELTA SYNC + SELECTIVE COLUMNS
+    // ASSEMBLE PROJECTS â€” DELTA SYNC + SELECTIVE COLUMNS
     // ======================================================
 
     async function assembleProjectsFromRelationalTablesAsync() {
@@ -306,8 +460,8 @@
             relationsUrl += "&updated_at=gt." + encodeURIComponent(lastRelationsSync);
         }
 
-        // ✅ OPTIMASI: project_assessments pakai DELTA SYNC juga
-        // FIX: project_assessments tidak punya updated_at — full sync saja
+        // âœ… OPTIMASI: project_assessments pakai DELTA SYNC juga
+        // FIX: project_assessments tidak punya updated_at â€” full sync saja
 var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.project_assessments;
 // Delta sync tidak aktif untuk tabel ini
 
@@ -461,57 +615,87 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
     // ======================================================
 
     async function syncResultsDownAsync() {
-        try {
-            var lastSync = getLastSyncTime("ts_results");
-            var url = "/rest/v1/ts_results?select=" + SELECT_COLS.ts_results;
-            if (lastSync !== "1970-01-01T00:00:00Z") {
-                url += "&created_at=gt." + encodeURIComponent(lastSync);
-            }
+    try {
+        // ============================================
+        // FIX: ts_results pakai FULL SYNC (bukan delta)
+        // Alasan: data kecil (~31 rows), delta sync sering skip data lama
+        // ============================================
+        var url = "/rest/v1/ts_results?select=" + SELECT_COLS.ts_results;
+        // DELTA SYNC DIHAPUS — selalu full sync untuk ts_results
 
-            var remote = await restGetAsync(url);
-            if (remote === null) return;
+        var remote = await restGetAsync(url);
+        if (remote === null) return;
 
-            if (remote.length > 0) {
-                var existingResults = readLocalArray(RESULTS_KEY);
-                var mergedResultsMap = {};
-                existingResults.forEach(function (r) {
-                    var key = String(r && (r.projectId + "__" + r.participantId + "__" + r.assessmentIndex) || "");
-                    if (key) mergedResultsMap[key] = r;
+        if (remote.length > 0) {
+            var existingResults = readLocalArray(RESULTS_KEY);
+            var mergedResultsMap = {};
+            
+            // Merge data existing (dari localStorage)
+            existingResults.forEach(function (r) {
+                var key = String(
+                    r && (
+                        (r.projectId || r.project_id) + "__" + 
+                        (r.participantId || r.participant_id) + "__" + 
+                        (r.assessmentIndex != null ? r.assessmentIndex : r.assessment_index)
+                    ) || ""
+                );
+                if (key && key.indexOf("undefined") === -1) {
+                    mergedResultsMap[key] = r;
+                }
+            });
+            
+            // Merge data remote (dari Supabase)
+            remote.forEach(function (row) {
+                var d = row.data || {};
+                // Gabung kolom DB + JSONB — DB sebagai fallback
+                var merged = Object.assign({}, d, {
+                    projectId: row.project_id || d.projectId,
+                    participantId: row.participant_id || d.participantId,
+                    assessmentIndex: row.assessment_index != null ? row.assessment_index : d.assessmentIndex,
+                    assessmentCode: row.assessment_code || d.assessmentCode,
+                    resultType: d.resultType || String(row.assessment_code || "").toUpperCase(),
+                    submittedAt: d.submittedAt || row.created_at
                 });
-                remote.forEach(function (row) {
-                    var d = row.data;
-                    var key = String(d && (d.projectId + "__" + d.participantId + "__" + d.assessmentIndex) || "");
-                    if (key) mergedResultsMap[key] = d;
-                });
+                var key = String(
+                    (merged.projectId || "") + "__" + 
+                    (merged.participantId || "") + "__" + 
+                    merged.assessmentIndex
+                );
+                if (key && key.indexOf("undefined") === -1) {
+                    mergedResultsMap[key] = merged;
+                }
+            });
 
-                var finalResults = Object.keys(mergedResultsMap).map(function (k) {
-                    return mergedResultsMap[k];
-                });
+            var finalResults = Object.keys(mergedResultsMap).map(function (k) {
+                return mergedResultsMap[k];
+            });
 
-                localStorage.setItem(RESULTS_KEY, JSON.stringify(finalResults));
+            localStorage.setItem(RESULTS_KEY, JSON.stringify(finalResults));
+            console.log("[TS-Sync] Results synced (full):", remote.length, "remote,", finalResults.length, "total");
 
-                remote.forEach(function (row) {
-                    var pid = row.project_id;
-                    var parid = row.participant_id;
-                    var idx = row.assessment_index;
-                    var code = String(row.assessment_code || "").toLowerCase();
-                    var json = JSON.stringify(row.data);
+            // Update per-result keys untuk akses cepat
+            remote.forEach(function (row) {
+                var pid = row.project_id;
+                var parid = row.participant_id;
+                var idx = row.assessment_index;
+                var code = String(row.assessment_code || "").toLowerCase();
+                var json = JSON.stringify(row.data);
 
-                    localStorage.setItem("assessment_result_v3_" + pid + "_" + parid + "_" + idx, json);
-                    localStorage.setItem("assessment_result_" + pid + "_" + parid + "_" + idx, json);
+                localStorage.setItem("assessment_result_v3_" + pid + "_" + parid + "_" + idx, json);
+                localStorage.setItem("assessment_result_" + pid + "_" + parid + "_" + idx, json);
 
-                    if (code) {
-                        localStorage.setItem(code + "_result_v3_" + pid + "_" + parid + "_" + idx, json);
-                        localStorage.setItem(code + "_result_" + pid + "_" + parid + "_" + idx, json);
-                    }
-                });
+                if (code) {
+                    localStorage.setItem(code + "_result_v3_" + pid + "_" + parid + "_" + idx, json);
+                    localStorage.setItem(code + "_result_" + pid + "_" + parid + "_" + idx, json);
+                }
+            });
 
-                setLastSyncTime("ts_results", nowISO());
-            }
-        } catch (error) {
-            console.warn("[TS-Sync] syncResultsDownAsync error:", error);
+            setLastSyncTime("ts_results", nowISO());
         }
+    } catch (error) {
+        console.warn("[TS-Sync] syncResultsDownAsync error:", error);
     }
+}
 
 
     // ======================================================
@@ -583,7 +767,7 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
             {
                 headers: {
                     "apikey": SUPABASE_ANON_KEY,
-                    "Authorization": "Bearer " + SUPABASE_ANON_KEY
+                    "Authorization": "Bearer " + getAuthTokenOrAnon(),
                 },
                 keepalive: true
             }
@@ -680,7 +864,7 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
                     method: "PATCH",
                     headers: {
                         "apikey": SUPABASE_ANON_KEY,
-                        "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+                        "Authorization": "Bearer " + getAuthTokenOrAnon(),
                         "Content-Type": "application/json",
                         "Prefer": "return=minimal"
                     },
@@ -805,13 +989,20 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
 
         try {
             if (PROJECTS_KEYS.indexOf(key) !== -1) {
-                debouncedPush("projects", function () {
-                    var arr = readLocalArray("talentscope_projects");
-                    var rows = arr.map(projectToRow).filter(Boolean);
-                    restUpsert("ts_projects", rows);
-                    pushParticipantsPresence(arr);
-                });
-            } else if (key === RESULTS_KEY) {
+    debouncedPush("projects", function () {
+        var arr = readLocalArray("talentscope_projects");
+        
+        // ✅ GUARD: hanya admin yang boleh write ke ts_projects
+        if (canWriteProjects()) {
+            var rows = arr.map(projectToRow).filter(Boolean);
+            restUpsert("ts_projects", rows);
+        } else {
+            console.log("[TS-Sync] Skip write ts_projects — role read-only");
+        }
+        
+        pushParticipantsPresence(arr);
+    });
+} else if (key === RESULTS_KEY) {
                 debouncedPush("results", function () {
                     var arr = readLocalArray(RESULTS_KEY);
                     var rows = arr.map(resultToRow).filter(Boolean);
@@ -831,14 +1022,14 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
 
 
     // ======================================================
-    // BACKGROUND SYNC — DENGAN MIN GAP
+    // BACKGROUND SYNC â€” DENGAN MIN GAP
     // ======================================================
 
     function startBackgroundSync() {
-        // ✅ Cegah spam: minimal 30s antar sync dari event
+        // âœ… Cegah spam: minimal 30s antar sync dari event
         var now = Date.now();
         if (now - __tsLastSyncTrigger < MIN_SYNC_GAP_MS) {
-            console.log("[TS-Sync] Skip sync — terlalu cepat (" + Math.round((now - __tsLastSyncTrigger) / 1000) + "s lalu)");
+            console.log("[TS-Sync] Skip sync â€” terlalu cepat (" + Math.round((now - __tsLastSyncTrigger) / 1000) + "s lalu)");
             return;
         }
         __tsLastSyncTrigger = now;
@@ -894,12 +1085,12 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
                 localStorage.removeItem(SYNC_TS_KEY_PREFIX + t);
             } catch (e) {}
         });
-        console.log("[TS-Sync] Delta sync reset — refresh halaman untuk full sync ulang");
+        console.log("[TS-Sync] Delta sync reset â€” refresh halaman untuk full sync ulang");
     };
 
 
     // ======================================================
-    // AUTO-SYNC — 120 DETIK (2 MENIT)
+    // AUTO-SYNC â€” 120 DETIK (2 MENIT)
     // ======================================================
 
     var __tsAutoSyncInterval = null;
@@ -912,10 +1103,10 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
 
         if (__tsAutoSyncInterval) return;
 
-        // ✅ Interval 120s (2 menit) — hemat egress
+        // âœ… Interval 120s (2 menit) â€” hemat egress
         __tsAutoSyncInterval = setInterval(function () {
             if (document.visibilityState !== "visible") {
-                console.log("[TS-Sync] Skip auto-sync — tab tidak aktif");
+                console.log("[TS-Sync] Skip auto-sync â€” tab tidak aktif");
                 return;
             }
 
@@ -939,8 +1130,8 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
         } else if (document.visibilityState === "visible") {
             if (isAutoSyncDisabled()) return;
 
-            // ✅ Sudah ada MIN_SYNC_GAP_MS guard di startBackgroundSync
-            console.log("[TS-Sync] Tab aktif kembali — sync langsung");
+            // âœ… Sudah ada MIN_SYNC_GAP_MS guard di startBackgroundSync
+            console.log("[TS-Sync] Tab aktif kembali â€” sync langsung");
             startBackgroundSync();
         }
     });

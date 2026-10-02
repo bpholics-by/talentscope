@@ -5,9 +5,9 @@
 <!-- ============================================================
      SCRIPT CONFIG — WAJIB PALING ATAS
      ============================================================ -->
-<script src="js/debug-redirect.js?v=5"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/auth-guard.js?v=5"></script>
+<!-- <script src="js/debug-redirect.js"></script> DISABLED -->
+<script src="js/config.js?v=7"></script>
+
 
 <!-- ============================================================
      HIDE SETTINGS MENU — INSTANT HIDE
@@ -396,6 +396,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
 
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
 <body>
@@ -803,37 +804,38 @@
      ---------------------------------------------------------
      URUTAN PENTING (jangan diubah):
      1. supabase-js (CDN)
-     2. supabase-client.js   (butuh config.js)
-     3. data-service.js      (butuh supabase-client.js)
+     2. supabase-client.js?v=5   (butuh config.js)
+     3. data-service.js      (butuh supabase-client.js?v=5)
      4. ts-supabase-sync.js  (butuh data-service.js)
 ========================================================= -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=5"></script>
-<script src="js/data-service.js?v=5"></script>
-<script src="js/ts-supabase-sync.js?v=6"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/auth-guard.js?v=12"></script>
+<script src="js/data-service.js?v=8"></script>
+<script src="js/ts-supabase-sync.js?v=14"></script>
 
 
 <!-- =========================================================
      LAYOUT LOADER (Sidebar & Header)
 ========================================================= -->
 
-<script src="js/layout/layout-loader.js?v=5"></script>
+<script src="js/layout/layout-loader.js?v=12"></script>
 
 
 <!-- =========================================================
      APPLICATION
 ========================================================= -->
 
-<script src="js/data.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
-<script src="js/dashboard.js?v=5"></script>
-<script src="js/global-search.js?v=5"></script>
+<script src="js/data.js?v=7"></script>
+<script src="js/app.js?v=7"></script>
+<script src="js/dashboard.js?v=7"></script>
+<script src="js/global-search.js?v=7"></script>
 
 <!-- ACCESS CONTROL -->
-<!-- DISABLED: <script src="js/app-access-control.js?v=5"></script> -->
-<script src="js/project-access-filter.js?v=5"></script>
-<script src="js/access-control-ui.js?v=5"></script>
+<!-- DISABLED: <script src="js/app-access-control.js?v=6"></script> -->
+<script src="js/project-access-filter.js?v=7"></script>
+<script src="js/access-control-ui.js?v=7"></script>
 
 
 <!-- =========================================================

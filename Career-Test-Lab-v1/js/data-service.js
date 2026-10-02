@@ -243,32 +243,86 @@
         },
 
 
-        async createProjectAssessments(projectAssessmentData) {
-            console.log('[DATA SERVICE] Saving project assessments...');
+         async createProjectAssessments(projectAssessmentData) {
+    console.log('[DATA SERVICE] Saving project assessments...');
 
-            if (!supabaseClient || typeof supabaseClient.from !== 'function') {
-                throw new Error('Supabase client tidak tersedia.');
+    if (!supabaseClient || typeof supabaseClient.from !== 'function') {
+        throw new Error('Supabase client tidak tersedia.');
+    }
+
+    if (!Array.isArray(projectAssessmentData) || projectAssessmentData.length === 0) {
+        console.warn('[DATA SERVICE] No project assessments to save');
+        return [];
+    }
+
+    // ============================================
+    // SANITASI UUID — cegah error 22P02
+    // ============================================
+    var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    // Map kode assessment → UUID
+    var ASSESSMENT_CODE_TO_UUID = {
+        "disc": "6266a366-47c4-4d5c-9f0f-6a2984227ed1",
+        "papi": "d8408a0f-55c0-4fc9-94fe-bb6d48292b31",
+        "papikostik": "d8408a0f-55c0-4fc9-94fe-bb6d48292b31",
+        "lsjt": "e3026a3d-15f7-4189-b25e-8cae12968558",
+        "msjt": "327a8cde-c51c-4524-aae1-4d54402d772a",
+        "vap": "8b0209ef-1b16-414c-b8c1-cd0e0449e7d7"
+    };
+
+    var sanitized = projectAssessmentData.map(function(row) {
+        var clean = Object.assign({}, row);
+
+        // 1. Bersihkan `id` — kalau bukan UUID, hapus (biar auto-generated)
+        if (clean.id && !UUID_REGEX.test(String(clean.id))) {
+            console.warn('[DATA SERVICE] Invalid id, will auto-generate:', clean.id);
+            delete clean.id;
+        }
+
+        // 2. Bersihkan `project_id` — kalau bukan UUID, skip row
+        if (!clean.project_id || !UUID_REGEX.test(String(clean.project_id))) {
+            console.warn('[DATA SERVICE] Invalid project_id, skip row:', clean.project_id);
+            return null;
+        }
+
+        // 3. Bersihkan `assessment_id` — konversi text → UUID
+        if (clean.assessment_id && !UUID_REGEX.test(String(clean.assessment_id))) {
+            var codeLower = String(clean.assessment_id).toLowerCase().trim();
+            var mappedUuid = ASSESSMENT_CODE_TO_UUID[codeLower];
+            if (mappedUuid) {
+                console.log('[DATA SERVICE] Mapped assessment_id:', clean.assessment_id, '→', mappedUuid);
+                clean.assessment_id = mappedUuid;
+            } else {
+                console.warn('[DATA SERVICE] Unknown assessment_id, skip row:', clean.assessment_id);
+                return null;
             }
+        }
 
-            if (!Array.isArray(projectAssessmentData) || projectAssessmentData.length === 0) {
-                console.warn('[DATA SERVICE] No project assessments to save');
-                return [];
-            }
+        return clean;
+    }).filter(Boolean);
 
-            var result = await supabaseClient
-                .from('project_assessments')
-                .insert(projectAssessmentData)
-                .select();
+    if (sanitized.length === 0) {
+        console.warn('[DATA SERVICE] No valid rows after sanitization');
+        return [];
+    }
 
-            if (result.error) {
-                handleError('CREATE PROJECT ASSESSMENTS', result.error);
-            }
+    console.log('[DATA SERVICE] Sanitized rows:', sanitized.length, '/', projectAssessmentData.length);
 
-            cacheInvalidate('project_assessments:');
-            cacheInvalidate('project:');
+    var result = await supabaseClient
+        .from('project_assessments')
+        .insert(sanitized)
+        .select();
 
-            console.log('[DATA SERVICE] Project assessments saved:', (result.data || []).length);
-            return result.data || [];
+    if (result.error) {
+        handleError('CREATE PROJECT ASSESSMENTS', result.error);
+        return [];
+    }
+
+    cacheInvalidate('project_assessments:');
+    cacheInvalidate('project:');
+
+    console.log('[DATA SERVICE] Project assessments saved:', (result.data || []).length);
+    return result.data || [];
         },
 
 

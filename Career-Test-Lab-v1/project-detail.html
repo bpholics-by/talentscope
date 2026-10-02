@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>  
-<!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
+    <script src="js/config.js?v=5"></script><!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
     <script>
     (function() {
         "use strict";
@@ -61,6 +60,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Detail | TalentScope</title>
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
@@ -108,51 +108,7 @@ var activeUser = getSavedUser();
                     }
                 });
 
-                // B. Filter Menu Sidebar
-                //
-                // FIX PENTING: role yang benar-benar tersimpan dari
-                // "Generate Credentials" cuma ada 2 nilai persis:
-                // "Client Administrator" dan "Client User" (lihat
-                // participants.js -- getSessionRoleFlags()). Tidak
-                // pernah ada role literal "Asesor"/"Assessor". "Client
-                // User" itu yang SECARA PERILAKU = Asesor (view-only).
-                //
-                // Kode lama di sini cuma cek /asesor|assessor/i, yang
-                // TIDAK PERNAH cocok dengan "Client User" -- makanya
-                // Client User selalu jatuh ke isClient (dianggap PIC
-                // pemilik project, full akses tombol) padahal harusnya
-                // read-only. Ini akar penyebab tombol Edit/Remove/Send
-                // Invitations/Import Excel masih aktif untuk Client User.
-                var isSystemAdmin = /system/i.test(role);
-                var isAsesor =
-                    !isSystemAdmin &&
-                    (/asesor|assessor/i.test(role) ||
-                        (/client/i.test(role) && /user/i.test(role)));
-                var isClient = !isSystemAdmin && !isAsesor && /client/i.test(role);
-                var isAdmin = !isSystemAdmin && !isClient && !isAsesor && /administrator/i.test(role);
-
-                var hideList = [];
-                if (isClient) {
-                    hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAsesor) {
-                    hideList = ["Assessment Catalog", "Assessment Detail", "Test Builder", "Test Bank", "Settings"];
-                } else if (isAdmin) {
-                    hideList = ["Settings"];
-                }
-
-                if (hideList.length > 0) {
-                    var menuLinks = document.querySelectorAll(".sidebar a, nav a, .sidebar li, .menu-item, a");
-                    menuLinks.forEach(function(item) {
-                        var text = item.textContent.trim();
-                        hideList.forEach(function(m) {
-                            if (text.indexOf(m) !== -1) {
-                                item.style.setProperty("display", "none", "important");
-                            }
-                        });
-                    });
-                }
-
-                // Client Administrator = PIC/pemilik project, tetap full
+                 // Client Administrator = PIC/pemilik project, tetap full
                 // akses tombol. Cuma Asesor (termasuk Client User) yang
                 // dibatasi view-only.
                 //
@@ -3388,7 +3344,7 @@ a{
 
 
 /* =========================================================
-   PREMIUM ASSESSMENT PACKAGE — scoped, non-invasive upgrade
+   PREMIUM ASSESSMENT PACKAGE ? scoped, non-invasive upgrade
 ========================================================= */
 #tab-assessment #assessmentList{margin-top:18px}
 .assessment-package-grid{display:grid;gap:14px}
@@ -3599,7 +3555,8 @@ a{
     background: #16a34a;
 }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 <body>
 <div class="app">
@@ -3830,8 +3787,8 @@ a{
 
 <div class="content">
   <div class="breadcrumb">
-    <a href="assessment-catalog.html">Assessment Catalog</a> &nbsp;›&nbsp;
-    <a href="assessment-project.html">Assessment Project</a> &nbsp;›&nbsp;
+    <a href="assessment-catalog.html">Assessment Catalog</a> &nbsp;?&nbsp;
+    <a href="assessment-project.html">Assessment Project</a> &nbsp;?&nbsp;
     <span>Project Detail</span>
   </div>
 
@@ -3923,7 +3880,7 @@ a{
     id="downloadTemplateBtn"
     onclick="window.tsV22 && window.tsV22.template(); return false;"
 >
-    ↓ Excel Template
+    Excel Template
 </button>
 
 <button
@@ -3932,7 +3889,7 @@ a{
     id="importExcelBtn"
     onclick="window.tsV22 && window.tsV22.importExcel(); return false;"
 >
-    ↑ Import Excel
+    Import Excel
 </button>
 
 <button
@@ -3986,7 +3943,7 @@ a{
 
     <!-- PATCH: Toolbar Reorder -->
     <div class="reorder-toolbar" id="reorderToolbar" style="display:none;">
-        <span><strong>💡 Mode Atur Urutan Aktif</strong> — Drag kartu atau gunakan tombol ↑↓ untuk memindahkan. Klik "Simpan Urutan" untuk menyimpan.</span>
+        <span><strong>?? Mode Atur Urutan Aktif</strong> ? Drag kartu atau gunakan tombol ?? untuk memindahkan. Klik "Simpan Urutan" untuk menyimpan.</span>
         <button class="reorder-save-btn" id="reorderSaveBtn" onclick="saveAssessmentOrder()">
             <i class="fa-solid fa-check"></i> Simpan Urutan
         </button>
@@ -3994,7 +3951,7 @@ a{
 
     <!-- PATCH: Container untuk list assessment yang bisa di-reorder -->
     <div class="assessment-package-list" id="assessmentPackageList">
-        <p style="color:var(--muted);padding:20px;text-align:center;">Memuat assessment…</p>
+        <p style="color:var(--muted);padding:20px;text-align:center;">Memuat assessment?</p>
     </div>
 </div>
 
@@ -4311,50 +4268,147 @@ function addParticipant(){
     b.onclick=function(){m.remove()}
   });
 
-  byId("v22_asave").onclick=function(){
+  byId("v22_asave").onclick = async function(){
 
-    var id=byId("v22_pid").value.trim(),
-        name=byId("v22_pname").value.trim(),
-        email=byId("v22_pemail").value.trim(),
-        pos=byId("v22_ppos").value.trim(),
-        phone=byId("v22_pphone").value.trim(),
-        education=byId("v22_peducation").value.trim(),
-        p=getProject();
+    var id = byId("v22_pid").value.trim(),
+        name = byId("v22_pname").value.trim(),
+        email = byId("v22_pemail").value.trim(),
+        pos = byId("v22_ppos").value.trim(),
+        phone = byId("v22_pphone").value.trim(),
+        education = byId("v22_peducation").value.trim(),
+        p = getProject();
 
     if(!id||!name){
-      byId("v22_aerr").textContent="Participant ID dan Name wajib diisi.";
-      return;
+        byId("v22_aerr").textContent = "Participant ID dan Name wajib diisi.";
+        return;
     }
 
     if(!p){
-      byId("v22_aerr").textContent="Project tidak ditemukan.";
-      return;
+        byId("v22_aerr").textContent = "Project tidak ditemukan.";
+        return;
     }
 
-    p.participants=p.participants||[];
+    // ============================================================
+    // FIX: Disable button saat proses
+    // ============================================================
+    var saveBtn = byId("v22_asave");
+    var originalText = saveBtn.textContent;
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+    byId("v22_aerr").textContent = "";
 
-    if(p.participants.some(function(x){
-      return String(x.id).toLowerCase()===id.toLowerCase()
-    })){
-      byId("v22_aerr").textContent="Participant ID sudah ada.";
-      return;
+    try {
+        // ============================================================
+        // FIX: Sync ke Supabase
+        // ============================================================
+        var sb = window.supabaseClient || window.supabase;
+        var participantDbId = null;
+        
+        if (sb) {
+            console.log("[Add Participant] Sync ke Supabase...");
+            
+            // 1. Cek participant existing (by email atau code)
+            var { data: existing } = await sb
+                .from("participants")
+                .select("id")
+                .or("participant_code.eq." + id + ",email.eq." + email)
+                .maybeSingle();
+            
+            participantDbId = existing ? existing.id : null;
+            
+            // 2. Insert participant jika belum ada
+            if (!participantDbId) {
+                var { data: newP, error: pErr } = await sb
+                    .from("participants")
+                    .insert({
+                        participant_code: id,
+                        project_id: p.id,
+                        name: name,
+                        full_name: name,
+                        email: email,
+                        position: pos || null,
+                        status: "Active",
+                        assessment_status: "Not Started",
+                        progress: 0,
+                        raw_data: {
+                            phone: phone || "",
+                            education: education || ""
+                        }
+                    })
+                    .select()
+                    .single();
+                
+                if (pErr) throw new Error("Insert participant: " + pErr.message);
+                participantDbId = newP.id;
+                console.log("[Add Participant] ? Participant created:", participantDbId);
+            } else {
+                console.log("[Add Participant] ??  Participant exists:", participantDbId);
+            }
+            
+            // 3. Cek link ke project
+            var { data: linkExisting } = await sb
+                .from("project_participants")
+                .select("id")
+                .eq("project_id", p.id)
+                .eq("participant_id", participantDbId)
+                .maybeSingle();
+            
+            // 4. Link ke project_participants
+            if (!linkExisting) {
+                var { error: linkErr } = await sb
+                    .from("project_participants")
+                    .insert({
+                        project_id: p.id,
+                        participant_id: participantDbId,
+                        status: "registered"
+                    });
+                
+                if (linkErr) throw new Error("Link project: " + linkErr.message);
+                console.log("[Add Participant] ? Linked to project");
+            }
+        }
+        
+        // ============================================================
+        // FIX: Save ke localStorage dengan UUID (bukan participant_code)
+        // ============================================================
+        p.participants = p.participants || [];
+        
+        // Cek duplikat by UUID
+        if (participantDbId && p.participants.some(function(x){
+            return String(x.id) === String(participantDbId);
+        })) {
+            byId("v22_aerr").textContent = "Participant sudah ada di project ini.";
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+            return;
+        }
+        
+        p.participants.push({
+            id: participantDbId,              // ? UUID (bukan code)
+            db_id: participantDbId,
+            participant_code: id,             // ? kode terpisah
+            name: name,
+            email: email,
+            position: pos,
+            phone: phone || "",
+            education: education || "",
+            status: "Not Started",
+            access: "Not Invited"
+        });
+
+        persist();
+        console.log("[Add Participant] ? Saved to localStorage");
+        
+        m.remove();
+        refresh();
+        
+    } catch (err) {
+        console.error("[Add Participant] ? Error:", err);
+        byId("v22_aerr").textContent = "Gagal menyimpan: " + err.message;
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
     }
-
-    p.participants.push({
-    id: id,
-    name: name,
-    email: email,
-    position: pos,
-    phone: phone || "",
-    education: education || "",
-    status: "Not Started",
-    access: "Not Invited"
-});
-
-    persist();
-    m.remove();
-    refresh();
-  };
+};
 
   setTimeout(function(){
     byId("v22_pid").focus()
@@ -4486,7 +4540,7 @@ function importExcel(){
       '<div style="font-size:13px;font-weight:700;color:#1e3a8a;margin-bottom:4px">Format file</div>'+
 
       '<div style="font-size:13px;color:#475569">'+
-        '.xlsx, .xls, atau .csv &nbsp;•&nbsp; '+
+        '.xlsx, .xls, atau .csv &nbsp;?&nbsp; '+
         'Kolom: Participant ID, Name, Email, Position, No. Telepon / HP, Pendidikan'+
       '</div>'+
 
@@ -4697,20 +4751,20 @@ function importExcel(){
 
                 "<div><b>"+
                   esc(x.id)+
-                "</b> — "+
+                "</b> ? "+
                   esc(x.name)+
                 "</div>"+
 
                 "<div style='margin-top:3px;color:#64748b'>"+
                   esc(x.email)+
-                  " &nbsp;•&nbsp; "+
+                  " &nbsp;?&nbsp; "+
                   esc(x.position)+
                 "</div>"+
 
                 "<div style='margin-top:3px;color:#64748b'>"+
                   "HP: "+
                   esc(x.phone||"-")+
-                  " &nbsp;•&nbsp; Pendidikan: "+
+                  " &nbsp;?&nbsp; Pendidikan: "+
                   esc(x.education||"-")+
                 "</div>"+
 
@@ -5691,7 +5745,7 @@ console.log(
 </script>
 
 
-<script id="tsInvitationV26">
+<script id="tsInvitationV26Script">
 (function(){
   "use strict";
 
@@ -5784,14 +5838,23 @@ console.log(
             '<b>Placeholder:</b> {{Participant Name}}, {{Access Link}}, {{Access Code}}, {{Access Until}} akan diganti otomatis untuk setiap participant saat invitation diproses.'+
           '</div>'+
         '</div>'+
-        '<div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 24px;border-top:1px solid #e5eaf2">'+
-          '<button type="button" id="tsV26Cancel" class="btn">Cancel</button>'+
-          '<button type="button" id="tsV26Send" class="btn btn-primary">Send Invitations</button>'+
-        '</div>'+
-      '</div>';
+               '<div style="display:flex;justify-content:flex-end;gap:12px;padding:20px 24px;border-top:1px solid #e5eaf2;flex-wrap:wrap;background:#fafbfd;border-radius:0 0 16px 16px">'+
+  '<button type="button" id="tsV26Cancel" style="display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:1px solid #d7deea;border-radius:10px;background:#fff;color:#475569;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s ease;font-family:inherit">Batal</button>'+
+  '<button type="button" id="tsV26CopyText" onclick="handleCopyInvitation()" style="display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:1px solid #cbd5e1;border-radius:10px;background:linear-gradient(135deg,#f8fafc,#f1f5f9);color:#334155;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(15,23,42,.05);transition:all .2s ease;font-family:inherit">'+
+    '<i class="fa-solid fa-copy" style="font-size:14px;color:#64748b"></i>'+
+    '<span>Copy untuk Kirim</span>'+
+  '</button>'+
+  '<button type="button" id="tsV26WhatsApp" onclick="handleWhatsAppInvitation()" style="display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#25D366,#1ea952);color:#fff;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(37,211,102,.25);transition:all .2s ease;font-family:inherit">'+
+    '<i class="fa-brands fa-whatsapp" style="font-size:16px"></i>'+
+    '<span>Kirim via WhatsApp</span>'+
+  '</button>'+
+  '<button type="button" id="tsV26Send" style="display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border:none;border-radius:10px;background:linear-gradient(135deg,#0878e8,#0656b3);color:#fff;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(8,120,232,.25);transition:all .2s ease;font-family:inherit">'+
+    '<i class="fa-solid fa-paper-plane" style="font-size:13px"></i>'+
+    '<span>Send via Email</span>'+
+  '</button>'+
+'</div>';
 
     document.body.appendChild(m);
-
     document.getElementById("tsV26Close").onclick=closeModal;
     document.getElementById("tsV26Cancel").onclick=closeModal;
 
@@ -6324,8 +6387,194 @@ if (
     }
   },true);
 
-  window.tsInvitationV26={openModal:openModal,send:sendInvitations,sync:syncSelection};
+  window.tsInvitationV26={
+  openModal:openModal,
+  send:sendInvitations,
+  sync:syncSelection,
+  getSelectedParticipants:selectedParticipants,    // ? TAMBAH INI
+  getProject:getProject
+};
 })();
+
+/* ============================================================
+   HANDLER ? Copy untuk Kirim + WhatsApp (v1)
+   ============================================================ */
+function generateInvitationShareText(p, projectTitle) {
+    var accessCode = p.accessCode || p.password || p.access_code || "";
+    var link = "http://127.0.0.1:5500/participant-access.html?project=" 
+             + encodeURIComponent(p.projectId || "")
+             + "&participant=" + encodeURIComponent(p.id || "")
+             + "&code=" + encodeURIComponent(accessCode);
+    
+    // Ambil project
+    var project = window.project || {};
+    
+    // Ambil template dari dialog textarea � kalau ada
+    var dialogBody = document.getElementById("tsV26Body");
+    var body = (dialogBody && dialogBody.value) 
+        ? dialogBody.value 
+        : invitationTemplateDefault(projectTitle || "TalentScope");
+    
+    // Format tanggal
+    var scheduleDate = project.scheduleDate 
+                    || project.startDate 
+                    || project.start_date 
+                    || project.start 
+                    || "-";
+    
+    var formattedDate = "-";
+    try {
+        if (scheduleDate && scheduleDate !== "-") {
+            var dateObj = new Date(scheduleDate);
+            if (!isNaN(dateObj.getTime())) {
+                formattedDate = dateObj.toLocaleDateString("id-ID", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric"
+                });
+            } else {
+                formattedDate = scheduleDate;
+            }
+        }
+    } catch(e) { formattedDate = scheduleDate; }
+    
+    // Format jam
+    var scheduleTime = project.assessment_start_time 
+                    || project.assessmentStartTime 
+                    || project.scheduleTime 
+                    || project.startTime 
+                    || "-";
+    
+    if (scheduleTime && scheduleTime !== "-") {
+        scheduleTime = String(scheduleTime).substring(0, 5);
+    }
+    
+    // Username & Password
+    var username = p.email || p.username || "-";
+    var password = accessCode || p.password || "-";
+    
+    // Replace placeholder
+    var text = body
+        .replace(/\{\{Participant Name\}\}/g, p.name || "Participant")
+        .replace(/\{\{Project Name\}\}/g, projectTitle || "TalentScope")
+        .replace(/\{\{Assessment Schedule\}\}/g, formattedDate)
+        .replace(/\{\{Assessment Time\}\}/g, scheduleTime)
+        .replace(/\{\{Username\}\}/g, username)
+        .replace(/\{\{Password\}\}/g, password)
+        .replace(/\{\{Access Link\}\}/g, link)
+        .replace(/\{\{Access Code\}\}/g, accessCode);
+    
+    // Phone extraction
+    var phoneRaw = 
+        p.phone || 
+        p.noTelepon || 
+        p.no_telepon || 
+        p.hp || 
+        (p.raw_data && (p.raw_data.phone || p.raw_data.noTelepon || p.raw_data.hp)) ||
+        "";
+
+    var phone = String(phoneRaw).replace(/[^0-9]/g, "");
+    if (phone.startsWith("0")) phone = "62" + phone.substring(1);
+    else if (phone.startsWith("8")) phone = "62" + phone;
+    else if (phone.startsWith("+")) phone = phone.substring(1);
+    
+    console.log("[INVITATION] Share text:", { scheduleDate: formattedDate, scheduleTime: scheduleTime, phone: phone });
+    
+    return { text: text, phone: phone };
+}
+
+// Fallback template kalau dialog textarea tidak ada
+function invitationTemplateDefault(projectName) {
+    return "Halo {{Participant Name}},\n\n" +
+        "Anda diundang untuk mengikuti assessment online \"" + projectName + "\", pada :\n\n" +
+        "Hari/Tanggal : {{Assessment Schedule}}\n" +
+        "Waktu        : {{Assessment Time}}\n\n\n" +
+        "Username : {{Username}}\n" +
+        "Password : {{Password}}\n\n" +
+        "Jika ada pertanyaan bisa ditanyakan di grup WhatsApp.\n\n" +
+        "Terima kasih,\n" +
+        "TalentScope";
+}
+function handleCopyInvitation() {
+    var api = window.tsInvitationV26;
+    if (!api || typeof api.getSelectedParticipants !== "function") {
+        alert("?? API invitation belum ready.");
+        return;
+    }
+    
+    var participants = api.getSelectedParticipants();
+    if (!participants || !participants.length) {
+        alert("?? Pilih peserta dulu.");
+        return;
+    }
+    
+    var p = participants[0];
+    var project = api.getProject ? api.getProject() : window.project;
+    var result = generateInvitationShareText(p, project && project.name);
+    
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(result.text).then(function() {
+            alert("? Text berhasil di-copy!\n\nPaste di WhatsApp / Email / Telegram.");
+        }).catch(function() {
+            fallbackCopy(result.text);
+        });
+    } else {
+        fallbackCopy(result.text);
+    }
+}
+
+function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;left:-9999px;top:0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand("copy");
+        alert("? Text berhasil di-copy!");
+    } catch(e) {
+        alert(" Gagal copy. Copy manual:\n\n" + text);
+    }
+    document.body.removeChild(ta);
+}
+
+function handleWhatsAppInvitation() {
+    var api = window.tsInvitationV26;
+    if (!api || typeof api.getSelectedParticipants !== "function") {
+        alert(" API invitation belum ready.");
+        return;
+    }
+    
+    var participants = api.getSelectedParticipants();
+    if (!participants || !participants.length) {
+        alert(" Pilih peserta dulu.");
+        return;
+    }
+    
+    var p = participants[0];
+    var project = api.getProject ? api.getProject() : window.project;
+    var result = generateInvitationShareText(p, project && project.name);
+    
+    if (!result.phone || result.phone.length < 10) {
+        alert(" Nomor HP peserta tidak ada / tidak valid.\n\nGunakan tombol ' Copy untuk Kirim' ? paste manual di WhatsApp.");
+        return;
+    }
+    
+    var waUrl = "https://wa.me/" + result.phone + "?text=" + encodeURIComponent(result.text);
+    window.open(waUrl, "_blank");
+}
+
+// Register setelah dialog muncul
+document.addEventListener("click", function(e) {
+    if (e.target && e.target.id === "tsV26CopyText") {
+        e.preventDefault();
+        handleCopyInvitation();
+    } else if (e.target && e.target.id === "tsV26WhatsApp") {
+        e.preventDefault();
+        handleWhatsAppInvitation();
+    }
+}, true);
 </script>
 
 <script>
@@ -6411,35 +6660,36 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- SUPABASE CLIENT -->
-<script src="js/config.js?v=3"></script><script src="js/auth-guard.js?v=3"></script>
-<script src="js/supabase-client.js?v=3"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/role-permissions.js?v=13"></script>
 
 <!-- CENTRAL DATA SERVICE -->
-<script src="js/data-service.js?v=3"></script>
-<script src="js/role-permissions.js?v=3"></script>
-<script src="js/ts-supabase-sync.js?v=6"></script>   <!-- ⬅️ TAMBAH INI DI SINI -->
+<script src="js/data-service.js?v=5"></script>
+<script src="js/role-permissions.js?v=13"></script>
+<script src="js/ts-supabase-sync.js?v=14"></script>   <!-- ?? TAMBAH INI DI SINI -->
 
 <!-- LSJT CATALOG SEED -->
-<script src="js/lsjt-catalog-seed.js?v=3"></script>
+<script src="js/lsjt-catalog-seed.js?v=5"></script>
 
 
 <!-- PROJECT DETAIL SUPABASE -->
 
-<script src="js/project-detail-data.js?v=3"></script>
+<script src="js/project-detail-data.js?v=5"></script>
 
 
 <!-- GLOBAL SEARCH -->
 
-<script src="js/global-search.js?v=3"></script>
+<script src="js/global-search.js?v=5"></script>
 
 
 <!-- ACCESS CONTROL -->
 
-<script src="js/app-access-control.js?v=3"></script>
+<script src="js/app-access-control.js?v=5"></script>
 
-<script src="js/project-access-filter.js?v=3"></script>
+<script src="js/project-access-filter.js?v=5"></script>
 
-<script src="js/access-control-ui.js?v=3"></script>
+<script src="js/access-control-ui.js?v=5"></script>
 
 <!-- SCRIPT STABILISASI SEMBUNYIKAN MENU SETTINGS -->
 <style id="hide-settings-style">
@@ -6867,7 +7117,7 @@ function closePublishModal() {
 }
 
 /* =========================================================
-   SHOW TOAST — fungsi notifikasi kecil
+   SHOW TOAST ? fungsi notifikasi kecil
    FIX: fungsi ini dipanggil di banyak tempat (publish, cancel,
    edit assessment) tapi tidak terdefinisi sebelumnya.
 ========================================================= */
@@ -7792,6 +8042,65 @@ try {
 } catch (saveErr) {
     console.error("[Save Package] Gagal simpan:", saveErr);
     throw saveErr;
+    /* ==========================================================
+   FIX: SYNC LANGSUNG KE project_assessments
+   ----------------------------------------------------------
+   Kenapa ditambahkan di sini:
+   - Sebelumnya hanya save ke raw_data
+   - UI load dari project_assessments (tabel terpisah)
+   - Tanpa sync ini, data "hilang" dari UI sampai refresh berkali-kali
+   
+   Cara kerja:
+   - INSERT assessment yang BELUM ADA di project_assessments
+   - SKIP yang sudah ada (hindari duplicate)
+   - Setelah ini, auto-sync juga akan konfirmasi
+========================================================== */
+
+console.log("[Save Package] Sync langsung ke project_assessments...");
+
+try {
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    // 1. Cek yang sudah ada di project_assessments
+    const { data: existing } = await supabaseClient
+        .from('project_assessments')
+        .select('assessment_id')
+        .eq('project_id', window.project.id);
+
+    const existingIds = new Set(
+        (existing || []).map(r => String(r.assessment_id || ""))
+    );
+
+    // 2. Filter yang belum ada
+    const toInsert = toAdd
+        .filter(id => id && uuidPattern.test(id) && !existingIds.has(String(id)))
+        .map(id => {
+            const catalogItem = catalogById[id] || {};
+            return {
+                project_id: window.project.id,
+                assessment_id: id,
+                assessment_name: catalogItem.assessment_name || catalogItem.name || ""
+            };
+        });
+
+    // 3. Insert yang belum ada
+    if (toInsert.length > 0) {
+        const { error: syncErr } = await supabaseClient
+            .from('project_assessments')
+            .insert(toInsert);
+
+        if (syncErr) {
+            console.warn("[Save Package] Sync error:", syncErr);
+        } else {
+            console.log("[Save Package] ? Synced", toInsert.length, "assessments ke project_assessments");
+        }
+    } else {
+        console.log("[Save Package] Semua sudah ada di project_assessments");
+    }
+
+} catch (syncException) {
+    console.warn("[Save Package] Sync exception:", syncException);
+}
 }}
         const refreshed = await DataService.getProjectAssessments(window.project.id);
         window.project.assessments = Array.isArray(refreshed) ? refreshed : window.project.assessments;
@@ -8157,7 +8466,7 @@ async function saveEditAssessment() {
 
 <script>
 /* =========================================================
-   AUTO-SYNC: raw_data.assessments → project_assessments table
+   AUTO-SYNC: raw_data.assessments ? project_assessments table
    FIX: Setiap kali project-detail.html load, pastikan
    project_assessments table di Supabase terisi dari
    raw_data.assessments. Ini mencegah masalah "assessment
@@ -8209,20 +8518,48 @@ async function saveEditAssessment() {
                 (existing || []).map(r => String(r.assessment_id || ""))
             );
             
-            // 3. Filter assessment yang belum ada di project_assessments
-            const toInsert = rawAssessments
-                .filter(a => {
-                    const aid = String(a.assessment_id || a.assessmentId || a.id || "");
-                    return aid && !existingIds.has(aid);
-                })
-                .map(a => ({
-                    project_id: projectId,
-                    assessment_id: a.assessment_id || a.assessmentId || a.id,
-                    assessment_name: a.assessment_name || a.name || a.title || ""
-                }));
-            
+            // ============================================================
+// 3. Filter assessment + SANITASI UUID
+// ============================================================
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const ASSESSMENT_CODE_TO_UUID = {
+    "disc": "6266a366-47c4-4d5c-9f0f-6a2984227ed1",
+    "papi": "d8408a0f-55c0-4fc9-94fe-bb6d48292b31",
+    "papikostik": "d8408a0f-55c0-4fc9-94fe-bb6d48292b31",
+    "lsjt": "e3026a3d-15f7-4189-b25e-8cae12968558",
+    "msjt": "327a8cde-c51c-4524-aae1-4d54402d772a",
+    "vap": "8b0209ef-1b16-414c-b8c1-cd0e0449e7d7"
+};
+
+const toInsert = rawAssessments
+    .map(a => {
+        const aidRaw = String(a.assessment_id || a.assessmentId || a.id || "").trim();
+        if (!aidRaw) return null;
+
+        // Konversi ke UUID
+        let aid = aidRaw;
+        if (!UUID_REGEX.test(aid)) {
+            const mapped = ASSESSMENT_CODE_TO_UUID[aidRaw.toLowerCase()];
+            if (!mapped) {
+                console.warn("[AUTO-SYNC] Unknown assessment_id, skip:", aidRaw);
+                return null;
+            }
+            aid = mapped;
+        }
+
+        // Skip kalau sudah ada di DB
+        if (existingIds.has(aid)) return null;
+
+        return {
+            project_id: projectId,
+            assessment_id: aid,
+            assessment_name: a.assessment_name || a.name || a.title || ""
+        };
+    })
+    .filter(Boolean);
             if (toInsert.length === 0) {
-                console.log("[AUTO-SYNC] ✓ Semua assessment sudah tersync ke project_assessments");
+                console.log("[AUTO-SYNC] ? Semua assessment sudah tersync ke project_assessments");
                 return;
             }
             
@@ -8236,7 +8573,7 @@ async function saveEditAssessment() {
             if (insErr) {
                 console.error("[AUTO-SYNC] Gagal insert:", insErr);
             } else {
-                console.log("[AUTO-SYNC] ✓ Berhasil sync", toInsert.length, "assessment");
+                console.log("[AUTO-SYNC] ? Berhasil sync", toInsert.length, "assessment");
             }
             
         } catch (err) {
@@ -8483,7 +8820,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(loadAssessmentPackage, 500);
 });
 </script>
-
+s
 </body>
 
 </html>

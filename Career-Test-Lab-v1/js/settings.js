@@ -717,12 +717,31 @@
                             user.status
                         ).toLowerCase()}">
 
-                            ${escapeHtml(user.status)}
+                            ${escapeHtml(user.status || "Active")}
 
                         </span>
 
                     </td>
-
+<td>
+    ${user.accountExpiresAt ? (function() {
+        var now = new Date();
+        var expires = new Date(user.accountExpiresAt);
+        var diffDays = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) {
+            return '<span class="status-badge inactive">Kadaluarsa</span>';
+        } else if (diffDays === 0) {
+            return '<span class="status-badge warning">Hari ini</span>';
+        } else if (diffDays <= 3) {
+            return '<span class="status-badge warning">' + diffDays + ' hari lagi</span>';
+        } else {
+            var dateStr = expires.toLocaleDateString('id-ID', { 
+                day: '2-digit', month: 'short', year: 'numeric' 
+            });
+            return '<span class="status-badge active">' + dateStr + '</span>';
+        }
+    })() : '<span class="status-badge active">Selamanya</span>'}
+</td>
 
                     <td class="align-right">
 
@@ -1293,8 +1312,34 @@
         $("userRole").value =
             user.role;
 
-        $("userStatus").value =
-            user.status;
+        (function() {
+        var rawStatus = String(user.status || "Active").trim().toLowerCase();
+        var normalizedStatus = rawStatus === "inactive" ? "Inactive" : "Active";
+        $("userStatus").value = normalizedStatus;
+    })();
+
+    // FIX: Load Masa Berlaku dari user.accountExpiresAt
+    (function() {
+        var sel = $("userExpiresIn");
+        if (!sel) return;
+        var expires = user.accountExpiresAt;
+        if (!expires) {
+            sel.value = "0";
+            return;
+        }
+        var now = new Date();
+        var expDate = new Date(expires);
+        var diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+        // Closest match dari opsi: 0, 1, 2, 3, 5, 7, 14, 30, 60, 90
+        var options = [0, 1, 2, 3, 5, 7, 14, 30, 60, 90];
+        var closest = 0;
+        var minDiff = Math.abs(options[0] - diffDays);
+        for (var i = 1; i < options.length; i++) {
+            var d = Math.abs(options[i] - diffDays);
+            if (d < minDiff) { minDiff = d; closest = options[i]; }
+        }
+        sel.value = String(closest);
+    })();
 
         $("userPassword").value = "";
 
@@ -1355,29 +1400,27 @@
 
 
             const payload = {
-
-                id:
-                    id ||
-                    "USR-" + Date.now(),
-
-                name:
-                    $("userName")
-                        .value
-                        .trim(),
-
-                username,
-
-                email:
-                    $("userEmail")
-                        .value
-                        .trim(),
-
-                role:
-                    $("userRole").value,
-
-                status:
-                    $("userStatus").value
+                id: id || "USR-" + Date.now(),
+                name: $("userName").value.trim(),
+                username: username,
+                email: $("userEmail").value.trim(),
+                role: $("userRole").value,
+                status: $("userStatus").value,
+                accountExpiresAt: (function() {
+                    var sel = $("userExpiresIn");
+                    if (!sel) return null;
+                    var days = parseInt(sel.value, 10) || 0;
+                    if (days <= 0) return null;
+                    var d = new Date();
+                    d.setDate(d.getDate() + days);
+                    return d.toISOString();
+                })(),
+                expiresInDays: (function() {
+                    var sel = $("userExpiresIn");
+                    return sel ? (parseInt(sel.value, 10) || 0) : 0;
+                })()
             };
+            
 
 
             const index =
@@ -1551,28 +1594,39 @@
        EDIT ROLE
     ========================================================== */
 
-    function editRole(roleId) {
+    function editRole(id) {
     // 1. Cek User Saat Ini
     const user = window.TalentScopeAccess ? window.TalentScopeAccess.getCurrentUser() : {};
-
-    // 2. Jika BUKAN System Administrator, TOLAK AKSI!
     if (user.roleKey !== "system-administrator") {
         alert("Hanya System Administrator yang diizinkan menambah atau mengubah Role & Permission!");
-        return; // Hentikan fungsi
+        return;
     }
 
-    // --- Kode lama settings.js Anda dilanjutkan di bawah sini ---
-    const role = roles.find(item => item.id === roleId);
+    const role = roles.find(item => item.id === id);
     if (!role) return;
     
-    // Batasi agar nama Role System Admin & Admin bawaan tidak sembarangan diubah
-    const isLockedRole = (role.id === "ROLE-SYSTEM" || role.id === "ROLE-ADMIN");
-    document.getElementById("roleName").disabled = isLockedRole;
+    const isLocked = LOCKED_ROLE_IDS.includes(role.id);
+
+    $("roleId").value = role.id;
+    $("roleName").value = role.name;
+    $("roleDescription").value = role.description || "";
+    $("roleModalTitle").textContent = isLocked ? "View System Role" : "Edit Role";
+    $("roleName").disabled = true;
+    $("roleDescription").disabled = isLocked;
+
+    renderPermissions(role.permissions || [], isLocked);
+
+    document.querySelectorAll("#permissionsGrid input").forEach(input => {
+        input.disabled = isLocked;
+    });
+
+    $("selectAllPermissions").style.display = isLocked ? "none" : "";
+    $("selectAllPermissions").textContent = "Select all";
 
     openModal("roleModal");
 }
-    
-    function editRole(id){
+
+function editRoleDuplicate(id){
 
         const role =
             roles.find(
@@ -1965,7 +2019,7 @@
     /*
        PENTING: pastikan state saat ini (termasuk defaultUsers
        kalau ini pertama kali dibuka di perangkat ini) selalu
-       tertulis ke localStorage lewat save() — bukan cuma saat
+       tertulis ke localStorage lewat save() ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â bukan cuma saat
        migrateRoles() mendeteksi ada perubahan. Ini yang memicu
        ts-supabase-sync.js mengirim akun Admin/Client/Asesor ke
        tabel ts_users. Tanpa baris ini, defaultUsers hanya ada
