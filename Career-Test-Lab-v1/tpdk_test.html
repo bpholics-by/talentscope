@@ -7,12 +7,13 @@
     window.__TS_DISABLE_AUTO_SYNC = true;
 </script>
 <!-- SUPABASE SYNC BRIDGE -->
-<script src="js/config.js"></script>
+<script src="js/config.js?v=9"></script>
 <script src="js/tab-switch-warning.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=8"></script>
-<script src="js/data-service.js"></script>
-<script src="js/ts-supabase-sync.js?v=15"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/session-helper.js?v=1"></script>
+<script src="js/data-service.js?v=8"></script>
+<script src="js/ts-supabase-sync.js?v=13"></script>
 <script src="js/participant-activity.js"></script>
 <script>
     if (typeof ParticipantActivity !== "undefined") {
@@ -589,82 +590,52 @@ function escapeHtml(str) {
   });
 }
 
-async function loadMeta(){
-  try {
-    const urlParams = new URLSearchParams(window.location.search);
-    const participantNameFromUrl = urlParams.get('participantName');
-    const projectNameFromUrl = urlParams.get('projectName');
-    
-    // Prioritas 1: Ambil dari URL
-    if (participantNameFromUrl) {
-      el('participant').textContent = participantNameFromUrl;
-    }
-    if (projectNameFromUrl) {
-      el('project').textContent = projectNameFromUrl;
-    }
-    
-    // Set tanggal
-    el('date').textContent = new Date().toLocaleDateString('id-ID', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
-    
-    // Prioritas 2: Jika URL tidak punya nama, fallback ke Supabase
-    if (!participantNameFromUrl || !projectNameFromUrl) {
-      var sb = window.supabaseClient || window.supabase;
-      if (sb) {
-        if (!participantNameFromUrl) {
-          var { data: pData } = await sb
-            .from("participants")
-            .select("name")
-            .eq("id", participantId)
-            .maybeSingle();
-          
-          if (pData && pData.name) {
-            el('participant').textContent = pData.name;
-          }
+    async function loadMeta() {
+        try {
+            // PRIORITAS 1: Ambil dari TS_SESSION
+            var participantName = "Peserta";
+            var projectName = "Project";
+            
+            if (window.TS_SESSION) {
+                var user = await window.TS_SESSION.getUser();
+                if (user) {
+                    var meta = user.user_metadata || {};
+                    participantName = meta.name || user.email.split("@")[0] || "Peserta";
+                    projectName = meta.project_name || "Project";
+                }
+            }
+            
+            // PRIORITAS 2: Fallback ke URL params
+            var urlParams = new URLSearchParams(window.location.search);
+            var participantNameFromUrl = urlParams.get('participantName');
+            var projectNameFromUrl = urlParams.get('projectName');
+            
+            if (participantNameFromUrl) participantName = participantNameFromUrl;
+            if (projectNameFromUrl) projectName = projectNameFromUrl;
+            
+            // Set ke UI
+            el('participant').textContent = participantName;
+            el('project').textContent = projectName;
+            el('date').textContent = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
+            
+            console.log('[TPDK] Metadata loaded:', {
+                participant: participantName,
+                project: projectName,
+                date: el('date').textContent
+            });
+        } catch (e) {
+            console.warn('TPDK metadata error:', e);
+            // Fallback: pakai UUID dari URL
+            var urlParams = new URLSearchParams(window.location.search);
+            el('participant').textContent = urlParams.get('participantName') || participantId || '-';
+            el('project').textContent = urlParams.get('projectName') || projectId || '-';
+            el('date').textContent = new Date().toLocaleDateString('id-ID', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            });
         }
-        
-        if (!projectNameFromUrl) {
-          var { data: prData } = await sb
-            .from("projects")
-            .select("name")
-            .eq("id", projectId)
-            .maybeSingle();
-          
-          if (prData && prData.name) {
-            el('project').textContent = prData.name;
-          }
-        }
-      }
     }
-    
-    // Fallback terakhir: pakai UUID kalau tidak ada nama
-    if (!el('participant').textContent || el('participant').textContent === '-') {
-      el('participant').textContent = participantId || '-';
-    }
-    if (!el('project').textContent || el('project').textContent === '-') {
-      el('project').textContent = projectId || '-';
-    }
-    
-    console.log('[TPDK] Metadata loaded:', {
-      participant: el('participant').textContent,
-      project: el('project').textContent,
-      date: el('date').textContent
-    });
-  } catch (e) {
-    console.warn('TPDK metadata error:', e);
-    // Fallback: pakai UUID
-    if (!el('participant').textContent || el('participant').textContent === '-') {
-      el('participant').textContent = participantId || '-';
-    }
-    if (!el('project').textContent || el('project').textContent === '-') {
-      el('project').textContent = projectId || '-';
-    }
-    el('date').textContent = new Date().toLocaleDateString('id-ID', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
-  }
-}
 
 function save(){ localStorage.setItem(answerKey, JSON.stringify(answers)); }
 
@@ -785,15 +756,24 @@ async function calculateScores() {
 
     console.log("[TPDK] Hitung skor via Edge Function...");
 
-    const res = await fetch("https://nixmychfhsnsvymkuxtm.supabase.co/functions/v1/calculate-tpdk-score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            projectId: projectId,
-            participantId: participantId,
-            answers: answers
-        })
-    });
+    // Ambil token dari TS_SESSION
+var accessToken = "";
+if (window.TS_SESSION) {
+    accessToken = await window.TS_SESSION.getAccessToken();
+}
+
+const res = await fetch("https://nixmychfhsnsvymkuxtm.supabase.co/functions/v1/calculate-tpdk-score", {
+    method: "POST",
+    headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + accessToken
+    },
+    body: JSON.stringify({
+        projectId: projectId,
+        participantId: participantId,
+        answers: answers
+    })
+});
 
     if (!res.ok) {
         const errorText = await res.text().catch(() => "");

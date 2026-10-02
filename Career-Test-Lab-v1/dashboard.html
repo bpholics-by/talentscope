@@ -9,17 +9,6 @@
 <script src="js/config.js?v=7"></script>
 
 
-<!-- ============================================================
-     HIDE SETTINGS MENU — INSTANT HIDE
-     ============================================================ -->
-<style id="hide-settings-style">
-    .dropdown-menu a[href*="setting"],
-    .dropdown-menu button[onclick*="setting"],
-    .dropdown-item[href*="setting"],
-    .dropdown-menu a[href*="Setting"],
-    .dropdown-item a[href*="setting"] {
-        display: none !important;
-    }
 </style>
 
 <meta charset="UTF-8">
@@ -811,6 +800,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js?v=7"></script>
+<script src="js/session-helper.js?v=1"></script>
 <script src="js/auth-guard.js?v=12"></script>
 <script src="js/data-service.js?v=8"></script>
 <script src="js/ts-supabase-sync.js?v=14"></script>
@@ -1003,80 +993,67 @@
            2. HIDE SETTINGS MENU — non-System-Admin
         ===================================================== */
 
-                       function enforceHideSettings() {
+                       async function enforceHideSettings() {
+    var user = null;
+    var userRole = "";
 
-            /* PRIORITAS 1: TS_AUTH (JWT baru) */
-            var user = null;
-
-            try {
-                if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
-                    user = window.TS_AUTH.getUser();
-                }
-            } catch (e) {
-                console.warn("[HIDE-SETTINGS] TS_AUTH error:", e);
-            }
-
-            /* FALLBACK: session lama */
-            if (!user) {
-                var userRaw =
-                    sessionStorage.getItem("ts_admin_session") ||
-                    sessionStorage.getItem("ts_participant_session");
-                if (userRaw) {
-                    try { user = JSON.parse(userRaw); } catch (e) {}
-                }
-            }
-
-            /* Tidak ada user → JANGAN hide (default = tampil) */
-            if (!user) {
-                console.log("[HIDE-SETTINGS] No user found — skip hiding");
-                var styleElDefault = document.getElementById("hide-settings-style");
-                if (styleElDefault) styleElDefault.remove();
-                return;
-            }
-
-            var userRole = String(user.role || "").trim();
-            var isSystemAdmin = /system/i.test(userRole);
-
-            console.log("[HIDE-SETTINGS] Role:", userRole, "| System Admin:", isSystemAdmin);
-
-            var styleEl = document.getElementById("hide-settings-style");
-
-            if (isSystemAdmin) {
-                /* System Admin → HAPUS CSS → tampilkan semua menu */
-                if (styleEl) {
-                    styleEl.remove();
-                    console.log("[HIDE-SETTINGS] ✅ Style removed (System Admin)");
-                }
-                return;
-            }
-
-            /* Non-System-Admin → hide menu "setting" */
-            var menuItems = document.querySelectorAll(
-                ".dropdown-menu a, .dropdown-menu button, " +
-                ".dropdown-item, li a"
-            );
-
-            menuItems.forEach(function (item) {
-                var text = item.textContent.trim().toLowerCase();
-                if (text.includes("setting") || text.includes("pengaturan")) {
-                    item.style.setProperty("display", "none", "important");
-                }
-            });
-
+    try {
+        // PRIORITAS 1: TS_SESSION (canonical)
+        if (window.TS_SESSION) {
+            user = await window.TS_SESSION.getUser();
+            userRole = await window.TS_SESSION.getRole();
+            console.log("[HIDE-SETTINGS] From TS_SESSION — user:", user?.email, "| role:", userRole);
+        } 
+        // FALLBACK: TS_AUTH
+        else if (window.TS_AUTH && typeof window.TS_AUTH.getUser === "function") {
+            user = await window.TS_AUTH.getUser();
+            userRole = user ? String(user.user_metadata?.role || "").toLowerCase().trim().replace(/\s+/g, "_") : "";
+            console.log("[HIDE-SETTINGS] From TS_AUTH — user:", user?.email, "| role:", userRole);
         }
-        enforceHideSettings();
+    } catch (e) {
+        console.warn("[HIDE-SETTINGS] Error:", e);
+    }
 
-        window.addEventListener("load", enforceHideSettings);
+    // Tidak ada user → JANGAN hide (default = tampil)
+    if (!user) {
+        console.log("[HIDE-SETTINGS] No user found — tampilkan semua menu");
+        return;
+    }
 
-        var settingsObserver = new MutationObserver(function () {
-            enforceHideSettings();
-        });
+    // Canonical check
+    var isSystemAdmin = userRole === "system_admin" || userRole === "administrator";
 
-        settingsObserver.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+    console.log("[HIDE-SETTINGS] Canonical role:", userRole, "| isAdmin:", isSystemAdmin);
 
+    var styleEl = document.getElementById("hide-settings-style");
+
+    if (isSystemAdmin) {
+        // Admin → HAPUS CSS → tampilkan semua menu
+        if (styleEl) {
+            styleEl.remove();
+            console.log("[HIDE-SETTINGS] ✅ Style removed for admin");
+        }
+        return;
+    }
+
+    // Non-Admin → hide menu Settings
+    var menuItems = document.querySelectorAll(
+        ".dropdown-menu a, .dropdown-menu button, " +
+        ".dropdown-item, li a"
+    );
+
+    menuItems.forEach(function (item) {
+        var text = item.textContent.trim().toLowerCase();
+        if (text.includes("setting") || text.includes("pengaturan")) {
+            item.style.setProperty("display", "none", "important");
+        }
+    });
+}
+        enforceHideSettings();  // Async, tapi tidak perlu await (fire-and-forget)
+window.addEventListener("load", enforceHideSettings);
+var settingsObserver = new MutationObserver(function () {
+    enforceHideSettings();
+});
 
         /* =====================================================
            3. UPDATE TANGGAL DASHBOARD

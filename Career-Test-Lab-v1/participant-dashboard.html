@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="id">
 <head>
-<script src="js/config.js?v=10"></script>
+<script src="js/config.js?v=9"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/supabase-client.js?v=9"></script>
-<script src="js/data-service.js?v=10"></script>
-<script src="js/ts-supabase-sync.js?v=16"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/session-helper.js?v=1"></script>
+<script src="js/data-service.js?v=8"></script>
+<script src="js/ts-supabase-sync.js?v=13"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>TalentScope — Participant Portal</title>
@@ -484,45 +485,43 @@ a{text-decoration:none;color:inherit}
     /* ==========================================================
        MAIN FUNCTION
     ========================================================== */
-               async function initDashboard() {
-        console.log("=== TALENTSCOPE DASHBOARD v7.0 (Single Source of Truth) ===");
+                  async function initDashboard() {
+        console.log("=== TALENTSCOPE DASHBOARD v7.0 (TS_SESSION) ===");
 
         updateClock();
         setInterval(updateClock, 30000);
 
-        // ===== AMBIL SESSION DARI SUPABASE AUTH =====
-        var sb = window.supabaseClient || window.supabase;
-        if (!sb || !sb.auth) {
-            console.error("[DASHBOARD] Supabase tidak tersedia");
+        // ===== AMBIL SESSION VIA TS_SESSION =====
+        if (!window.TS_SESSION) {
+            console.error("[DASHBOARD] TS_SESSION tidak tersedia");
             window.location.href = "login.html";
             return;
         }
 
-        var { data: { session }, error } = await sb.auth.getSession();
-        
-        if (error || !session || !session.user) {
+        var isAuth = await window.TS_SESSION.isAuthenticated();
+        if (!isAuth) {
             console.error("[DASHBOARD] Tidak ada session, redirect ke login");
             window.location.href = "login.html";
             return;
         }
 
-        var user = session.user;
-        var meta = user.user_metadata || {};
-        
-        // Semua data diambil dari user_metadata (single source of truth)
-        var sessionParticipantId = normalize(meta.participant_id);
-        var sessionProjectId = normalize(meta.project_id);
-        var sessionProjectName = normalize(meta.project_name) || "Assessment";  // <-- NAMA PROJECT
-        var sessionName = meta.name || user.email.split("@")[0];
-        var sessionEmail = normalizeEmail(user.email);
-        var sessionRole = meta.role || "Peserta";
+        // ===== AMBIL DATA DARI TS_SESSION =====
+        var user = await window.TS_SESSION.getUser();
+        var sessionName = user ? (user.user_metadata?.name || user.email.split("@")[0]) : "Participant";
+        var sessionEmail = user ? user.email : "";
+        var sessionParticipantId = await window.TS_SESSION.getParticipantId();
+        var sessionProjectId = await window.TS_SESSION.getProjectId();
+        var sessionProjectName = await window.TS_SESSION.getProjectName();
+        var sessionRole = await window.TS_SESSION.getRole();
 
+        console.log("[DASHBOARD] Name:", sessionName);
+        console.log("[DASHBOARD] Email:", sessionEmail);
         console.log("[DASHBOARD] Participant ID:", sessionParticipantId);
         console.log("[DASHBOARD] Project ID:", sessionProjectId);
-        console.log("[DASHBOARD] Project Name:", sessionProjectName);  // <-- Log nama
-        console.log("[DASHBOARD] Name:", sessionName);
+        console.log("[DASHBOARD] Project Name:", sessionProjectName);
         console.log("[DASHBOARD] Role:", sessionRole);
 
+        // ===== VALIDASI =====
         if (!sessionParticipantId || !sessionProjectId) {
             console.error("[DASHBOARD] ⚠️ Metadata tidak lengkap!");
             showToast("Data user tidak lengkap. Silakan hubungi admin.", "error");
@@ -536,20 +535,18 @@ a{text-decoration:none;color:inherit}
         if (el("avatar")) el("avatar").textContent = String(sessionName).charAt(0).toUpperCase();
 
         // ===== LOAD ASSESSMENTS =====
-        var activeAssessments = await loadAssessmentsFromSupabase(sessionProjectId, sessionParticipantId, sessionEmail);
+        var activeAssessments = await loadAssessmentsFromSupabase(sessionProjectId, sessionParticipantId);
 
         console.log("[DASHBOARD] Loaded assessments:", activeAssessments.length);
 
         if (activeAssessments.length === 0) {
             renderEmptyState();
         } else {
-            // Kirim projectName juga ke renderAssessments
             renderAssessments(activeAssessments, sessionProjectId, sessionParticipantId, sessionProjectName);
         }
 
         console.log("=== DASHBOARD READY ===");
     }
-
     /* ==========================================================
        LOAD ASSESSMENTS — MULTI-LAYER FALLBACK
        Prioritas:
@@ -557,7 +554,7 @@ a{text-decoration:none;color:inherit}
        2. project_assessments (fallback kalau participant_assessments kosong)
        3. localStorage (fallback terakhir)
     ========================================================== */
-        async function loadAssessmentsFromSupabase(projectId, participantId, email) {
+           async function loadAssessmentsFromSupabase(projectId, participantId) {
         var sb = window.supabaseClient || window.supabase;
         if (!sb || typeof sb.from !== "function") {
             console.warn("[LOAD] Supabase tidak tersedia");
@@ -607,8 +604,6 @@ a{text-decoration:none;color:inherit}
             return [];
         }
     }
-
-
     /* ==========================================================
        LOAD FROM LOCALSTORAGE (FALLBACK)
     ========================================================== */
@@ -748,7 +743,7 @@ a{text-decoration:none;color:inherit}
     /* ==========================================================
        HANDLE START ASSESSMENT
     ========================================================== */
-     async function handleStartAssessment() {
+        async function handleStartAssessment() {
         var btn = this;
         btn.disabled = true;
         btn.classList.add("loading");
@@ -769,69 +764,24 @@ a{text-decoration:none;color:inherit}
         }
 
         var route = getAssessmentRoute(assessmentCode, assessmentName);
-
         if (!route) {
-            showToast("⚠ Assessment tidak dikenali: " + assessmentCode, "error");
+            showToast("Assessment tidak dikenali: " + assessmentCode, "error");
             btn.disabled = false;
             btn.classList.remove("loading");
             return;
         }
 
-        window.__tsParticipantInternalNavigation = true;
-
-                   // Ambil nama dari user_metadata Supabase Auth (paling reliable)
-        var sb = window.supabaseClient || window.supabase;
+        // Ambil nama dari TS_SESSION (single source of truth)
         var participantName = "Peserta";
         var projectName = "Project";
         
-        if (sb && sb.auth) {
-            try {
-                var { data: { session } } = await sb.auth.getSession();
-                                if (session && session.user && session.user.user_metadata) {
-                    var meta = session.user.user_metadata;
-                    participantName = meta.name || session.user.email.split("@")[0];
-                    projectName = meta.project_name || "";
-                    
-                    console.log("[START] Dari user_metadata:");
-                    console.log("[START]   participantName:", participantName);
-                    console.log("[START]   projectName:", projectName || "(kosong, akan query DB)");
-                    
-                    // Fallback: jika project_name kosong, query ke Supabase
-                    if (!projectName) {
-                        try {
-                            var { data: projData } = await sb
-                                .from("projects")
-                                .select("name")
-                                .eq("id", projectId)
-                                .maybeSingle();
-                            
-                            if (projData && projData.name) {
-                                projectName = projData.name;
-                                console.log("[START] Project name dari DB:", projectName);
-                            }
-                        } catch (e) {
-                            console.warn("[START] Gagal query project:", e);
-                        }
-                    }
-                    
-                    // Fallback terakhir
-                    if (!projectName) {
-                        projectName = "Project";
-                    }
-                }
-            } catch (e) {
-                console.warn("[START] Gagal ambil session:", e);
-            }
+        if (window.TS_SESSION) {
+            var user = await window.TS_SESSION.getUser();
+            participantName = user ? (user.user_metadata?.name || user.email.split("@")[0]) : "Peserta";
+            projectName = await window.TS_SESSION.getProjectName() || "Project";
         }
-        
-        // Fallback ke sessionStorage jika user_metadata kosong
-        if (participantName === "Peserta" || projectName === "Project") {
-            try {
-                var session2 = JSON.parse(sessionStorage.getItem("ts_participant_session") || "{}");
-                participantName = session2.name || session2.fullName || participantName;
-                projectName = session2.projectName || session2.project_name || projectName;
-            } catch (e) {}
-        }
+
+        window.__tsParticipantInternalNavigation = true;
 
         var url = route +
             "?projectId=" + encodeURIComponent(projectId) +
@@ -845,7 +795,6 @@ a{text-decoration:none;color:inherit}
         console.log("[START] Redirect to:", url);
         window.location.href = url;
     }
-
     /* ==========================================================
        ESCAPE HTML
     ========================================================== */
@@ -858,7 +807,7 @@ a{text-decoration:none;color:inherit}
     /* ==========================================================
        LOGOUT HANDLER
     ========================================================== */
-        function setupLogout() {
+            function setupLogout() {
         var logoutBtn = el("logout");
         if (!logoutBtn) return;
 
@@ -866,22 +815,18 @@ a{text-decoration:none;color:inherit}
             logoutBtn.disabled = true;
             logoutBtn.classList.add("loading");
 
-            try {
-                var sb = window.supabaseClient;
-                if (sb && sb.auth) {
-                    await sb.auth.signOut();
+            // Pakai TS_SESSION untuk clear
+            if (window.TS_SESSION) {
+                try {
+                    await window.TS_SESSION.clearSession();
+                } catch (e) {
+                    console.warn("[LOGOUT] Error:", e);
                 }
-            } catch (e) {
-                console.warn("[LOGOUT] Error:", e);
             }
-
-            try { sessionStorage.removeItem("ts_participant_session"); } catch (e) {}
 
             window.location.href = "login.html";
         });
     }
-
-
     /* ==========================================================
        MOBILE MENU
     ========================================================== */

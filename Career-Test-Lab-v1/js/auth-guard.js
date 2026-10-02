@@ -1,47 +1,54 @@
 /* =========================================================
-   TALENTSCOPE — AUTH-GUARD.JS (SUPABASE AUTH MODE) - FIXED
-   ========================================================= */
+   TALENTSCOPE — AUTH-GUARD.JS (PHASE 2 - USE TS_SESSION)
+   ---------------------------------------------------------
+   Menggunakan TS_SESSION helper untuk session management.
+   Tidak lagi langsung akses supabase.auth.getSession().
+========================================================= */
 
-;(function (global) {
+;(function(global) {
     "use strict";
 
     var LOGIN_PAGE = "login.html";
     var DASHBOARD_PAGE = "dashboard.html";
     var PARTICIPANT_PAGE = "participant-dashboard.html";
 
-    function getSupabase() {
-        return window.supabaseClient || null;
+    // ============================================================
+    // HELPER: Dapatkan TS_SESSION
+    // ============================================================
+    function getSession() {
+        if (!global.TS_SESSION) {
+            console.warn("[AUTH-GUARD] TS_SESSION belum dimuat!");
+            return null;
+        }
+        return global.TS_SESSION;
     }
 
     // ============================================================
-    // SESSION FUNCTIONS
+    // SESSION FUNCTIONS (delegate ke TS_SESSION)
     // ============================================================
-    async function getSession() {
-        var sb = getSupabase();
-        if (!sb) return null;
-        try {
-            var result = await sb.auth.getSession();
-            if (result.error) return null;
-            return result.data ? result.data.session : null;
-        } catch (err) {
-            return null;
-        }
+    async function getSessionAsync() {
+        var ts = getSession();
+        return ts ? await ts.getSession() : null;
     }
 
     async function getUser() {
-        var session = await getSession();
-        return session && session.user ? session.user : null;
+        var ts = getSession();
+        return ts ? await ts.getUser() : null;
     }
 
     async function isAuthenticated() {
-        var session = await getSession();
-        return !!session;
+        var ts = getSession();
+        return ts ? await ts.isAuthenticated() : false;
     }
 
     async function getUserRole() {
-        var user = await getUser();
-        if (!user) return "";
-        return (user.user_metadata && user.user_metadata.role) || "";
+        var ts = getSession();
+        return ts ? await ts.getRole() : "";
+    }
+
+    async function getToken() {
+        var ts = getSession();
+        return ts ? await ts.getAccessToken() : "";
     }
 
     // ============================================================
@@ -64,30 +71,49 @@
     }
 
     // ============================================================
-    // ROLE NORMALIZER
+    // REQUIRE AUTH / ROLE
     // ============================================================
-    function normalizeRole(rawRole) {
-        var role = String(rawRole || "").toLowerCase().trim().replace(/\s+/g, "_");
-        if (role === "system_administrator" || role === "system_admin") return "system_admin";
-        if (role === "client_administrator" || role === "client_admin" || role === "clientadmin") return "clientadmin";
-        if (role === "client_user" || role === "clientuser") return "clientuser";
-        if (role === "asesor" || role === "assessor") return "asesor";
-        if (role === "peserta" || role === "participant") return "peserta";
-        return role;
+    async function requireAuth() {
+        var authenticated = await isAuthenticated();
+        if (!authenticated) {
+            goToLogin("not authenticated");
+            return null;
+        }
+        return await getUser();
+    }
+
+    async function requireRole(allowedRoles) {
+        var user = await requireAuth();
+        if (!user) return null;
+
+        var role = await getUserRole();
+        if (!role) {
+            goToLogin("no role");
+            return null;
+        }
+
+        if (Array.isArray(allowedRoles) && allowedRoles.length > 0) {
+            var allowed = allowedRoles.map(function(r) {
+                return String(r).toLowerCase();
+            });
+            if (allowed.indexOf(role) === -1) {
+                console.warn("[AUTH-GUARD] Role not allowed:", role);
+                redirectByRole(role);
+                return null;
+            }
+        }
+
+        return user;
     }
 
     // ============================================================
-    // AUTO UPDATE HEADER (DIPERBAIKI)
+    // AUTO UPDATE HEADER
     // ============================================================
     async function autoUpdateHeader() {
         try {
-            var sb = window.supabaseClient;
-            if (!sb || !sb.auth) return;
+            var user = await getUser();
+            if (!user) return;
 
-            var { data: { session } } = await sb.auth.getSession();
-            if (!session || !session.user) return;
-
-            var user = session.user;
             var meta = user.user_metadata || {};
             var role = meta.role || "User";
             var name = meta.name || meta.username || (user.email ? user.email.split("@")[0] : "User");
@@ -101,7 +127,7 @@
             var avatarEl = document.querySelector(".header-avatar");
             if (avatarEl && name) avatarEl.textContent = name.charAt(0).toUpperCase();
         } catch (e) {
-            // silent
+            // Silent
         }
     }
 
@@ -113,47 +139,37 @@
         var style = document.createElement("style");
         style.id = "ts-anti-flash-css";
         style.textContent = [
-            'html[data-ts-role="clientuser"] .sidebar a[href*="assessment-catalog"],',
-            'html[data-ts-role="clientuser"] .sidebar li:has(a[href*="assessment-catalog"]),',
-            'html[data-ts-role="clientuser"] .sidebar a[href*="settings"],',
-            'html[data-ts-role="clientuser"] .sidebar li:has(a[href*="settings"]),',
+            'html[data-ts-role="client_user"] .sidebar a[href*="assessment-catalog"],',
+            'html[data-ts-role="client_user"] .sidebar li:has(a[href*="assessment-catalog"]),',
+            'html[data-ts-role="client_user"] .sidebar a[href*="settings"],',
+            'html[data-ts-role="client_user"] .sidebar li:has(a[href*="settings"]),',
             'html[data-ts-role="asesor"] .sidebar a[href*="assessment-catalog"],',
             'html[data-ts-role="asesor"] .sidebar li:has(a[href*="assessment-catalog"]),',
             'html[data-ts-role="asesor"] .sidebar a[href*="settings"],',
             'html[data-ts-role="asesor"] .sidebar li:has(a[href*="settings"]),',
-            'html[data-ts-role="clientadmin"] .sidebar a[href*="settings"],',
-            'html[data-ts-role="clientadmin"] .sidebar li:has(a[href*="settings"]),',
-            'html[data-ts-role="clientuser"] button[data-action="create-project"],',
-            'html[data-ts-role="asesor"] button[data-action="create-project"],',
-            'html[data-ts-role="clientuser"] button.btn-create-project,',
-            'html[data-ts-role="asesor"] button.btn-create-project',
+            'html[data-ts-role="client_admin"] .sidebar a[href*="settings"],',
+            'html[data-ts-role="client_admin"] .sidebar li:has(a[href*="settings"]),',
             '{ display: none !important; visibility: hidden !important; }'
         ].join("");
         document.head.appendChild(style);
     })();
 
     // ============================================================
-    // AUTO UPDATE SIDEBAR (DIPERBAIKI)
+    // AUTO UPDATE SIDEBAR
     // ============================================================
     async function autoUpdateSidebar() {
         try {
-            var sb = window.supabaseClient;
-            if (!sb || !sb.auth) return;
-
-            var { data: { session } } = await sb.auth.getSession();
-            if (!session || !session.user) return;
-
-            var meta = session.user.user_metadata || {};
-            var role = normalizeRole(meta.role);
+            var role = await getUserRole();
+            if (!role) return;
 
             document.documentElement.setAttribute("data-ts-role", role);
 
             var hideList = [];
             if (role === "system_admin") {
                 hideList = [];
-            } else if (role === "clientadmin") {
+            } else if (role === "client_admin") {
                 hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
-            } else if (role === "clientuser" || role === "asesor") {
+            } else if (role === "client_user" || role === "asesor") {
                 hideList = ["Assessment Catalog", "Test Builder", "Test Bank", "Settings"];
             } else if (role === "peserta") {
                 hideList = ["Assessment Catalog", "Assessment Project", "Assessment Detail",
@@ -181,7 +197,7 @@
                 });
             }
 
-            if (role === "clientuser" || role === "asesor") {
+            if (role === "client_user" || role === "asesor") {
                 document.querySelectorAll("button").forEach(function (btn) {
                     if ((btn.textContent || "").trim().includes("Create Project")) {
                         btn.style.setProperty("display", "none", "important");
@@ -194,19 +210,17 @@
     }
 
     // ============================================================
-    // INIT — TUNGGU SESSION SIAP
+    // INIT
     // ============================================================
     async function initAuthGuard() {
-        var sb = getSupabase();
-        if (!sb) {
-            console.warn("[AUTH-GUARD] Supabase client tidak tersedia");
+        var ts = getSession();
+        if (!ts) {
+            console.warn("[AUTH-GUARD] TS_SESSION tidak tersedia. Skip init.");
             return;
         }
 
-        // Coba getSession dulu
-        var session = await getSession();
-
-        // Jika belum ada, tunggu event INITIAL_SESSION
+        // Tunggu session siap (maks 3 detik)
+        var session = await ts.getSession();
         if (!session) {
             await new Promise(function(resolve) {
                 var resolved = false;
@@ -214,18 +228,17 @@
                     if (!resolved) { resolved = true; resolve(); }
                 }, 3000);
 
-                var { data: { subscription } } = sb.auth.onAuthStateChange(function(event, sess) {
+                var sub = ts.onAuthChange(function(event, sess) {
                     if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !resolved) {
                         resolved = true;
                         clearTimeout(timeout);
-                        subscription.unsubscribe();
+                        if (sub && sub.unsubscribe) sub.unsubscribe();
                         resolve();
                     }
                 });
             });
         }
 
-        // Setelah session siap (atau timeout), jalankan update
         await autoUpdateHeader();
         await autoUpdateSidebar();
     }
@@ -234,67 +247,38 @@
     // EXPORT
     // ============================================================
     global.TS_AUTH = {
-        getSession: getSession,
+        getSession: getSessionAsync,
         getUser: getUser,
         isAuthenticated: isAuthenticated,
         getUserRole: getUserRole,
+        getToken: getToken,
         goToLogin: goToLogin,
         redirectByRole: redirectByRole,
+        requireAuth: requireAuth,
+        requireRole: requireRole,
         autoUpdateHeader: autoUpdateHeader,
         autoUpdateSidebar: autoUpdateSidebar,
         logout: async function() {
-            var sb = getSupabase();
-            if (sb) { try { await sb.auth.signOut(); } catch(e){} }
+            var ts = getSession();
+            if (ts) await ts.clearSession();
             window.location.replace(LOGIN_PAGE);
         },
-        clearSession: function() { console.warn("Deprecated"); },
-        saveSession: function() { console.warn("Deprecated"); }
+        clearSession: function() {
+            var ts = getSession();
+            if (ts) ts.clearCache();
+        },
+        saveSession: function() {
+            console.warn("[AUTH-GUARD] saveSession deprecated");
+        }
     };
-    // ============================================================
-    // INIT — TUNGGU SESSION SIAP
-    // ============================================================
-    async function initAuthGuard() {
-        var sb = getSupabase();
-        if (!sb) {
-            console.warn("[AUTH-GUARD] Supabase client tidak tersedia");
-            return;
-        }
-
-        // Coba getSession dulu
-        var session = await getSession();
-
-        // Jika belum ada, tunggu event INITIAL_SESSION
-        if (!session) {
-            await new Promise(function(resolve) {
-                var resolved = false;
-                var timeout = setTimeout(function() {
-                    if (!resolved) { resolved = true; resolve(); }
-                }, 3000);
-
-                var { data: { subscription } } = sb.auth.onAuthStateChange(function(event, sess) {
-                    if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && !resolved) {
-                        resolved = true;
-                        clearTimeout(timeout);
-                        subscription.unsubscribe();
-                        resolve();
-                    }
-                });
-            });
-        }
-
-        // Setelah session siap (atau timeout), jalankan update
-        await autoUpdateHeader();
-        await autoUpdateSidebar();
-    }
 
     // Auto-run
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initAuthGuard); // <-- PASTIKAN initAuthGuard
+        document.addEventListener("DOMContentLoaded", initAuthGuard);
     } else {
-        initAuthGuard(); // <-- PASTIKAN initAuthGuard
+        initAuthGuard();
     }
 
-    console.log("[AUTH-GUARD] Loaded (FIXED)");
+    console.log("[AUTH-GUARD] Loaded (Phase 2 - using TS_SESSION)");
 
 })(window);
-    
