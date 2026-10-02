@@ -1,0 +1,1627 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+<!-- ============================================================
+     SCRIPT CONFIG — WAJIB PALING ATAS
+     ============================================================ -->
+<script src="js/config.js?v=5"></script>
+<!-- ============================================================
+     HIDE SETTINGS MENU — INSTANT HIDE
+     ----------------------------------------------------------
+     CSS ini menyembunyikan menu Settings sejak awal.
+     Script di bawah (di akhir body) akan mengembalikannya
+     kalau user ternyata System Administrator.
+     ============================================================ -->
+<style id="hide-settings-style">
+    .dropdown-menu a[href*="setting"],
+    .dropdown-menu button[onclick*="setting"],
+    .dropdown-item[href*="setting"],
+    [class*="dropdown"] a:has(svg):first-child,
+    .user-dropdown a:first-child {
+        display: none !important;
+    }
+</style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Assessment Catalog | TalentScope</title>
+
+<!-- CSS -->
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/assessment-catalog.css">
+
+<style>
+
+/* =========================================================
+   MOBILE RESPONSIVE
+   ASSESSMENT CATALOG
+========================================================= */
+
+#mobileMenuButton {
+    display: none;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media screen and (max-width: 768px) {
+
+    html {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+
+    body {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        position: relative !important;
+    }
+
+    .app {
+        display: block !important;
+        width: 100% !important;
+        min-height: 100vh !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .app-layout,
+    .main-layout {
+        width: 100% !important;
+        min-height: 100vh !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .main {
+        width: 100% !important;
+        min-height: 100vh !important;
+        height: auto !important;
+        margin-left: 0 !important;
+        overflow: visible !important;
+    }
+
+    .main-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: 100vh !important;
+        height: auto !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
+
+    .content {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+        padding: 20px 16px 120px !important;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+        display: flex !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 280px !important;
+        max-width: 85vw !important;
+        height: 100vh !important;
+        margin: 0 !important;
+        z-index: 10001 !important;
+        transform: translateX(-105%) !important;
+        transition: transform 0.3s ease !important;
+        overflow-y: auto !important;
+        flex-direction: column !important;
+    }
+
+    .sidebar.mobile-open {
+        display: flex !important;
+        transform: translateX(0) !important;
+    }
+
+    /* OVERLAY */
+    .sidebar-overlay {
+        display: block !important;
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(15, 23, 42, 0.55) !important;
+        z-index: 10000 !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    }
+
+    .sidebar-overlay.active {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+    }
+
+    /* FLOATING MENU BUTTON */
+    #mobileMenuButton {
+        display: flex !important;
+        position: fixed !important;
+        top: 16px !important;
+        right: 16px !important;
+        left: auto !important;
+        width: 46px !important;
+        height: 46px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: none !important;
+        border-radius: 12px !important;
+        background: #0F172A !important;
+        color: #FFFFFF !important;
+        font-size: 20px !important;
+        cursor: pointer !important;
+        z-index: 9999 !important;
+        box-shadow: 0 8px 25px rgba(15,23,42,.25) !important;
+    }
+
+    #mobileMenuButton i {
+        pointer-events: none !important;
+    }
+
+    body.sidebar-is-open #mobileMenuButton {
+        right: 16px !important;
+        left: auto !important;
+    }
+
+    /* HEADER */
+    .header {
+        width: 100% !important;
+        min-height: auto !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+        padding: 26px 84px 20px 20px !important;
+        overflow: visible !important;
+    }
+
+    .page-header,
+    .dashboard-header,
+    .content-header {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        margin-bottom: 24px !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-left {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    .header-left h1,
+    .page-title {
+        font-size: 42px !important;
+        line-height: 1.12 !important;
+        margin: 0 0 8px 0 !important;
+        word-break: normal !important;
+    }
+
+    .header-left p,
+    .page-subtitle {
+        margin: 0 !important;
+        font-size: 17px !important;
+        line-height: 1.55 !important;
+    }
+
+    .header-right {
+        width: 100% !important;
+        min-width: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-search,
+    .global-search {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-search input,
+    .global-search input {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .page-action {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .page-action > button {
+        width: 100% !important;
+    }
+
+    #selectionPanel {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 14px !important;
+    }
+
+    #selectionPanel button {
+        width: 100% !important;
+    }
+
+    .catalog-stats {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+        width: 100% !important;
+    }
+
+    .stat-card {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding: 18px !important;
+    }
+
+    .stat-content span,
+    .stat-content small {
+        font-size: 12px !important;
+    }
+
+    .stat-content h3 {
+        font-size: 26px !important;
+    }
+
+    .catalog-toolbar {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+        box-sizing: border-box !important;
+    }
+
+    .toolbar-left,
+    .toolbar-right {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .search-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-box input {
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .toolbar-right button {
+        width: 100% !important;
+    }
+
+    #assessmentFilterPanel {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    #assessmentFilterPanel > div:nth-of-type(2) {
+        grid-template-columns: 1fr !important;
+    }
+
+    .table-wrapper {
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .assessment-table {
+        min-width: 850px !important;
+    }
+
+    .pagination-wrapper {
+        width: 100% !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .pagination-container {
+        min-width: max-content !important;
+    }
+
+    #selectionPanel button {
+        width: 100% !important;
+    }
+
+    .modal-overlay {
+        padding: 14px !important;
+        box-sizing: border-box !important;
+    }
+
+    .modal-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 90dvh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse !important;
+    }
+
+    .modal-footer button {
+        width: 100% !important;
+    }
+}
+
+
+/* =========================================================
+   EXTRA SMALL MOBILE
+========================================================= */
+
+@media screen and (max-width: 480px) {
+
+    .content {
+        padding: 18px 14px 120px !important;
+    }
+
+    .header {
+        padding: 22px 76px 18px 18px !important;
+    }
+
+    .header-left h1,
+    .page-title {
+        font-size: 38px !important;
+    }
+
+    .header-left p,
+    .page-subtitle {
+        font-size: 16px !important;
+    }
+
+    #mobileMenuButton {
+        width: 46px !important;
+        height: 46px !important;
+        font-size: 17px !important;
+        top: 16px !important;
+        right: 16px !important;
+        border-radius: 14px !important;
+    }
+}
+
+
+/* =========================================================
+   FINAL FIX - ASSESSMENT CATALOG MOBILE
+========================================================= */
+
+@media screen and (max-width: 768px) {
+
+    .header,
+    .page-header,
+    .dashboard-header,
+    .content-header {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 24px 20px 20px !important;
+        gap: 14px !important;
+    }
+
+    .header-left {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .header-left h1,
+    .page-title {
+        font-size: 42px !important;
+        line-height: 1.1 !important;
+        margin: 0 0 8px !important;
+        max-width: 100% !important;
+    }
+
+    .header-left p,
+    .page-subtitle {
+        font-size: 18px !important;
+        line-height: 1.5 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .header-right {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .header-search,
+    .global-search {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        position: relative !important;
+        margin: 0 !important;
+    }
+
+    .header-search input,
+    .global-search input,
+    #globalSearchInput {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        padding-right: 16px !important;
+    }
+
+    .user-profile,
+    .user-menu,
+    .header-user {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+
+    .main,
+    .main-content,
+    .content {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    .page-action {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .page-action > button {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+}
+
+
+/* =========================================
+   ASSESSMENT CATALOG - PAGINATION FIX
+========================================= */
+
+.pagination-wrapper {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 14px 0 16px 0 !important;
+    margin-top: 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
+    right: auto !important;
+    overflow: visible !important;
+    z-index: 1 !important;
+}
+
+#assessmentPagination,
+.pagination-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
+    min-height: 46px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 !important;
+}
+
+.pagination-wrapper button,
+#assessmentPagination button,
+.pagination-container button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+.assessment-table-container,
+.table-container {
+    padding-bottom: 10px !important;
+}
+
+
+/* =====================================================
+   PREMIUM ASSESSMENT PAGINATION
+===================================================== */
+
+.pagination-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 18px;
+    margin-bottom: 24px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    position: relative;
+    clear: both;
+    z-index: 10;
+    overflow: visible !important;
+}
+
+.pagination-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
+    white-space: nowrap;
+}
+
+.pagination-container .pg-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-container #prevPage,
+.pagination-container #nextPage {
+    padding-left: 11px;
+    padding-right: 11px;
+    min-width: auto;
+    color: #475569;
+}
+
+.pagination-container .pg-btn:hover:not(.active) {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.pagination-container .pg-num.active {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.22);
+    transform: none;
+}
+
+.pagination-container .pg-btn:active {
+    transform: scale(0.96);
+}
+
+.pagination-container .pg-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: transparent;
+    color: #94a3b8;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* =====================================================
+   TABLE AREA SAFETY
+===================================================== */
+
+.assessment-table-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.pagination-wrapper,
+.pagination-container,
+#assessmentPagination {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .pagination-wrapper {
+        justify-content: center;
+        margin-top: 20px;
+        margin-bottom: 24px;
+        padding: 0 12px;
+    }
+
+    .pagination-container {
+        gap: 5px;
+        padding: 5px;
+        max-width: 100%;
+    }
+
+    .pagination-container .pg-btn {
+        min-width: 38px;
+        height: 38px;
+        padding: 0 11px;
+        font-size: 13px;
+    }
+
+    .pagination-container #prevPage,
+    .pagination-container #nextPage {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+}
+
+
+@media (max-width: 420px) {
+
+    .pagination-wrapper {
+        padding: 0 8px;
+    }
+
+    .pagination-container {
+        gap: 4px;
+        padding: 4px;
+        border-radius: 12px;
+    }
+
+    .pagination-container .pg-btn {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 9px;
+        font-size: 12px;
+    }
+
+    .pagination-container #prevPage,
+    .pagination-container #nextPage {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+
+</style>
+
+<!-- Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar"></aside>
+
+    <!-- Main -->
+    <div class="main">
+
+        <!-- Header -->
+        <header class="header"></header>
+
+        <!-- Content -->
+        <main class="content">
+
+            <!-- =====================================================
+                 PAGE HEADER
+                 ===================================================== -->
+            <section class="page-header" style="width: 100%; display: block; clear: both; margin-bottom: 24px;">
+
+                <div class="page-action" style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+
+                    <button class="btn btn-primary" id="addAssessmentBtn" style="font-size: 14px; padding: 10px 18px; font-weight: 600;">
+                        + Add Assessment
+                    </button>
+
+                    <div id="selectionPanel" style="align-items: center; gap: 12px; background: #ffffff; padding: 6px 6px 6px 16px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                        <span id="selectedCount" style="font-size: 14px; font-weight: 500; color: #64748b;">0 assessment selected</span>
+                        <button class="btn btn-primary" id="createProjectBtn" style="font-size: 14px; padding: 10px 18px; font-weight: 600;">
+                            <i class="fas fa-layer-group"></i> Create Assessment Project
+                        </button>
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+                 STATISTICS
+                 ===================================================== -->
+            <section class="catalog-stats">
+
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-book"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span>Total Assessment</span>
+                        <h3 id="totalAssessment">0</h3>
+                        <small>Assessment available</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span>Active</span>
+                        <h3 id="activeAssessment">0</h3>
+                        <small>Ready to use</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span>Total Duration</span>
+                        <h3 id="totalDuration">0</h3>
+                        <small>Minutes</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span>Categories</span>
+                        <h3 id="totalCategory">0</h3>
+                        <small>Assessment Types</small>
+                    </div>
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+                 TOOLBAR
+                 ===================================================== -->
+            <section class="catalog-toolbar">
+
+                <div class="toolbar-left">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="searchAssessment" placeholder="Search assessment...">
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <button class="btn btn-outline" id="filterAssessment">
+                        <i class="fa-solid fa-filter"></i>
+                        Filter
+                    </button>
+                </div>
+
+            </section>
+
+
+            <!-- =====================================================
+                 FILTER PANEL
+                 ===================================================== -->
+            <div id="assessmentFilterPanel" style="display:none; background:#ffffff; border:1px solid #e2e8f0; border-radius:10px; padding:18px 20px; margin-bottom:16px; box-shadow:0 2px 8px rgba(15,23,42,.06);">
+
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+
+                    <div>
+                        <div style="font-size:15px; font-weight:700; color:#0f172a;">
+                            Filter Assessment
+                        </div>
+                        <div style="margin-top:3px; font-size:12px; color:#64748b;">
+                            Filter assessment berdasarkan category dan status
+                        </div>
+                    </div>
+
+                    <button type="button" id="resetAssessmentFilter" style="border:none; background:transparent; color:#64748b; font-size:13px; font-weight:600; cursor:pointer;">
+                        Reset
+                    </button>
+
+                </div>
+
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+                    <!-- CATEGORY -->
+                    <div>
+                        <label style="display:block; margin-bottom:7px; font-size:13px; font-weight:600; color:#334155;">
+                            Category
+                        </label>
+
+                        <select id="filterCategory" style="width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #d8e0ea; border-radius:8px; background:#ffffff; color:#0f172a; font-size:13px; outline:none;">
+                            <option value="">All Categories</option>
+                            <option value="Cognitive">Cognitive</option>
+                            <option value="Personality">Personality</option>
+                            <option value="Intelligence">Intelligence</option>
+                            <option value="Behavior">Behavior</option>
+                            <option value="Interest">Interest</option>
+                            <option value="Projective">Projective</option>
+                            <option value="Performance">Performance</option>
+                        </select>
+                    </div>
+
+
+                    <!-- STATUS -->
+                    <div>
+                        <label style="display:block; margin-bottom:7px; font-size:13px; font-weight:600; color:#334155;">
+                            Status
+                        </label>
+
+                        <select id="filterStatus" style="width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid #d8e0ea; border-radius:8px; background:#ffffff; color:#0f172a; font-size:13px; outline:none;">
+                            <option value="">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px; padding-top:15px; border-top:1px solid #eef2f7;">
+
+                    <button type="button" id="clearAssessmentFilter" style="padding:9px 15px; border:1px solid #d8e0ea; background:#ffffff; color:#52667c; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+                        Clear
+                    </button>
+
+                    <button type="button" id="applyAssessmentFilter" style="padding:9px 16px; border:1px solid #0066ff; background:#0066ff; color:#ffffff; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">
+                        Apply Filter
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================================================
+                 TABLE
+                 ===================================================== -->
+            <div class="table-wrapper">
+
+                <table class="assessment-table">
+
+                    <thead>
+                        <tr>
+                            <th width="55">
+                                <input type="checkbox" id="checkAll">
+                            </th>
+                            <th width="90">Code</th>
+                            <th>Assessment Name</th>
+                            <th width="170">Category</th>
+                            <th width="120">Duration</th>
+                            <th width="130">Questions</th>
+                            <th width="130">Status</th>
+                            <th width="140">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="assessmentTable">
+                        <!-- Render by JavaScript -->
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =====================================================
+                 PAGINATION
+                 ===================================================== -->
+            <div class="pagination-wrapper">
+                <div class="pagination-container" id="assessmentPagination">
+
+                    <button id="prevPage" class="pg-btn">
+                        Previous
+                    </button>
+
+                    <button class="pg-btn pg-num active">1</button>
+                    <button class="pg-btn pg-num">2</button>
+                    <button class="pg-btn pg-num">3</button>
+
+                    <button id="nextPage" class="pg-btn">
+                        Next
+                    </button>
+
+                </div>
+            </div>
+
+
+
+            <!-- =====================================================
+                 PREMIUM ADD ASSESSMENT MODAL
+                 ===================================================== -->
+            <div class="modal-overlay" id="assessmentModal" style="display: none;">
+                <div class="modal-card">
+
+                    <!-- Header -->
+                    <div class="modal-header">
+                        <div>
+                            <h3 class="modal-title">Add New Assessment</h3>
+                            <p class="modal-subtitle">Create and configure a new assessment instrument</p>
+                        </div>
+                        <button type="button" class="btn-close" id="closeAssessmentModal">&times;</button>
+                    </div>
+
+                    <!-- Body Form -->
+                    <div class="modal-body">
+                        <div class="form-grid">
+
+                            <div class="form-group">
+                                <label>Assessment Code <span class="required">*</span></label>
+                                <input type="text" id="assessmentCode" placeholder="e.g. VR" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Assessment Name <span class="required">*</span></label>
+                                <input type="text" id="assessmentName" placeholder="e.g. Verbal Reasoning" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="assessmentCategory">
+                                    <option value="Cognitive">Cognitive</option>
+                                    <option value="Personality">Personality</option>
+                                    <option value="Intelligence">Intelligence</option>
+                                    <option value="Behavior">Behavior</option>
+                                    <option value="Interest">Interest</option>
+                                    <option value="Projective">Projective</option>
+                                    <option value="Performance">Performance</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Status</label>
+                                <select id="assessmentStatus">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+
+                            <!-- ? FIX: form-group ini ditutup dengan benar -->
+                            <div class="form-group">
+                                <label>Duration (Minutes)</label>
+                                <input type="number" id="assessmentDuration" value="20" placeholder="20" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Total Questions</label>
+                                <input type="number" id="assessmentQuestion" value="30" placeholder="30" />
+                            </div>
+
+                            <div class="form-group full-width">
+                                <label>Description</label>
+                                <textarea id="assessmentDescription" rows="3" placeholder="Enter assessment overview or instructions..."></textarea>
+                            </div>
+
+                        </div>
+
+                        <!-- Footer Action -->
+                        <div class="modal-footer">
+                            <button type="button" class="btn-secondary" id="cancelAssessment">Cancel</button>
+                            <button type="button" class="btn-primary-modal" id="saveAssessment">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Assessment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- =========================================
+                 JAVASCRIPT — EXTERNAL LIBRARIES
+                 ========================================= -->
+            <script src="js/layout/layout-loader.js?v=12"></script>
+            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+            <script src="js/supabase-client.js?v=7"></script>
+            <script src="js/role-permissions.js?v=13"></script>
+            <script src="js/data-service.js?v=8"></script>
+            <script src="js/ts-supabase-sync.js?v=14"></script>
+            <script src="js/assessment-modal.js?v=5"></script>
+            <script src="js/assessment.js?v=5"></script>
+            <script src="js/lsjt-catalog-seed.js?v=5"></script>
+            <script src="js/assessment-project-selection.js?v=5"></script>
+            <script src="js/global-search.js?v=5"></script>
+            <script src="js/app-access-control.js?v=6"></script>
+            <script src="js/project-access-filter.js?v=5"></script>
+            <script src="js/access-control-ui.js?v=5"></script>
+
+
+           <!-- =========================================
+     JAVASCRIPT — HALAMAN INLINE
+     ========================================= -->
+<script>
+
+/* =========================================================
+   TALENTSCOPE - ASSESSMENT CATALOG
+   INLINE PAGE SCRIPT
+   ----------------------------------------------------------
+   Menggabungkan 5 script inline lama menjadi 1 blok:
+   1. Proteksi Session & Role
+   2. Hide Settings menu (non-System-Admin)
+   3. Proteksi Asesor & Client (blok Add/Edit/Delete)
+   4. Auto-inject id="globalSearchInput"
+   5. Mobile menu button (hamburger)
+   6. Update selection panel
+   7. Transfer selected assessments
+========================================================= */
+
+(function () {
+    "use strict";
+
+
+    /* =====================================================
+       1. AMBIL SESSION USER
+    ===================================================== */
+
+    function getSavedUser() {
+        try {
+            var d =
+                sessionStorage.getItem("ts_admin_session") ||
+                sessionStorage.getItem("ts_participant_session") ||
+                localStorage.getItem("talentscope_current_user");
+
+            return d ? JSON.parse(d) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    var activeUser = getSavedUser();
+
+
+    /* =====================================================
+       2. SESSION & ROLE DISPLAY — setelah DOM siap
+    ===================================================== */
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        if (activeUser) {
+
+            // Pertahankan session di sessionStorage (jangan timpa)
+
+            var role = String(activeUser.role || "").trim();
+
+            /* A. Update header text */
+            var allEls = document.querySelectorAll(
+                "div, span, p, strong, b, h1, h2, h3"
+            );
+
+            allEls.forEach(function (el) {
+
+                if (el.children.length === 0) {
+
+                    if (el.textContent.trim() === "Administrator") {
+                        el.textContent =
+                            activeUser.name ||
+                            activeUser.username ||
+                            "User";
+                    }
+
+                    if (el.textContent.trim() === "System Admin") {
+                        el.textContent = role;
+                    }
+
+                }
+
+            });
+
+           
+            /* C. Sembunyikan tombol aksi sensitif untuk Client & Asesor */
+            if (isClient || isAsesor) {
+
+                document.querySelectorAll(
+                    "button, .btn, .btn-primary"
+                ).forEach(function (btn) {
+
+                    var bt = btn.textContent.toLowerCase();
+
+                    if (
+                        bt.includes("remove") ||
+                        bt.includes("create") ||
+                        bt.includes("add") ||
+                        bt.includes("delete") ||
+                        bt.includes("tambah")
+                    ) {
+                        btn.style.setProperty(
+                            "display",
+                            "none",
+                            "important"
+                        );
+                    }
+
+                });
+
+            }
+
+        }
+
+
+        /* =====================================================
+           3. HIDE SETTINGS MENU — non-System-Admin
+        ===================================================== */
+
+        function enforceHideSettings() {
+
+            var userRaw =
+                sessionStorage.getItem("ts_admin_session") ||
+                sessionStorage.getItem("ts_participant_session");
+
+            if (!userRaw) return;
+
+            var user;
+            try {
+                user = JSON.parse(userRaw);
+            } catch (e) {
+                return;
+            }
+
+            var isSystemAdmin = /system/i.test(user.role || "");
+
+            var styleEl =
+                document.getElementById("hide-settings-style");
+
+            /* Kalau System Admin ? kembalikan menu Settings */
+            if (isSystemAdmin) {
+                if (styleEl) styleEl.remove();
+                return;
+            }
+
+            /* Kalau bukan ? pastikan semua elemen "Setting" tersembunyi */
+            var menuItems = document.querySelectorAll(
+                ".dropdown-menu a, .dropdown-menu button, " +
+                ".dropdown-item, li a"
+            );
+
+            menuItems.forEach(function (item) {
+
+                var text = item.textContent.trim().toLowerCase();
+
+                if (
+                    text.includes("setting") ||
+                    text.includes("pengaturan")
+                ) {
+                    item.style.setProperty(
+                        "display",
+                        "none",
+                        "important"
+                    );
+                }
+
+            });
+
+        }
+
+        enforceHideSettings();
+
+        window.addEventListener("load", enforceHideSettings);
+
+        /* MutationObserver: kalau dropdown baru dirender */
+        var settingsObserver = new MutationObserver(function () {
+            enforceHideSettings();
+        });
+
+        settingsObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+
+        /* =====================================================
+           4. PROTEKSI ASESOR & CLIENT — blok Add/Edit/Delete
+        ===================================================== */
+
+        function isRestrictedRole() {
+
+            var savedUser =
+                localStorage.getItem("talentscope_current_user") ||
+                sessionStorage.getItem("ts_admin_session");
+
+            var user = savedUser ? JSON.parse(savedUser) : {};
+            var role = String(user.role || "").toLowerCase();
+
+            var roleTextInPage =
+                document.querySelector(
+                    ".dropdown-profile small, .user-role, .profile-role"
+                )?.textContent.toLowerCase() || "";
+
+            var isAsesor =
+                role.includes("asesor") ||
+                role.includes("assessor") ||
+                roleTextInPage.includes("asesor");
+
+            var isClient =
+                role.includes("client") ||
+                roleTextInPage.includes("client");
+
+            return isAsesor || isClient;
+
+        }
+
+        document.addEventListener("click", function (e) {
+
+            var btnDelete =
+                e.target.closest(".deleteAssessment") ||
+                e.target.closest(".delete-btn") ||
+                e.target.closest(".fa-trash") ||
+                e.target.closest("button[title='Delete']");
+
+            var btnEdit =
+                e.target.closest(".editAssessment") ||
+                e.target.closest(".edit-btn") ||
+                e.target.closest(".fa-pen") ||
+                e.target.closest("button[title='Edit']");
+
+            var btnAdd =
+                e.target.closest("#addAssessmentBtn") ||
+                e.target.closest("#openModalBtn");
+
+            if (btnDelete && isRestrictedRole()) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                alert("Akses Ditolak: Role Anda tidak memiliki izin untuk menghapus asesmen.");
+                return false;
+            }
+
+            if (btnEdit && isRestrictedRole()) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                alert("Akses Ditolak: Role Anda tidak memiliki izin untuk mengedit asesmen.");
+                return false;
+            }
+
+            if (btnAdd && isRestrictedRole()) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                alert("Akses Ditolak: Role Anda tidak memiliki izin untuk menambah asesmen.");
+                return false;
+            }
+
+        }, true);
+
+
+        /* =====================================================
+           5. AUTO-INJECT id="globalSearchInput" (header dinamis)
+        ===================================================== */
+
+        setTimeout(function () {
+
+            var searchInput = document.querySelector(
+                '.main header input[type="text"], ' +
+                '.header input[type="text"], ' +
+                '.main input[placeholder*="Cari"]'
+            );
+
+            if (searchInput && !searchInput.id) {
+                searchInput.id = "globalSearchInput";
+            }
+
+        }, 500);
+
+
+        /* =====================================================
+           6. MOBILE MENU BUTTON
+        ===================================================== */
+
+        function createMobileMenuButton() {
+
+            if (document.getElementById("mobileMenuButton")) {
+                return;
+            }
+
+            var button = document.createElement("button");
+            button.id = "mobileMenuButton";
+            button.type = "button";
+            button.setAttribute("aria-label", "Open menu");
+            button.innerHTML = '<i class="fa-solid fa-bars"></i>';
+
+            document.body.appendChild(button);
+
+            button.addEventListener("click", function () {
+
+                var sidebar = document.querySelector(".sidebar");
+                var overlay = document.querySelector(".sidebar-overlay");
+
+                if (!sidebar) {
+                    console.warn("Sidebar belum ditemukan");
+                    return;
+                }
+
+                sidebar.classList.toggle("mobile-open");
+                document.body.classList.toggle("sidebar-is-open");
+
+                if (overlay) {
+                    overlay.classList.toggle("active");
+                }
+
+            });
+
+        }
+
+        function closeMobileSidebar() {
+
+            var sidebar = document.querySelector(".sidebar");
+            var overlay = document.querySelector(".sidebar-overlay");
+
+            if (sidebar) sidebar.classList.remove("mobile-open");
+            if (overlay) overlay.classList.remove("active");
+
+            document.body.classList.remove("sidebar-is-open");
+
+        }
+
+        function setupOverlay() {
+
+            var overlay = document.querySelector(".sidebar-overlay");
+
+            if (!overlay || overlay.dataset.ready === "true") {
+                return;
+            }
+
+            overlay.dataset.ready = "true";
+
+            overlay.addEventListener("click", closeMobileSidebar);
+
+        }
+
+        function initializeMobileMenu() {
+
+            if (window.innerWidth > 768) return;
+
+            createMobileMenuButton();
+            setupOverlay();
+
+        }
+
+        initializeMobileMenu();
+
+        /* Karena sidebar/header dimuat oleh layout-loader.js */
+        var mobileObserver = new MutationObserver(function () {
+            initializeMobileMenu();
+        });
+
+        mobileObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        window.addEventListener("resize", function () {
+            if (window.innerWidth > 768) {
+                closeMobileSidebar();
+            }
+        });
+
+
+        /* =====================================================
+           7. UPDATE SELECTION PANEL ("0 assessment selected")
+        ===================================================== */
+
+        function updateMobileSelectionPanel() {
+
+            var selectionPanel =
+                document.getElementById("selectionPanel");
+
+            var selectedCountEl =
+                document.getElementById("selectedCount");
+
+            if (!selectionPanel || !selectedCountEl) return;
+
+            var checkedBoxes = document.querySelectorAll(
+                'input[type="checkbox"]:checked'
+            );
+
+            var totalSelected = 0;
+
+            checkedBoxes.forEach(function (checkbox) {
+
+                if (
+                    !checkbox.id.includes("selectAll") &&
+                    !checkbox.classList.contains("select-all")
+                ) {
+                    totalSelected++;
+                }
+
+            });
+
+            selectedCountEl.textContent =
+                totalSelected +
+                (totalSelected === 1
+                    ? " assessment selected"
+                    : " assessments selected");
+
+            if (totalSelected > 0) {
+                selectionPanel.classList.add("has-selection");
+            } else {
+                selectionPanel.classList.remove("has-selection");
+            }
+
+        }
+
+        document.addEventListener("change", function (event) {
+
+            if (
+                event.target.matches('input[type="checkbox"]')
+            ) {
+                setTimeout(updateMobileSelectionPanel, 50);
+            }
+
+        });
+
+        updateMobileSelectionPanel();
+
+
+        /* =====================================================
+           8. TRANSFER SELECTED ASSESSMENTS ? PROJECT
+           (Q1=A: Script A yang benar, dipertahankan)
+        ===================================================== */
+
+        var createBtn = document.getElementById("createProjectBtn");
+
+        if (createBtn) {
+
+            createBtn.addEventListener("click", function () {
+
+                /* Ambil semua assessment yang dicentang (dalam tbody saja) */
+                var selected = Array.from(
+                    document.querySelectorAll(
+                        'input[type="checkbox"]:checked'
+                    )
+                )
+                .filter(function (checkbox) {
+                    return checkbox.closest("tbody") !== null;
+                })
+                .map(function (checkbox) {
+
+    var row = checkbox.closest("tr");
+    if (!row) return null;
+
+    var cells = row.querySelectorAll("td");
+
+    /* ============================================
+       FIX: Ambil UUID dari data-assessment-id
+       Prioritas: data-assessment-id ? data-id ? value
+    ============================================ */
+    var assessmentId = 
+        checkbox.getAttribute("data-assessment-id") ||
+        checkbox.getAttribute("data-id") ||
+        checkbox.value;
+
+    /* ============================================
+       FIX: Validasi format UUID
+    ============================================ */
+    var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!assessmentId || !uuidPattern.test(assessmentId)) {
+        console.warn("[Catalog] Skip: ID bukan UUID:", {
+            id: assessmentId,
+            code: cells[1]?.textContent.trim()
+        });
+        return null;
+    }
+
+    return {
+        id: assessmentId,
+        code: cells[1]?.textContent.trim() || "",
+        name: cells[2]?.textContent.trim() || "",
+        category: cells[3]?.textContent.trim() || "",
+        duration: parseInt(cells[4]?.textContent.replace(/\D/g, ""), 10) || 0,
+        questions: parseInt(cells[5]?.textContent.replace(/\D/g, ""), 10) || 0,
+        required: true,
+        active: true
+    };
+
+})
+.filter(Boolean);
+                if (selected.length === 0) {
+                    alert("Silakan pilih minimal satu assessment.");
+                    return;
+                }
+
+                /* Simpan sementara */
+                sessionStorage.setItem(
+                    "talentscope_selected_assessments",
+                    JSON.stringify(selected)
+                );
+
+                /* Masuk ke Assessment Project */
+                window.location.href = "assessment-project.html";
+
+            });
+
+        }
+
+    });
+
+})();
+
+</script>
+
+</body>
+</html>

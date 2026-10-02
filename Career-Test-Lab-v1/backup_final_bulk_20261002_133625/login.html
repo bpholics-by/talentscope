@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Login | TalentScope</title>
+
+<!-- WAJIB PALING ATAS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js?v=9"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/session-helper.js?v=1"></script>
+<script src="js/auth-guard.js?v=13"></script>
+
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;}
+body{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;
+  background:radial-gradient(circle at 8% 15%, rgba(42,166,255,.20) 0 8%, transparent 24%),
+             radial-gradient(circle at 92% 82%, rgba(0,180,255,.18) 0 10%, transparent 27%),
+             linear-gradient(135deg,#061b31 0%,#073e68 38%,#0875c5 72%,#087eea 100%);
+}
+.shell{width:min(460px,calc(100vw - 32px));position:relative;z-index:2;}
+.brand{text-align:center;margin-bottom:18px;}
+.logo{
+  width:54px;height:54px;margin:0 auto 10px;border-radius:15px;
+  display:grid;place-items:center;background:linear-gradient(145deg,#0d8cff,#0669ce);
+  color:#fff;font-weight:900;font-size:20px;box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+.card{
+  background:rgba(255,255,255,.98);border:1px solid rgba(255,255,255,.8);
+  border-radius:16px;padding:28px 32px 25px;box-shadow:0 30px 80px rgba(0,15,35,.32);
+}
+h1{text-align:center;margin:0 0 22px;color:#14263d;font-size:21px;line-height:1.25;}
+.field{margin-bottom:15px;}
+label{display:block;font-size:11px;font-weight:700;color:#53677e;margin-bottom:7px;}
+input{
+  width:100%;height:44px;border:1px solid #d7e0ea;border-radius:9px;
+  padding:0 13px;outline:none;font-size:12px;color:#182b42;background:#fff;
+}
+input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
+.password{position:relative;}
+.password input{padding-right:58px;}
+.show{
+  position:absolute;right:7px;top:6px;height:32px;border:0;
+  background:transparent;color:#0878e8;font-size:10px;font-weight:800;cursor:pointer;
+}
+.btn{
+  width:100%;height:44px;border:0;border-radius:9px;
+  background:linear-gradient(135deg,#0878e8,#0669ca);color:#fff;
+  font-weight:800;font-size:12px;cursor:pointer;margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s ease,box-shadow .15s ease,opacity .15s ease;
+}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 20px rgba(8,120,232,.28);}
+.btn:active:not(:disabled){transform:translateY(0);}
+.btn:disabled{cursor:not-allowed;opacity:.75;}
+.btn .spinner{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.45);border-top-color:#fff;
+  animation:btn-spin .7s linear infinite;display:none;flex:0 0 auto;
+}
+.btn.loading .spinner{display:inline-block;}
+.btn.success{
+  background:linear-gradient(135deg,#10b981,#059669);
+  cursor:default;
+  box-shadow:0 8px 20px rgba(16,185,129,.32);
+  transform:none;
+}
+.btn.success:hover{transform:none;box-shadow:0 8px 20px rgba(16,185,129,.32);}
+.btn.success .spinner{display:none;}
+.btn.error{
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+  cursor:default;
+  box-shadow:0 8px 20px rgba(239,68,68,.32);
+  transform:none;
+}
+.btn.error:hover{transform:none;box-shadow:0 8px 20px rgba(239,68,68,.32);}
+.btn.error .spinner{display:none;}
+@keyframes ts-success-pulse {
+    0%, 100% { box-shadow: 0 8px 20px rgba(16,185,129,.32); }
+    50%      { box-shadow: 0 8px 30px rgba(16,185,129,.55); }
+}
+.btn.success {
+    animation: ts-success-pulse 1s ease-in-out infinite;
+}
+@keyframes btn-spin{to{transform:rotate(360deg);}}
+.message{display:none;margin:0 0 14px;padding:10px 11px;border-radius:8px;font-size:11px;}
+.message.show{display:block;}
+.message.error{background:#fff3f3;border:1px solid #efcccc;color:#b33d3d;}
+.message.success{background:#f2fbf5;border:1px solid #cfeada;color:#2c7a4b;}
+.footer{text-align:center;color:rgba(255,255,255,.68);font-size:9px;margin-top:14px;}
+</style>
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=9">
+</head>
+
+<body>
+
+<main class="shell">
+  <div class="brand">
+    <div class="logo">TS</div>
+  </div>
+
+  <section class="card">
+    <h1>Login Integrated Assessment Platform</h1>
+    <div id="message" class="message"></div>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="field">
+        <label for="username">Email / Username</label>
+        <input id="username" type="text" placeholder="Masukkan email atau username" required autocomplete="username">
+      </div>
+
+      <div class="field">
+        <label for="password">Password / Access Code</label>
+        <div class="password">
+          <input id="password" type="password" placeholder="Masukkan password atau access code" required autocomplete="current-password">
+          <button type="button" class="show" id="togglePassword">Show</button>
+        </div>
+      </div>
+
+      <button class="btn" id="loginBtn" type="submit">
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="btn-text" id="loginBtnText">Login</span>
+      </button>
+    </form>
+  </section>
+
+  <div class="footer">TalentScope</div>
+</main>
+
+<script>
+;(function () {
+    "use strict";
+
+    var loginForm     = document.getElementById("loginForm");
+    var loginBtn      = document.getElementById("loginBtn");
+    var loginBtnText  = document.getElementById("loginBtnText");
+    var toggleBtn     = document.getElementById("togglePassword");
+    var passInput     = document.getElementById("password");
+    var messageEl     = document.getElementById("message");
+
+    function showMessage(text, type) {
+        if (!messageEl) return;
+        messageEl.textContent = text;
+        messageEl.className = "message show " + (type || "error");
+    }
+    function hideMessage() {
+        if (!messageEl) return;
+        messageEl.className = "message";
+        messageEl.textContent = "";
+    }
+    function setLoading(isLoading) {
+        if (!loginBtn) return;
+        if (isLoading) {
+            loginBtn.disabled = true;
+            loginBtn.classList.add("loading");
+            if (loginBtnText) loginBtnText.textContent = "Memeriksa...";
+        } else {
+            loginBtn.disabled = false;
+            loginBtn.classList.remove("loading");
+            if (loginBtnText) loginBtnText.textContent = "Login";
+        }
+    }
+
+    function setSuccess() {
+        if (!loginBtn) return;
+        loginBtn.disabled = true;
+        loginBtn.classList.remove("loading");
+        loginBtn.classList.add("success");
+        if (loginBtnText) loginBtnText.textContent = "✓ Berhasil Login";
+    }
+
+    function setError(message) {
+        if (!loginBtn) return;
+        loginBtn.disabled = false;
+        loginBtn.classList.remove("loading");
+        loginBtn.classList.add("error");
+        if (loginBtnText) loginBtnText.textContent = "✕ " + (message || "Login Gagal");
+        
+        setTimeout(function () {
+            if (loginBtn) {
+                loginBtn.classList.remove("error");
+                if (loginBtnText) loginBtnText.textContent = "Login";
+            }
+        }, 3000);
+    }
+
+    function looksLikeAccessCode(input) {
+        if (!input) return false;
+        if (input.indexOf("@") !== -1) return false;
+        return /^[A-Za-z0-9\-]{4,}$/.test(input);
+    }
+
+    if (toggleBtn && passInput) {
+        toggleBtn.addEventListener("click", function () {
+            var isPassword = passInput.type === "password";
+            passInput.type = isPassword ? "text" : "password";
+            toggleBtn.textContent = isPassword ? "Hide" : "Show";
+        });
+    }
+
+    // ============================================
+    // AUTO-REDIRECT JIKA SUDAH LOGIN (via TS_SESSION)
+    // ============================================
+    (async function checkExistingAuth() {
+        if (!window.TS_SESSION) {
+            console.log("[LOGIN] TS_SESSION tidak tersedia, skip auto-redirect");
+            return;
+        }
+        
+        try {
+            var isAuth = await window.TS_SESSION.isAuthenticated();
+            if (!isAuth) {
+                console.log("[LOGIN] Belum login. Tampilkan form.");
+                return;
+            }
+            
+            var role = await window.TS_SESSION.getRole();
+            console.log("[LOGIN] Sudah login sebagai:", role, "— redirect");
+            
+            if (role === "peserta" || role === "participant") {
+                window.location.replace("participant-dashboard.html");
+            } else {
+                window.location.replace("dashboard.html");
+            }
+        } catch (e) {
+            console.warn("[LOGIN] Auto-redirect error:", e);
+        }
+    })();
+
+    if (!loginForm) {
+        console.error("[LOGIN] Form tidak ditemukan");
+        return;
+    }
+
+    loginForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        hideMessage();
+
+        var usernameInput = document.getElementById("username");
+        var usernameRaw = String(usernameInput ? usernameInput.value : "").trim();
+        var passwordRaw = String(passInput ? passInput.value : "").trim();
+
+        if (!usernameRaw || !passwordRaw) {
+            showMessage("Masukkan username dan password!", "error");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            var email;
+            
+            if (usernameRaw.indexOf("@") !== -1) {
+                // Sudah email
+                email = usernameRaw.toLowerCase();
+                console.log("[LOGIN] Email detected:", email);
+            } else if (looksLikeAccessCode(usernameRaw)) {
+                // ============================================
+                // LOGIN PESERTA VIA ACCESS CODE
+                // ============================================
+                console.log("[LOGIN] Access code detected:", usernameRaw);
+                
+                var accessCode = usernameRaw.toUpperCase().replace(/\s+/g, "");
+                var sbP = window.supabaseClient;
+                
+                if (!sbP) {
+                    setError("Supabase client tidak tersedia");
+                    setLoading(false);
+                    return;
+                }
+                
+                var pesertaResult = await sbP
+                    .from("participants")
+                    .select("id, email, name, project_id, access_code, auth_user_id")
+                    .eq("access_code", accessCode)
+                    .maybeSingle();
+                
+                var peserta = pesertaResult.data;
+                
+                if (!peserta || !peserta.email) {
+                    setError("Access code tidak valid");
+                    setLoading(false);
+                    return;
+                }
+                
+                console.log("[LOGIN] Peserta ditemukan:", peserta.name);
+                email = peserta.email;
+                
+            } else {
+                // Username biasa → mapping ke email
+                email = usernameRaw.toLowerCase();
+                
+                try {
+                    var sb = window.supabaseClient;
+                    if (sb) {
+                        var userCheck = await sb.from("ts_users")
+                            .select("data")
+                            .eq("data->>username", email)
+                            .maybeSingle();
+                        
+                        if (userCheck && userCheck.data && userCheck.data.email) {
+                            email = userCheck.data.email;
+                            console.log("[LOGIN] Email dari ts_users:", email);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[LOGIN] Username lookup gagal:", e);
+                }
+            }
+
+            // ============================================
+            // LOGIN VIA SUPABASE AUTH
+            // ============================================
+            var sb = window.supabaseClient;
+            if (!sb || !sb.auth) {
+                showMessage("Supabase client tidak tersedia. Refresh halaman.", "error");
+                setLoading(false);
+                return;
+            }
+            
+            console.log("[LOGIN] Attempting Supabase Auth:", email);
+            
+            var result = await sb.auth.signInWithPassword({
+                email: email,
+                password: passwordRaw
+            });
+            
+            if (result.error) {
+                console.error("[LOGIN] Supabase Auth error:", result.error);
+                setError("Username atau password salah");
+                setLoading(false);
+                return;
+            }
+            
+            if (!result.data || !result.data.user) {
+                setError("Login gagal");
+                setLoading(false);
+                return;
+            }
+            
+            var user = result.data.user;
+            console.log("[LOGIN] ✅ Success:", user.email);
+            
+            // Clear cache TS_SESSION agar role terbaca fresh
+            if (window.TS_SESSION) {
+                window.TS_SESSION.clearCache();
+            }
+            
+            setSuccess();
+            
+            // Ambil role canonical
+            var canonicalRole = "peserta"; // default
+            if (window.TS_SESSION) {
+                canonicalRole = await window.TS_SESSION.getRole();
+            } else {
+                canonicalRole = String(user.user_metadata?.role || "").toLowerCase();
+            }
+            
+            console.log("[LOGIN] ✅ LOGIN SUKSES! Role:", canonicalRole);
+            
+            setTimeout(function () { 
+                if (canonicalRole === "peserta" || canonicalRole === "participant") {
+                    window.location.replace("participant-dashboard.html");
+                } else {
+                    window.location.replace("dashboard.html");
+                }
+            }, 800);
+
+        } catch (err) {
+            console.error("[LOGIN] Error:", err);
+            setError("Koneksi gagal. Coba lagi.");
+            setLoading(false);
+        }
+    });
+
+})();
+</script>
+
+</body>
+</html>

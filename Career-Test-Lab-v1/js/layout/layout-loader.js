@@ -259,35 +259,160 @@ if (isClientUser) {
 });
 
 // =================================================================
-// GLOBAL USER DROPDOWN & LOGOUT (GABUNGAN)
+// GLOBAL USER DROPDOWN & LOGOUT (PHASE 3 - FIXED)
 // =================================================================
-document.addEventListener("click", function (e) {
-    const userDropdown = document.getElementById("userDropdown");
-    const dropdownMenu = document.getElementById("dropdownMenu");
+(function setupUserDropdown() {
+    "use strict";
 
-    if (!userDropdown || !dropdownMenu) return;
+    var _logoutInProgress = false;
 
-    // Cek apakah yang diklik adalah tombol logout (atau bagian dalamnya)
-    const logoutBtn = e.target.closest("#logoutBtn");
-    if (logoutBtn) {
-        e.preventDefault();
-        
-        // Bersihkan data sesi
-        // Hanya hapus data sesi login saja, data peserta & proyek aman
-localStorage.removeItem('auth_token');
-localStorage.removeItem('current_user');
-localStorage.removeItem('talentscope_current_user');
-sessionStorage.clear();
-        
-        // Sesuaikan tujuan redirect (pilih salah satu: "login.html" atau "../index.html")
-        window.location.href = "login.html"; 
-        return;
+    // ============================================================
+    // LOGOUT HANDLER (single source of truth)
+    // ============================================================
+    async function handleLogout(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Guard: jangan dobel klik
+        if (_logoutInProgress) return;
+        _logoutInProgress = true;
+
+        console.log("[LAYOUT] 🚪 Logout clicked — clearing session...");
+
+        // Visual feedback
+        var logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+            logoutBtn.disabled = true;
+            logoutBtn.style.opacity = "0.6";
+            logoutBtn.style.cursor = "wait";
+        }
+
+        try {
+            // PRIORITAS 1: TS_SESSION
+            if (window.TS_SESSION && typeof window.TS_SESSION.clearSession === "function") {
+                await window.TS_SESSION.clearSession();
+                console.log("[LAYOUT] ✅ Session cleared via TS_SESSION");
+            }
+            // PRIORITAS 2: TS_AUTH (legacy)
+            else if (window.TS_AUTH && typeof window.TS_AUTH.logout === "function") {
+                await window.TS_AUTH.logout();
+                console.log("[LAYOUT] ✅ Session cleared via TS_AUTH");
+            }
+            // PRIORITAS 3: Manual clear
+            else {
+                var sb = window.supabaseClient;
+                if (sb && sb.auth) {
+                    try { await sb.auth.signOut(); } catch (err) {}
+                }
+                console.log("[LAYOUT] ✅ Session cleared manually");
+            }
+        } catch (err) {
+            console.warn("[LAYOUT] Logout error:", err);
+        }
+
+        // Fallback cleanup — hapus legacy keys
+        try {
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('current_user');
+            localStorage.removeItem('talentscope_current_user');
+            sessionStorage.removeItem('ts_participant_session');
+        } catch (err) {}
+
+        // Redirect ke login
+        console.log("[LAYOUT] 🚪 Redirecting to login...");
+        window.location.replace("login.html");
     }
 
-    // Toggle menu dropdown
-    if (userDropdown.contains(e.target)) {
-        dropdownMenu.classList.toggle("show");
+    // ============================================================
+    // ATTACH HANDLER (retry karena dropdown bisa dibuat dinamis)
+    // ============================================================
+    function attachLogoutHandler() {
+        var logoutBtns = document.querySelectorAll(
+            "#logoutBtn, " +
+            ".dropdown-menu a[href*='logout' i], " +
+            ".dropdown-menu button[data-action='logout'], " +
+            ".dropdown-item[data-action='logout'], " +
+            "[role='menuitem'][data-action='logout']"
+        );
+
+        // Fallback: cari berdasarkan teks
+        var dropdownItems = document.querySelectorAll(
+            ".dropdown-menu a, .dropdown-menu button, .dropdown-item, [role='menuitem']"
+        );
+
+        dropdownItems.forEach(function (el) {
+            var txt = (el.textContent || "").trim().toLowerCase();
+            var isLogoutText = (
+                txt === "log out" ||
+                txt === "logout" ||
+                txt === "sign out" ||
+                txt === "keluar" ||
+                txt.includes("log out")
+            );
+
+            if (isLogoutText && el.dataset.tsLogoutBound !== "1") {
+                el.dataset.tsLogoutBound = "1";
+                el.addEventListener("click", handleLogout, true);
+                console.log("[LAYOUT] ✅ Logout handler bound:", txt);
+            }
+        });
+
+        // Handle #logoutBtn eksplisit
+        var explicitBtn = document.getElementById("logoutBtn");
+        if (explicitBtn && explicitBtn.dataset.tsLogoutBound !== "1") {
+            explicitBtn.dataset.tsLogoutBound = "1";
+            explicitBtn.addEventListener("click", handleLogout, true);
+            console.log("[LAYOUT] ✅ #logoutBtn handler bound");
+        }
+    }
+
+    // Retry binding dengan interval
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(attachLogoutHandler, 300);
+        });
     } else {
-        dropdownMenu.classList.remove("show");
+        setTimeout(attachLogoutHandler, 300);
     }
-});
+
+    setTimeout(attachLogoutHandler, 1000);
+    setTimeout(attachLogoutHandler, 2000);
+    setTimeout(attachLogoutHandler, 4000);
+
+    // ============================================================
+    // DROPDOWN TOGGLE (untuk area di luar logout button)
+    // ============================================================
+    document.addEventListener("click", function (e) {
+        var userDropdown = document.getElementById("userDropdown");
+        var dropdownMenu = document.getElementById("dropdownMenu");
+
+        if (!userDropdown || !dropdownMenu) return;
+
+        // Skip kalau yang diklik adalah logout (sudah di-handle di atas)
+        var isLogoutClick = e.target.closest(
+            "#logoutBtn, .dropdown-menu a, .dropdown-menu button, .dropdown-item, [role='menuitem']"
+        );
+        
+        if (isLogoutClick) {
+            var txt = (isLogoutClick.textContent || "").trim().toLowerCase();
+            if (txt.includes("log out") || txt.includes("logout") || 
+                txt.includes("sign out") || txt.includes("keluar")) {
+                // Biarkan handler utama yang urus
+                return;
+            }
+        }
+
+        // Toggle dropdown
+        if (userDropdown.contains(e.target)) {
+            dropdownMenu.classList.toggle("show");
+        } else {
+            dropdownMenu.classList.remove("show");
+        }
+    });
+
+    // Expose untuk manual trigger (opsional)
+    window.__tsHandleLogout = handleLogout;
+
+})();

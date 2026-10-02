@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Projects | TalentScope Enterprise</title>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23087ff5'/%3E%3Ctext x='50' y='67' font-size='55' text-anchor='middle' fill='white' font-family='Arial'%3ETS%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/sidebar.css">
+<link rel="stylesheet" href="css/header.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/projects.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- =========================================================
+     PROJECTS - MOBILE & TABLET RESPONSIVE
+     Desktop TIDAK DIUBAH
+     ========================================================= -->
+<style>
+
+/* =========================================================
+   DEFAULT
+   Hanya elemen mobile yang disembunyikan di desktop
+   ========================================================= */
+
+.mobile-hamburger-btn,
+.mobile-header-card,
+.sidebar-overlay {
+    display: none !important;
+}
+
+
+/* =========================================================
+   MOBILE + TABLET
+   ========================================================= */
+
+@media screen and (max-width: 1024px) {
+
+    /* -----------------------------------------------------
+       RESET LAYOUT UTAMA
+       ----------------------------------------------------- */
+
+    html,
+    body {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        overflow-x: hidden !important;
+
+        box-sizing: border-box !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+
+    /* -----------------------------------------------------
+       APP
+       ----------------------------------------------------- */
+
+    .app,
+    #app,
+    .wrapper,
+    .main-wrapper {
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+    }
+
+
+    /* -----------------------------------------------------
+       MAIN
+       ----------------------------------------------------- */
+
+    .main {
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin: 0 !important;
+
+        /*
+         * Hanya 8px kiri-kanan.
+         * Ini yang membuat halaman lebih lebar.
+         */
+        padding: 8px 8px 30px !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTENT
+       ----------------------------------------------------- */
+
+    .content,
+    .content-wrapper,
+    .projects-container,
+    .projects-page-wrapper,
+    .projects-content,
+    .project-content {
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        margin: 0 !important;
+
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* -----------------------------------------------------
+       JANGAN MEMBERI PADDING KE SEMUA .card
+       karena bisa menyebabkan card bertumpuk padding.
+       ----------------------------------------------------- */
+
+    .card,
+    .assessment-package-card {
+
+        max-width: 100% !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       HEADER MOBILE
+       ===================================================== */
+
+    header.header {
+        display: none !important;
+    }
+
+
+    .mobile-header-card {
+
+        display: flex !important;
+
+        flex-direction: column;
+
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 0 14px 0 !important;
+
+        padding: 16px !important;
+
+        background: #ffffff;
+
+        border-radius: 14px;
+
+        border: 1px solid #e2e8f0;
+
+        box-shadow:
+            0 2px 6px rgba(15, 23, 42, 0.05);
+
+        position: relative !important;
+
+        z-index: 50;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* -----------------------------------------------------
+       JUDUL MOBILE
+       ----------------------------------------------------- */
+
+    .page-title-group {
+
+        padding-right: 52px !important;
+
+        min-width: 0;
+    }
+
+
+    .page-title-group h1,
+    .page-title-group .page-title {
+
+        font-size: 26px !important;
+
+        line-height: 1.2 !important;
+
+        font-weight: 700 !important;
+
+        margin: 0 !important;
+    }
+
+
+    .page-title-group p,
+    .page-title-group .page-subtitle {
+
+        font-size: 14px !important;
+
+        line-height: 1.45 !important;
+
+        margin: 6px 0 0 !important;
+
+        color: #64748b;
+    }
+
+
+    /* =====================================================
+       HAMBURGER
+       ===================================================== */
+
+    .mobile-hamburger-btn {
+
+        display: flex !important;
+
+        position: absolute !important;
+
+        top: 14px !important;
+        right: 14px !important;
+
+        width: 44px !important;
+        height: 44px !important;
+
+        padding: 0 !important;
+
+        border: none !important;
+
+        border-radius: 10px !important;
+
+        background: #0f172a !important;
+
+        color: #ffffff !important;
+
+        font-size: 18px !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        cursor: pointer !important;
+
+        z-index: 2147483647 !important;
+
+        pointer-events: auto !important;
+    }
+
+
+    /* =====================================================
+       SEARCH MOBILE
+       ===================================================== */
+
+    .mobile-search-wrapper {
+
+        width: 100% !important;
+
+        position: relative !important;
+
+        margin-top: 2px !important;
+    }
+
+
+    .mobile-search-wrapper input {
+
+        width: 100% !important;
+
+        height: 48px !important;
+
+        padding: 8px 14px 8px 38px !important;
+
+        border: 1px solid #cbd5e1 !important;
+
+        border-radius: 12px !important;
+
+        background: #ffffff !important;
+
+        color: #0f172a !important;
+
+        font-size: 14px !important;
+
+        outline: none !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    .mobile-search-wrapper input:focus {
+
+        border-color: #3b82f6 !important;
+
+        box-shadow:
+            0 0 0 3px rgba(59, 130, 246, 0.12);
+    }
+
+
+    /* =====================================================
+       USER PROFILE
+       ===================================================== */
+
+    .mobile-user-profile {
+
+        width: 100% !important;
+
+        min-height: 48px !important;
+
+        display: flex !important;
+
+        align-items: center !important;
+
+        gap: 10px !important;
+
+        padding: 9px 12px !important;
+
+        background: #f8fafc !important;
+
+        border: 1px solid #e2e8f0 !important;
+
+        border-radius: 10px !important;
+
+        cursor: pointer;
+
+        position: relative;
+
+        user-select: none;
+
+        z-index: 60;
+
+        box-sizing: border-box !important;
+    }
+
+
+    .mobile-user-profile span,
+    .mobile-user-profile div {
+
+        font-size: 14px;
+    }
+
+
+    /* Dropdown */
+
+    .mobile-user-dropdown-menu {
+
+        display: none;
+
+        position: absolute;
+
+        top: calc(100% + 5px);
+
+        left: 0;
+
+        right: 0;
+
+        width: 100%;
+
+        background: #ffffff;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 10px;
+
+        box-shadow:
+            0 10px 25px rgba(15, 23, 42, 0.12);
+
+        z-index: 100000;
+
+        overflow: hidden;
+    }
+
+
+    .mobile-user-dropdown-menu.show {
+
+        display: block !important;
+    }
+
+
+    .mobile-dropdown-item {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 10px;
+
+        min-height: 42px;
+
+        padding: 10px 12px;
+
+        font-size: 13px !important;
+
+        color: #334155;
+
+        text-decoration: none;
+
+        transition: background .2s;
+    }
+
+
+    .mobile-dropdown-item:hover {
+
+        background: #f1f5f9;
+    }
+
+
+    /* =====================================================
+       SIDEBAR MOBILE
+       ===================================================== */
+
+    aside.sidebar {
+
+        position: fixed !important;
+
+        top: 0 !important;
+
+        left: -320px !important;
+
+        width: min(290px, 84vw) !important;
+
+        height: 100vh !important;
+
+        height: 100dvh !important;
+
+        z-index: 999999 !important;
+
+        transition: left .3s ease-in-out !important;
+
+        background: #0b1329 !important;
+
+        box-shadow:
+            5px 0 20px rgba(0,0,0,.35);
+
+        overflow-y: auto !important;
+
+        overflow-x: hidden !important;
+    }
+
+
+    aside.sidebar.sidebar-open {
+
+        left: 0 !important;
+    }
+
+
+    /* Overlay */
+
+    .sidebar-overlay {
+
+        display: none;
+
+        position: fixed !important;
+
+        inset: 0 !important;
+
+        width: 100% !important;
+        height: 100% !important;
+
+        background: rgba(0,0,0,.5);
+
+        z-index: 999998 !important;
+    }
+
+
+    .sidebar-overlay.active {
+
+        display: block !important;
+    }
+
+
+    /* =====================================================
+       PROJECT STATISTICS
+       ===================================================== */
+
+    section.project-stats {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        display: grid !important;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 12px !important;
+
+        margin: 0 0 18px 0 !important;
+
+        padding: 0 !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* -----------------------------------------------------
+       STAT CARD
+       ----------------------------------------------------- */
+
+    section.project-stats .stat-card {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        min-width: 0 !important;
+
+        min-height: 135px !important;
+
+        padding: 16px !important;
+
+        display: flex !important;
+
+        flex-direction: row !important;
+
+        align-items: center !important;
+
+        gap: 12px !important;
+
+        background: #ffffff !important;
+
+        border-radius: 14px !important;
+
+        border: 1px solid #e2e8f0 !important;
+
+        box-shadow:
+            0 2px 5px rgba(15,23,42,.05) !important;
+
+        box-sizing: border-box !important;
+
+        overflow: hidden !important;
+    }
+
+
+    /* -----------------------------------------------------
+       ICON
+       ----------------------------------------------------- */
+
+    section.project-stats .stat-icon {
+
+        width: 46px !important;
+
+        height: 46px !important;
+
+        min-width: 46px !important;
+
+        flex: 0 0 46px !important;
+
+        font-size: 18px !important;
+
+        border-radius: 11px !important;
+
+        display: flex !important;
+
+        align-items: center !important;
+
+        justify-content: center !important;
+
+        flex-shrink: 0 !important;
+    }
+
+
+    /* -----------------------------------------------------
+       CONTENT
+       ----------------------------------------------------- */
+
+    section.project-stats .stat-content {
+
+        min-width: 0 !important;
+
+        display: flex !important;
+
+        flex-direction: column !important;
+
+        justify-content: center !important;
+
+        overflow: visible !important;
+    }
+
+
+    /* LABEL */
+
+    section.project-stats .stat-label {
+
+        display: block !important;
+
+        font-size: 12px !important;
+
+        line-height: 1.3 !important;
+
+        font-weight: 500 !important;
+
+        color: #64748b !important;
+
+        white-space: normal !important;
+
+        overflow: visible !important;
+    }
+
+
+    /* NUMBER */
+
+    section.project-stats h3 {
+
+        font-size: 26px !important;
+
+        line-height: 1.1 !important;
+
+        font-weight: 800 !important;
+
+        margin: 5px 0 !important;
+
+        color: #0f172a !important;
+    }
+
+
+    /* DESCRIPTION */
+
+    section.project-stats small {
+
+        display: block !important;
+
+        font-size: 10px !important;
+
+        line-height: 1.35 !important;
+
+        color: #94a3b8 !important;
+
+        white-space: normal !important;
+
+        overflow: visible !important;
+    }
+
+
+    /* =====================================================
+       PROJECT TOOLBAR
+       ===================================================== */
+
+    .project-toolbar {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        margin: 0 0 14px 0 !important;
+
+        padding: 14px !important;
+
+        box-sizing: border-box !important;
+
+        border-radius: 14px !important;
+    }
+
+
+    .project-toolbar select,
+    .project-toolbar input {
+
+        font-size: 14px !important;
+
+        min-height: 46px !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       PROJECT TABLE
+       ===================================================== */
+
+    section.project-table,
+    .project-table {
+
+        width: 100% !important;
+
+        max-width: 100% !important;
+
+        margin: 0 !important;
+
+        padding: 8px !important;
+
+        background: #ffffff !important;
+
+        border-radius: 14px !important;
+
+        border: 1px solid #e2e8f0 !important;
+
+        box-sizing: border-box !important;
+
+        overflow-x: auto !important;
+
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+
+    section.project-table table {
+
+        width: 100% !important;
+
+        min-width: 650px;
+
+        font-size: 13px !important;
+    }
+
+
+    /* =====================================================
+       PAGINATION
+       ===================================================== */
+
+    .pagination,
+    .dataTables_paginate,
+    .project-pagination {
+
+        width: 100% !important;
+
+        display: flex !important;
+
+        flex-wrap: wrap !important;
+
+        align-items: center !important;
+
+        justify-content: center !important;
+
+        gap: 5px !important;
+
+        padding: 12px 4px !important;
+
+        box-sizing: border-box !important;
+    }
+
+
+    /* =====================================================
+       BUTTON ACTION
+       ===================================================== */
+
+    button.action {
+
+        font-size: 14px !important;
+
+        min-height: 44px !important;
+
+        padding: 10px 16px !important;
+    }
+
+}
+
+
+/* =========================================================
+   KHUSUS HP
+   <= 650px
+   ========================================================= */
+
+@media screen and (max-width: 650px) {
+
+
+    /* -----------------------------------------------------
+       MAIN
+       ----------------------------------------------------- */
+
+    .main {
+
+        padding: 6px 6px 28px !important;
+    }
+
+
+    /* -----------------------------------------------------
+       MOBILE HEADER
+       ----------------------------------------------------- */
+
+    .mobile-header-card {
+
+        padding: 16px !important;
+
+        margin-bottom: 12px !important;
+
+        border-radius: 14px !important;
+    }
+
+
+    .mobile-hamburger-btn {
+
+        top: 12px !important;
+
+        right: 12px !important;
+
+        width: 44px !important;
+
+        height: 44px !important;
+
+        border-radius: 10px !important;
+    }
+
+
+    /* -----------------------------------------------------
+       TITLE
+       ----------------------------------------------------- */
+
+    .page-title-group {
+
+        padding-right: 50px !important;
+    }
+
+
+    .page-title-group h1,
+    .page-title-group .page-title {
+
+        font-size: 25px !important;
+    }
+
+
+    .page-title-group p,
+    .page-title-group .page-subtitle {
+
+        font-size: 14px !important;
+    }
+
+
+    /* -----------------------------------------------------
+       SEARCH
+       ----------------------------------------------------- */
+
+    .mobile-search-wrapper input {
+
+        height: 50px !important;
+
+        font-size: 14px !important;
+
+        border-radius: 12px !important;
+    }
+
+
+    /* =====================================================
+       STAT CARD MOBILE
+       ===================================================== */
+
+    section.project-stats {
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
+
+        gap: 10px !important;
+
+        margin-bottom: 16px !important;
+    }
+
+
+    section.project-stats .stat-card {
+
+        min-height: 125px !important;
+
+        padding: 14px 12px !important;
+
+        gap: 10px !important;
+
+        border-radius: 13px !important;
+    }
+
+
+    /* ICON */
+
+    section.project-stats .stat-icon {
+
+        width: 42px !important;
+
+        height: 42px !important;
+
+        min-width: 42px !important;
+
+        flex-basis: 42px !important;
+
+        font-size: 17px !important;
+
+        border-radius: 10px !important;
+    }
+
+
+    /* LABEL */
+
+    section.project-stats .stat-label {
+
+        font-size: 11px !important;
+
+        line-height: 1.3 !important;
+    }
+
+
+    /* NUMBER */
+
+    section.project-stats h3 {
+
+        font-size: 24px !important;
+
+        margin: 4px 0 !important;
+    }
+
+
+    /* DESCRIPTION */
+
+    section.project-stats small {
+
+        font-size: 9px !important;
+
+        line-height: 1.3 !important;
+    }
+
+
+    /* -----------------------------------------------------
+       TOOLBAR
+       ----------------------------------------------------- */
+
+    .project-toolbar {
+
+        padding: 12px !important;
+
+        border-radius: 12px !important;
+    }
+
+
+    .project-toolbar select,
+    .project-toolbar input {
+
+        min-height: 46px !important;
+
+        font-size: 14px !important;
+    }
+
+
+    /* -----------------------------------------------------
+       TABLE
+       ----------------------------------------------------- */
+
+    section.project-table {
+
+        padding: 6px !important;
+
+        border-radius: 12px !important;
+    }
+
+
+    section.project-table table {
+
+        min-width: 650px;
+
+        font-size: 12px !important;
+    }
+
+}
+
+
+/* =========================================================
+   HP SANGAT KECIL
+   <= 380px
+   ========================================================= */
+
+@media screen and (max-width: 380px) {
+
+    .main {
+
+        padding-left: 5px !important;
+
+        padding-right: 5px !important;
+    }
+
+
+    section.project-stats {
+
+        gap: 8px !important;
+    }
+
+
+    section.project-stats .stat-card {
+
+        min-height: 120px !important;
+
+        padding: 12px 10px !important;
+
+        gap: 8px !important;
+    }
+
+
+    section.project-stats .stat-icon {
+
+        width: 38px !important;
+
+        height: 38px !important;
+
+        min-width: 38px !important;
+
+        flex-basis: 38px !important;
+
+        font-size: 15px !important;
+    }
+
+
+    section.project-stats .stat-label {
+
+        font-size: 10px !important;
+    }
+
+
+    section.project-stats h3 {
+
+        font-size: 22px !important;
+    }
+
+
+    section.project-stats small {
+
+        font-size: 8px !important;
+    }
+
+}
+
+</style>
+
+    <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar"></aside>
+    
+
+    <div class="main">
+
+        <!-- Header Desktop (Akan aktif secara normal di layar besar) -->
+        <header class="header"></header>
+
+        <!-- Content -->
+        <main class="content">
+
+            <!-- HEADER KHUSUS MOBILE & TABLET (Judul, Subjudul, Search, User Profil, Tombol Hamburger Kanan) -->
+           <!-- Elemen Overlay Sidebar Gelap (Pastikan ini ada di luar atau di dalam .app) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<section class="mobile-header-card">
+    <!-- Tombol Hamburger diposisikan absolute di pojok kanan atas card -->
+    <button class="mobile-hamburger-btn" id="mobileMenuToggle" type="button">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <div class="page-title-group">
+        <h1 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Projects</h1>
+        <p style="font-size: 11px; color: #64748b; margin: 2px 0 0 0;">Manage assessment projects, progress & activity</p>
+    </div>
+
+    <div class="mobile-search-wrapper" style="margin-top: 6px;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;"></i>
+        <input type="text" id="globalSearchInput" placeholder="Search projects...">
+    </div>
+
+    <!-- User Profile Dropdown Toggle -->
+    <div class="mobile-user-profile" id="mobileUserProfileCard" style="margin-top: 6px;">
+        <div class="mobile-user-avatar" id="mobileUserAvatar" style="width: 30px; height: 30px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px;">U</div>
+        <div style="flex-grow: 1;">
+            <strong id="mobileUserName" style="font-size: 12px; color: #1e293b; display: block;">Loading...</strong>
+            <span id="mobileUserRole" style="font-size: 10px; color: #64748b;">Role</span>
+        </div>
+        <i class="fa-solid fa-chevron-down" id="mobileProfileChevron" style="color: #94a3b8; font-size: 11px; transition: transform 0.2s;"></i>
+
+        <!-- Menu Dropdown -->
+        <div class="mobile-user-dropdown-menu" id="mobileUserDropdown">
+            <a href="settings.html" class="mobile-dropdown-item">
+                <i class="fa-solid fa-gear"></i> Setting
+            </a>
+            <a href="#" class="mobile-dropdown-item" id="mobileLogoutBtn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </div>
+</section>
+
+            <!-- ======================================================= -->
+            <!-- STATISTIC CONTAINER (ISOLASI DUAL-ROLE)                 -->
+            <!-- ======================================================= -->
+
+            <!-- 1. TAMPILAN ADMIN -->
+            <section class="project-stats" id="ts-admin-stats-section">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Projects</span>
+                        <h3 id="stat-total-projects">0</h3>
+                        <small>Assessment projects</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Running</span>
+                        <h3 id="stat-running-projects">0</h3>
+                        <small>Active projects</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Completed</span>
+                        <h3 id="stat-completed-projects">0</h3>
+                        <small>Finished projects</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Clients</span>
+                        <h3 id="stat-total-clients">0</h3>
+                        <small>Registered companies</small>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. TAMPILAN ASESOR & CLIENT -->
+            <section class="project-stats" id="ts-client-asesor-stats-section" style="display: none !important;">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Nama Project</span>
+                        <h3 id="ts-custom-project-name" style="font-size: 16px; margin: 4px 0; font-weight: 700;">-</h3>
+                        <small id="ts-custom-project-id" style="color: #2563eb; font-weight: 600;">-</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Status Project</span>
+                        <h3 id="ts-custom-running-status" style="font-size: 18px; margin: 4px 0; color: #10b981; font-weight: 700;">-</h3>
+                        <small style="color: #64748b; font-weight: 600;"></small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Jumlah Peserta</span>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin: 4px 0;">
+                            <h3 id="ts-custom-total-participants" style="font-size: 24px; font-weight: 800; margin: 0; color: #0f172a;">0</h3>
+                            <span style="font-size: 13px; color: #64748b; font-weight: 600;"></span>
+                        </div>
+                        <small style="color: #64748b;">Total Terdaftar</small>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="stat-content" style="width: 100%;">
+                        <span class="stat-label">Status Peserta</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 6px;">
+                            <span style="color: #64748b;">Invited:</span>
+                            <strong id="ts-custom-invited" style="color: #ea580c; font-weight: 700;">0 orang</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; margin-top: 3px;">
+                            <span style="color: #64748b;">Completed:</span>
+                            <strong id="ts-custom-completed" style="color: #10b981; font-weight: 700;">0 orang</strong>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TOOLBAR -->
+            <section class="project-toolbar">
+                <div class="toolbar-left"></div>
+                <div class="toolbar-right">
+                    <button class="btn btn-danger" id="removeSelectedProjects">
+                        <i class="fa-solid fa-trash"></i> Remove Selected Project
+                    </button>
+                </div>
+            </section>
+
+            <!-- TABLE -->
+            <section class="project-table">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAllProjects"></th>
+                                <th>Project</th>
+                                <th>Client</th>
+                                <th>Assessment Date</th>
+                                <th>Participants</th>
+                                <th>PIC</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectTable"></tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <button class="page-btn">Previous</button>
+                    <button class="page-number active">1</button>
+                    <button class="page-number">2</button>
+                    <button class="page-number">3</button>
+                    <button class="page-btn">Next</button>
+                </div>
+            </section>
+
+            <!-- CREATE PROJECT MODAL -->
+            <div class="modal" id="projectModal">
+                <div class="modal-content large">
+                    <div class="modal-header">
+                        <h2>Create Assessment Project</h2>
+                        <button class="modal-close" id="closeModal"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Project Name <span class="required">*</span></label>
+                                <input type="text" id="projectName">
+                            </div>
+                            <div class="form-group">
+                                <label>Company <span class="required">*</span></label>
+                                <input type="text" id="companyName">
+                            </div>
+                            <div class="form-group">
+                                <label>Client</label>
+                                <input type="text" id="clientName">
+                            </div>
+                            <div class="form-group">
+                                <label>PIC</label>
+                                <input type="text" id="picName">
+                            </div>
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="startDate">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="endDate">
+                            </div>
+                            <div class="form-group">
+                                <label>Maximum Participant</label>
+                                <input type="number" id="participantLimit">
+                            </div>
+                        </div>
+
+                        <div class="assessment-selection">
+                            <h3>Assessment Selection</h3>
+                            <p>Select assessments that will be available for this project.</p>
+                            <div class="assessment-list" id="projectAssessmentList"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-outline" id="cancelProject">Cancel</button>
+                        <button class="btn btn-primary" id="saveProject">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Project
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="js/layout/layout-loader.js?v=12"></script>
+<script src="js/config.js?v=5"></script><!-- SUPABASE LIBRARY -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- SUPABASE CLIENT -->
+
+<script src="js/supabase-client.js?v=7"></script>
+
+<!-- CENTRAL DATA SERVICE -->
+<script src="js/data-service.js?v=8"></script>
+<script src="js/ts-supabase-sync.js?v=14"></script>
+<script src="js/role-permissions.js?v=13"></script>
+
+<!-- APPLICATION DATA -->
+
+<script src="js/projects-data.js?v=5"></script>
+
+<!-- APPLICATION RENDER -->
+<script src="js/projects-render.js?v=6"></script>
+<script src="js/projects-modal.js?v=5"></script>
+
+<script src="js/global-search.js?v=5"></script>
+<script src="js/project-export.js?v=5"></script>
+<script src="js/app-access-control.js?v=6"></script>
+<script src="js/project-access-filter.js?v=5"></script>
+<script src="js/access-control-ui.js?v=5"></script>
+
+
+<!-- SCRIPT PENGISIAN PROFIL PENGGUNA & HAMBURGER MENU MOBILE -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const hamburgerBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector("aside.sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleMenu() {
+        sidebar.classList.toggle("sidebar-open");
+        overlay.classList.toggle("active");
+    }
+
+    if (hamburgerBtn && sidebar) {
+        hamburgerBtn.addEventListener("click", toggleMenu);
+        overlay.addEventListener("click", toggleMenu);
+    }
+
+    try {
+        var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
+        if (userRaw) {
+            var activeUser = JSON.parse(userRaw);
+            var name = activeUser.name || activeUser.username || "System Administrator";
+            var role = activeUser.role || "System Administrator";
+
+            document.getElementById("mobileUserName").innerText = name;
+            document.getElementById("mobileUserRole").innerText = role;
+            document.getElementById("mobileUserAvatar").innerText = name.charAt(0).toUpperCase();
+        }
+    } catch(e) {
+        console.error("Gagal memuat profil pengguna:", e);
+    }
+});
+</script>
+
+<!-- SCRIPT FILTER & STATISTIK TERUNIFIKASI -->
+<script>
+(function() {
+    "use strict";
+
+    function updateUnifiedStats() {
+        var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
+        var activeUser = userRaw ? JSON.parse(userRaw) : null;
+        var role = activeUser ? String(activeUser.role || "").toLowerCase() : "";
+
+        var isAdmin = /administrator|system/i.test(role);
+        var isClientOrAsesor = /client|asesor|assessor/i.test(role);
+
+        var adminSec = document.getElementById("ts-admin-stats-section");
+        var clientSec = document.getElementById("ts-client-asesor-stats-section");
+
+        if (isClientOrAsesor) {
+            if (adminSec) adminSec.style.setProperty("display", "none", "important");
+            if (clientSec) clientSec.style.setProperty("display", "grid", "important");
+
+            var firstRow = document.querySelector("tbody tr");
+            if (firstRow) {
+                var cols = firstRow.querySelectorAll("td");
+                if (cols.length >= 6) {
+                    var pName = cols[1].innerText.trim().split("\n")[0];
+                    var pCount = cols[4].innerText.trim();
+                    var pStatus = cols[6].innerText.trim();
+
+                    if (pName && pName !== "No projects found.") {
+                        document.getElementById("ts-custom-project-name").innerText = pName;
+                        var prefix = pName.replace(/project/i, "").trim().toUpperCase();
+                        document.getElementById("ts-custom-project-id").innerText = "ID: PRJ-" + (prefix || "BY");
+                    }
+                    if (pCount) {
+                        document.getElementById("ts-custom-total-participants").innerText = pCount;
+                        document.getElementById("ts-custom-invited").innerText = pCount + " Orang";
+                    }
+                    if (pStatus) {
+                        var statusEl = document.getElementById("ts-custom-running-status");
+                        statusEl.innerText = pStatus;
+                        statusEl.style.color = pStatus.toLowerCase().includes("draft") ? "#d97706" : "#10b981";
+                    }
+                }
+            }
+        } else {
+            if (adminSec) adminSec.style.setProperty("display", "grid", "important");
+            if (clientSec) clientSec.style.setProperty("display", "none", "important");
+
+            var allRows = document.querySelectorAll("#projectTable tr");
+            var total = 0, running = 0, completed = 0;
+            var clients = new Set();
+
+            allRows.forEach(function(row) {
+                var cols = row.querySelectorAll("td");
+                if (cols.length >= 7) {
+                    total++;
+                    var clientName = cols[2].innerText.trim();
+                    if (clientName && clientName !== "-") clients.add(clientName);
+
+                    var st = cols[6].innerText.trim().toLowerCase();
+                    if (st.includes("running") || st.includes("active") || st.includes("scheduled") || st.includes("ongoing") || st.includes("draft") || st.includes("waiting")) {
+                        running++;
+                    } else if (st.includes("completed") || st.includes("complete") || st.includes("finish")) {
+                        completed++;
+                    }
+                }
+            });
+
+            document.getElementById("stat-total-projects").innerText = total;
+            document.getElementById("stat-running-projects").innerText = running;
+            document.getElementById("stat-completed-projects").innerText = completed;
+            document.getElementById("stat-total-clients").innerText = clients.size || (total > 0 ? 1 : 0);
+        }
+    }
+
+    function applyProjectFilter() {
+        // FIX: logic lama di sini mencoba menyembunyikan baris tabel
+        // dengan mencari string UUID projectId secara literal di teks
+        // baris (row.textContent). Padahal baris tabel tidak pernah
+        // menampilkan UUID mentah - isinya cuma Nama Project, Company,
+        // Tanggal, dst. Akibatnya rowText.indexOf(projectIdTarget)
+        // SELALU -1, dan SEMUA baris (termasuk yang sudah benar)
+        // selalu ikut disembunyikan lewat display:none - inilah
+        // kenapa tabel Project Access selalu kelihatan kosong padahal
+        // card ringkasan di atasnya tetap benar (updateUnifiedStats
+        // baca data dari baris yang di-DOM meski sudah disembunyikan).
+        //
+        // Filtering data yang benar SUDAH dilakukan di projects-render.js
+        // (getVisibleProjectsForCurrentUser - mencocokkan project.id
+        // dengan session.projectId) SEBELUM baris tabel dibuat, jadi
+        // baris yang sampai ke sini memang sudah cuma milik project
+        // user yang login. Tidak perlu filter ulang / sembunyikan lagi.
+        updateUnifiedStats();
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Fallback awal (jaga-jaga kalau projectsLoaded sudah lama selesai)
+        setTimeout(applyProjectFilter, 300);
+
+        // FIX: pemicu utama - tunggu event "projectsLoaded" yang
+        // di-dispatch projects-data.js SETELAH data Supabase beneran
+        // siap & renderProjects() sudah membuat baris tabel. Sebelumnya
+        // cuma mengandalkan setTimeout(300ms) & window.load, yang
+        // TIDAK menunggu fetch() ke Supabase selesai - kalau respons
+        // Supabase lebih lambat dari 300ms, card kebaca sebelum ada
+        // baris sama sekali dan permanen menampilkan "-".
+        window.addEventListener("projectsLoaded", function() {
+            // setTimeout(...,0) memastikan renderProjects() (listener
+            // projectsLoaded lain, dari projects-render.js) sudah
+            // selesai membuat <tr> dulu sebelum kita baca isinya.
+            setTimeout(applyProjectFilter, 0);
+        });
+    });
+    window.addEventListener("load", applyProjectFilter);
+})();
+</script>
+
+<style id="hide-settings-style">
+  .dropdown-menu a[href*="setting"],
+  .dropdown-menu button[onclick*="setting"],
+  .dropdown-item[href*="setting"],
+  [class*="dropdown"] a:has(svg):first-child,
+  .user-dropdown a:first-child {
+    display: none !important;
+  }
+</style>
+
+<script>
+(function() {
+  "use strict";
+
+  function enforceHideSettings() {
+    var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
+    if (!userRaw) return;
+
+    var activeUser = JSON.parse(userRaw);
+    var isSystemAdmin = /system/i.test(activeUser.role || "");
+    var styleEl = document.getElementById("hide-settings-style");
+
+    if (isSystemAdmin) {
+      if (styleEl) styleEl.remove();
+      return;
+    }
+
+    var menuItems = document.querySelectorAll(".dropdown-menu a, .dropdown-menu button, .dropdown-item, li a");
+    menuItems.forEach(function(item) {
+      var text = item.textContent.trim().toLowerCase();
+      if (text.includes("setting") || text.includes("pengaturan")) {
+        item.style.setProperty("display", "none", "important");
+      }
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", enforceHideSettings);
+  window.addEventListener("load", enforceHideSettings);
+
+  var observer = new MutationObserver(function() {
+    enforceHideSettings();
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const removeBtn = document.getElementById("removeSelectedProjects");
+    const selectAllCb = document.getElementById("selectAllProjects");
+
+    if (selectAllCb) {
+        selectAllCb.addEventListener("change", function() {
+            const checkboxes = document.querySelectorAll("#projectTable input[type='checkbox']");
+            checkboxes.forEach(cb => cb.checked = selectAllCb.checked);
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener("click", function() {
+            const checkedBoxes = document.querySelectorAll("#projectTable input[type='checkbox']:checked");
+            
+            if (checkedBoxes.length === 0) {
+                alert("Silakan pilih project yang ingin dihapus terlebih dahulu!");
+                return;
+            }
+
+            if (confirm(`Apakah Anda yakin ingin menghapus ${checkedBoxes.length} project yang dipilih?`)) {
+                checkedBoxes.forEach(cb => {
+                    const row = cb.closest("tr");
+                    if (row) row.remove();
+                });
+
+                if (selectAllCb) selectAllCb.checked = false;
+
+                if (typeof updateUnifiedStats === "function") {
+                    updateUnifiedStats();
+                }
+                
+                alert("Project yang dipilih berhasil dihapus!");
+            }
+        });
+    }
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Kontrol Sidebar Hamburger (Diperkuat agar selalu merespons klik)
+    const hamburgerBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector("aside.sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleSidebar(e) {
+        if (e) e.stopPropagation();
+        if (sidebar) sidebar.classList.toggle("sidebar-open");
+        if (overlay) overlay.classList.toggle("active");
+    }
+
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener("click", toggleSidebar);
+    }
+    if (overlay) {
+        overlay.addEventListener("click", toggleSidebar);
+    }
+
+    // 2. Kontrol Dropdown User Profile
+    const profileCard = document.getElementById("mobileUserProfileCard");
+    const userDropdown = document.getElementById("mobileUserDropdown");
+    const chevron = document.getElementById("mobileProfileChevron");
+
+    if (profileCard && userDropdown) {
+        profileCard.addEventListener("click", function(e) {
+            e.stopPropagation();
+            const isOpen = userDropdown.classList.toggle("show");
+            if (chevron) chevron.style.transform = isOpen ? "rotate(180deg)" : "rotate(0deg)";
+        });
+
+        document.addEventListener("click", function(e) {
+            if (!profileCard.contains(e.target)) {
+                userDropdown.classList.remove("show");
+                if (chevron) chevron.style.transform = "rotate(0deg)";
+            }
+        });
+    }
+
+    // 3. Action Logout Mobile
+    const logoutBtn = document.getElementById("mobileLogoutBtn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", function(e) {
+            e.preventDefault();
+            localStorage.removeItem("talentscope_current_user");
+            sessionStorage.removeItem("ts_admin_session");
+            window.location.href = "login.html";
+        });
+    }
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const hamburgerBtn = document.getElementById("mobileMenuToggle");
+    const sidebar = document.querySelector("aside.sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleSidebar(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (sidebar) sidebar.classList.toggle("sidebar-open");
+        if (overlay) overlay.classList.toggle("active");
+    }
+
+    if (hamburgerBtn) {
+        hamburgerBtn.addEventListener("click", toggleSidebar);
+        hamburgerBtn.addEventListener("touchend", toggleSidebar);
+    }
+    
+    if (overlay) {
+        overlay.addEventListener("click", toggleSidebar);
+    }
+});
+</script>
+</body>
+</html>

@@ -801,6 +801,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js?v=7"></script>
 <script src="js/session-helper.js?v=1"></script>
+    <script src="js/role-permissions.js?v=1"></script>
 <script src="js/auth-guard.js?v=12"></script>
 <script src="js/data-service.js?v=8"></script>
 <script src="js/ts-supabase-sync.js?v=14"></script>
@@ -1319,76 +1320,6 @@ var settingsObserver = new MutationObserver(function () {
 
 })();
 </script>
-<!-- =========================================================
-     FIX: TOMBOL LOG OUT — Hook ke TS_AUTH.logout()
-     Ditambah sementara karena app-access-control.js di-disable
-     ========================================================= -->
-<script>
-;(function () {
-    "use strict";
-
-    function attachLogoutHandlers() {
-        var selectors = [
-            ".dropdown-menu a",
-            ".dropdown-menu button",
-            ".dropdown-item",
-            "[role='menuitem']"
-        ];
-
-        var all = document.querySelectorAll(selectors.join(","));
-
-        all.forEach(function (el) {
-            var txt = (el.textContent || "").trim().toLowerCase();
-            // Match "log out", "logout", "sign out", "keluar"
-            if (
-                txt === "log out" ||
-                txt === "logout" ||
-                txt === "sign out" ||
-                txt === "keluar"
-            ) {
-                if (el.dataset.tsLogoutBound === "1") return;
-                el.dataset.tsLogoutBound = "1";
-
-                el.addEventListener("click", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    console.log("[DASHBOARD] Log Out clicked → logging out");
-
-                    if (window.TS_AUTH && typeof window.TS_AUTH.logout === "function") {
-                        window.TS_AUTH.logout();
-                    } else {
-                        // Fallback manual
-                        try {
-                            localStorage.removeItem("ts_auth_token");
-                            localStorage.removeItem("ts_auth_user");
-                            localStorage.removeItem("ts_auth_expires");
-                            localStorage.removeItem("ts_auth_login_at");
-                        } catch (err) {}
-                        window.location.replace("login.html");
-                    }
-                });
-
-                console.log("[DASHBOARD] Log Out handler bound:", txt);
-            }
-        });
-    }
-
-    // Retry berkali-kali karena dropdown mungkin dibuat JS belakangan
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", function () {
-            setTimeout(attachLogoutHandlers, 300);
-        });
-    } else {
-        setTimeout(attachLogoutHandlers, 300);
-    }
-
-    setTimeout(attachLogoutHandlers, 1000);
-    setTimeout(attachLogoutHandlers, 2000);
-    setTimeout(attachLogoutHandlers, 4000);
-})();
-</script>
-
 
 </body>
 </html>
