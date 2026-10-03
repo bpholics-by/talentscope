@@ -177,7 +177,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: window.sessionStorage,
+    storage: window.localStorage, 
     storageKey: 'sb-nixmychfhsnsvymkuxtm-auth-token',
     flowType: 'implicit'
 },

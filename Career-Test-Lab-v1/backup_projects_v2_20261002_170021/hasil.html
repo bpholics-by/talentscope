@@ -56,7 +56,7 @@
     </script>
 
 <meta charset="UTF-8">
-    <!-- SUPABASE SYNC BRIDGE ï¿½ WAJIB DIMUAT PALING AWAL -->
+    <!-- SUPABASE SYNC BRIDGE — WAJIB DIMUAT PALING AWAL -->
    <script src="js/config.js?v=5"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js?v=7"></script>
     <script src="js/role-permissions.js?v=13"></script>
@@ -2276,7 +2276,7 @@ a{
                 <div class="table-footer">
 
                     <span id="resultCount">
-                        Showing 0ï¿½0 of 0 results
+                        Showing 0–0 of 0 results
                     </span>
 
                     <strong>
@@ -2398,7 +2398,7 @@ a{
    LOGOUT
 ========================================================== */
 
-// Logout handler ï¿½ konsisten dengan view-monitoring.html
+// Logout handler — konsisten dengan view-monitoring.html
 (function() {
     var btn = document.getElementById("logoutBtn");
     if (!btn) return;
@@ -2513,7 +2513,7 @@ a{
 })();
 </script>
 <!-- ==========================================================
-   PATCH: PRELOAD DARI SUPABASE ï¿½ SESSION ISOLATION
+   PATCH: PRELOAD DARI SUPABASE — SESSION ISOLATION
    ----------------------------------------------------------
    Sebelum result.js baca localStorage, kita preload data
    project + participants dari Supabase. Ini yang bikin
@@ -2600,7 +2600,7 @@ a{
             // 3. Merge ke localStorage
             var projects = [];
             try {
-                projects = (await DataService.getProjects());
+                projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
             } catch (e) { projects = []; }
             if (!Array.isArray(projects)) projects = [];
 
@@ -2627,7 +2627,7 @@ a{
     }
 
     // Jalankan preload SEBELUM result.js
-    // Cara: kita "tahan" event load ï¿½ result.js menunggu preload selesai
+    // Cara: kita "tahan" event load — result.js menunggu preload selesai
     var __preloadPromise = preloadFromSupabase();
 
     // Expose ke window supaya result.js bisa tunggu

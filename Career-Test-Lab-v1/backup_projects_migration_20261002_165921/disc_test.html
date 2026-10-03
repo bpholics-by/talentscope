@@ -439,7 +439,7 @@ let current=0,seconds=30*60,timerId=null,sending=false;
 
 function loadMeta(){
  try{
-  const ps=await DataService.getProjects();
+  const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
   const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
   const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
   document.getElementById('participant').textContent=part?.name||part?.fullName||participantId||'-';
@@ -451,7 +451,7 @@ function loadMeta(){
 function save(){localStorage.setItem(answerKey,JSON.stringify(answers))}
 function getAssessmentSequenceLabel(){
  try{
-  const ps=await DataService.getProjects();
+  const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
   const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
   if(!proj)return'';
   const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
@@ -603,7 +603,7 @@ function nextTest(){
  const next=assessmentIndex+1;
  let packs=[];
  try{
-  const ps=await DataService.getProjects();
+  const ps=JSON.parse(localStorage.getItem('talentscope_projects')||'[]');
   const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
   const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
   packs=(Array.isArray(part?.assessments)&&part.assessments.length>0)

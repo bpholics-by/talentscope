@@ -68,7 +68,7 @@ async function loadTestResult() {
         var checkInterval = setInterval(function() {
             var projects = [];
             try {
-                projects = (await DataService.getProjects());
+                projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
             } catch (e) {}
 
             var params = new URLSearchParams(window.location.search);
@@ -581,7 +581,7 @@ async function getAssessmentResult(
     // ==========================================================
     var projectCodeFallback = null;
     try {
-        var allProjects = (await DataService.getProjects());
+        var allProjects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
         var projMatch = allProjects.find(function(p) {
             return String(p.id) === String(projectId) || String(p.projectId) === String(projectId);
         });

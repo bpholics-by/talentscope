@@ -4213,14 +4213,14 @@ function getProject(){
   if(window.project) return window.project;
   try{
     var id=new URLSearchParams(location.search).get("id");
-    var ps=(await DataService.getProjects());
+    var ps=JSON.parse(localStorage.getItem("talentscope_projects")||"[]");
     window.project=ps.find(function(x){return String(x.id)===String(id)})||ps[0];
     return window.project;
   }catch(e){return null}
 }
 function persist(){
   try{
-    var ps=(await DataService.getProjects());
+    var ps=JSON.parse(localStorage.getItem("talentscope_projects")||"[]");
     var p=getProject(); if(!p) return;
     var i=ps.findIndex(function(x){return String(x.id)===String(p.id)});
     if(i>=0) ps[i]=p; else ps.push(p);
@@ -5016,7 +5016,11 @@ async function () {
     try {
 
         var storedProjects =
-            (await DataService.getProjects());
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
 
         if (!Array.isArray(storedProjects)) {
             storedProjects = [];
@@ -5382,7 +5386,11 @@ async function () {
         try {
 
             var projectsAfterSync =
-                (await DataService.getProjects());
+                JSON.parse(
+                    localStorage.getItem(
+                        "talentscope_projects"
+                    ) || "[]"
+                );
 
             if (!Array.isArray(projectsAfterSync)) {
                 projectsAfterSync = [];
@@ -6227,7 +6235,11 @@ if (
             "talentscope_projects",
 
             JSON.stringify(
-                (await DataService.getProjects()).map(function(x){
+                JSON.parse(
+                    localStorage.getItem(
+                        "talentscope_projects"
+                    ) || "[]"
+                ).map(function(x){
 
                     return String(x.id) === String(p.id)
                         ? p
@@ -6397,7 +6409,7 @@ function generateInvitationShareText(p, projectTitle) {
     // Ambil project
     var project = window.project || {};
     
-    // Ambil template dari dialog textarea ï¿½ kalau ada
+    // Ambil template dari dialog textarea — kalau ada
     var dialogBody = document.getElementById("tsV26Body");
     var body = (dialogBody && dialogBody.value) 
         ? dialogBody.value 

@@ -289,7 +289,7 @@ function getAssessmentSequenceLabel(){
     const ids = getAssessmentIdentity();
     const params = new URLSearchParams(location.search);
     const assessmentIndex = Number(params.get("assessmentIndex") || 0);
-    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const projects = (await DataService.getProjects());
     if(!Array.isArray(projects)) return "";
     const project = projects.find(pr => String(pr?.id || pr?.projectId || pr?.project_id || "").trim() === ids.projectId);
     if(!project) return "";
@@ -316,7 +316,7 @@ function goToNextOrDashboard(){
   const next = currentIndex + 1;
   let packs = [];
   try{
-    const ps = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const ps = (await DataService.getProjects());
     const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
     const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
     packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
@@ -337,7 +337,7 @@ function syncAssessmentActivity(activity, historyType){
   const ids = getAssessmentIdentity();
   if(!ids.projectId || !ids.participantId) return;
   try{
-    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const projects = (await DataService.getProjects());
     if(!Array.isArray(projects)) return;
     const now = new Date().toISOString();
     let changed = false;
@@ -373,7 +373,7 @@ function recordAssessmentLogout(reason){
   const ids = getAssessmentIdentity();
   if(!ids.projectId || !ids.participantId) return;
   try{
-    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const projects = (await DataService.getProjects());
     if(!Array.isArray(projects)) return;
     const now = new Date().toISOString();
     const testName = getAssessmentDisplayName();
@@ -411,7 +411,7 @@ function getContext(){
   try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
   let participantName = "", projectName = "", participantObject = null, projectObject = null;
   try{
-    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const projects = (await DataService.getProjects());
     if(Array.isArray(projects)){
       projectObject = projects.find(function(project){
         const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
@@ -745,7 +745,7 @@ async function finishAssessment(){
 
   /* ---- Update participant progress ---- */
   try{
-    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+    const projects = (await DataService.getProjects());
     if(Array.isArray(projects)){
       const now = new Date().toISOString();
       projects.forEach(project=>{

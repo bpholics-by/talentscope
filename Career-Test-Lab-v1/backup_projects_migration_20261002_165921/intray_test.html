@@ -1546,7 +1546,7 @@ function saveDraft() {
 // =========================================================
 function loadMeta() {
     try {
-        const ps = await DataService.getProjects();
+        const ps = JSON.parse(localStorage.getItem('talentscope_projects') || '[]');
         const proj = ps.find(x => String(x.id || x.projectId || '') === projectId);
         const part = proj?.participants?.find(x => String(x.id || x.participantId || '') === participantId);
         

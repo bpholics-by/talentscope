@@ -247,7 +247,7 @@ async function loadCombinedResult() {
 
     if (!project) {
         try {
-            const projects = (await DataService.getProjects());
+            const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
             project = projects.find(item => String(item.id) === String(projectId));
             if (project) console.log("[COMBINED] Project dari localStorage");
         } catch (error) {
@@ -295,7 +295,7 @@ async function loadCombinedResult() {
 
     if (assessments.length === 0) {
         try {
-            const projects = (await DataService.getProjects());
+            const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
             const fallbackProject = projects.find(item => String(item.id) === String(projectId));
             if (fallbackProject && Array.isArray(fallbackProject.assessments)) {
                 assessments = fallbackProject.assessments.slice().sort(function (a, b) {

@@ -697,7 +697,7 @@ function(projectId) {
    OPEN PROJECT EDIT / PROJECT DETAIL
 ========================================================== */
 
-window.openProjectEdit = async function(projectId) {
+window.openProjectEdit = function(projectId) {
 
     "use strict";
 
@@ -744,7 +744,11 @@ window.openProjectEdit = async function(projectId) {
     try {
 
         projects =
-            (await DataService.getProjects());
+            JSON.parse(
+                localStorage.getItem(
+                    "talentscope_projects"
+                ) || "[]"
+            );
 
     } catch (error) {
 
@@ -917,7 +921,7 @@ document.addEventListener(
 
 document.addEventListener(
     "DOMContentLoaded",
-    async function() {
+    function() {
 
 
         const removeButton =
@@ -931,7 +935,7 @@ document.addEventListener(
 
         removeButton.addEventListener(
             "click",
-            async function() {
+            function() {
 
 
                 const selected =
@@ -996,7 +1000,11 @@ document.addEventListener(
                 try {
 
                     storedProjects =
-                        (await DataService.getProjects()) || [];
+                        JSON.parse(
+                            localStorage.getItem(
+                                "talentscope_projects"
+                            )
+                        ) || [];
 
                 } catch (error) {
 

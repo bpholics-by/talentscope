@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -1364,115 +1364,22 @@ document.addEventListener("DOMContentLoaded", function() {
 (function() {
     "use strict";
 
-    function updateUnifiedStats() {
-        var userRaw = sessionStorage.getItem("ts_admin_session") || localStorage.getItem("talentscope_current_user");
-        var activeUser = userRaw ? JSON.parse(userRaw) : null;
-        var role = activeUser ? String(activeUser.role || "").toLowerCase() : "";
+    // =========================================================
+    // STATISTICS — UPDATE FROM projects-data.js
+    // =========================================================
+    // NOTE: Fungsi updateUnifiedStats() lama dihapus karena
+    // bentrok dengan projects-data.js yang update stat cards
+    // dari DATA (bukan dari DOM rows). Sekarang stat cards
+    // diupdate oleh projects-data.js setelah load dari Supabase.
+    //
+    // Filter/visible logic sudah dilakukan di projects-render.js
+    // (getVisibleProjectsForCurrentUser).
+    //
+    // Tidak perlu update stats dari HTML inline.
+    // =========================================================
 
-        var isAdmin = /administrator|system/i.test(role);
-        var isClientOrAsesor = /client|asesor|assessor/i.test(role);
+    console.log("[PROJECTS-INLINE] Stats update dihandle projects-data.js");
 
-        var adminSec = document.getElementById("ts-admin-stats-section");
-        var clientSec = document.getElementById("ts-client-asesor-stats-section");
-
-        if (isClientOrAsesor) {
-            if (adminSec) adminSec.style.setProperty("display", "none", "important");
-            if (clientSec) clientSec.style.setProperty("display", "grid", "important");
-
-            var firstRow = document.querySelector("tbody tr");
-            if (firstRow) {
-                var cols = firstRow.querySelectorAll("td");
-                if (cols.length >= 6) {
-                    var pName = cols[1].innerText.trim().split("\n")[0];
-                    var pCount = cols[4].innerText.trim();
-                    var pStatus = cols[6].innerText.trim();
-
-                    if (pName && pName !== "No projects found.") {
-                        document.getElementById("ts-custom-project-name").innerText = pName;
-                        var prefix = pName.replace(/project/i, "").trim().toUpperCase();
-                        document.getElementById("ts-custom-project-id").innerText = "ID: PRJ-" + (prefix || "BY");
-                    }
-                    if (pCount) {
-                        document.getElementById("ts-custom-total-participants").innerText = pCount;
-                        document.getElementById("ts-custom-invited").innerText = pCount + " Orang";
-                    }
-                    if (pStatus) {
-                        var statusEl = document.getElementById("ts-custom-running-status");
-                        statusEl.innerText = pStatus;
-                        statusEl.style.color = pStatus.toLowerCase().includes("draft") ? "#d97706" : "#10b981";
-                    }
-                }
-            }
-        } else {
-            if (adminSec) adminSec.style.setProperty("display", "grid", "important");
-            if (clientSec) clientSec.style.setProperty("display", "none", "important");
-
-            var allRows = document.querySelectorAll("#projectTable tr");
-            var total = 0, running = 0, completed = 0;
-            var clients = new Set();
-
-            allRows.forEach(function(row) {
-                var cols = row.querySelectorAll("td");
-                if (cols.length >= 7) {
-                    total++;
-                    var clientName = cols[2].innerText.trim();
-                    if (clientName && clientName !== "-") clients.add(clientName);
-
-                    var st = cols[6].innerText.trim().toLowerCase();
-                    if (st.includes("running") || st.includes("active") || st.includes("scheduled") || st.includes("ongoing") || st.includes("draft") || st.includes("waiting")) {
-                        running++;
-                    } else if (st.includes("completed") || st.includes("complete") || st.includes("finish")) {
-                        completed++;
-                    }
-                }
-            });
-
-            document.getElementById("stat-total-projects").innerText = total;
-            document.getElementById("stat-running-projects").innerText = running;
-            document.getElementById("stat-completed-projects").innerText = completed;
-            document.getElementById("stat-total-clients").innerText = clients.size || (total > 0 ? 1 : 0);
-        }
-    }
-
-    function applyProjectFilter() {
-        // FIX: logic lama di sini mencoba menyembunyikan baris tabel
-        // dengan mencari string UUID projectId secara literal di teks
-        // baris (row.textContent). Padahal baris tabel tidak pernah
-        // menampilkan UUID mentah - isinya cuma Nama Project, Company,
-        // Tanggal, dst. Akibatnya rowText.indexOf(projectIdTarget)
-        // SELALU -1, dan SEMUA baris (termasuk yang sudah benar)
-        // selalu ikut disembunyikan lewat display:none - inilah
-        // kenapa tabel Project Access selalu kelihatan kosong padahal
-        // card ringkasan di atasnya tetap benar (updateUnifiedStats
-        // baca data dari baris yang di-DOM meski sudah disembunyikan).
-        //
-        // Filtering data yang benar SUDAH dilakukan di projects-render.js
-        // (getVisibleProjectsForCurrentUser - mencocokkan project.id
-        // dengan session.projectId) SEBELUM baris tabel dibuat, jadi
-        // baris yang sampai ke sini memang sudah cuma milik project
-        // user yang login. Tidak perlu filter ulang / sembunyikan lagi.
-        updateUnifiedStats();
-    }
-
-    document.addEventListener("DOMContentLoaded", function() {
-        // Fallback awal (jaga-jaga kalau projectsLoaded sudah lama selesai)
-        setTimeout(applyProjectFilter, 300);
-
-        // FIX: pemicu utama - tunggu event "projectsLoaded" yang
-        // di-dispatch projects-data.js SETELAH data Supabase beneran
-        // siap & renderProjects() sudah membuat baris tabel. Sebelumnya
-        // cuma mengandalkan setTimeout(300ms) & window.load, yang
-        // TIDAK menunggu fetch() ke Supabase selesai - kalau respons
-        // Supabase lebih lambat dari 300ms, card kebaca sebelum ada
-        // baris sama sekali dan permanen menampilkan "-".
-        window.addEventListener("projectsLoaded", function() {
-            // setTimeout(...,0) memastikan renderProjects() (listener
-            // projectsLoaded lain, dari projects-render.js) sudah
-            // selesai membuat <tr> dulu sebelum kita baca isinya.
-            setTimeout(applyProjectFilter, 0);
-        });
-    });
-    window.addEventListener("load", applyProjectFilter);
 })();
 </script>
 
