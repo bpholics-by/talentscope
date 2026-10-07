@@ -642,9 +642,8 @@
 
         // UI helpers
         autoUpdateHeader: autoUpdateHeader,
-              autoUpdateHeader: autoUpdateHeader,
-      getRoleLabel: getRoleLabel,
-      ROLE_LABELS: ROLE_LABELS,
+        getRoleLabel: getRoleLabel,
+        ROLE_LABELS: ROLE_LABELS,
         autoUpdateSidebar: autoUpdateSidebar,
         enforceReadOnly: enforceReadOnly,
         watchSidebarChanges: watchSidebarChanges

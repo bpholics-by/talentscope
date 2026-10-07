@@ -214,7 +214,17 @@ if (isClientUser) {
             header.innerHTML = await res.text();
 
             // --- UPDATE TEKS PROFIL DI HEADER ---
-            if (activeUser) {
+                        if (activeUser) {
+                // Display label untuk role — pakai getRoleLabel() kalau tersedia
+                var roleLabel = role;
+                if (window.RolePermissions && typeof window.RolePermissions.getRoleLabel === "function") {
+                    try {
+                        roleLabel = window.RolePermissions.getRoleLabel(role);
+                    } catch (e) {
+                        roleLabel = role;
+                    }
+                }
+
                 const textNodes = header.querySelectorAll("div, span, p, strong, b, h1, h2, h3");
                 textNodes.forEach(el => {
                     if (el.children.length === 0) {
@@ -223,7 +233,7 @@ if (isClientUser) {
                             el.textContent = activeUser.name || activeUser.username || "Client User";
                         }
                         if (txt === "System Admin") {
-                            el.textContent = role;
+                            el.textContent = roleLabel;
                         }
                     }
                 });
