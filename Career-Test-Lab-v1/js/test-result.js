@@ -61,34 +61,47 @@ function getAssessmentMetaTestResult(codeOrUuid) {
    MAIN CONTROLLER
 ========================================================== */
 async function loadTestResult() {
-    // Tunggu sync dari Supabase (max 1.5 detik)
-    await new Promise(function(resolve) {
-        var startTime = Date.now();
-        var maxWaitMs = 1500;
-        var checkInterval = setInterval(function() {
-            var projects = [];
-            try {
-                projects = (await DataService.getProjects());
-            } catch (e) {}
+    // Tunggu data project tersedia dari DataService (max 1.5 detik)
+    // DataService sudah handle sync dari Supabase + fallback internal.
+    await waitForProjectAvailable(1500);
 
-            var params = new URLSearchParams(window.location.search);
-            var targetPid = params.get("projectId");
-            var found = Array.isArray(projects) && projects.some(function(p) {
+    /* ==========================================================
+   WAIT FOR PROJECT AVAILABLE
+   ----------------------------------------------------------
+   Menggantikan polling setInterval yang pakai await di dalam
+   callback non-async (syntax error).
+   Pendekatan: pakai async/await + setTimeout Promise.
+   ========================================================== */
+async function waitForProjectAvailable(maxWaitMs) {
+    const startTime = Date.now();
+    const params = new URLSearchParams(window.location.search);
+    const targetPid = params.get("projectId");
+
+    if (!targetPid) {
+        // Tidak ada projectId — tidak perlu tunggu
+        return false;
+    }
+
+    while (Date.now() - startTime < maxWaitMs) {
+        try {
+            const projects = await DataService.getProjects();
+            const found = Array.isArray(projects) && projects.some(function(p) {
                 return String(p.id) === String(targetPid);
             });
-
             if (found) {
-                clearInterval(checkInterval);
-                console.log("[TEST-RESULT] ✅ Project tersedia di localStorage (" + (Date.now() - startTime) + "ms)");
-                resolve();
-            } else if (Date.now() - startTime >= maxWaitMs) {
-                clearInterval(checkInterval);
-                console.warn("[TEST-RESULT] Timeout tunggu sync (" + maxWaitMs + "ms)");
-                resolve();
+                console.log("[TEST-RESULT] ✅ Project tersedia (" + (Date.now() - startTime) + "ms)");
+                return true;
             }
-        }, 100);
-    });
+        } catch (e) {
+            console.warn("[TEST-RESULT] getProjects error:", e);
+        }
+        // Tunggu 100ms sebelum coba lagi
+        await new Promise(function(r) { setTimeout(r, 100); });
+    }
 
+    console.warn("[TEST-RESULT] Timeout tunggu project (" + maxWaitMs + "ms)");
+    return false;
+}
     // ======================================================
     // PARSE URL PARAMS
     // ======================================================
