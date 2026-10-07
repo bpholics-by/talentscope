@@ -141,7 +141,7 @@ main{max-width:1120px;margin:auto;padding:30px 20px 55px}
     <div style="overflow:auto;margin-top:10px"><table><thead><tr><th>Session</th><th>Correct</th><th>Wrong</th><th>Missed</th><th>Raw Acc</th><th>Corrected Acc</th><th>Median RT</th></tr></thead><tbody id="summary"></tbody></table></div>
   </div>
   <details class="result-card" style="margin-top:18px"><summary><b>Detail Jawaban</b></summary>
-    <div style="overflow:auto;margin-top:12px"><table><thead><tr><th>No</th><th>Sesi</th><th>Block</th><th>Stimulus</th><th>Jawaban</th><th>Kunci</th><th>Status</th><th>RT</th></tr></thead><tbody id="log"></tbody></table></div>
+    <div style="overflow:auto;margin-top:12px"><table><thead><tr><th>No</th><th>Sesi</th><th>Block</th><th>Stimulus</th><th>Jawaban</th><th>Status</th><th>RT</th></tr></thead><tbody id="log"></tbody></table></div>
   </details>
 </section>
 </main>
@@ -218,12 +218,12 @@ function getAssessmentDisplayName(){
   const ctx = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
   return String(params.get("assessmentName") || params.get("testName") || ctx.assessmentName || ctx.assessment_name || ctx.testName || ctx.test_name || ctx.assessmentTitle || ctx.testTitle || "VAP").trim() || "VAP";
 }
-function getAssessmentSequenceLabel(){
+async function getAssessmentSequenceLabel(){
   try{
     const ids = getAssessmentIdentity();
     const params = new URLSearchParams(location.search);
     const assessmentIndex = Number(params.get("assessmentIndex") || 0);
-    const projects = (await DataService.getProjects());
+    const projects = await DataService.getProjects();
     if(!Array.isArray(projects)) return "";
     const project = projects.find(pr => String(pr?.id || pr?.projectId || pr?.project_id || "").trim() === ids.projectId);
     if(!project) return "";
@@ -244,14 +244,14 @@ function resolveAssessmentRoute(code, name){
   if(c.includes("msjt") || n.includes("msjt") || n.includes("managerial")) return "msjt_managerial.html";
   return "";
 }
-function goToNextOrDashboard(){
+async function goToNextOrDashboard(){
   const ids = getAssessmentIdentity();
   const params = new URLSearchParams(location.search);
   const currentIndex = Number(params.get("assessmentIndex") || 0);
   const next = currentIndex + 1;
   let packs = [];
   try{
-    const ps = (await DataService.getProjects());
+    const ps = await DataService.getProjects();
     const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
     const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
     packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
@@ -268,11 +268,11 @@ function goToNextOrDashboard(){
     location.href = `assessment.html?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
   }
 }
-function syncAssessmentActivity(activity, historyType){
+async function syncAssessmentActivity(activity, historyType){
   const ids = getAssessmentIdentity();
   if(!ids.projectId || !ids.participantId) return;
   try{
-    const projects = (await DataService.getProjects());
+    const projects = await DataService.getProjects();
     if(!Array.isArray(projects)) return;
     const now = new Date().toISOString();
     let changed = false;
@@ -300,7 +300,7 @@ function syncAssessmentActivity(activity, historyType){
 }
 
 let assessmentLogoutRecorded = false;
-function recordAssessmentLogout(reason){
+async function recordAssessmentLogout(reason){
   if(assessmentLogoutRecorded) return;
   const internalNavigation = sessionStorage.getItem("ts_internal_assessment_navigation");
   if(internalNavigation === "true"){ sessionStorage.removeItem("ts_internal_assessment_navigation"); return; }
@@ -308,7 +308,7 @@ function recordAssessmentLogout(reason){
   const ids = getAssessmentIdentity();
   if(!ids.projectId || !ids.participantId) return;
   try{
-    const projects = (await DataService.getProjects());
+    const projects = await DataService.getProjects();
     if(!Array.isArray(projects)) return;
     const now = new Date().toISOString();
     const testName = getAssessmentDisplayName();
@@ -338,7 +338,7 @@ function markAssessmentStarted(){ const name = getAssessmentDisplayName(); syncA
 function markAssessmentSessionChange(sessionNumber){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")" + getAssessmentSequenceLabel() + " — Sesi " + sessionNumber, "test-session"); }
 function markAssessmentFinished(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Tes selesai (" + name + ")" + getAssessmentSequenceLabel(), "test-complete"); }
 
-function getContext(){
+async function getContext(){
   const params = new URLSearchParams(location.search);
   const participantId = String(params.get("participantId") || params.get("id") || "").trim();
   const projectId = String(params.get("projectId") || "").trim();
@@ -347,7 +347,7 @@ function getContext(){
   try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
   let participantName = "", projectName = "", participantObject = null, projectObject = null;
   try{
-    const projects = (await DataService.getProjects());
+    const projects = await DataService.getProjects();
     if(Array.isArray(projects)){
       projectObject = projects.find(function(project){
         const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
@@ -376,15 +376,12 @@ function getContext(){
   }
   return {id: participantId, name: participantName, project: projectName, projectId: projectId, participant: participantObject, projectData: projectObject};
 }
-function init(){
-  // ==========================================================
-  // PATCH: Init warning pindah tab (VAP)
-  // ==========================================================
+async function init(){
   if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
     window.TabSwitchWarning.init({ context: "VAP" });
   }
 
-  const c = getContext();
+  const c = await getContext();
   participant.name = c.name; participant.id = c.id; participant.project = c.project;
   participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
   el("participantName").textContent = participant.name || "-";
@@ -505,8 +502,10 @@ function nextTrial(){
     number, block: info.block,
     difficulty: currentSession === 1 ? "mixed" : "similarity-controlled",
     stimulus: g.stimulus,
-    answerKey: String(g.key),
-    answer: null, correct: null, timeout: false,
+    // answerKey DIHAPUS — client tidak boleh tahu jawaban
+    answer: null,
+    correct: null,   // akan di-set server; client biarkan null
+    timeout: false,
     responseTimeMs: null,
     presentedAt: performance.now()
   };
@@ -519,7 +518,8 @@ function answer(value){
   const t = currentTrial;
   t.answer = String(value);
   t.responseTimeMs = Math.round(performance.now() - t.presentedAt);
-  t.correct = t.answer === t.answerKey;
+  // t.correct TIDAK di-set — server yang akan verifikasi
+  t.correct = null;
   sessions[currentSession].trials.push(t);
   currentTrial = null;
   if(sessionRemaining > 0 && totalRemaining > 0) nextTrial();
@@ -569,8 +569,93 @@ function startBreakTimer(){
 }
 
 /* =========================================================
+   VAP SCORING — Server-side via Edge Function
+========================================================= */
+async function calculateVapScore() {
+  const ids = getAssessmentIdentity();
+  if (!ids.projectId || !ids.participantId) {
+    throw new Error("projectId & participantId tidak ada");
+  }
+
+  let accessToken = "";
+  if (window.TS_SESSION) {
+    accessToken = await window.TS_SESSION.getAccessToken();
+  }
+  if (!accessToken) {
+    throw new Error("Session tidak valid — silakan login ulang");
+  }
+
+  const params = new URLSearchParams(location.search);
+  const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
+  const rawAssessmentCode = params.get("assessmentCode") || "vap";
+  const assessmentCodeStr = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawAssessmentCode)
+    ? "vap"
+    : rawAssessmentCode.toLowerCase();
+  const assessmentNameStr = getAssessmentDisplayName();
+
+  // Kirim raw trials — TANPA correct, TANPA answerKey
+  const payloadSessions = {
+    1: {
+      trials: sessions[1].trials.map(t => ({
+        trialId: t.trialId,
+        session: t.session,
+        number: t.number,
+        block: t.block,
+        stimulus: t.stimulus,
+        answer: t.answer,
+        timeout: t.timeout,
+        responseTimeMs: t.responseTimeMs,
+      })),
+    },
+    2: {
+      trials: sessions[2].trials.map(t => ({
+        trialId: t.trialId,
+        session: t.session,
+        number: t.number,
+        block: t.block,
+        stimulus: t.stimulus,
+        answer: t.answer,
+        timeout: t.timeout,
+        responseTimeMs: t.responseTimeMs,
+      })),
+    },
+  };
+
+  const res = await fetch(
+    "https://nixmychfhsnsvymkuxtm.supabase.co/functions/v1/calculate-vap-score",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + accessToken,
+      },
+      body: JSON.stringify({
+        projectId: ids.projectId,
+        participantId: ids.participantId,
+        assessmentIndex: assessmentIndexNum,
+        assessmentCode: assessmentCodeStr,
+        assessmentName: assessmentNameStr,
+        sessions: payloadSessions,
+      }),
+    }
+  );
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error("HTTP " + res.status + " — " + errText);
+  }
+
+  const json = await res.json();
+  if (!json.success) {
+    throw new Error(json.error || "Gagal hitung skor");
+  }
+
+  console.log("[VAP] Skor dari server:", json.scores);
+  return json.scores;
+}
+
+/* =========================================================
    FINISH ASSESSMENT — dengan Supabase Sync
-   FIX v3.1: Tambah participant_name di upsert
 ========================================================= */
 async function finishAssessment(){
   console.log("VAP Assessment selesai");
@@ -590,13 +675,13 @@ async function finishAssessment(){
   /* ---- Update monitoring activity ---- */
   try{
     const ids = getAssessmentIdentity();
-    const projects = (await DataService.getProjects());
+    const projects = await DataService.getProjects();
     if(Array.isArray(projects)){
       const params = new URLSearchParams(location.search);
       const assessmentIndex = Number(params.get("assessmentIndex") || 0);
       const assessmentCode = String(params.get("assessmentCode") || "VAP").trim();
       const assessmentName = getAssessmentDisplayName();
-      const assessmentSeqLabel = getAssessmentSequenceLabel();
+      const assessmentSeqLabel = await getAssessmentSequenceLabel();
       const now = new Date().toISOString();
       projects.forEach(project=>{
         const projectId = String(project.id || project.projectId || project.project_id || "").trim();
@@ -642,11 +727,18 @@ async function finishAssessment(){
 
   markAssessmentFinished();
 
-  /* ---- Hitung hasil ---- */
-  let result;
-  try{ result = calc(); }catch(error){ console.error("Gagal menghitung hasil VAP:", error); result = null; }
+  /* ---- Hitung hasil via Edge Function (server-side) ---- */
+  let result = null;
+  try {
+    result = await calculateVapScore();
+    window.__lastVapResult = result;
+  } catch (error) {
+    console.error("[VAP] Gagal hitung skor via server:", error);
+    alert("Gagal menghitung skor VAP: " + (error.message || error) + "\n\nCoba lagi atau hubungi admin.");
+    return;
+  }
 
-  /* ---- Simpan ke localStorage ---- */
+  /* ---- Simpan ke localStorage (backward compat) ---- */
   const ids = getAssessmentIdentity();
   const params = new URLSearchParams(location.search);
   const assessmentIndexNum = Number(params.get("assessmentIndex") || 0);
@@ -656,12 +748,12 @@ async function finishAssessment(){
         return fallback;
     }
     return c || fallback;
-}
+  }
 
-const assessmentCodeStr = normalizeAssessmentCode(
+  const assessmentCodeStr = normalizeAssessmentCode(
     params.get("assessmentCode"),
     "vap"
-);
+  );
   const assessmentNameStr = getAssessmentDisplayName();
   const assessmentIdFromUrl = String(params.get("assessmentId") || "").trim();
   let vapResult = null;
@@ -669,51 +761,58 @@ const assessmentCodeStr = normalizeAssessmentCode(
   try{
     if(ids.projectId && ids.participantId && result){
       const submittedAt = new Date().toISOString();
-      // PATCH: Kalau participant.name kosong, ambil dari Supabase
-let participantName = participant.name || "";
+      let participantName = participant.name || "";
 
-if (!participantName) {
-    try {
-        const sb = window.supabaseClient || window.supabase;
-        if (sb) {
+      if (!participantName) {
+        try {
+          const sb = window.supabaseClient || window.supabase;
+          if (sb) {
             const { data: pData } = await sb
-                .from("participants")
-                .select("name, full_name, raw_data")
-                .eq("id", ids.participantId)
-                .single();
-            
-            if (pData) {
-                participantName = pData.name || 
-                                   pData.full_name || 
-                                   (pData.raw_data && pData.raw_data.name) || 
-                                   "";
-                console.log("[VAP] Nama dari Supabase:", participantName);
-            }
-        }
-    } catch (e) {
-        console.warn("[VAP] Gagal fetch nama:", e);
-    }
-}
+              .from("participants")
+              .select("name, full_name, raw_data")
+              .eq("id", ids.participantId)
+              .single();
 
-vapResult = {
-    version: 3,
-    resultType: "VAP",
-    projectId: ids.projectId,
-    participantId: ids.participantId,
-    participantName: participantName,   // ← pakai variabel
-    assessmentId: assessmentIdFromUrl, 
-    // ...
-};
-            // Simpan dengan UUID (BARU)
-      if (assessmentIdFromUrl) {
-          localStorage.setItem(`vap_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(vapResult));
-          localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(vapResult));
-          console.log("[VAP] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+            if (pData) {
+              participantName = pData.name ||
+                               pData.full_name ||
+                               (pData.raw_data && pData.raw_data.name) ||
+                               "";
+              console.log("[VAP] Nama dari Supabase:", participantName);
+            }
+          }
+        } catch (e) {
+          console.warn("[VAP] Gagal fetch nama:", e);
+        }
       }
 
-      // Simpan dengan index (kompatibilitas)
+      vapResult = {
+        version: 3,
+        resultType: "VAP",
+        projectId: ids.projectId,
+        participantId: ids.participantId,
+        participantName: participantName,
+        assessmentId: assessmentIdFromUrl,
+        assessmentIndex: assessmentIndexNum,
+        assessmentCode: assessmentCodeStr,
+        assessmentName: assessmentNameStr,
+        scores: result,
+        sessions: {
+          1: {trials: sessions[1].trials, startedAt: sessions[1].startedAt, endedAt: sessions[1].endedAt},
+          2: {trials: sessions[2].trials, startedAt: sessions[2].startedAt, endedAt: sessions[2].endedAt}
+        },
+        submittedAt
+      };
+
+      if (assessmentIdFromUrl) {
+        localStorage.setItem(`vap_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(vapResult));
+        localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(vapResult));
+        console.log("[VAP] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+      }
+
       localStorage.setItem(`vap_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(vapResult));
       localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(vapResult));
+      let allResults = [];
       try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
       if(!Array.isArray(allResults)) allResults = [];
       allResults = allResults.filter(item => !(String(item?.projectId || "") === ids.projectId && String(item?.participantId || "") === ids.participantId && String(item?.assessmentIndex ?? "") === String(assessmentIndexNum) && String(item?.assessmentCode || "").toUpperCase() === "VAP"));
@@ -723,39 +822,8 @@ vapResult = {
     }
   }catch(error){ console.error("Gagal menyimpan hasil VAP ke localStorage:", error); }
 
-  /* ---- SIMPAN KE SUPABASE ---- */
-  if(vapResult){
-    try{
-      const sb = window.supabaseClient || window.supabase;
-      if(sb && typeof sb.from === "function"){
-        const { data, error } = await sb
-          .from("vap_results")
-          .upsert({
-  project_id: ids.projectId,
-  participant_id: ids.participantId,
-  assessment_index: assessmentIndexNum,
-  assessment_code: assessmentCodeStr,
-  assessment_name: assessmentNameStr,
-  result_type: "VAP",             
-  scores: vapResult.scores,
-  raw_data: vapResult.sessions,
-  submitted_at: vapResult.submittedAt
-            
-          }, {
-            onConflict: "project_id,participant_id,assessment_index,assessment_code"
-          });
-
-        if(error){
-          console.error("[VAP] Supabase upsert error:", error);
-        } else {
-          console.log("[VAP] ✓ Hasil tersinkron ke Supabase (vap_results)");
-        }
-      } else {
-        console.warn("[VAP] Supabase client tidak tersedia — hanya localStorage");
-      }
-    }catch(err){
-      console.error("[VAP] Gagal sync ke Supabase:", err);
-    }
+  if (vapResult) {
+    console.log("[VAP] ✓ Hasil tersimpan di server (via Edge Function)");
   }
 
   /* ---- Tampilkan finish ---- */
@@ -764,11 +832,23 @@ vapResult = {
   el("finish").classList.remove("hidden");
   window.scrollTo({top: 0, behavior: "smooth"});
   console.log("VAP Assessment berhasil diselesaikan");
+
+  /* ---- Force report mode (dev) ---- */
+  const forceReport = new URLSearchParams(location.search).get("showReport") === "1";
+  if (forceReport && result) {
+    el("finish").classList.add("hidden");
+    el("results").classList.remove("hidden");
+    render(result);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
   setTimeout(goToNextOrDashboard, 1200);
 }
 
 /* =========================================================
-   SCORING
+   SCORING (client-side, hanya untuk fallback/export)
+   Server-side scoring ada di Edge Function calculate-vap-score
 ========================================================= */
 function trimRT(rtArray){
   if(!rtArray.length) return [];
@@ -783,8 +863,8 @@ function trimRT(rtArray){
 function metrics(n){
   const t = sessions[n].trials;
   const answered = t.filter(x => !x.timeout);
-  const correct = t.filter(x => x.correct);
-  const wrong = t.filter(x => !x.timeout && !x.correct);
+  const correct = t.filter(x => x.correct === true);
+  const wrong = t.filter(x => !x.timeout && x.correct === false);
   const missed = t.filter(x => x.timeout);
   const rtAll = answered.map(x => x.responseTimeMs).filter(Number.isFinite);
   const rtTrimmed = trimRT(rtAll);
@@ -815,7 +895,7 @@ function blocks(n){
   return Array.from({length: CFG.blocks}, (_, i) => {
     const t = sessions[n].trials.filter(x => x.block === i + 1);
     const answered = t.filter(x => !x.timeout);
-    const correct = t.filter(x => x.correct);
+    const correct = t.filter(x => x.correct === true);
     const missed = t.filter(x => x.timeout);
     const chance = n === 2 ? CFG.session2Chance : 0;
     const rawAcc = answered.length ? correct.length / answered.length : 0;
@@ -1096,7 +1176,7 @@ function render(d){
   ).join("");
 
   el("log").innerHTML = [...sessions[1].trials, ...sessions[2].trials].map(t =>
-    `<tr><td>${t.number}</td><td>S${t.session}</td><td>${t.block}</td><td>${t.stimulus}</td><td>${t.timeout ? "—" : t.answer}</td><td>${t.answerKey}</td><td>${t.timeout ? "TIMEOUT" : t.correct ? "BENAR" : "SALAH"}</td><td>${t.responseTimeMs ? (t.responseTimeMs / 1000).toFixed(2) + " sec" : "—"}</td></tr>`
+    `<tr><td>${t.number}</td><td>S${t.session}</td><td>${t.block}</td><td>${t.stimulus}</td><td>${t.timeout ? "—" : t.answer}</td><td>${t.timeout ? "TIMEOUT" : (t.correct === null ? "(server)" : t.correct ? "BENAR" : "SALAH")}</td><td>${t.responseTimeMs ? (t.responseTimeMs / 1000).toFixed(2) + " sec" : "—"}</td></tr>`
   ).join("");
 
   const behavioral = [["Kecepatan Kerja", d.speed], ["Ketelitian Kerja", d.accuracy], ["Stabilitas Kerja", d.stability], ["Endurance", d.endurance], ["Kontrol Perhatian", d.attention], ["Vigilance", d.vigilance]];
@@ -1200,7 +1280,15 @@ function draw(d, anomalies){
 }
 
 function exportJSON(){
-  const payload = {assessment: "VAP", version: 3, generatedAt: new Date().toISOString(), participant, sessions, dimensions: calc(), config: CFG};
+  const payload = {
+    assessment: "VAP",
+    version: 3,
+    generatedAt: new Date().toISOString(),
+    participant,
+    sessions,
+    dimensions: window.__lastVapResult || null,
+    config: CFG,
+  };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -1218,33 +1306,6 @@ document.addEventListener("visibilitychange", () => {
 
 init();
 console.log("[VAP v3.1] Initialized. TEST_MODE =", TEST_MODE);
-
-(function(){
-  const params = new URLSearchParams(location.search);
-  const forceReport = params.get("showReport") === "1";
-  if(!forceReport) return;
-  const originalFinish = window.finishAssessment;
-  window.finishAssessment = async function(){
-    await originalFinish.apply(this, arguments);
-    setTimeout(()=>{
-      const result = calc();
-      el("finish").classList.add("hidden");
-      el("results").classList.remove("hidden");
-      render(result);
-      window.scrollTo({top: 0, behavior: "smooth"});
-      console.log("[VAP DEV] Report ditampilkan paksa untuk testing");
-    }, 300);
-  };
-  const originalGoNext = window.goToNextOrDashboard;
-  window.goToNextOrDashboard = function(){
-    if(forceReport){
-      console.log("[VAP DEV] Navigasi otomatis dibatalkan");
-      return;
-    }
-    originalGoNext.apply(this, arguments);
-  };
-  console.log("[VAP DEV] Force report mode AKTIF");
-})();
 </script>
 </body>
 </html>
