@@ -54,7 +54,7 @@
     // ==========================================================
     // CANONICAL ROLES
     // ==========================================================
-    var ROLES = {
+       var ROLES = {
         SYSTEM_ADMIN: "system_admin",
         ADMINISTRATOR: "administrator",
         CLIENT_ADMIN: "client_admin",
@@ -62,6 +62,26 @@
         ASESOR: "asesor",
         PESERTA: "peserta"
     };
+
+    // ==========================================================
+    // ROLE LABELS — display name untuk UI
+    // Canonical role (value) → Human-readable label
+    // ==========================================================
+    var ROLE_LABELS = {
+        "system_admin":  "System Administrator",
+        "administrator": "Administrator",
+        "client_admin":  "Client",
+        "client_user":   "Client User",
+        "asesor":        "Asesor",
+        "peserta":       "Peserta"
+    };
+
+    function getRoleLabel(role) {
+        var key = String(role || "").toLowerCase().trim().replace(/\s+/g, "_");
+        // Normalize dulu (handle "system_administrator" → "system_admin")
+        var normalized = normalizeRole(key);
+        return ROLE_LABELS[normalized] || ROLE_LABELS[key] || role || "-";
+    }
 
     // View-only roles (tidak boleh create/edit/delete)
     var VIEW_ONLY_ROLES = [
@@ -277,17 +297,18 @@
             var user = await getUser();
             if (!user) return;
 
-            var meta = user.user_metadata || {};
+                        var meta = user.user_metadata || {};
             var name = meta.name || meta.username || (user.email || "").split("@")[0];
             var role = meta.role || "User";
+            var roleLabel = getRoleLabel(role);
 
             var nameEl = document.querySelector(".header-user-name");
             var roleEl = document.querySelector(".header-user-role");
 
             if (nameEl) nameEl.textContent = name;
-            if (roleEl) roleEl.textContent = role;
+            if (roleEl) roleEl.textContent = roleLabel;
 
-            console.log("[ROLE-PERM] Header updated:", { name: name, role: role });
+            console.log("[ROLE-PERM] Header updated:", { name: name, role: role, roleLabel: roleLabel });
         } catch (e) {
             console.warn("[ROLE-PERM] Header update error:", e);
         }
@@ -621,6 +642,9 @@
 
         // UI helpers
         autoUpdateHeader: autoUpdateHeader,
+              autoUpdateHeader: autoUpdateHeader,
+      getRoleLabel: getRoleLabel,
+      ROLE_LABELS: ROLE_LABELS,
         autoUpdateSidebar: autoUpdateSidebar,
         enforceReadOnly: enforceReadOnly,
         watchSidebarChanges: watchSidebarChanges

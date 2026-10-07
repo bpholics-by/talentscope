@@ -110,26 +110,38 @@
     // AUTO UPDATE HEADER
     // ============================================================
     async function autoUpdateHeader() {
-        try {
-            var user = await getUser();
-            if (!user) return;
+    try {
+        var user = await getUser();
+        if (!user) return;
 
-            var meta = user.user_metadata || {};
-            var role = meta.role || "User";
-            var name = meta.name || meta.username || (user.email ? user.email.split("@")[0] : "User");
+        var meta = user.user_metadata || {};
+        var role = meta.role || "User";
+        var name = meta.name || meta.username || (user.email ? user.email.split("@")[0] : "User");
 
-            var nameEl = document.querySelector(".header-user-name");
-            if (nameEl) nameEl.textContent = name;
-
-            var roleEl = document.querySelector(".header-user-role");
-            if (roleEl) roleEl.textContent = role;
-
-            var avatarEl = document.querySelector(".header-avatar");
-            if (avatarEl && name) avatarEl.textContent = name.charAt(0).toUpperCase();
-        } catch (e) {
-            // Silent
+        // Pakai getRoleLabel kalau tersedia (dari role-permissions.js)
+        // Fallback ke raw role kalau tidak tersedia
+        var roleLabel = role;
+        if (window.RolePermissions && typeof window.RolePermissions.getRoleLabel === "function") {
+            try {
+                roleLabel = window.RolePermissions.getRoleLabel(role);
+            } catch (e) {
+                // Fallback ke raw
+                roleLabel = role;
+            }
         }
+
+        var nameEl = document.querySelector(".header-user-name");
+        if (nameEl) nameEl.textContent = name;
+
+        var roleEl = document.querySelector(".header-user-role");
+        if (roleEl) roleEl.textContent = roleLabel;
+
+        var avatarEl = document.querySelector(".header-avatar");
+        if (avatarEl && name) avatarEl.textContent = name.charAt(0).toUpperCase();
+    } catch (e) {
+        // Silent
     }
+}
 
     // ============================================================
     // INJECT CSS ANTI-FLASH
