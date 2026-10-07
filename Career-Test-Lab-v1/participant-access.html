@@ -70,81 +70,163 @@ h1,h2{margin:0 0 10px}.muted{color:#6f8198}.pill{display:inline-flex;padding:6px
 <script>
 (function(){
 "use strict";
-const $=id=>document.getElementById(id);
-const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-const params=new URLSearchParams(location.search);
-const projectId=params.get("project");
-const participantId=params.get("participant");
-const code=params.get("code");
+const $ = id => document.getElementById(id);
+const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const params = new URLSearchParams(location.search);
+const projectId = String(params.get("project") || params.get("projectId") || "").trim();
+const participantId = String(params.get("participant") || params.get("participantId") || "").trim();
+const code = String(params.get("code") || "").trim();
 
-function load(){
-  try{const raw=localStorage.getItem("talentscope_projects");return raw?JSON.parse(raw):[]}
-  catch(e){return[]}
-}
-function save(data){localStorage.setItem("talentscope_projects",JSON.stringify(data))}
-function find(){
-  const projects=load();
-  const project=projects.find(x=>String(x.id)===String(projectId));
-  if(!project)return null;
-  const participant=(project.participants||[]).find(x=>String(x.id)===String(participantId));
-  if(!participant)return null;
-  if(!code || participant.accessCode!==code)return null;
-  return {projects,project,participant};
-}
 function fmt(v){
-  if(!v)return "-"; const d=new Date(v); return isNaN(d)?v:d.toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  if(!v) return "-";
+  const d = new Date(v);
+  return isNaN(d) ? v : d.toLocaleString("en-GB",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
 }
-function isWithin(p){
-  const now=new Date();
-  const a=p.accessStart?new Date(p.accessStart):null;
-  const b=p.accessEnd?new Date(p.accessEnd):null;
-  return (!a||isNaN(a)||now>=a)&&(!b||isNaN(b)||now<=b);
+function isWithin(accessStart, accessEnd){
+  const now = new Date();
+  const a = accessStart ? new Date(accessStart) : null;
+  const b = accessEnd ? new Date(accessEnd) : null;
+  return (!a || isNaN(a) || now >= a) && (!b || isNaN(b) || now <= b);
 }
-const ctx=find();
-if(!ctx){
+function showError(title, msg){
   $("error").classList.remove("hidden");
-  $("error").innerHTML="<h2>Access not found</h2><p class='muted'>Access code tidak valid atau participant/project tidak ditemukan.</p>";
-  return;
-}
-const {projects,project,participant}=ctx;
-$("access").classList.remove("hidden");
-$("company").textContent=project.company||"";
-$("projectName").textContent=project.name||"Assessment Project";
-$("participantName").textContent=(participant.name||"Participant")+" • "+(participant.email||"");
-$("from").textContent=fmt(participant.accessStart);
-$("until").textContent=fmt(participant.accessEnd);
-
-const active=isWithin(participant);
-const status=participant.status==="Completed"?"Completed":participant.status==="In Progress"||participant.startedAt?"In Progress":"Access Granted";
-$("accessStatus").textContent=status;
-$("accessStatus").className="pill "+(status==="Completed"?"warn":"ok");
-
-const assessments=(project.assessments||[]).map((a,i)=>typeof a==="string"?{name:a,code:"A"+(i+1)}:a);
-$("assessmentList").innerHTML=assessments.length?assessments.map((a,i)=>`<div class="assessment"><div><strong>${esc(a.name||"Assessment "+(i+1))}</strong><div class="muted">${esc(a.category||"Assessment")} ${a.duration?"• "+esc(a.duration)+" min":""}</div></div><span class="pill">Assessment ${i+1}</span></div>`).join(""):"<p class='muted'>No assessment assigned.</p>";
-
-if(!active && status!=="In Progress"){
-  $("startBtn").disabled=true;
-  $("accessStatus").textContent="Outside Access Window";
-  $("accessStatus").className="pill danger";
-  $("startBtn").textContent="Access Not Available";
-}
-if(status==="In Progress"){
-  $("instructions").classList.add("hidden");
-  $("started").classList.remove("hidden");
+  $("error").innerHTML = '<h2>'+esc(title)+'</h2><p class="muted">'+esc(msg)+'</p>';
+  $("access").classList.add("hidden");
 }
 
-$("startBtn").onclick=function(){
-  if(!isWithin(participant)){alert("Assessment belum atau sudah tidak dapat diakses pada waktu ini.");return;}
-  participant.status="In Progress";
-  participant.startedAt=participant.startedAt||new Date().toISOString();
-  participant.currentAssessmentIndex=0;
-  save(projects);
-  $("instructions").classList.add("hidden");
-  $("started").classList.remove("hidden");
-};
-$("continueBtn").onclick=function(){
-  location.href="assessment-runner.html?project="+encodeURIComponent(project.id)+"&participant="+encodeURIComponent(participant.id)+"&code="+encodeURIComponent(participant.accessCode);
-};
+async function init(){
+  if(!projectId || !participantId){
+    showError("Access not found", "Project ID atau Participant ID tidak ada di URL.");
+    return;
+  }
+
+  const sb = window.supabaseClient || window.supabase;
+  if(!sb || typeof sb.from !== "function"){
+    showError("Sistem tidak siap", "Supabase client tidak tersedia.");
+    return;
+  }
+
+  // ---- 1. Ambil participant (verify ownership) ----
+  const { data: participant, error: pErr } = await sb
+    .from("participants")
+    .select("id, project_id, name, full_name, email, access_code, access_start, access_end, status, started_at")
+    .eq("id", participantId)
+    .eq("project_id", projectId)
+    .maybeSingle();
+
+  if(pErr || !participant){
+    showError("Access not found", "Access code tidak valid atau participant/project tidak ditemukan.");
+    return;
+  }
+
+  // Optional: verify access code kalau URL punya `code=`
+  if(code && participant.access_code && code !== participant.access_code){
+    showError("Access not found", "Access code tidak valid.");
+    return;
+  }
+
+  // ---- 2. Ambil project info ----
+  const { data: project } = await sb
+    .from("projects")
+    .select("id, name, project_name, company")
+    .eq("id", projectId)
+    .maybeSingle();
+
+  // ---- 3. Ambil daftar assessment dari participant_assessments ----
+  const { data: paRows } = await sb
+    .from("participant_assessments")
+    .select("id, assessment_name, status, created_at")
+    .eq("participant_id", participantId)
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+
+  const assessments = Array.isArray(paRows) ? paRows : [];
+
+  // ---- 4. Render ----
+  $("access").classList.remove("hidden");
+  $("company").textContent = project?.company || "";
+  $("projectName").textContent = project?.name || project?.project_name || "Assessment Project";
+  $("participantName").textContent = (participant.name || participant.full_name || "Participant") + (participant.email ? " • " + participant.email : "");
+  $("from").textContent = fmt(participant.access_start);
+  $("until").textContent = fmt(participant.access_end);
+
+  const withinWindow = isWithin(participant.access_start, participant.access_end);
+  const rawStatus = String(participant.status || "").trim().toLowerCase();
+  const participantStatus = rawStatus === "completed" ? "Completed"
+    : (rawStatus === "in progress" || participant.started_at) ? "In Progress"
+    : "Access Granted";
+
+  $("accessStatus").textContent = participantStatus;
+  $("accessStatus").className = "pill " + (participantStatus === "Completed" ? "warn" : "ok");
+
+  $("assessmentList").innerHTML = assessments.length
+    ? assessments.map((a, i) => {
+        const status = String(a.status || "Not Started");
+        return '<div class="assessment"><div><strong>' + esc(a.assessment_name || "Assessment " + (i+1)) + '</strong><div class="muted">Assessment ' + (i+1) + ' • ' + esc(status) + '</div></div><span class="pill">#' + (i+1) + '</span></div>';
+      }).join("")
+    : "<p class='muted'>No assessment assigned.</p>";
+
+  if(!withinWindow && participantStatus !== "In Progress"){
+    $("startBtn").disabled = true;
+    $("accessStatus").textContent = "Outside Access Window";
+    $("accessStatus").className = "pill danger";
+    $("startBtn").textContent = "Access Not Available";
+  }
+
+  if(participantStatus === "In Progress"){
+    $("instructions").classList.add("hidden");
+    $("started").classList.remove("hidden");
+  }
+
+  // ---- 5. Event handlers ----
+  $("startBtn").onclick = async function(){
+    if(!isWithin(participant.access_start, participant.access_end)){
+      alert("Assessment belum atau sudah tidak dapat diakses pada waktu ini.");
+      return;
+    }
+
+    // Update status participant + assessment pertama ke "In Progress"
+    try {
+      await sb.from("participants")
+        .update({
+          status: "In Progress",
+          started_at: participant.started_at || new Date().toISOString(),
+        })
+        .eq("id", participantId);
+
+      // Update assessment pertama (kalau ada) ke In Progress
+      if(assessments.length > 0){
+        const first = assessments[0];
+        await sb.from("participant_assessments")
+          .update({
+            status: "In Progress",
+            started_at: new Date().toISOString(),
+          })
+          .eq("id", first.id);
+      }
+    } catch(err){
+      console.warn("[ACCESS] Gagal update status:", err);
+    }
+
+    $("instructions").classList.add("hidden");
+    $("started").classList.remove("hidden");
+  };
+
+  $("continueBtn").onclick = function(){
+    const qs = new URLSearchParams({
+      project: projectId,
+      participant: participantId,
+      code: participant.access_code || "",
+    });
+    location.href = "assessment-runner.html?" + qs.toString();
+  };
+}
+
+init().catch(err => {
+  console.error("[ACCESS] Unhandled error:", err);
+  showError("Terjadi kesalahan", String(err && err.message || err));
+});
+
 })();
 </script>
 </body>
