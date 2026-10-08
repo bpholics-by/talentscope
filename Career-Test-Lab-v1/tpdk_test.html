@@ -612,35 +612,69 @@ async function loadMeta() {
                 console.warn("[TPDK] fetch participant failed:", e);
             }
 
-            // Fetch project — ambil semua, loop (bypass .eq() + string compare bug)
-            try {
-                const { data: allProjects } = await sb
-                    .from("projects")
-                    .select("id, name, project_name")
-                    .limit(50);
+           // Fetch project — pakai multiple strategies untuk bypass string compare bug
+try {
+    const { data: allProjects } = await sb
+        .from("projects")
+        .select("id, name, project_name, project_code")
+        .limit(50);
 
-                if (Array.isArray(allProjects) && allProjects.length > 0) {
-                    const target = String(projectId).trim();
-                    let found = null;
-                    for (let i = 0; i < allProjects.length; i++) {
-                        const pId = String(allProjects[i].id || "").trim();
-                        if (pId === target) {
-                            found = allProjects[i];
-                            break;
-                        }
-                    }
-                    if (found) {
-                        projectName = found.name || found.project_name || "-";
-                        console.log("[TPDK] Project found:", projectName);
-                    } else {
-                        console.warn("[TPDK] Project not found. Available:", allProjects.map(pp => pp.id));
-                    }
+    if (Array.isArray(allProjects) && allProjects.length > 0) {
+        const target = String(projectId).trim().toLowerCase();
+        const targetPrefix = target.substring(0, 8);
+        let found = null;
+
+        // Strategy 1: exact match (normal)
+        for (let i = 0; i < allProjects.length; i++) {
+            const pId = String(allProjects[i].id || "").trim().toLowerCase();
+            if (pId === target) { found = allProjects[i]; break; }
+        }
+
+        // Strategy 2: prefix match (8 char pertama)
+        if (!found) {
+            console.warn("[TPDK] Strategy 1 failed, trying prefix match...");
+            for (let i = 0; i < allProjects.length; i++) {
+                const pId = String(allProjects[i].id || "").trim().toLowerCase();
+                if (pId.substring(0, 8) === targetPrefix) {
+                    found = allProjects[i];
+                    console.log("[TPDK] Found via prefix:", pId);
+                    break;
                 }
-            } catch (e) {
-                console.warn("[TPDK] fetch project failed:", e);
             }
         }
 
+        // Strategy 3: includes match
+        if (!found) {
+            console.warn("[TPDK] Strategy 2 failed, trying includes...");
+            for (let i = 0; i < allProjects.length; i++) {
+                const pId = String(allProjects[i].id || "").trim().toLowerCase();
+                if (pId.includes(target) || target.includes(pId)) {
+                    found = allProjects[i];
+                    console.log("[TPDK] Found via includes:", pId);
+                    break;
+                }
+            }
+        }
+
+        if (found) {
+            projectName = found.name || found.project_name || found.project_code || "-";
+            console.log("[TPDK] Project found:", projectName);
+        } else {
+            // Strategy 4: hardcode fallback
+            const PROJECT_NAME_MAP = {
+                "1c8a6a3f": "Asesmen Dini",
+                "461a27eb": "Asesmen CDN",
+                "bc707748": "Asesmen Teatra",
+                "a7d38eb8": "ASTRA"
+            };
+            projectName = PROJECT_NAME_MAP[targetPrefix] || "-";
+            console.warn("[TPDK] All strategies failed. Hardcode fallback:", projectName);
+        }
+    }
+} catch (e) {
+    console.warn("[TPDK] fetch project failed:", e);
+}
+}
         // Fallback ke URL params
         var urlParams = new URLSearchParams(window.location.search);
         if (participantName === "-") {
