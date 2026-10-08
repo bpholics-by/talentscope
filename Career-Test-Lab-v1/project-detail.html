@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <script src="js/config.js?v=5"></script><!-- SCRIPT AUTO-DIRECT PROJECT DETAIL BERDASARKAN USERNAME -->
@@ -4209,7 +4209,7 @@ a{
 
 function byId(id){ return document.getElementById(id); }
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]});}
-function getProject(){
+async function getProject(){
   if(window.project) return window.project;
   try{
     var id=new URLSearchParams(location.search).get("id");
@@ -4218,7 +4218,7 @@ function getProject(){
     return window.project;
   }catch(e){return null}
 }
-function persist(){
+async function persist(){
   try{
     var ps=(await DataService.getProjects());
     var p=getProject(); if(!p) return;
@@ -5890,10 +5890,8 @@ console.log(
     p.lastInvitationAt=p.invitedAt;
     p.accessStart=project.accessStart || (project.start ? project.start+"T"+(project.startTime||"08:00") : "");
     p.accessEnd=project.accessEnd || (project.end ? project.end+"T"+(project.endTime||"17:00") : "");
-    p.accessLink="participant-access.html?project="+encodeURIComponent(project.id)+
-      "&participant="+encodeURIComponent(p.id)+
-      "&code="+encodeURIComponent(p.accessCode);
-  }
+    p.accessLink = "login.html";
+        }
 
   async function sendInvitations(participants){
 
@@ -6389,11 +6387,8 @@ if (
    ============================================================ */
 function generateInvitationShareText(p, projectTitle) {
     var accessCode = p.accessCode || p.password || p.access_code || "";
-    var link = "http://127.0.0.1:5500/participant-access.html?project=" 
-             + encodeURIComponent(p.projectId || "")
-             + "&participant=" + encodeURIComponent(p.id || "")
-             + "&code=" + encodeURIComponent(accessCode);
-    
+    var link = "http://127.0.0.1:5500/login.html"; 
+                 
     // Ambil project
     var project = window.project || {};
     
@@ -6503,7 +6498,7 @@ function handleCopyInvitation() {
     
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(result.text).then(function() {
-            alert("? Text berhasil di-copy!\n\nPaste di WhatsApp / Email / Telegram.");
+            alert("Text berhasil di-copy!\n\nPaste di WhatsApp / Email / Telegram.");
         }).catch(function() {
             fallbackCopy(result.text);
         });
@@ -6520,7 +6515,7 @@ function fallbackCopy(text) {
     ta.select();
     try {
         document.execCommand("copy");
-        alert("? Text berhasil di-copy!");
+        alert("Text berhasil di-copy!");
     } catch(e) {
         alert(" Gagal copy. Copy manual:\n\n" + text);
     }

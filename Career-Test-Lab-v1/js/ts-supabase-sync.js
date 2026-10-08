@@ -1006,7 +1006,17 @@ var assessmentsUrl = "/rest/v1/project_assessments?select=" + SELECT_COLS.projec
                 debouncedPush("results", function () {
                     var arr = readLocalArray(RESULTS_KEY);
                     var rows = arr.map(resultToRow).filter(Boolean);
-                    restUpsert("ts_results", rows);
+                    // Skip write ts_results untuk role peserta (RLS block)
+var currentRole = "";
+try {
+    var sessionData = JSON.parse(sessionStorage.getItem("ts_participant_session") || "{}");
+    currentRole = sessionData.role || "";
+} catch(e) {}
+if (currentRole !== "peserta") {
+    restUpsert("ts_results", rows);
+} else {
+    console.log("[TS-Sync] Skip write ts_results — role peserta");
+}
                 });
             } else if (key === USERS_KEY) {
                 debouncedPush("users", function () {
