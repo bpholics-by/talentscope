@@ -648,7 +648,48 @@
         enforceReadOnly: enforceReadOnly,
         watchSidebarChanges: watchSidebarChanges
     };
+    // ==========================================================
+    // GLOBAL FLAGS — kompatibilitas halaman lama
+    // ==========================================================
+    window.isAsesor = false;
+    window.isClient = false;
+    window.isViewOnly = false;
+
+    function refreshGlobalRoleFlags() {
+        try {
+            var role = String((typeof getRole === "function" ? getRole() : "") || "").toLowerCase().trim();
+            window.isAsesor = (role === ROLES.ASESOR);
+            window.isClient = (role === ROLES.CLIENT_ADMIN || role === ROLES.CLIENT_USER);
+            window.isViewOnly = (role === ROLES.CLIENT_USER || role === ROLES.ASESOR);
+            console.log("[ROLE-PERM] Global flags:", {
+                role: role,
+                isAsesor: window.isAsesor,
+                isClient: window.isClient,
+                isViewOnly: window.isViewOnly
+            });
+        } catch (e) {
+            console.warn("[ROLE-PERM] refreshGlobalRoleFlags error:", e);
+        }
+    }
+
+    window.RolePermissions.refreshGlobalRoleFlags = refreshGlobalRoleFlags;
+
+    var _origAutoUpdate = window.RolePermissions.autoUpdateHeader;
+    window.RolePermissions.autoUpdateHeader = async function() {
+        var result = await _origAutoUpdate.apply(this, arguments);
+        refreshGlobalRoleFlags();
+        return result;
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", refreshGlobalRoleFlags);
+    } else {
+        setTimeout(refreshGlobalRoleFlags, 100);
+    }
+
+    setInterval(refreshGlobalRoleFlags, 2000);
 
     console.log("[ROLE-PERM] ✅ RolePermissions loaded (Phase 3 - canonical)");
 
 })(window);
+    

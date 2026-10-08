@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
 
@@ -73,7 +73,10 @@ if (roleEl) {
                 
 
                 // C. Sembunyikan Tombol Aksi Sensitif
-                if (isAsesor) {
+                var isViewOnlyLocal = (window.RolePermissions && typeof window.RolePermissions.isViewOnly === "function")
+    ? window.RolePermissions.isViewOnly()
+    : false;
+if (isViewOnlyLocal) {
                     document.querySelectorAll("button, .btn, .btn-primary").forEach(function(btn) {
                         var bt = btn.textContent.toLowerCase();
 
