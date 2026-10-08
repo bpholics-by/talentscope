@@ -5786,7 +5786,8 @@ console.log(
 
       "Password : {{Password}}\n\n"+
 
-      "Jika ada pertanyaan bisa ditanyakan di grup WhatsApp.\n\n"+
+      "Anda akan menerima tautan login (Login URL) secara terpisah untuk menghindari kadaluarsa kredensial apabila proses login dilakukan lebih awal.\n\n"+
+      "Apabila terdapat pertanyaan atau kendala teknis, silakan menghubungi admin melalui grup WhatsApp yang tersedia.\n\n"+
 
       "Terima kasih,\n"+
 
@@ -5827,7 +5828,7 @@ console.log(
           '<label style="display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:7px">Invitation Message</label>'+
           '<textarea id="tsV26Body" style="width:100%;box-sizing:border-box;min-height:230px;resize:vertical;border:1px solid #d9e2ec;border-radius:9px;padding:12px;font:13px/1.6 system-ui;color:#0f172a;outline:none">'+esc(invitationTemplate(p.name || "TalentScope"))+'</textarea>'+
           '<div style="margin-top:12px;padding:12px 14px;border-radius:10px;background:#f8fafc;border:1px solid #e5e7eb;font-size:12px;color:#64748b;line-height:1.6">'+
-            '<b>Placeholder:</b> {{Participant Name}}, {{Access Link}}, {{Access Code}}, {{Access Until}} akan diganti otomatis untuk setiap participant saat invitation diproses.'+
+            '<b>Placeholder:</b> {{Participant Name}}, {{Assessment Schedule}}, {{Assessment Time}}, {{Username}}, {{Password}} akan diganti otomatis untuk setiap participant saat invitation diproses.'+
           '</div>'+
         '</div>'+
                '<div style="display:flex;justify-content:flex-end;gap:12px;padding:20px 24px;border-top:1px solid #e5eaf2;flex-wrap:wrap;background:#fafbfd;border-radius:0 0 16px 16px">'+
@@ -6475,7 +6476,8 @@ function invitationTemplateDefault(projectName) {
         "Waktu        : {{Assessment Time}}\n\n\n" +
         "Username : {{Username}}\n" +
         "Password : {{Password}}\n\n" +
-        "Jika ada pertanyaan bisa ditanyakan di grup WhatsApp.\n\n" +
+        "Anda akan menerima tautan login (Login URL) secara terpisah untuk menghindari kadaluarsa kredensial apabila proses login dilakukan lebih awal.\n\n" +
+        "Apabila terdapat pertanyaan atau kendala teknis, silakan menghubungi admin melalui grup WhatsApp yang tersedia.\n\n" +
         "Terima kasih,\n" +
         "TalentScope";
 }

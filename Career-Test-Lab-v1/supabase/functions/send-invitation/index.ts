@@ -294,7 +294,9 @@ Waktu        : ${p.scheduleTime || "-"}
 Username : ${p.username || p.email || "-"}
 Password : ${p.password || p.accessCode || "-"}
 
-Jika ada pertanyaan bisa ditanyakan di grup whatsapp.
+Anda akan menerima tautan login (Login URL) secara terpisah untuk menghindari kadaluarsa kredensial apabila proses login dilakukan lebih awal.
+
+Apabila terdapat pertanyaan atau kendala teknis, silakan menghubungi admin melalui grup WhatsApp yang tersedia.
 
 Terima kasih,
 TalentScope`;
