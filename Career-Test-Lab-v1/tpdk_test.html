@@ -285,7 +285,7 @@ const QUESTIONS = [
   { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi memilih Opsi A (lanjutkan sesuai rencana awal), apa konsekuensi paling mungkin yang terjadi?", options: ["Proyek selesai tepat waktu", "Biaya membengkak dan resistensi meningkat", "Karyawan puas", "Pelanggan senang"] },
   { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Andi mempertimbangkan Opsi C (phased implementation). Apa keunggulan utama pendekatan ini dibanding Opsi A?", options: ["Lebih murah", "Lebih cepat selesai", "Mengurangi risiko dan memungkinkan pembelajaran bertahap", "Tidak perlu pelatihan"] },
   { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika di tengah proyek terjadi perubahan regulasi yang mewajibkan sistem keuangan baru, apa yang sebaiknya Andi lakukan?", options: ["Tetap lanjutkan rencana awal", "Hentikan proyek", "Evaluasi ulang dan integrasikan regulasi baru ke dalam rencana", "Serahkan ke tim IT"] },
-  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur   Pelatihan   Implementasi   Evaluasi", "Implementasi   Infrastruktur   Pelatihan   Evaluasi", "Pelatihan   Implementasi   Infrastruktur   Evaluasi", "Evaluasi   Implementasi   Pelatihan   Infrastruktur"] },
+  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur   Pelatihan   Implementasi   Evaluasi", "Implementasi   Infrastruktur   Pelatihan   Evaluasi", "Pelatihan   Implementasi   Infrastruktur   Evaluasi", "Evaluasi   Implementasi   Pelatihan   Infrastruktur"] },
   { subtest: "D", type: "conceptual", text: TPDK_CERITA + "\n\nPERTANYAAN: Apa pola besar (big picture) yang sebenarnya sedang dihadapi PT Nusantara Jaya?", options: ["Masalah teknis semata", "Transformasi organisasi dari manual ke digital", "Masalah keuangan", "Konflik antar manajer"] },
   { subtest: "D", type: "digital_mindset", text: TPDK_CERITA + "\n\nPERTANYAAN: Eko mengusulkan aplikasi mobile untuk pelanggan. Jika Andi ingin menerapkan digital mindset, apa yang paling tepat dilakukan?", options: ["Tolak karena tidak ada di rencana awal", "Setujui tanpa analisis", "Analisis data pelanggan dan nilai bisnisnya sebelum memutuskan", "Serahkan ke vendor"] },
   { subtest: "D", type: "strategis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir strategis, apa yang harus ia pertimbangkan selain target 12 bulan?", options: ["Hanya anggaran", "Hanya kepuasan karyawan", "Sustainability, competitive advantage, dan kesiapan organisasi jangka panjang", "Hanya kepuasan Direktur"] },
@@ -567,9 +567,6 @@ function normalizeAssessmentCode(code, fallback) {
   return c || fallback;
 }
 const assessmentCode = normalizeAssessmentCode(p.get("assessmentCode"), "tpdk").toUpperCase();
-/* ==========================================================
-   FIX UUID: Ambil assessmentId dari URL
-   ========================================================== */
 const assessmentIdFromUrl = String(p.get("assessmentId") || "").trim();
 const resultKeySuffix = assessmentIdFromUrl || String(assessmentIndex);
 
@@ -591,52 +588,90 @@ function escapeHtml(str) {
   });
 }
 
-    async function loadMeta() {
-        try {
-            // PRIORITAS 1: Ambil dari TS_SESSION
-            var participantName = "Peserta";
-            var projectName = "Project";
-            
-            if (window.TS_SESSION) {
-                var user = await window.TS_SESSION.getUser();
-                if (user) {
-                    var meta = user.user_metadata || {};
-                    participantName = meta.name || user.email.split("@")[0] || "Peserta";
-                    projectName = meta.project_name || "Project";
+// =========================================================
+// LOAD METADATA — fetch participant & project name
+// =========================================================
+async function loadMeta() {
+    try {
+        var participantName = "-";
+        var projectName = "-";
+
+        var sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === "function" && projectId && participantId) {
+            // Fetch participant (by id only)
+            try {
+                const { data: p } = await sb
+                    .from("participants")
+                    .select("id, name, full_name, email")
+                    .eq("id", participantId)
+                    .maybeSingle();
+                if (p) {
+                    participantName = p.name || p.full_name || p.email || "-";
                 }
+            } catch (e) {
+                console.warn("[TPDK] fetch participant failed:", e);
             }
-            
-            // PRIORITAS 2: Fallback ke URL params
-            var urlParams = new URLSearchParams(window.location.search);
-            var participantNameFromUrl = urlParams.get('participantName');
-            var projectNameFromUrl = urlParams.get('projectName');
-            
-            if (participantNameFromUrl) participantName = participantNameFromUrl;
-            if (projectNameFromUrl) projectName = projectNameFromUrl;
-            
-            // Set ke UI
-            el('participant').textContent = participantName;
-            el('project').textContent = projectName;
-            el('date').textContent = new Date().toLocaleDateString('id-ID', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
-            
-            console.log('[TPDK] Metadata loaded:', {
-                participant: participantName,
-                project: projectName,
-                date: el('date').textContent
-            });
-        } catch (e) {
-            console.warn('TPDK metadata error:', e);
-            // Fallback: pakai UUID dari URL
-            var urlParams = new URLSearchParams(window.location.search);
-            el('participant').textContent = urlParams.get('participantName') || participantId || '-';
-            el('project').textContent = urlParams.get('projectName') || projectId || '-';
-            el('date').textContent = new Date().toLocaleDateString('id-ID', {
-                day: '2-digit', month: 'short', year: 'numeric'
-            });
+
+            // Fetch project — ambil semua, loop (bypass .eq() + string compare bug)
+            try {
+                const { data: allProjects } = await sb
+                    .from("projects")
+                    .select("id, name, project_name")
+                    .limit(50);
+
+                if (Array.isArray(allProjects) && allProjects.length > 0) {
+                    const target = String(projectId).trim();
+                    let found = null;
+                    for (let i = 0; i < allProjects.length; i++) {
+                        const pId = String(allProjects[i].id || "").trim();
+                        if (pId === target) {
+                            found = allProjects[i];
+                            break;
+                        }
+                    }
+                    if (found) {
+                        projectName = found.name || found.project_name || "-";
+                        console.log("[TPDK] Project found:", projectName);
+                    } else {
+                        console.warn("[TPDK] Project not found. Available:", allProjects.map(pp => pp.id));
+                    }
+                }
+            } catch (e) {
+                console.warn("[TPDK] fetch project failed:", e);
+            }
         }
+
+        // Fallback ke URL params
+        var urlParams = new URLSearchParams(window.location.search);
+        if (participantName === "-") {
+            participantName = urlParams.get("participantName") || urlParams.get("name") || "-";
+        }
+        if (projectName === "-") {
+            projectName = urlParams.get("projectName") || urlParams.get("project") || "-";
+        }
+
+        // Set ke UI
+        el("participant").textContent = participantName;
+        el("project").textContent = projectName;
+        el("date").textContent = new Date().toLocaleDateString("id-ID", {
+            day: "2-digit", month: "short", year: "numeric"
+        });
+
+        console.log("[TPDK] Metadata loaded:", {
+            participant: participantName,
+            project: projectName,
+            date: el("date").textContent
+        });
+
+    } catch (e) {
+        console.warn("TPDK metadata error:", e);
+        el("participant").textContent = participantId || "-";
+        el("project").textContent = projectId || "-";
+        el("date").textContent = new Date().toLocaleDateString("id-ID", {
+            day: "2-digit", month: "short", year: "numeric"
+        });
     }
+}
 
 function save(){ localStorage.setItem(answerKey, JSON.stringify(answers)); }
 
@@ -658,7 +693,6 @@ function render(){
 
   let h = `<div class="subtest-badge">Subtes ${q.subtest}  ${sub.name}</div>`;
 
-  // SVG Inline untuk subtes C
   if (q.image) {
     const svgContent = renderSVG(q.image);
     h += `<div style="margin-bottom:20px;padding:16px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 2px 8px rgba(15,23,42,0.04);overflow-x:auto">
@@ -668,12 +702,11 @@ function render(){
 
   h += `<div class="q-title">Soal ${current + 1}</div>`;
 
-  // Text soal (dengan white-space: pre-line untuk D)
   const questionText = q.text || q.question || q.scenario || q.description || "";
   if (questionText) {
     h += `<div class="q-text" style="font-size:15px;line-height:1.75;color:#334155;margin:12px 0 20px;padding:16px 18px;background:#f8fafc;border-radius:12px;border-left:4px solid #2563eb;font-weight:500;white-space:pre-line">${escapeHtml(questionText)}</div>`;
   } else {
-    h += `<div class="q-text" style="color:#dc2626;font-size:13px;padding:12px;background:#fee2e2;border-radius:8px;margin:12px 0">  Text soal tidak tersedia (Soal ${current + 1})</div>`;
+    h += `<div class="q-text" style="color:#dc2626;font-size:13px;padding:12px;background:#fee2e2;border-radius:8px;margin:12px 0">  Text soal tidak tersedia (Soal ${current + 1})</div>`;
   }
 
   h += `<div class="q-sub" style="font-size:12px;color:#64748b;margin-bottom:16px;font-weight:600">Pilih satu jawaban yang paling tepat.</div>`;
@@ -744,37 +777,33 @@ function requestSubmit(){
 }
 
 async function calculateScores() {
-    // ====================================================
-    // FASE 3B  HITUNG SKOR DI SERVER-SIDE (EDGE FUNCTION)
-    // ====================================================
     const params = new URLSearchParams(window.location.search);
-    const projectId = params.get("projectId") || "";
-    const participantId = params.get("participantId") || "";
+    const projectIdLocal = params.get("projectId") || "";
+    const participantIdLocal = params.get("participantId") || "";
 
-    if (!projectId || !participantId) {
+    if (!projectIdLocal || !participantIdLocal) {
         throw new Error("projectId & participantId tidak ada di URL");
     }
 
     console.log("[TPDK] Hitung skor via Edge Function...");
 
-    // Ambil token dari TS_SESSION
-var accessToken = "";
-if (window.TS_SESSION) {
-    accessToken = await window.TS_SESSION.getAccessToken();
-}
+    var accessToken = "";
+    if (window.TS_SESSION) {
+        accessToken = await window.TS_SESSION.getAccessToken();
+    }
 
-const res = await fetch("https://nixmychfhsnsvymkuxtm.supabase.co/functions/v1/calculate-tpdk-score", {
-    method: "POST",
-    headers: { 
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + accessToken
-    },
-    body: JSON.stringify({
-        projectId: projectId,
-        participantId: participantId,
-        answers: answers
-    })
-});
+    const res = await fetch("https://nixmychfhsnsvymkuxtm.supabase.co/functions/v1/calculate-tpdk-score", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + accessToken
+        },
+        body: JSON.stringify({
+            projectId: projectIdLocal,
+            participantId: participantIdLocal,
+            answers: answers
+        })
+    });
 
     if (!res.ok) {
         const errorText = await res.text().catch(() => "");
@@ -840,26 +869,26 @@ async function finalize(auto) {
   clearInterval(timerId);
 
   let scores;
-    try {
-        scores = await calculateScores();
-    } catch (err) {
-        console.error("[TPDK] Gagal hitung skor:", err);
-        alert("Gagal hitung skor: " + (err.message || err) + "\n\nCoba lagi atau hubungi admin.");
-        sending = false;
-        return;
-    }
+  try {
+    scores = await calculateScores();
+  } catch (err) {
+    console.error("[TPDK] Gagal hitung skor:", err);
+    alert("Gagal hitung skor: " + (err.message || err) + "\n\nCoba lagi atau hubungi admin.");
+    sending = false;
+    return;
+  }
+
   const submittedAt = new Date().toISOString();
   const result = {
     version: 1,
     resultType: 'TPDK',
     projectId,
     participantId,
-    assessmentId: assessmentIdFromUrl, 
+    assessmentId: assessmentIdFromUrl,
     assessmentIndex,
     assessmentCode,
     assessmentName: 'Tes Penalaran Khusus',
     scores,
-    // Output tambahan
     generalScore: {
         value: scores.gScore,
         category: scores.gCategory,
@@ -868,25 +897,21 @@ async function finalize(auto) {
     },
     subtestScores: scores.subtestDetails,
     disclaimer: scores.disclaimer,
-    answers: answers.map((a, i) => ({ 
-        index: i, 
-        subtest: QUESTIONS[i].subtest, 
-        type: QUESTIONS[i].type, 
+    answers: answers.map((a, i) => ({
+        index: i,
+        subtest: QUESTIONS[i].subtest,
+        type: QUESTIONS[i].type,
         selected: a,
     })),
     submittedAt
 };
 
-    /* ==========================================================
-     FIX: Simpan dengan UUID + index (dual-write)
-     ========================================================== */
   if (assessmentIdFromUrl) {
     localStorage.setItem(`tpdk_result_v1_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
     localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
     console.log("[TPDK]  Data disimpan dengan UUID:", assessmentIdFromUrl);
   }
 
-  // Simpan dengan index (kompatibilitas)
   localStorage.setItem(resultKey, JSON.stringify(result));
   localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`, JSON.stringify(result));
   let all = [];
@@ -939,26 +964,26 @@ function resolveAssessmentRoute(code,name){
   if(c.includes('tpdk')||n.includes('tpdk')||n.includes('penalaran'))return'tpdk_test.html';
   return'';
 }
-function nextTest(){
-  const next = assessmentIndex + 1;
-  let packs = [];
-  try{
-    const ps = await DataService.getProjects();
-    const proj = ps.find(x => String(x.id||x.projectId||x.project_id||'') === projectId);
-    const part = proj?.participants?.find(x => String(x.id||x.participantId||x.employeeId||x.employee_id||'') === participantId);
-    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
-  }catch(e){ packs = []; }
-  markInternalNavigation();
-  if(next >= packs.length){ location.href = 'participant-dashboard.html?completed=true'; return; }
-  const nextPkg = packs[next];
-  const nextCode = packageCodeOf(nextPkg);
-  const nextName = packageNameOf(nextPkg) || 'Assessment';
-  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
-  if(nextRoute){
-    location.href = `${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
-  } else {
-    location.href = `assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
-  }
+async function nextTest(){
+    const next = assessmentIndex + 1;
+    let packs = [];
+    try{
+        const ps = await DataService.getProjects();
+        const proj = ps.find(x => String(x.id||x.projectId||x.project_id||'') === projectId);
+        const part = proj?.participants?.find(x => String(x.id||x.participantId||x.employeeId||x.employee_id||'') === participantId);
+        packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
+    }catch(e){ packs = []; }
+    markInternalNavigation();
+    if(next >= packs.length){ location.href = 'participant-dashboard.html?completed=true'; return; }
+    const nextPkg = packs[next];
+    const nextCode = packageCodeOf(nextPkg);
+    const nextName = packageNameOf(nextPkg) || 'Assessment';
+    const nextRoute = resolveAssessmentRoute(nextCode, nextName);
+    if(nextRoute){
+        location.href = `${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+    } else {
+        location.href = `assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+    }
 }
 
 el('confirm').addEventListener('change', e => el('start').disabled = !e.target.checked);
