@@ -3,16 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <script>
-    // FIX: Matikan auto-sync di halaman tes hemat egress
     window.__TS_DISABLE_AUTO_SYNC = true;
 </script>
-<!-- SUPABASE SYNC BRIDGE -->
 <script src="js/config.js?v=9"></script>
 <script src="js/tab-switch-warning.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase-client.js?v=7"></script>
 <script src="js/session-helper.js?v=1"></script>
-    <script src="js/role-permissions.js?v=3"></script>
+<script src="js/role-permissions.js?v=3"></script>
 <script src="js/data-service.js?v=8"></script>
 <script src="js/ts-supabase-sync.js?v=13"></script>
 <script src="js/participant-activity.js"></script>
@@ -193,8 +191,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sa
 
 <section class="finish" id="finish">
   <div class="finish-icon"><i class="fa-solid fa-check"></i></div>
-  <h2>Terima Kasih</h2>
-  <p>Jawaban Tes Penalaran Khusus Anda telah berhasil direkam dan disimpan.</p>
+  <h2 id="finishTitle">Terima Kasih</h2>
+  <p id="finishMessage">Jawaban Tes Penalaran Khusus Anda telah berhasil direkam dan disimpan.</p>
   <button class="btn primary" id="nextTest">Lanjut ke Tes Berikutnya <i class="fa-solid fa-arrow-right"></i></button>
 </section>
 
@@ -254,7 +252,7 @@ Andi juga mempertimbangkan masukan tim:
  Eko: "Ini momentum untuk inovasi. Jangan hanya ERP, tapi juga mobile app."`;
 
 const QUESTIONS = [
-  // ============ SUBTES A VERBAL  (10 item) ============
+  // SUBTES A VERBAL (10 item)
   { subtest: "A", type: "paling_mendukung", text: "Di sebuah perusahaan logistik, manajemen ingin meningkatkan kecepatan pengiriman tanpa menambah jumlah armada. Salah satu supervisor mengusulkan penggunaan sistem penjadwalan berbasis data agar rute pengiriman lebih efisien. Manakah pernyataan berikut yang paling mendukung gagasan supervisor tersebut?", options: ["Penambahan armada akan mempercepat pengiriman walaupun biaya meningkat.", "Keterlambatan pengiriman umumnya disebabkan oleh jadwal yang tumpang tindih dan rute yang tidak optimal.", "Sopir berpengalaman tidak memerlukan sistem baru karena sudah hafal semua rute.", "Sistem berbasis data membutuhkan pelatihan tambahan sebelum digunakan.", "Efisiensi waktu pengiriman lebih dipengaruhi oleh kondisi jalan dibandingkan sistem yang digunakan."] },
   { subtest: "A", type: "paling_mendukung", text: "Divisi pemasaran meluncurkan kampanye digital baru untuk menarik segmen pelanggan muda. Setelah dua minggu, kunjungan ke situs meningkat 40%, tetapi angka pembelian tidak berubah. Manakah pernyataan berikut yang paling mendukung perlunya evaluasi terhadap isi kampanye?", options: ["Mayoritas pengunjung baru berhenti di halaman utama tanpa melanjutkan ke halaman produk.", "Tim pemasaran menargetkan jumlah pengunjung situs, bukan angka penjualan.", "Kampanye digital baru difokuskan untuk memperkenalkan merek, bukan meningkatkan transaksi.", "Angka kunjungan tinggi menunjukkan keberhasilan strategi digital.", "Sebagian pengunjung mengakses situs hanya karena promosi hadiah, bukan minat membeli produk."] },
   { subtest: "A", type: "paling_mendukung", text: "Dalam sebuah evaluasi kinerja, ditemukan bahwa tingkat kehadiran karyawan menurun selama dua bulan terakhir, tetapi hasil pekerjaan secara keseluruhan tetap stabil. Pernyataan manakah yang PALING MENDUKUNG temuan tersebut?", options: ["Sebagian karyawan tetap menyelesaikan tugasnya meskipun tidak selalu hadir di kantor.", "Penurunan tingkat kehadiran menyebabkan keterlambatan penyelesaian proyek.", "Produktivitas menurun karena pengawasan terhadap karyawan berkurang.", "Semua karyawan yang hadir setiap hari menunjukkan hasil kerja lebih baik.", "Sistem kerja jarak jauh membuat koordinasi antarpegawai menjadi tidak efektif."] },
@@ -266,26 +264,26 @@ const QUESTIONS = [
   { subtest: "A", type: "asumsi", text: "\"Karyawan yang sering bekerja lembur menunjukkan loyalitas tinggi terhadap perusahaan. Oleh karena itu, perusahaan seharusnya memberi penghargaan khusus bagi mereka yang paling sering lembur.\" Apa asumsi yang mendukung agar kesimpulan tersebut benar?", options: ["Semua karyawan yang lembur melakukannya karena dedikasi terhadap perusahaan.", "Lembur selalu terjadi karena beban kerja yang tidak seimbang.", "Loyalitas karyawan hanya bisa diukur dari lamanya bekerja.", "Perusahaan tidak memiliki cara lain untuk menilai loyalitas.", "Karyawan yang jarang lembur tidak loyal terhadap perusahaan."] },
   { subtest: "A", type: "asumsi", text: "Seorang manajer proyek mengatakan, \"Jika seluruh anggota tim disiplin mengisi laporan harian proyek, keterlambatan pekerjaan dapat diminimalkan.\" Asumsi yang mendasari pernyataan tersebut adalah...", options: ["Laporan harian dapat digunakan untuk memantau progres pekerjaan dengan akurat.", "Semua anggota tim memiliki kemampuan yang sama dalam menyelesaikan tugas.", "Setiap keterlambatan disebabkan oleh kurangnya laporan dari anggota tim.", "Tim proyek selalu membaca dan menindaklanjuti laporan yang telah dikirimkan.", "Disiplin mengisi laporan menunjukkan tingkat kepatuhan terhadap arahan manajer."] },
 
-  // ============ SUBTES B KUANTITATIF (5 item) ============
+  // SUBTES B KUANTITATIF (5 item)
   { subtest: "B", type: "aritmatika", text: "Tim logistik mencatat bahwa kendaraan pengiriman pertama menempuh rute sejauh 126 km dalam waktu 1 jam 45 menit. Kendaraan kedua menempuh rute yang sama tetapi membutuhkan waktu 15% lebih lama. Waktu tempuh kendaraan kedua adalah ...", options: ["1 jam 52 menit", "1 jam 55 menit", "2 jam 00 menit", "2 jam 01 menit", "2 jam 05 menit"] },
   { subtest: "B", type: "perbandingan", text: "Dalam laporan kinerja, bagian keuangan mencatat tingkat penyelesaian proyek beberapa divisi sebagai berikut: Divisi A: 1 2/5 proyek dari target; Divisi B: 95% dari target; Divisi C: 0,63 dari target; Divisi D: 25/40 dari target; Divisi E: 25/50 dari target. Urutan tingkat penyelesaian dari yang tertinggi hingga terendah adalah ...", options: ["A, B, C, D, E", "A, B, C, E, D", "D, E, C, B, A", "E, D, C, B, A", "D, E, B, C, A"] },
-  { subtest: "B", type: "geometri", text: "Bagian pemeliharaan gedung akan memasang pagar baja ringan mengelilingi area gudang berbentuk persegi panjang berukuran 60 meter  40 meter. Tiang pancang dipasang setiap 2 meter termasuk di setiap sudut. Berapa banyak tiang pancang yang dibutuhkan?", options: ["48 buah", "49 buah", "50 buah", "51 buah", "52 buah"] },
-  { subtest: "B", type: "deret", text: "Sebuah perusahaan manufaktur mencatat jumlah unit produk yang dihasilkan selama lima minggu berturut-turut sebagai berikut: Minggu 1: 120; Minggu 2: 128; Minggu 3: 141; Minggu 4: 159; Minggu 5: 182. Manajer produksi memperkirakan peningkatan produktivitas mengikuti pola kenaikan bertingkat dua yang konstan (second order difference tetap). Berdasarkan pola tersebut, perkiraan jumlah unit yang akan dihasilkan pada minggu ke-7 adalah ...", options: ["210", "216", "222", "229", "243"], answer: "E" },
-  { subtest: "B", type: "aritmatika_bisnis", text: "Sebuah perusahaan retail mencatat penjualan sebagai berikut: Bulan Januari: Rp250.000.000; Bulan Februari: Rp275.000.000; Bulan Maret: Rp300.000.000. Jika tren kenaikan ini berlanjut secara konstan, berapa total penjualan selama 6 bulan pertama (Januarii)?", options: ["Rp1.650.000.000", "Rp1.725.000.000", "Rp1.800.000.000", "Rp1.875.000.000", "Rp1.950.000.000"] },
+  { subtest: "B", type: "geometri", text: "Bagian pemeliharaan gedung akan memasang pagar baja ringan mengelilingi area gudang berbentuk persegi panjang berukuran 60 meter x 40 meter. Tiang pancang dipasang setiap 2 meter termasuk di setiap sudut. Berapa banyak tiang pancang yang dibutuhkan?", options: ["48 buah", "49 buah", "50 buah", "51 buah", "52 buah"] },
+  { subtest: "B", type: "deret", text: "Sebuah perusahaan manufaktur mencatat jumlah unit produk yang dihasilkan selama lima minggu berturut-turut sebagai berikut: Minggu 1: 120; Minggu 2: 128; Minggu 3: 141; Minggu 4: 159; Minggu 5: 182. Manajer produksi memperkirakan peningkatan produktivitas mengikuti pola kenaikan bertingkat dua yang konstan (second order difference tetap). Berdasarkan pola tersebut, perkiraan jumlah unit yang akan dihasilkan pada minggu ke-7 adalah ...", options: ["210", "216", "222", "229", "243"] },
+  { subtest: "B", type: "aritmatika_bisnis", text: "Sebuah perusahaan retail mencatat penjualan sebagai berikut: Bulan Januari: Rp250.000.000; Bulan Februari: Rp275.000.000; Bulan Maret: Rp300.000.000. Jika tren kenaikan ini berlanjut secara konstan, berapa total penjualan selama 6 bulan pertama (Januari-Juni)?", options: ["Rp1.650.000.000", "Rp1.725.000.000", "Rp1.800.000.000", "Rp1.875.000.000", "Rp1.950.000.000"] },
 
-  // ============ SUBTES C SPASIAL (5 item) ============
+  // SUBTES C SPASIAL (5 item)
   { subtest: "C", type: "rotasi", text: "Perhatikan denah ruang kantor berikut. Denah diputar 90 searah jarum jam. Pilih denah yang paling sesuai dengan hasil rotasi tersebut.", options: ["Pintu masuk di Timur", "Pintu masuk di Barat", "Pintu masuk di Selatan", "Pintu masuk di Utara"], image: "c01_denah_kantor.png" },
   { subtest: "C", type: "rotasi", text: "Sebuah gedung kantor menghadap ke Utara. Di sisi kiri gedung terdapat parkiran, di sisi kanan terdapat taman, dan di belakang gedung terdapat gudang. Jika gedung diputar 180 di manakah posisi taman?", options: ["Utara", "Timur", "Selatan", "Barat"], image: "c02_orientasi_bangunan.png" },
   { subtest: "C", type: "visualisasi", text: "Perhatikan susunan kardus di rak gudang berikut. Rak dilihat dari depan. Jika rak diputar 90 ke kiri, bagaimana susunan yang terlihat?", options: ["Kardus besar di kiri, kardus kecil di kanan", "Kardus besar di kanan, kardus kecil di kiri", "Susunan tidak berubah", "Semua kardus terlihat sama"], image: "c03_rak_gudang.png" },
   { subtest: "C", type: "pencerminan", text: "Perhatikan layout kantor berikut. Layout dilihat dari atas. Jika layout dicerminkan secara horizontal (kiri-ke-kanan), di manakah posisi meja manajer?", options: ["Tetap di kiri", "Pindah ke kanan", "Pindah ke atas", "Pindah ke bawah"], image: "c04_layout_kantor.png" },
   { subtest: "C", type: "analisis_ruang", text: "Sebuah truk pengiriman berada di titik A. Truk bergerak: 10 km ke Utara, 5 km ke Timur, 10 km ke Selatan, 5 km ke Barat. Di manakah posisi truk sekarang relatif terhadap titik A?", options: ["5 km di Utara", "5 km di Timur", "10 km di Selatan", "Kembali ke titik A"], image: "c05_rute_pengiriman.png" },
 
-  // ============ SUBTES D LOGIKA PRAKTIS (10 item) ============
+  // SUBTES D LOGIKA PRAKTIS (10 item)
   { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita di atas, apa akar masalah utama dari keterlambatan proyek ERP?", options: ["Anggaran tidak cukup", "Infrastruktur tidak siap dan resistensi karyawan", "Tim tidak kompeten", "Direktur terlalu ambisius"] },
   { subtest: "D", type: "logika_analisis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi memilih Opsi A (lanjutkan sesuai rencana awal), apa konsekuensi paling mungkin yang terjadi?", options: ["Proyek selesai tepat waktu", "Biaya membengkak dan resistensi meningkat", "Karyawan puas", "Pelanggan senang"] },
   { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Andi mempertimbangkan Opsi C (phased implementation). Apa keunggulan utama pendekatan ini dibanding Opsi A?", options: ["Lebih murah", "Lebih cepat selesai", "Mengurangi risiko dan memungkinkan pembelajaran bertahap", "Tidak perlu pelatihan"] },
   { subtest: "D", type: "fleksibilitas", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika di tengah proyek terjadi perubahan regulasi yang mewajibkan sistem keuangan baru, apa yang sebaiknya Andi lakukan?", options: ["Tetap lanjutkan rencana awal", "Hentikan proyek", "Evaluasi ulang dan integrasikan regulasi baru ke dalam rencana", "Serahkan ke tim IT"] },
-  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur   Pelatihan   Implementasi   Evaluasi", "Implementasi   Infrastruktur   Pelatihan   Evaluasi", "Pelatihan   Implementasi   Infrastruktur   Evaluasi", "Evaluasi   Implementasi   Pelatihan   Infrastruktur"] },
+  { subtest: "D", type: "sistematika", text: TPDK_CERITA + "\n\nPERTANYAAN: Berdasarkan cerita, urutan prioritas yang paling logis untuk Andi adalah?", options: ["Infrastruktur, Pelatihan, Implementasi, Evaluasi", "Implementasi, Infrastruktur, Pelatihan, Evaluasi", "Pelatihan, Implementasi, Infrastruktur, Evaluasi", "Evaluasi, Implementasi, Pelatihan, Infrastruktur"] },
   { subtest: "D", type: "conceptual", text: TPDK_CERITA + "\n\nPERTANYAAN: Apa pola besar (big picture) yang sebenarnya sedang dihadapi PT Nusantara Jaya?", options: ["Masalah teknis semata", "Transformasi organisasi dari manual ke digital", "Masalah keuangan", "Konflik antar manajer"] },
   { subtest: "D", type: "digital_mindset", text: TPDK_CERITA + "\n\nPERTANYAAN: Eko mengusulkan aplikasi mobile untuk pelanggan. Jika Andi ingin menerapkan digital mindset, apa yang paling tepat dilakukan?", options: ["Tolak karena tidak ada di rencana awal", "Setujui tanpa analisis", "Analisis data pelanggan dan nilai bisnisnya sebelum memutuskan", "Serahkan ke vendor"] },
   { subtest: "D", type: "strategis", text: TPDK_CERITA + "\n\nPERTANYAAN: Jika Andi berpikir strategis, apa yang harus ia pertimbangkan selain target 12 bulan?", options: ["Hanya anggaran", "Hanya kepuasan karyawan", "Sustainability, competitive advantage, dan kesiapan organisasi jangka panjang", "Hanya kepuasan Direktur"] },
@@ -553,6 +551,7 @@ function renderSVG(imageId) {
     };
     return svgs[imageId] || '<div style="padding:40px;text-align:center;color:#dc2626;font-size:13px">SVG untuk "' + imageId + '" belum tersedia</div>';
 }
+
 const TOTAL_SECONDS = 47 * 60;
 const TOTAL_ITEMS = QUESTIONS.length;
 
@@ -589,16 +588,16 @@ function escapeHtml(str) {
 }
 
 // =========================================================
-// LOAD METADATA — fetch participant & project name
+// LOAD METADATA
 // =========================================================
 async function loadMeta() {
     try {
         var participantName = "-";
         var projectName = "-";
-
         var sb = window.supabaseClient || window.supabase;
+
         if (sb && typeof sb.from === "function" && projectId && participantId) {
-            // Fetch participant (by id only)
+            // Fetch participant by id only
             try {
                 const { data: p } = await sb
                     .from("participants")
@@ -612,90 +611,65 @@ async function loadMeta() {
                 console.warn("[TPDK] fetch participant failed:", e);
             }
 
-           // Fetch project — pakai multiple strategies untuk bypass string compare bug
-try {
-    const { data: allProjects } = await sb
-        .from("projects")
-        .select("id, name, project_name, project_code")
-        .limit(50);
+            // Fetch project — multi-strategy
+            try {
+                const { data: allProjects } = await sb
+                    .from("projects")
+                    .select("id, name, project_name, project_code")
+                    .limit(50);
 
-    if (Array.isArray(allProjects) && allProjects.length > 0) {
-        const target = String(projectId).trim().toLowerCase();
-        const targetPrefix = target.substring(0, 8);
-        let found = null;
+                if (Array.isArray(allProjects) && allProjects.length > 0) {
+                    const target = String(projectId).trim().toLowerCase();
+                    const targetPrefix = target.substring(0, 8);
+                    let found = null;
 
-        // Strategy 1: exact match (normal)
-        for (let i = 0; i < allProjects.length; i++) {
-            const pId = String(allProjects[i].id || "").trim().toLowerCase();
-            if (pId === target) { found = allProjects[i]; break; }
-        }
+                    for (let i = 0; i < allProjects.length; i++) {
+                        const pId = String(allProjects[i].id || "").trim().toLowerCase();
+                        if (pId === target) { found = allProjects[i]; break; }
+                    }
 
-        // Strategy 2: prefix match (8 char pertama)
-        if (!found) {
-            console.warn("[TPDK] Strategy 1 failed, trying prefix match...");
-            for (let i = 0; i < allProjects.length; i++) {
-                const pId = String(allProjects[i].id || "").trim().toLowerCase();
-                if (pId.substring(0, 8) === targetPrefix) {
-                    found = allProjects[i];
-                    console.log("[TPDK] Found via prefix:", pId);
-                    break;
+                    if (!found) {
+                        console.warn("[TPDK] Strategy 1 failed, trying prefix match...");
+                        for (let i = 0; i < allProjects.length; i++) {
+                            const pId = String(allProjects[i].id || "").trim().toLowerCase();
+                            if (pId.substring(0, 8) === targetPrefix) {
+                                found = allProjects[i];
+                                console.log("[TPDK] Found via prefix:", pId);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (found) {
+                        projectName = found.name || found.project_name || found.project_code || "-";
+                        console.log("[TPDK] Project found:", projectName);
+                    } else {
+                        const PROJECT_NAME_MAP = {
+                            "1c8a6a3f": "Asesmen Dini",
+                            "461a27eb": "Asesmen CDN",
+                            "bc707748": "Asesmen Teatra",
+                            "a7d38eb8": "ASTRA"
+                        };
+                        projectName = PROJECT_NAME_MAP[targetPrefix] || "-";
+                        console.warn("[TPDK] Hardcode fallback:", projectName);
+                    }
                 }
+            } catch (e) {
+                console.warn("[TPDK] fetch project failed:", e);
             }
         }
 
-        // Strategy 3: includes match
-        if (!found) {
-            console.warn("[TPDK] Strategy 2 failed, trying includes...");
-            for (let i = 0; i < allProjects.length; i++) {
-                const pId = String(allProjects[i].id || "").trim().toLowerCase();
-                if (pId.includes(target) || target.includes(pId)) {
-                    found = allProjects[i];
-                    console.log("[TPDK] Found via includes:", pId);
-                    break;
-                }
-            }
-        }
-
-        if (found) {
-            projectName = found.name || found.project_name || found.project_code || "-";
-            console.log("[TPDK] Project found:", projectName);
-        } else {
-            // Strategy 4: hardcode fallback
-            const PROJECT_NAME_MAP = {
-                "1c8a6a3f": "Asesmen Dini",
-                "461a27eb": "Asesmen CDN",
-                "bc707748": "Asesmen Teatra",
-                "a7d38eb8": "ASTRA"
-            };
-            projectName = PROJECT_NAME_MAP[targetPrefix] || "-";
-            console.warn("[TPDK] All strategies failed. Hardcode fallback:", projectName);
-        }
-    }
-} catch (e) {
-    console.warn("[TPDK] fetch project failed:", e);
-}
-}
-        // Fallback ke URL params
         var urlParams = new URLSearchParams(window.location.search);
-        if (participantName === "-") {
-            participantName = urlParams.get("participantName") || urlParams.get("name") || "-";
-        }
-        if (projectName === "-") {
-            projectName = urlParams.get("projectName") || urlParams.get("project") || "-";
-        }
+        if (participantName === "-") participantName = urlParams.get("participantName") || urlParams.get("name") || "-";
+        if (projectName === "-") projectName = urlParams.get("projectName") || urlParams.get("project") || "-";
 
-        // Set ke UI
         el("participant").textContent = participantName;
         el("project").textContent = projectName;
         el("date").textContent = new Date().toLocaleDateString("id-ID", {
             day: "2-digit", month: "short", year: "numeric"
         });
 
-        console.log("[TPDK] Metadata loaded:", {
-            participant: participantName,
-            project: projectName,
-            date: el("date").textContent
-        });
+        console.log("[TPDK] Metadata loaded:", { participant: participantName, project: projectName });
 
     } catch (e) {
         console.warn("TPDK metadata error:", e);
@@ -895,13 +869,40 @@ function buildSubtestDetails(perSubtest) {
     return result;
 }
 
+// =========================================================
+// FINALIZE — FIXED RACE CONDITION
+// =========================================================
 async function finalize(auto) {
+  // Guard: kalau sudah proses, jangan lanjut
   if(sending) return;
+  
   const missing = answers.findIndex(a => a === null);
   if(missing >= 0 && !auto){ go(missing); return; }
+  
+  // Set sending SEBELUM await apapun
   sending = true;
   clearInterval(timerId);
-
+  
+  // Disable buttons
+  const submitBtn = el('confirmSubmit');
+  const cancelBtn = el('cancelSubmit');
+  if(submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Mengirim...';
+  }
+  if(cancelBtn) cancelBtn.disabled = true;
+  
+  // Tutup modal — mencegah klik berulang
+  el('modal').classList.remove('show');
+  
+  // Tampilkan state loading
+  el('quiz').style.display = 'none';
+  el('finish').style.display = 'block';
+  el('finishTitle').textContent = 'Memproses...';
+  el('finishMessage').textContent = 'Sedang menghitung skor...';
+  el('nextTest').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
   let scores;
   try {
     scores = await calculateScores();
@@ -909,6 +910,16 @@ async function finalize(auto) {
     console.error("[TPDK] Gagal hitung skor:", err);
     alert("Gagal hitung skor: " + (err.message || err) + "\n\nCoba lagi atau hubungi admin.");
     sending = false;
+    
+    // Restore UI
+    el('finish').style.display = 'none';
+    el('quiz').style.display = 'block';
+    el('modal').classList.add('show');
+    if(submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ya, Kirim Jawaban';
+    }
+    if(cancelBtn) cancelBtn.disabled = false;
     return;
   }
 
@@ -938,14 +949,13 @@ async function finalize(auto) {
         selected: a,
     })),
     submittedAt
-};
+  };
 
+  // Simpan ke localStorage
   if (assessmentIdFromUrl) {
     localStorage.setItem(`tpdk_result_v1_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
     localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
-    console.log("[TPDK]  Data disimpan dengan UUID:", assessmentIdFromUrl);
   }
-
   localStorage.setItem(resultKey, JSON.stringify(result));
   localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`, JSON.stringify(result));
   let all = [];
@@ -956,11 +966,12 @@ async function finalize(auto) {
   localStorage.setItem('talent_scope_results', JSON.stringify(all));
   localStorage.removeItem(answerKey);
 
+  // Simpan ke Supabase (tpdk_results)
   try {
     const sb = window.supabaseClient || window.supabase;
     if(sb && typeof sb.from === 'function'){
       const participantName = el('participant')?.textContent || '';
-      sb.from('tpdk_results').upsert({
+      const { error } = await sb.from('tpdk_results').upsert({
         project_id: projectId,
         participant_id: participantId,
         assessment_index: assessmentIndex,
@@ -973,17 +984,21 @@ async function finalize(auto) {
         submitted_at: submittedAt
       }, {
         onConflict: 'project_id,participant_id,assessment_index,assessment_code'
-      }).then(({ error }) => {
-        if(error) console.error('[TPDK] Supabase sync error:', error);
-        else console.log('[TPDK]  Tersinkron ke Supabase (tpdk_results)');
       });
+      if(error) console.error('[TPDK] Supabase sync error:', error);
+      else console.log('[TPDK] Tersinkron ke Supabase (tpdk_results)');
     }
   } catch(err){ console.warn('[TPDK] Gagal sync Supabase:', err); }
 
   updateParticipantAssessmentStatus('Completed', 'Tes TPDK telah selesai', 'Menyelesaikan tes TPDK', 'test-complete');
-  el('modal').classList.remove('show');
-  el('quiz').style.display = 'none';
-  el('finish').style.display = 'block';
+  
+  // Tampilkan state sukses
+  el('finishTitle').textContent = 'Terima Kasih';
+  el('finishMessage').textContent = 'Jawaban Tes Penalaran Khusus Anda telah berhasil direkam dan disimpan.';
+  el('nextTest').style.display = 'inline-block';
+  
+  // Reset sending
+  sending = false;
 }
 
 function packageCodeOf(item){ if(!item||typeof item!=='object')return''; return String(item.code||item.assessmentCode||item.assessment_code||item.id||item.assessmentId||item.testId||'').trim(); }
@@ -1049,9 +1064,6 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
     const now = new Date().toISOString();
     participant.isLoggedIn = true; participant.onlineStatus = 'online'; participant.lastSeen = now; participant.lastSeenAt = now; participant.lastHeartbeat = now;
     if(!participant.loginTime) participant.loginTime = now;
-    if(!participant.loggedInAt) participant.loggedInAt = participant.loginTime;
-    if(!participant.loginAt) participant.loginAt = participant.loginTime;
-    if(!participant.lastLoginAt) participant.lastLoginAt = participant.loginTime;
     if(status){ participant.assessmentStatus=status; participant.statusAsesmen=status; participant.assessment_status=status; participant.status=status; }
     if(activity){ participant.currentActivity=activity; participant.currentTest='Tes Penalaran Khusus'; participant.activity=activity; participant.lastActivity=activity; participant.activityUpdatedAt=now; }
     participant.disconnectDetectedAt = null;
