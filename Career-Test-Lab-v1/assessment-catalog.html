@@ -1,13 +1,13 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="id">
 
 <head>
 <!-- ============================================================
-     SCRIPT CONFIG — WAJIB PALING ATAS
+     SCRIPT CONFIG ï¿½ WAJIB PALING ATAS
      ============================================================ -->
 <script src="js/config.js?v=5"></script>
 <!-- ============================================================
-     HIDE SETTINGS MENU — INSTANT HIDE
+     HIDE SETTINGS MENU ï¿½ INSTANT HIDE
      ----------------------------------------------------------
      CSS ini menyembunyikan menu Settings sejak awal.
      Script di bawah (di akhir body) akan mengembalikannya
@@ -1093,7 +1093,7 @@
 
 
             <!-- =========================================
-                 JAVASCRIPT — EXTERNAL LIBRARIES
+                 JAVASCRIPT ï¿½ EXTERNAL LIBRARIES
                  ========================================= -->
             <script src="js/layout/layout-loader.js?v=13"></script>
             <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1112,7 +1112,7 @@
 
 
            <!-- =========================================
-     JAVASCRIPT — HALAMAN INLINE
+     JAVASCRIPT ï¿½ HALAMAN INLINE
      ========================================= -->
 <script>
 
@@ -1155,7 +1155,7 @@
 
 
     /* =====================================================
-       2. SESSION & ROLE DISPLAY — setelah DOM siap
+       2. SESSION & ROLE DISPLAY ï¿½ setelah DOM siap
     ===================================================== */
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -1192,7 +1192,10 @@
 
            
             /* C. Sembunyikan tombol aksi sensitif untuk Client & Asesor */
-            if (isClient || isAsesor) {
+var isViewOnly = (window.RolePermissions && typeof window.RolePermissions.isViewOnly === "function")
+    ? window.RolePermissions.isViewOnly()
+    : false;
+if (isViewOnly) {
 
                 document.querySelectorAll(
                     "button, .btn, .btn-primary"
@@ -1222,7 +1225,7 @@
 
 
         /* =====================================================
-           3. HIDE SETTINGS MENU — non-System-Admin
+           3. HIDE SETTINGS MENU ï¿½ non-System-Admin
         ===================================================== */
 
         function enforceHideSettings() {
@@ -1292,7 +1295,7 @@
 
 
         /* =====================================================
-           4. PROTEKSI ASESOR & CLIENT — blok Add/Edit/Delete
+           4. PROTEKSI ASESOR & CLIENT ï¿½ blok Add/Edit/Delete
         ===================================================== */
 
         function isRestrictedRole() {
