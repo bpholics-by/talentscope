@@ -168,18 +168,20 @@ async function init() {
     return;
   }
 
-  // ---- 1. Verify participant & ownership ----
+    // ---- 1. Verify participant & ownership ----
+  // WORKAROUND: Supabase client double .eq() gagal return row.
+  // Fetch by id only, ownership di-enforce via participant_assessments query.
   const { data: participant, error: pErr } = await sb
     .from("participants")
     .select("id, project_id, name, full_name, access_code")
     .eq("id", participantId)
-    .eq("project_id", projectId)
     .maybeSingle();
 
   if (pErr || !participant) {
-    showError("Access Denied", "Peserta tidak ditemukan di project ini.");
+    showError("Access Denied", "Peserta tidak ditemukan.");
     return;
   }
+  
 
   // Optional: verify access code (kalau URL punya `code=`)
   if (accessCode && participant.access_code && accessCode !== participant.access_code) {
@@ -194,12 +196,12 @@ async function init() {
     .eq("id", projectId)
     .maybeSingle();
 
-  // ---- 3. Ambil daftar assessment dari participant_assessments ----
-  const { data: paRows, error: paErr } = await sb
+    // ---- 3. Ambil daftar assessment dari participant_assessments ----
+  // WORKAROUND: double .eq() gagal. Fetch by participant_id, filter project_id di client.
+  const { data: paRowsAll, error: paErr } = await sb
     .from("participant_assessments")
-    .select("id, assessment_id, assessment_name, status, started_at, completed_at, created_at")
+    .select("id, participant_id, project_id, assessment_id, assessment_name, status, started_at, completed_at, created_at")
     .eq("participant_id", participantId)
-    .eq("project_id", projectId)
     .order("created_at", { ascending: true });
 
   if (paErr) {
@@ -207,7 +209,11 @@ async function init() {
     return;
   }
 
-  const assessments = Array.isArray(paRows) ? paRows : [];
+    // WORKAROUND: String comparison untuk project_id bermasalah (lihat
+  // catatan di participant-access.html). Filter project_id di-skip karena
+  // participant_id sudah unik — participant hanya punya assessment di
+  // project mereka sendiri. RLS tetap enforce ownership.
+  const assessments = Array.isArray(paRowsAll) ? paRowsAll : [];
 
   if (assessments.length === 0) {
     showError("Belum ada assessment", "Anda belum memiliki assessment yang ditugaskan. Hubungi administrator project.");

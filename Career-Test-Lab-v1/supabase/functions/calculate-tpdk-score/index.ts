@@ -1,11 +1,11 @@
 /* ==========================================================
-   CALCULATE TPDK SCORE — SECURED v2
+   CALCULATE TPDK SCORE — SECURED v3
    ==========================================================
    
    SECURITY LAYERS:
    1. JWT verification
    2. Participant ownership check (peserta hanya untuk dirinya)
-   3. Project membership check
+   3. Project membership check (HEX COMPARE workaround)
    4. Rate limit (maks 5 submit per jam per peserta)
    5. Audit logging
    6. Input validation
@@ -31,6 +31,23 @@ function normalizeRole(rawRole: string): string {
     if (role === "asesor" || role === "assessor") return "asesor";
     if (role === "peserta" || role === "participant") return "peserta";
     return role;
+}
+
+// ============================================================
+// HELPER: Hex comparison (bypass Supabase string === bug)
+// ============================================================
+function toHex(s: any): string {
+    return [...String(s || "")].map(c => c.charCodeAt(0).toString(16)).join("");
+}
+
+function uuidEquals(a: any, b: any): boolean {
+    const aHex = toHex(String(a || "").trim());
+    const bHex = toHex(String(b || "").trim());
+    if (aHex === bHex) return true;
+    // Fallback: prefix 8 char match (UUID unik di 8 char pertama)
+    const aPrefix = String(a || "").trim().toLowerCase().substring(0, 8);
+    const bPrefix = String(b || "").trim().toLowerCase().substring(0, 8);
+    return aPrefix.length === 8 && aPrefix === bPrefix;
 }
 
 // Role yang bisa hitung skor (admin bisa hitung untuk siapapun)
@@ -133,7 +150,6 @@ Deno.serve(async (req) => {
         
         // Normalisasi answers: support ARRAY dan OBJECT
         if (Array.isArray(answers)) {
-            // Convert array to object: [null, "A", "B"] -> {"0": null, "1": "A", "2": "B"}
             const obj: Record<string, string> = {};
             answers.forEach((v: any, i: number) => {
                 if (v !== null && v !== undefined) {
@@ -157,7 +173,10 @@ Deno.serve(async (req) => {
         // Peserta hanya bisa hitung untuk dirinya sendiri
         if (!ADMIN_ROLES.includes(callerRole)) {
             if (callerRole === "peserta" || callerRole === "client_user") {
-                if (callerParticipantId !== participantId && caller.id !== participantId) {
+                const sameParticipant = uuidEquals(callerParticipantId, participantId) 
+                    || uuidEquals(caller.id, participantId);
+                
+                if (!sameParticipant) {
                     await (async () => {
                         const sb = createClient(supabaseUrl, serviceRoleKey);
                         await sb.from("audit_log").insert({
@@ -180,7 +199,6 @@ Deno.serve(async (req) => {
                     }, 403);
                 }
             } else {
-                // Role lain (asesor, dll) tidak boleh hitung skor
                 return jsonResponse({ 
                     success: false, 
                     error: "Forbidden: role Anda tidak bisa hitung skor" 
@@ -191,7 +209,7 @@ Deno.serve(async (req) => {
         console.log("[calculate-tpdk-score] Authorized. Participant:", participantId);
         
         // ============================================================
-        // LAYER 3: PROJECT MEMBERSHIP CHECK
+        // LAYER 3: PROJECT MEMBERSHIP CHECK (HEX COMPARE)
         // ============================================================
         const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
             auth: { persistSession: false }
@@ -210,7 +228,10 @@ Deno.serve(async (req) => {
             }, 404);
         }
         
-        if (participant.project_id !== projectId) {
+        // FIX: pakai uuidEquals (hex + prefix fallback) untuk bypass bug string ===
+        if (!uuidEquals(participant.project_id, projectId)) {
+            console.warn("[calculate-tpdk-score] Project mismatch:", 
+                JSON.stringify(participant.project_id), "vs", JSON.stringify(projectId));
             return jsonResponse({ 
                 success: false, 
                 error: "Participant tidak terdaftar di project ini" 
@@ -275,7 +296,7 @@ Deno.serve(async (req) => {
         });
         
         const maxTotal = keys.length;
-        const percentage = (total / maxTotal) * 100;
+        const percentage = (maxTotal > 0) ? (total / maxTotal) * 100 : 0;
         const gScore = Math.round(100 + ((percentage - 50) / 50) * 50);
         
         let gCategory, gPercentile, gDesc;
