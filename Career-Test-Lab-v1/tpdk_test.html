@@ -1015,26 +1015,72 @@ function resolveAssessmentRoute(code,name){
 }
 async function nextTest(){
     const next = assessmentIndex + 1;
-    let packs = [];
-    try{
-        const ps = await DataService.getProjects();
-        const proj = ps.find(x => String(x.id||x.projectId||x.project_id||'') === projectId);
-        const part = proj?.participants?.find(x => String(x.id||x.participantId||x.employeeId||x.employee_id||'') === participantId);
-        packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
-    }catch(e){ packs = []; }
     markInternalNavigation();
-    if(next >= packs.length){ location.href = 'participant-dashboard.html?completed=true'; return; }
+    
+    // Query langsung ke participant_assessments via Supabase
+    let packs = [];
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === 'function') {
+            const { data, error } = await sb
+                .from("participant_assessments")
+                .select("id, assessment_id, assessment_name, status, created_at")
+                .eq("participant_id", participantId)
+                .order("created_at", { ascending: true });
+            
+            console.log("[TPDK] Query result:", data?.length, "| error:", error);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                packs = data;
+            }
+        }
+    } catch(e) {
+        console.warn("[TPDK] Query failed:", e);
+    }
+    
+    console.log("[TPDK] Total packs:", packs.length, "| next index:", next);
+    
+    // Kalau tidak ada assessment berikutnya
+    if (next >= packs.length) {
+        console.log("[TPDK] Semua selesai, redirect dashboard");
+        location.href = 'participant-dashboard.html?completed=true';
+        return;
+    }
+    
+    // Ambil pack berikutnya
     const nextPkg = packs[next];
-    const nextCode = packageCodeOf(nextPkg);
-    const nextName = packageNameOf(nextPkg) || 'Assessment';
-    const nextRoute = resolveAssessmentRoute(nextCode, nextName);
-    if(nextRoute){
+    const nextName = nextPkg.assessment_name || 'Assessment';
+    
+    console.log("[TPDK] Next assessment:", nextName);
+    
+    // Resolve route dari nama
+    let nextRoute = '';
+    const n = String(nextName).toLowerCase();
+    if (n.includes('vap') || n.includes('work performance') || n.includes('sustained') || n.includes('speed')) 
+        nextRoute = 'speedtest.html';
+    else if (n.includes('intray') || n.includes('inbasket') || n.includes('inbaket')) 
+        nextRoute = 'intray_test.html';
+    else if (n.includes('managerial') || n.includes('msjt')) 
+        nextRoute = 'msjt_managerial.html';
+    else if (n.includes('leadership') || n.includes('lsjt')) 
+        nextRoute = 'sjt_leadership.html';
+    else if (n.includes('papi') || n.includes('kostick')) 
+        nextRoute = 'papi_kostick_test.html';
+    else if (n.includes('disc')) 
+        nextRoute = 'disc_test.html';
+    else if (n.includes('tpdk') || n.includes('penalaran')) 
+        nextRoute = 'tpdk_test.html';
+    
+    const nextCode = nextPkg.assessment_id || '';
+    
+    console.log("[TPDK] Redirect to:", nextRoute, "| index:", next, "| code:", nextCode);
+    
+    if (nextRoute) {
         location.href = `${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
     } else {
         location.href = `assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
     }
 }
-
 el('confirm').addEventListener('change', e => el('start').disabled = !e.target.checked);
 el('start').addEventListener('click', startQuiz);
 el('prev').addEventListener('click', () => go(current - 1));

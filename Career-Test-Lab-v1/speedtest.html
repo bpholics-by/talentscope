@@ -249,22 +249,76 @@ async function goToNextOrDashboard(){
   const params = new URLSearchParams(location.search);
   const currentIndex = Number(params.get("assessmentIndex") || 0);
   const next = currentIndex + 1;
-  let packs = [];
-  try{
-    const ps = await DataService.getProjects();
-    const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
-    const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
-    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
-  }catch(e){ packs = []; }
+  
   sessionStorage.setItem("ts_internal_assessment_navigation", "true");
-  if(next >= packs.length){ location.href = "participant-dashboard.html?completed=true"; return; }
+  
+  // Query langsung ke Supabase participant_assessments
+  let packs = [];
+  try {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === 'function') {
+      const { data, error } = await sb
+        .from("participant_assessments")
+        .select("id, assessment_id, assessment_name, status, created_at")
+        .eq("participant_id", ids.participantId)
+        .order("created_at", { ascending: true });
+      
+      console.log("[VAP] Query participant_assessments:", data?.length, "| error:", error);
+      
+      if (Array.isArray(data) && data.length > 0) {
+        packs = data;
+      }
+    }
+  } catch(e) {
+    console.warn("[VAP] Supabase query failed:", e);
+  }
+  
+  // Fallback ke DataService kalau Supabase gagal
+  if (packs.length === 0) {
+    try {
+      const ps = await DataService.getProjects();
+      const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
+      const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
+      packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
+    } catch(e) { packs = []; }
+  }
+  
+  console.log("[VAP] Total packs:", packs.length, "| next index:", next);
+  
+  if (next >= packs.length) {
+    console.log("[VAP] Semua selesai, redirect dashboard");
+    location.href = "participant-dashboard.html?completed=true";
+    return;
+  }
+  
   const nextPkg = packs[next];
-  const nextCode = packageCodeOf(nextPkg);
-  const nextName = packageNameOf(nextPkg) || "Assessment";
-  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
-  if(nextRoute){
+  const nextName = nextPkg.assessment_name || packageNameOf(nextPkg) || "Assessment";
+  
+  // Resolve route dari nama
+  let nextRoute = '';
+  const n = String(nextName).toLowerCase();
+  if (n.includes('vap') || n.includes('work performance') || n.includes('sustained') || n.includes('speed')) 
+    nextRoute = 'speedtest.html';
+  else if (n.includes('intray') || n.includes('inbasket') || n.includes('inbaket')) 
+    nextRoute = 'intray_test.html';
+  else if (n.includes('managerial') || n.includes('msjt')) 
+    nextRoute = 'msjt_managerial.html';
+  else if (n.includes('leadership') || n.includes('lsjt') || n.includes('situational')) 
+    nextRoute = 'sjt_leadership.html';
+  else if (n.includes('papi') || n.includes('kostick')) 
+    nextRoute = 'papi_kostick_test.html';
+  else if (n.includes('disc')) 
+    nextRoute = 'disc_test.html';
+  else if (n.includes('tpdk') || n.includes('penalaran')) 
+    nextRoute = 'tpdk_test.html';
+  
+  const nextCode = nextPkg.assessment_id || packageCodeOf(nextPkg) || '';
+  
+  console.log("[VAP] Redirect to:", nextRoute, "| index:", next, "| code:", nextCode);
+  
+  if (nextRoute) {
     location.href = `${nextRoute}?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
-  }else{
+  } else {
     location.href = `assessment.html?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
   }
 }
@@ -345,35 +399,79 @@ async function getContext(){
   const context = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
   let storedContext = {};
   try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
+  
   let participantName = "", projectName = "", participantObject = null, projectObject = null;
-  try{
-    const projects = await DataService.getProjects();
-    if(Array.isArray(projects)){
-      projectObject = projects.find(function(project){
-        const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
-        return currentProjectId === projectId;
-      });
-      if(projectObject){
-        projectName = String(projectObject.name || projectObject.projectName || projectObject.project_name || projectObject.title || "").trim();
-        const participants = Array.isArray(projectObject.participants) ? projectObject.participants : [];
-        participantObject = participants.find(function(participant){
-          const currentParticipantId = String(participant.id || participant.participantId || participant.employeeId || participant.employee_id || "").trim();
-          return currentParticipantId === participantId;
-        });
-        if(participantObject){
-          participantName = String(participantObject.name || participantObject.fullName || participantObject.full_name || participantObject.participantName || "").trim();
+  
+  // PRIORITAS 1: Query langsung Supabase (bukan DataService)
+  const sb = window.supabaseClient || window.supabase;
+  if (sb && typeof sb.from === 'function' && participantId) {
+    try {
+      const { data: p } = await sb
+        .from("participants")
+        .select("id, name, full_name, email")
+        .eq("id", participantId)
+        .maybeSingle();
+      if (p) {
+        participantName = p.name || p.full_name || p.email || "";
+        participantObject = p;
+        console.log("[VAP] Participant dari Supabase:", participantName);
+      }
+    } catch(e) { console.warn("[VAP] Fetch participant failed:", e); }
+    
+    if (projectId) {
+      try {
+        const { data: pr } = await sb
+          .from("projects")
+          .select("id, name, project_name")
+          .eq("id", projectId)
+          .maybeSingle();
+        if (pr) {
+          projectName = pr.name || pr.project_name || "";
+          projectObject = pr;
+          console.log("[VAP] Project dari Supabase:", projectName);
+        }
+      } catch(e) { console.warn("[VAP] Fetch project failed:", e); }
+    }
+  }
+  
+  // PRIORITAS 2: Fallback ke DataService (kalau Supabase kosong)
+  if (!participantName || !projectName) {
+    try {
+      const projects = await DataService.getProjects();
+      if (Array.isArray(projects)) {
+        if (!projectObject) {
+          projectObject = projects.find(function(project){
+            const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
+            return currentProjectId === projectId;
+          });
+        }
+        if (projectObject && !projectName) {
+          projectName = String(projectObject.name || projectObject.projectName || projectObject.project_name || projectObject.title || "").trim();
+        }
+        if (projectObject && !participantName) {
+          const participants = Array.isArray(projectObject.participants) ? projectObject.participants : [];
+          participantObject = participants.find(function(participant){
+            const currentParticipantId = String(participant.id || participant.participantId || participant.employeeId || participant.employee_id || "").trim();
+            return currentParticipantId === participantId;
+          });
+          if (participantObject) {
+            participantName = String(participantObject.name || participantObject.fullName || participantObject.full_name || participantObject.participantName || "").trim();
+          }
         }
       }
-    }
-  }catch(error){ console.warn("Gagal mengambil data peserta/project:", error); }
-  if(!participantName){
+    } catch(error){ console.warn("Gagal mengambil data peserta/project:", error); }
+  }
+  
+  // PRIORITAS 3: Fallback ke URL params / context
+  if (!participantName) {
     const participantObj = context.participant || context.candidate || context.user || storedContext.participant || storedContext.candidate || storedContext.user || {};
     participantName = String(params.get("participantName") || params.get("name") || context.participantName || context.participant_name || context.candidateName || participantObj.name || participantObj.fullName || storedContext.participantName || storedContext.name || "").trim();
   }
-  if(!projectName){
+  if (!projectName) {
     const projectObj = context.project || storedContext.project || {};
     projectName = String(params.get("projectName") || params.get("project") || context.projectName || context.project_name || context.projectTitle || (typeof projectObj === "string" ? projectObj : (projectObj.name || projectObj.projectName || projectObj.title || "")) || storedContext.projectName || "").trim();
   }
+  
   return {id: participantId, name: participantName, project: projectName, projectId: projectId, participant: participantObject, projectData: projectObject};
 }
 async function init(){
