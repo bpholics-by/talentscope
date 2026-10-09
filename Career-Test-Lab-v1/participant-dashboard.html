@@ -545,7 +545,17 @@ a{text-decoration:none;color:inherit}
         } else {
             renderAssessments(activeAssessments, sessionProjectId, sessionParticipantId, sessionProjectName);
         }
-
+        // ===== Handle ?completed=true (redirect dari assessment terakhir) =====
+        try {
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("completed") === "true") {
+                showToast("🎉 Selamat! Semua assessment sudah selesai.", "success");
+                // Bersihkan URL biar tidak re-show saat refresh
+                window.history.replaceState({}, "", window.location.pathname);
+            }
+        } catch (e) {
+            console.warn("[DASHBOARD] URL param check error:", e);
+        }
         console.log("=== DASHBOARD READY ===");
     }
     /* ==========================================================
@@ -656,75 +666,112 @@ a{text-decoration:none;color:inherit}
     /* ==========================================================
        RENDER ASSESSMENTS
     ========================================================== */
-        function renderAssessments(assessments, projectId, participantId, projectName) {
-        var content = el("content");
-        if (!content) return;
-        
-        // Fallback: jika projectName tidak dikirim, pakai projectId
-        if (!projectName || projectName === "" || projectName === "undefined") {
-            projectName = projectId;
+   function renderAssessments(assessments, projectId, participantId, projectName) {
+    var content = el("content");
+    if (!content) return;
+    
+    if (!projectName || projectName === "" || projectName === "undefined") {
+        projectName = projectId;
+    }
+
+    var completedCount = assessments.filter(function (a) {
+        return String(a.status || "").toLowerCase() === "completed";
+    }).length;
+
+    var inProgressCount = assessments.filter(function (a) {
+        return String(a.status || "").toLowerCase() === "in progress";
+    }).length;
+
+    if (el("total")) el("total").textContent = assessments.length;
+    if (el("completed")) el("completed").textContent = completedCount;
+    if (el("pending")) el("pending").textContent = assessments.length - completedCount;
+
+    var packageStatus = "Not Started";
+    if (completedCount === assessments.length) packageStatus = "Completed";
+    else if (completedCount > 0 || inProgressCount > 0) packageStatus = "In Progress";
+
+    var packageStatusClass = packageStatus === "Completed" ? "done" : (packageStatus === "In Progress" ? "progress" : "");
+    var packageStatusText = packageStatus === "Completed" ? "✓ Completed" : packageStatus;
+
+    // Next entry: prioritas In Progress > Not Started
+    var nextEntry = assessments.find(function (a) {
+        return String(a.status || "").toLowerCase() === "in progress";
+    }) || assessments.find(function (a) {
+        return String(a.status || "").toLowerCase() !== "completed";
+    }) || assessments[assessments.length - 1];
+
+    var nextEntryStatus = String(nextEntry.status || "").toLowerCase();
+    var nextIndex = assessments.indexOf(nextEntry);
+
+    // ===== Tentukan label + action tombol =====
+    var isAllCompleted = packageStatus === "Completed";
+    var buttonLabel = "Start Assessment";
+    var buttonAction = "start"; // start | continue | result
+
+    if (isAllCompleted) {
+        buttonLabel = "View All Results";
+        buttonAction = "result-all";
+    } else if (nextEntryStatus === "in progress") {
+        buttonLabel = "Continue Assessment";
+        buttonAction = "continue";
+    } else if (completedCount > 0) {
+        buttonLabel = "Continue to Next";
+        buttonAction = "start";
+    }
+
+    // ===== Build test list =====
+    var testListHtml = '<div class="package-tests"><div class="package-tests-label">Assessments Included</div><div class="package-test-list">';
+    assessments.forEach(function (a, index) {
+        var status = String(a.status || "").toLowerCase();
+        var statusIcon = '';
+        if (status === "completed") {
+            statusIcon = '<span class="package-test-check">✓</span>';
+        } else if (status === "in progress") {
+            statusIcon = '<span class="package-test-check" style="color:#1670ef">◉</span>';
         }
+        testListHtml += '<div class="package-test-item">' +
+            '<span class="package-test-number">' + (index + 1) + '</span>' +
+            '<span class="package-test-name">' + escapeHtml(a.name || a.assessment_name) + '</span>' +
+            statusIcon +
+            '</div>';
+    });
+    testListHtml += '</div></div>';
 
-        var completedCount = assessments.filter(function (a) {
-            return String(a.status || "").toLowerCase() === "completed";
-        }).length;
-
-        if (el("total")) el("total").textContent = assessments.length;
-        if (el("completed")) el("completed").textContent = completedCount;
-        if (el("pending")) el("pending").textContent = assessments.length - completedCount;
-
-        var packageStatus = "Not Started";
-        if (completedCount === assessments.length) packageStatus = "Completed";
-        else if (completedCount > 0) packageStatus = "In Progress";
-
-        var packageStatusClass = packageStatus === "Completed" ? "done" : (packageStatus === "In Progress" ? "progress" : "");
-        var packageStatusText = packageStatus === "Completed" ? "✓ Completed" : packageStatus;
-
-        var nextEntry = assessments.find(function (a) {
-            return String(a.status || "").toLowerCase() !== "completed";
-        }) || assessments[assessments.length - 1];
-
-        var testListHtml = '<div class="package-tests"><div class="package-tests-label">Assessments Included</div><div class="package-test-list">';
-        assessments.forEach(function (a, index) {
-            var completed = String(a.status || "").toLowerCase() === "completed";
-            testListHtml += '<div class="package-test-item">' +
-                '<span class="package-test-number">' + (index + 1) + '</span>' +
-                '<span class="package-test-name">' + escapeHtml(a.name || a.assessment_name) + '</span>' +
-                (completed ? '<span class="package-test-check">✓</span>' : '') +
-                '</div>';
-        });
-        testListHtml += '</div></div>';
-
-        var nextIndex = assessments.indexOf(nextEntry);
-
-        content.innerHTML =
-            '<div class="grid assessment-package-grid">' +
-                '<article class="card assessment-package-card">' +
-                    '<div class="card-top">' +
-                                            '<div class="package-heading">' +
+    // ===== Build card HTML =====
+    content.innerHTML =
+        '<div class="grid assessment-package-grid">' +
+            '<article class="card assessment-package-card">' +
+                '<div class="card-top">' +
+                    '<div class="package-heading">' +
                         '<h3>Assessment Package</h3>' +
                         '<div class="code">' + escapeHtml(projectName) + '</div>' +
                     '</div>' +
-                    '</div>' +
-                    testListHtml +
-                    '<div class="card-info">' +
-                        '<div><div class="info-label">Status</div><div class="info-value"><span class="status-pill ' + packageStatusClass + '">' + escapeHtml(packageStatusText) + '</span></div></div>' +
-                        '<div><div class="info-label">Total Assessments</div><div class="info-value">' + assessments.length + '</div></div>' +
-                    '</div>' +
-                    '<button class="action" data-project="' + escapeHtml(projectId) + '" data-participant="' + escapeHtml(participantId) + '" data-assessment-index="' + nextIndex + '" data-assessment-code="' + escapeHtml(nextEntry.code || "") + '" data-assessment-name="' + escapeHtml(nextEntry.name || "") + '" type="button">' +
-                        '<span class="btn-spinner"></span>' +
-                        '<span class="btn-label">' + (packageStatus === "Completed" ? "View Result" : "Start Assessment") + '</span>' +
-                    '</button>' +
-                '</article>' +
-            '</div>';
+                '</div>' +
+                testListHtml +
+                '<div class="card-info">' +
+                    '<div><div class="info-label">Status</div><div class="info-value"><span class="status-pill ' + packageStatusClass + '">' + escapeHtml(packageStatusText) + '</span></div></div>' +
+                    '<div><div class="info-label">Total Assessments</div><div class="info-value">' + assessments.length + '</div></div>' +
+                '</div>' +
+                '<button class="action" ' +
+                    'data-action="' + buttonAction + '" ' +
+                    'data-project="' + escapeHtml(projectId) + '" ' +
+                    'data-participant="' + escapeHtml(participantId) + '" ' +
+                    'data-assessment-index="' + nextIndex + '" ' +
+                    'data-assessment-code="' + escapeHtml(nextEntry.code || "") + '" ' +
+                    'data-assessment-name="' + escapeHtml(nextEntry.name || nextEntry.assessment_name || "") + '" ' +
+                    'type="button">' +
+                    '<span class="btn-spinner"></span>' +
+                    '<span class="btn-label">' + escapeHtml(buttonLabel) + '</span>' +
+                '</button>' +
+            '</article>' +
+        '</div>';
 
-        // Bind button
-        var actionButton = content.querySelector(".action");
-        if (actionButton) {
-            actionButton.addEventListener("click", handleStartAssessment);
-        }
+    // ===== Bind button =====
+    var actionButton = content.querySelector(".action");
+    if (actionButton) {
+        actionButton.addEventListener("click", handleStartAssessment);
     }
-
+}
     function renderEmptyState() {
         if (el("total")) el("total").textContent = "0";
         if (el("completed")) el("completed").textContent = "0";
@@ -744,58 +791,100 @@ a{text-decoration:none;color:inherit}
     /* ==========================================================
        HANDLE START ASSESSMENT
     ========================================================== */
-        async function handleStartAssessment() {
-        var btn = this;
-        btn.disabled = true;
-        btn.classList.add("loading");
+   async function handleStartAssessment() {
+    var btn = this;
+    btn.disabled = true;
+    btn.classList.add("loading");
 
-        var projectId = normalize(btn.getAttribute("data-project"));
-        var participantId = normalize(btn.getAttribute("data-participant"));
-        var assessmentIndex = btn.getAttribute("data-assessment-index");
-        var assessmentCode = btn.getAttribute("data-assessment-code") || "";
-        var assessmentName = btn.getAttribute("data-assessment-name") || "";
+    var action = normalize(btn.getAttribute("data-action")) || "start";
+    var projectId = normalize(btn.getAttribute("data-project"));
+    var participantId = normalize(btn.getAttribute("data-participant"));
+    var assessmentIndex = btn.getAttribute("data-assessment-index");
+    var assessmentCode = btn.getAttribute("data-assessment-code") || "";
+    var assessmentName = btn.getAttribute("data-assessment-name") || "";
 
-        console.log("[START] Click:", { projectId, participantId, assessmentIndex, assessmentCode, assessmentName });
+    console.log("[START] Click:", { action, projectId, participantId, assessmentIndex, assessmentCode, assessmentName });
 
-        if (!projectId || !participantId) {
-            showToast("Identitas tidak valid. Silakan login kembali.", "error");
-            btn.disabled = false;
-            btn.classList.remove("loading");
-            return;
-        }
+    if (!projectId || !participantId) {
+        showToast("Identitas tidak valid. Silakan login kembali.", "error");
+        btn.disabled = false;
+        btn.classList.remove("loading");
+        return;
+    }
 
-        var route = getAssessmentRoute(assessmentCode, assessmentName);
-        if (!route) {
-            showToast("Assessment tidak dikenali: " + assessmentCode, "error");
-            btn.disabled = false;
-            btn.classList.remove("loading");
-            return;
-        }
-
-        // Ambil nama dari TS_SESSION (single source of truth)
-        var participantName = "Peserta";
-        var projectName = "Project";
-        
-        if (window.TS_SESSION) {
+    // ===== Ambil nama peserta & project dari TS_SESSION =====
+    var participantName = "Peserta";
+    var projectName = "Project";
+    
+    if (window.TS_SESSION) {
+        try {
             var user = await window.TS_SESSION.getUser();
             participantName = user ? (user.user_metadata?.name || user.email.split("@")[0]) : "Peserta";
             projectName = await window.TS_SESSION.getProjectName() || "Project";
+        } catch (e) {
+            console.warn("[START] TS_SESSION error:", e);
         }
-
-        window.__tsParticipantInternalNavigation = true;
-
-        var url = route +
-            "?projectId=" + encodeURIComponent(projectId) +
-            "&participantId=" + encodeURIComponent(participantId) +
-            "&participantName=" + encodeURIComponent(participantName) +
-            "&projectName=" + encodeURIComponent(projectName) +
-            "&assessmentIndex=" + encodeURIComponent(assessmentIndex) +
-            "&assessmentCode=" + encodeURIComponent(assessmentCode) +
-            "&assessmentName=" + encodeURIComponent(assessmentName);
-
-        console.log("[START] Redirect to:", url);
-        window.location.href = url;
     }
+
+    // ===== Build common URL params =====
+    var commonParams = 
+        "?projectId=" + encodeURIComponent(projectId) +
+        "&participantId=" + encodeURIComponent(participantId) +
+        "&participantName=" + encodeURIComponent(participantName) +
+        "&projectName=" + encodeURIComponent(projectName) +
+        "&assessmentIndex=" + encodeURIComponent(assessmentIndex) +
+        "&assessmentCode=" + encodeURIComponent(assessmentCode) +
+        "&assessmentName=" + encodeURIComponent(assessmentName);
+
+    // ===== ACTION: VIEW RESULT (khusus tombol View Result) =====
+    if (action === "result" || action === "result-all") {
+        window.__tsParticipantInternalNavigation = true;
+        window.location.href = "test-result.html" + commonParams;
+        return;
+    }
+
+    // ===== ACTION: START / CONTINUE =====
+    // Guard tambahan: kalau ternyata status sudah Completed (race condition),
+    // redirect ke result instead
+    try {
+        var sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === "function") {
+            var targetIdx = Number(assessmentIndex);
+            var { data, error } = await sb
+                .from("participant_assessments")
+                .select("status, assessment_id")
+                .eq("participant_id", participantId)
+                .order("created_at", { ascending: true });
+
+            if (!error && Array.isArray(data) && data[targetIdx]) {
+                var currentStatus = String(data[targetIdx].status || "").toLowerCase();
+                console.log("[START] Server status check:", currentStatus);
+
+                if (currentStatus === "completed") {
+                    // Sudah selesai → redirect ke result
+                    showToast("Assessment ini sudah selesai. Menampilkan hasil...", "info");
+                    window.__tsParticipantInternalNavigation = true;
+                    window.location.href = "test-result.html" + commonParams;
+                    return;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("[START] Status check error:", e);
+    }
+
+    // ===== Route ke test file =====
+    var route = getAssessmentRoute(assessmentCode, assessmentName);
+    if (!route) {
+        showToast("Assessment tidak dikenali: " + assessmentCode, "error");
+        btn.disabled = false;
+        btn.classList.remove("loading");
+        return;
+    }
+
+    window.__tsParticipantInternalNavigation = true;
+    window.location.href = route + commonParams;
+}
     /* ==========================================================
        ESCAPE HTML
     ========================================================== */
