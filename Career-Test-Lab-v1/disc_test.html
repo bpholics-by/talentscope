@@ -437,32 +437,79 @@ let answers=[];try{answers=JSON.parse(localStorage.getItem(answerKey)||'[]')}cat
 answers=Array.from({length:questions.length},(_,i)=>({M:answers[i]?.M??null,L:answers[i]?.L??null}));
 let current=0,seconds=30*60,timerId=null,sending=false;
 
-function loadMeta(){
- try{
-  const ps=await DataService.getProjects();
-  const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
-  const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
-  document.getElementById('participant').textContent=part?.name||part?.fullName||participantId||'-';
-  document.getElementById('project').textContent=proj?.projectName||proj?.name||proj?.title||projectId||'-';
-  const dv=proj?.startDate||proj?.start||proj?.assessmentDate||new Date(),d=new Date(dv);
-  document.getElementById('date').textContent=Number.isNaN(d.getTime())?String(dv):d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
- }catch(e){console.warn('DISC metadata:',e)}
+async function loadMeta(){
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        let participantName = participantId;
+        let projectName = projectId;
+        let startDate = new Date();
+
+        if (sb && typeof sb.from === 'function') {
+            const { data: projData } = await sb
+                .from("projects")
+                .select("id, name, project_name, start_date, created_at")
+                .eq("id", projectId)
+                .maybeSingle();
+
+            if (projData) {
+                projectName = projData.project_name || projData.name || projectName;
+                startDate = projData.start_date || projData.created_at || startDate;
+            }
+
+            const { data: partData } = await sb
+                .from("participants")
+                .select("id, name, full_name, email")
+                .eq("id", participantId)
+                .maybeSingle();
+
+            if (partData) {
+                participantName = partData.name || partData.full_name || partData.email || participantName;
+            }
+        }
+
+        const pEl = document.getElementById('participant');
+        const prEl = document.getElementById('project');
+        const dEl = document.getElementById('date');
+        if (pEl) pEl.textContent = participantName || '-';
+        if (prEl) prEl.textContent = projectName || '-';
+        if (dEl) {
+            const d = new Date(startDate);
+            dEl.textContent = isNaN(d.getTime()) 
+                ? String(startDate) 
+                : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+    } catch(e) {
+        console.warn('[DISC] loadMeta error:', e);
+    }
 }
 function save(){localStorage.setItem(answerKey,JSON.stringify(answers))}
 function getAssessmentSequenceLabel(){
- try{
-  const ps=await DataService.getProjects();
-  const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
-  if(!proj)return'';
-  const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
-  const list=(Array.isArray(part?.assessments)&&part.assessments.length>0)
-   ?part.assessments
-   :(proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
-  if(Array.isArray(list)&&list.length>0){
-   return' — Tes '+(assessmentIndex+1)+' dari '+list.length;
-  }
-  return'';
- }catch(e){return''}
+    try {
+        const cached = window.__tsAssessmentCount;
+        if (typeof cached === 'number' && cached > 0) {
+            return ` (Tes ${assessmentIndex + 1} dari ${cached})`;
+        }
+
+        const projects = JSON.parse(localStorage.getItem('talentscope_projects') || '[]');
+        const proj = projects.find(x => 
+            String(x.id || x.projectId || x.project_id || '') === projectId
+        );
+        if (!proj) return '';
+
+        const part = proj?.participants?.find(x => 
+            String(x.id || x.participantId || x.employeeId || x.employee_id || '') === participantId
+        );
+        const list = (Array.isArray(part?.assessments) && part.assessments.length > 0)
+            ? part.assessments
+            : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
+
+        if (Array.isArray(list) && list.length > 0) {
+            return ` (Tes ${assessmentIndex + 1} dari ${list.length})`;
+        }
+        return '';
+    } catch(e) {
+        return '';
+    }
 }
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2300)}
 function renderPages(){
@@ -490,9 +537,36 @@ function pick(kind,i){
  answers[current][kind]=i;save();render();
 }
 function go(i){current=Math.max(0,Math.min(questions.length-1,i));render();window.scrollTo({top:document.querySelector('.quiz-card').offsetTop-82,behavior:'smooth'})}
-function startQuiz() {
+async function checkAssessmentLock() {
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (!sb || typeof sb.from !== 'function') return true;
+
+        const { data, error } = await sb
+            .from("participant_assessments")
+            .select("status")
+            .eq("participant_id", participantId)
+            .order("created_at", { ascending: true });
+
+        if (error || !Array.isArray(data) || !data[assessmentIndex]) return true;
+
+        return String(data[assessmentIndex].status || "").toLowerCase() !== "completed";
+    } catch (e) {
+        console.warn("[DISC] Lock check error:", e);
+        return true;
+    }
+}
+
+async function startQuiz(){
     if (!projectId || !participantId) {
         alert('Identitas project atau peserta tidak valid. Silakan kembali dan login ulang.');
+        return;
+    }
+
+    const canStart = await checkAssessmentLock();
+    if (!canStart) {
+        alert('Anda sudah menyelesaikan tes DISC ini. Tidak dapat mengerjakan ulang.');
+        location.href = 'participant-dashboard.html';
         return;
     }
 
@@ -531,17 +605,12 @@ function finalize(auto){
  const change={D:most.D+least.D,I:most.I+least.I,S:most.S+least.S,C:most.C+least.C};
  const result={version:3,resultType:'DISC',projectId,participantId,assessmentIndex,assessmentId:assessmentIdFromUrl,assessmentCode,scores:{most,least,change},answers:stored,submittedAt:new Date().toISOString()};
 
- // ==========================================================
- // FIX: Simpan dengan UUID + index (dual-write)
- // ==========================================================
  if (assessmentIdFromUrl) {
-     // Simpan dengan UUID (BARU)
      localStorage.setItem(`disc_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
      localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIdFromUrl}`, JSON.stringify(result));
-     console.log("[DISC] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
+     console.log("[DISC] Data disimpan dengan UUID:", assessmentIdFromUrl);
  }
 
- // Tetap simpan dengan index (KOMPATIBILITAS dengan data lama)
  localStorage.setItem(resultKey, JSON.stringify(result));
  localStorage.setItem(`assessment_result_v3_${projectId}_${participantId}_${assessmentIndex}`, JSON.stringify(result));
 
@@ -550,9 +619,6 @@ function finalize(auto){
  all=all.filter(x=>!(String(x?.projectId||'')===projectId&&String(x?.participantId||'')===participantId&&String(x?.assessmentIndex??'')===String(assessmentIndex)&&String(x?.assessmentCode||'').toUpperCase()==='DISC'));
  all.push(result);localStorage.setItem('talent_scope_results',JSON.stringify(all));localStorage.removeItem(answerKey);
 
- // ==========================================================
- // Sync DISC ke Supabase
- // ==========================================================
  try {
     const sb = window.supabaseClient || window.supabase;
     if (sb && typeof sb.from === "function") {
@@ -573,7 +639,7 @@ function finalize(auto){
             onConflict: "project_id,participant_id,assessment_index,assessment_code"
         }).then(({ error }) => {
             if (error) console.error("[DISC] Supabase sync error:", error);
-            else console.log("[DISC] ✓ Tersinkron ke Supabase (disc_results)");
+            else console.log("[DISC] Tersinkron ke Supabase (disc_results)");
         });
     }
  } catch (err) {
@@ -599,37 +665,70 @@ function resolveAssessmentRoute(code,name){
  if(c.includes('vap')||n.includes('vap')||n.includes('visual')||n.includes('performance')||n.includes('sustained attention')||n.includes('speed'))return'speedtest.html';
  return'';
 }
-function nextTest(){
- const next=assessmentIndex+1;
- let packs=[];
- try{
-  const ps=await DataService.getProjects();
-  const proj=ps.find(x=>String(x.id||x.projectId||x.project_id||'')===projectId);
-  const part=proj?.participants?.find(x=>String(x.id||x.participantId||x.employeeId||x.employee_id||'')===participantId);
-  packs=(Array.isArray(part?.assessments)&&part.assessments.length>0)
-   ?part.assessments
-   :(proj?.assessmentPackage||proj?.assessments||proj?.packages||[]);
- }catch(e){packs=[]}
+async function nextTest(){
+    const next = assessmentIndex + 1;
+    markInternalNavigation();
 
- markInternalNavigation();
+    let packs = [];
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === 'function') {
+            const { data, error } = await sb
+                .from("participant_assessments")
+                .select("id, assessment_id, assessment_name, status, created_at")
+                .eq("participant_id", participantId)
+                .order("created_at", { ascending: true });
 
- if(next>=packs.length){
-  location.href=`participant-dashboard.html?completed=true`;
-  return;
- }
+            console.log("[DISC] Query result:", data?.length, "| error:", error);
 
- const nextPkg=packs[next];
- const nextCode=packageCodeOf(nextPkg);
- const nextName=packageNameOf(nextPkg)||'Assessment';
- const nextRoute=resolveAssessmentRoute(nextCode,nextName);
+            if (Array.isArray(data) && data.length > 0) {
+                packs = data;
+            }
+        }
+    } catch(e) {
+        console.warn("[DISC] Query failed:", e);
+    }
 
- if(nextRoute){
-  location.href=`${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
- }else{
-  console.warn('[DISC] Tidak bisa menentukan tes berikutnya dari code/name:',nextCode,nextName);
-  location.href=`assessment.html?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
- }
+    console.log("[DISC] Total packs:", packs.length, "| next index:", next);
+
+    if (next >= packs.length) {
+        console.log("[DISC] Semua selesai, redirect dashboard");
+        location.href = 'participant-dashboard.html?completed=true';
+        return;
+    }
+
+    const nextPkg = packs[next];
+    const nextName = nextPkg.assessment_name || 'Assessment';
+
+    console.log("[DISC] Next assessment:", nextName);
+
+    let nextRoute = '';
+    const n = String(nextName).toLowerCase();
+    if (n.includes('vap') || n.includes('work performance') || n.includes('sustained') || n.includes('speed'))
+        nextRoute = 'speedtest.html';
+    else if (n.includes('intray') || n.includes('inbasket') || n.includes('inbaket'))
+        nextRoute = 'intray_test.html';
+    else if (n.includes('managerial') || n.includes('msjt'))
+        nextRoute = 'msjt_managerial.html';
+    else if (n.includes('leadership') || n.includes('lsjt'))
+        nextRoute = 'sjt_leadership.html';
+    else if (n.includes('papi') || n.includes('kostick'))
+        nextRoute = 'papi_kostick_test.html';
+    else if (n.includes('disc'))
+        nextRoute = 'disc_test.html';
+    else if (n.includes('tpdk') || n.includes('penalaran'))
+        nextRoute = 'tpdk_test.html';
+
+    const nextCode = nextPkg.assessment_id || '';
+
+    if (nextRoute) {
+        location.href = `${nextRoute}?projectId=${encodeURIComponent(projectId)}&participantId=${encodeURIComponent(participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+    } else {
+        console.warn('[DISC] Tidak bisa menentukan tes berikutnya dari nama:', nextName);
+        location.href = `participant-dashboard.html`;
+    }
 }
+
 document.getElementById('confirm').addEventListener('change',e=>document.getElementById('start').disabled=!e.target.checked);
 document.getElementById('start').addEventListener('click',startQuiz);
 document.getElementById('prev').addEventListener('click',()=>go(current-1));
@@ -930,4 +1029,6 @@ const participantHeartbeatInterval = setInterval(
     updateParticipantHeartbeat,
     HEARTBEAT_INTERVAL
 );
-</script></body></html>
+</script>
+</body>
+</html>
