@@ -6390,7 +6390,7 @@ if (
    ============================================================ */
 function generateInvitationShareText(p, projectTitle) {
     var accessCode = p.accessCode || p.password || p.access_code || "";
-    var link = "http://127.0.0.1:5500/login.html"; 
+    var link = new URL("login.html", window.location.href).href; 
                  
     // Ambil project
     var project = window.project || {};
