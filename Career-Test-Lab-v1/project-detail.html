@@ -123,7 +123,11 @@ var activeUser = getSavedUser();
                 // di-render belakangan lewat DataService (async, setelah
                 // DOMContentLoaded) -- sekali jalan saja bisa kelewat kalau
                 // baris itu belum ada di DOM saat pengecekan pertama.
-                if (isAsesor) {
+                var isViewOnly = (window.RolePermissions && typeof window.RolePermissions.isViewOnly === "function")
+    ? window.RolePermissions.isViewOnly()
+    : false;
+
+if (isViewOnly) {
 
                     // FIX (permintaan terbaru): tombol aksi TIDAK
                     // disembunyikan lagi. Tetap tampil apa adanya,
@@ -5879,12 +5883,10 @@ console.log(
   }
 
   function makeAccess(p, project){
-    if(typeof window.participantAccessCode==="function"){
-      p.accessCode=window.participantAccessCode(p);
-    }else if(!p.accessCode){
-      var seed=String(p.id||p.email||p.name||"PART").replace(/[^A-Za-z0-9]/g,"").toUpperCase().slice(0,4)||"PART";
-      p.accessCode=seed+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
-    }
+  if(!p.accessCode){
+    var seed=String(p.id||p.email||p.name||"PART").replace(/[^A-Za-z0-9]/g,"").toUpperCase().slice(0,4)||"PART";
+    p.accessCode=seed+"-"+Math.random().toString(36).slice(2,8).toUpperCase();
+  }
     p.invitationStatus="Invited";
     p.access="Invited";
     p.invitedAt=new Date().toISOString();
