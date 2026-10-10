@@ -1276,7 +1276,61 @@ async function confirmSubmit() {
             else console.log('[INTRAY] ✓ Synced to Supabase');
         }
     } catch(err) { console.warn('[INTRAY] Supabase error:', err); }
-    
+    // ==========================================================
+// SYNC STATUS ke participant_assessments
+// ==========================================================
+try {
+    const sb2 = window.supabaseClient || window.supabase;
+    if (sb2 && typeof sb2.from === "function") {
+        const _urlParams = new URLSearchParams(location.search);
+        const _assessmentId = String(_urlParams.get("assessmentId") || "").trim();
+        const _assessmentIndexNum = Number(_urlParams.get("assessmentIndex") || assessmentIndex || 0);
+        
+        let _targetRow = null;
+
+        if (_assessmentId) {
+            const { data } = await sb2
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", participantId)
+                .eq("project_id", projectId)
+                .eq("assessment_id", _assessmentId)
+                .limit(1);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        if (!_targetRow) {
+            const { data } = await sb2
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", participantId)
+                .eq("project_id", projectId)
+                .order("created_at", { ascending: true })
+                .range(_assessmentIndexNum, _assessmentIndexNum);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        if (_targetRow && _targetRow.id) {
+            const { error: updErr } = await sb2
+                .from("participant_assessments")
+                .update({
+                    status: "Completed",
+                    score: 0,
+                    progress: 100,
+                    completed_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", _targetRow.id);
+
+            if (updErr) console.error("[INTRAY] ❌ Gagal update participant_assessments:", updErr);
+            else console.log("[INTRAY] ✅ participant_assessments → Completed (id:", _targetRow.id + ")");
+        } else {
+            console.warn("[INTRAY] ⚠ Row participant_assessments tidak ditemukan");
+        }
+    }
+} catch (e) {
+    console.error("[INTRAY] Exception update status:", e);
+}
     if (typeof updateParticipantAssessmentStatus === 'function') {
         updateParticipantAssessmentStatus('Completed', 'In-Tray Exercise selesai', 'Menyelesaikan In-Tray Exercise', 'test-complete');
     }

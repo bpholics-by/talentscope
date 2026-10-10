@@ -590,7 +590,7 @@ function requestSubmit(){
  if(missing>=0){go(missing);toast(`Nomor ${missing+1} belum lengkap. Pilih Most dan Least.`);return}
  document.getElementById('modal').classList.add('show');
 }
-function finalize(auto){
+async function finalize(auto){
  if(sending)return;
  const missing=answers.findIndex(a=>a.M===null||a.L===null);
  if(missing>=0&&!auto){go(missing);return}
@@ -645,7 +645,65 @@ function finalize(auto){
  } catch (err) {
     console.warn("[DISC] Gagal sync Supabase:", err);
  }
+// ==========================================================
+// SYNC STATUS ke participant_assessments
+// ==========================================================
+try {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === "function") {
+        // Tunggu sebentar untuk pastikan upsert disc_results selesai
+        await new Promise(r => setTimeout(r, 300));
+        
+        const _urlParams = new URLSearchParams(location.search);
+        const _assessmentId = String(_urlParams.get("assessmentId") || "").trim();
+        const _assessmentIndexNum = Number(_urlParams.get("assessmentIndex") || assessmentIndex || 0);
+        
+        let _targetRow = null;
 
+        if (_assessmentId) {
+            const { data } = await sb
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", participantId)
+                .eq("project_id", projectId)
+                .eq("assessment_id", _assessmentId)
+                .limit(1);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        if (!_targetRow) {
+            const { data } = await sb
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", participantId)
+                .eq("project_id", projectId)
+                .order("created_at", { ascending: true })
+                .range(_assessmentIndexNum, _assessmentIndexNum);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        if (_targetRow && _targetRow.id) {
+            // DISC skor tidak tunggal — pakai raw score 0
+            const { error: updErr } = await sb
+                .from("participant_assessments")
+                .update({
+                    status: "Completed",
+                    score: 0,
+                    progress: 100,
+                    completed_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", _targetRow.id);
+
+            if (updErr) console.error("[DISC] ❌ Gagal update participant_assessments:", updErr);
+            else console.log("[DISC] ✅ participant_assessments → Completed (id:", _targetRow.id + ")");
+        } else {
+            console.warn("[DISC] ⚠ Row participant_assessments tidak ditemukan");
+        }
+    }
+} catch (e) {
+    console.error("[DISC] Exception update status:", e);
+}
  updateParticipantAssessmentStatus('Completed', 'Tes DISC telah selesai — peserta masih aktif dalam sesi'+getAssessmentSequenceLabel(), 'Menyelesaikan tes DISC Personality', 'test-complete');
  document.getElementById('modal').classList.remove('show');document.getElementById('quiz').style.display='none';document.getElementById('finish').style.display='block';
 }

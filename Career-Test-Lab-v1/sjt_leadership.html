@@ -843,7 +843,61 @@ async function finishAssessment(){
   el("finish").classList.remove("hidden");
   window.scrollTo({top: 0, behavior: "smooth"});
   console.log("[LSJT] Assessment berhasil diselesaikan");
+// ==========================================================
+// SYNC STATUS ke participant_assessments
+// ==========================================================
+try {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === "function") {
+        const _urlParams = new URLSearchParams(location.search);
+        const _assessmentId = String(_urlParams.get("assessmentId") || "").trim();
+        const _assessmentIndexNum = Number(_urlParams.get("assessmentIndex") || assessmentIndexNum || 0);
+        
+        let _targetRow = null;
 
+        if (_assessmentId) {
+            const { data } = await sb
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", ids.participantId)
+                .eq("project_id", ids.projectId)
+                .eq("assessment_id", _assessmentId)
+                .limit(1);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        if (!_targetRow) {
+            const { data } = await sb
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", ids.participantId)
+                .eq("project_id", ids.projectId)
+                .order("created_at", { ascending: true })
+                .range(_assessmentIndexNum, _assessmentIndexNum);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        if (_targetRow && _targetRow.id) {
+            const { error: updErr } = await sb
+                .from("participant_assessments")
+                .update({
+                    status: "Completed",
+                    score: 0,
+                    progress: 100,
+                    completed_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", _targetRow.id);
+
+            if (updErr) console.error("[LSJT] ❌ Gagal update participant_assessments:", updErr);
+            else console.log("[LSJT] ✅ participant_assessments → Completed (id:", _targetRow.id + ")");
+        } else {
+            console.warn("[LSJT] ⚠ Row participant_assessments tidak ditemukan");
+        }
+    }
+} catch (e) {
+    console.error("[LSJT] Exception update status:", e);
+}
   setTimeout(goToNextOrDashboard, 1500);
 }
 
