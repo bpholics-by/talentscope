@@ -989,6 +989,76 @@ async function finalize(auto) {
       else console.log('[TPDK] Tersinkron ke Supabase (tpdk_results)');
     }
   } catch(err){ console.warn('[TPDK] Gagal sync Supabase:', err); }
+  // ==========================================================
+// SYNC STATUS ke participant_assessments
+// -----------------------------------------------------------
+// Update status = 'Completed' supaya dashboard akurat.
+// Karena test file sebelumnya hanya update localStorage.
+// ==========================================================
+try {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === "function") {
+        const _urlParams = new URLSearchParams(location.search);
+        const _assessmentId = String(_urlParams.get("assessmentId") || "").trim();
+        const _assessmentIndexNum = Number(_urlParams.get("assessmentIndex") || assessmentIndex || 0);
+        
+        let _targetRow = null;
+
+        // Prioritas 1: cari by assessment_id (UUID)
+        if (_assessmentId) {
+            const { data } = await sb
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", participantId)
+                .eq("project_id", projectId)
+                .eq("assessment_id", _assessmentId)
+                .limit(1);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        // Fallback: cari by index (urutan)
+        if (!_targetRow) {
+            const { data } = await sb
+                .from("participant_assessments")
+                .select("id")
+                .eq("participant_id", participantId)
+                .eq("project_id", projectId)
+                .order("created_at", { ascending: true })
+                .range(_assessmentIndexNum, _assessmentIndexNum);
+            if (data && data[0]) _targetRow = data[0];
+        }
+
+        // Update jika target ditemukan
+        if (_targetRow && _targetRow.id) {
+            // Ambil skor numerik dari scores (kalau ada)
+            let _scoreValue = 0;
+            if (typeof scores === "number") _scoreValue = scores;
+            else if (Array.isArray(scores) && scores[0]?.score !== undefined) _scoreValue = Number(scores[0].score) || 0;
+            else if (scores && typeof scores === "object" && scores.total !== undefined) _scoreValue = Number(scores.total) || 0;
+
+            const { error: updErr } = await sb
+                .from("participant_assessments")
+                .update({
+                    status: "Completed",
+                    score: _scoreValue,
+                    progress: 100,
+                    completed_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .eq("id", _targetRow.id);
+
+            if (updErr) {
+                console.error("[TPDK] ❌ Gagal update participant_assessments:", updErr);
+            } else {
+                console.log("[TPDK] ✅ participant_assessments → Completed (id:", _targetRow.id + ")");
+            }
+        } else {
+            console.warn("[TPDK] ⚠ Row participant_assessments tidak ditemukan");
+        }
+    }
+} catch (e) {
+    console.error("[TPDK] Exception update status:", e);
+}
 
   updateParticipantAssessmentStatus('Completed', 'Tes TPDK telah selesai', 'Menyelesaikan tes TPDK', 'test-complete');
   
