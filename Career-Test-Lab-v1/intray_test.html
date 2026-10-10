@@ -45,29 +45,6 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sa
     -webkit-touch-callout: none;
 }
 
-/* ============ WATERMARK ============ */
-#wm-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 9998;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    align-content: space-around;
-    justify-items: center;
-    opacity: 0.05;
-    transform: rotate(-25deg);
-    transform-origin: center;
-}
-#wm-overlay div {
-    font-size: 28px;
-    font-weight: 900;
-    color: #000;
-    white-space: nowrap;
-    padding: 30px;
-}
-
 /* ============ INSTRUCTIONS BANNER ============ */
 .intray-notice {
     position: fixed;
@@ -302,9 +279,6 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sa
     <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
 </head>
 <body>
-
-<!-- WATERMARK -->
-<div id="wm-overlay"></div>
 
 <!-- NOTICE -->
 <div class="intray-notice">
@@ -817,21 +791,6 @@ function saveState() {
     
     console.log("[INTRAY] Anti-copy deterrent aktif");
 })();
-
-// =========================================================
-// WATERMARK DINAMIS
-// =========================================================
-function installWatermark() {
-    const wm = el("wm-overlay");
-    if (!wm) return;
-    
-    const name = el("userName")?.textContent || "Peserta";
-    const timestamp = new Date().toISOString().slice(0, 19).replace("T", " ");
-    const text = name + " | " + timestamp;
-    
-    // 9 watermark untuk coverage
-    wm.innerHTML = Array(9).fill(`<div>${escapeHtml(text)}</div>`).join("");
-}
 
 // =========================================================
 // TAB MANAGEMENT
@@ -1455,16 +1414,12 @@ async function loadMeta() {
             } catch(e) { console.warn("[INTRAY] DataService fallback failed:", e); }
         }
         
-        el('userName').textContent = participantName;
+                el('userName').textContent = participantName;
         el('userAvatar').textContent = participantName.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
-        
-        // Update watermark dengan nama
-        installWatermark();
         
         console.log("[INTRAY] Metadata loaded:", { participant: participantName });
     } catch(e) {
         console.warn('Meta error:', e);
-        installWatermark(); // fallback
     }
 }
 
@@ -1481,11 +1436,22 @@ async function init() {
     updateUnreadCount();
     updateProgress();
     
-    // Restore timer if already started
+        // Restore timer if already started
     if (state.startedAt) {
         const elapsed = Math.floor((Date.now() - new Date(state.startedAt).getTime()) / 1000);
-        seconds = Math.max(60, TOTAL_SECONDS - elapsed);
-        startTimer();
+        
+        // Guard: kalau elapsed > TOTAL_SECONDS, reset fresh (state stale)
+        if (elapsed >= TOTAL_SECONDS) {
+            console.log("[INTRAY] Timer sudah habis — reset fresh state");
+            state.startedAt = null;
+            state.submitted = false;
+            saveState();
+            switchTab('instruction');
+        } else {
+            seconds = TOTAL_SECONDS - elapsed;
+            if (seconds < 60) seconds = 60;
+            startTimer();
+        }
     } else {
         switchTab('instruction');
     }
