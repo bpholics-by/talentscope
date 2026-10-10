@@ -581,12 +581,20 @@ function getAssessmentDisplayName(){
   const ctx = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
   return String(params.get("assessmentName") || params.get("testName") || ctx.assessmentName || ctx.assessment_name || ctx.testName || ctx.test_name || ctx.assessmentTitle || ctx.testTitle || "MSJT").trim() || "MSJT";
 }
+
+/* FIX: getAssessmentSequenceLabel — sync, tanpa await */
 function getAssessmentSequenceLabel(){
   try{
     const ids = getAssessmentIdentity();
     const params = new URLSearchParams(location.search);
     const assessmentIndex = Number(params.get("assessmentIndex") || 0);
-    const projects = (await DataService.getProjects());
+    
+    const cached = window.__tsAssessmentCount;
+    if (typeof cached === "number" && cached > 0) {
+      return " — Tes " + (assessmentIndex + 1) + " dari " + cached;
+    }
+    
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
     if(!Array.isArray(projects)) return "";
     const project = projects.find(pr => String(pr?.id || pr?.projectId || pr?.project_id || "").trim() === ids.projectId);
     if(!project) return "";
@@ -607,35 +615,79 @@ function resolveAssessmentRoute(code, name){
   if(c.includes("msjt") || n.includes("msjt") || n.includes("managerial")) return "msjt_managerial.html";
   return "";
 }
-function goToNextOrDashboard(){
+
+/* FIX: goToNextOrDashboard — async + query Supabase */
+async function goToNextOrDashboard(){
   const ids = getAssessmentIdentity();
   const params = new URLSearchParams(location.search);
-  const currentIndex = Number(params.get("assessmentIndex") || 0);
-  const next = currentIndex + 1;
+  const currentIndexNum = Number(params.get("assessmentIndex") || 0);
+  const next = currentIndexNum + 1;
+
+  sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+
   let packs = [];
   try{
-    const ps = (await DataService.getProjects());
-    const proj = ps.find(x => String(x.id || x.projectId || x.project_id || "") === ids.projectId);
-    const part = proj?.participants?.find(x => String(x.id || x.participantId || x.employeeId || x.employee_id || "") === ids.participantId);
-    packs = (Array.isArray(part?.assessments) && part.assessments.length > 0) ? part.assessments : (proj?.assessmentPackage || proj?.assessments || proj?.packages || []);
-  }catch(e){ packs = []; }
-  sessionStorage.setItem("ts_internal_assessment_navigation", "true");
-  if(next >= packs.length){ location.href = "participant-dashboard.html?completed=true"; return; }
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && typeof sb.from === "function") {
+      const { data, error } = await sb
+        .from("participant_assessments")
+        .select("id, assessment_id, assessment_name, status, created_at")
+        .eq("participant_id", ids.participantId)
+        .order("created_at", { ascending: true });
+
+      console.log("[MSJT] Query result:", data?.length, "| error:", error);
+
+      if (Array.isArray(data) && data.length > 0) {
+        packs = data;
+      }
+    }
+  }catch(e){
+    console.warn("[MSJT] Query failed:", e);
+  }
+
+  console.log("[MSJT] Total packs:", packs.length, "| next index:", next);
+
+  if(next >= packs.length){
+    location.href = "participant-dashboard.html?completed=true";
+    return;
+  }
+
   const nextPkg = packs[next];
-  const nextCode = packageCodeOf(nextPkg);
-  const nextName = packageNameOf(nextPkg) || "Assessment";
-  const nextRoute = resolveAssessmentRoute(nextCode, nextName);
+  const nextName = nextPkg.assessment_name || "Assessment";
+
+  let nextRoute = "";
+  const n = String(nextName).toLowerCase();
+  if(n.includes("vap") || n.includes("work performance") || n.includes("sustained") || n.includes("speed"))
+    nextRoute = "speedtest.html";
+  else if(n.includes("intray") || n.includes("inbasket") || n.includes("inbaket"))
+    nextRoute = "intray_test.html";
+  else if(n.includes("managerial") || n.includes("msjt"))
+    nextRoute = "msjt_managerial.html";
+  else if(n.includes("leadership") || n.includes("lsjt"))
+    nextRoute = "sjt_leadership.html";
+  else if(n.includes("papi") || n.includes("kostick"))
+    nextRoute = "papi_kostick_test.html";
+  else if(n.includes("disc"))
+    nextRoute = "disc_test.html";
+  else if(n.includes("tpdk") || n.includes("penalaran"))
+    nextRoute = "tpdk_test.html";
+
+  const nextCode = nextPkg.assessment_id || "";
+
   if(nextRoute){
     location.href = `${nextRoute}?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
   }else{
-    location.href = `assessment.html?projectId=${encodeURIComponent(ids.projectId)}&participantId=${encodeURIComponent(ids.participantId)}&assessmentIndex=${next}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+    console.warn("[MSJT] Tidak bisa menentukan tes berikutnya:", nextName);
+    location.href = "participant-dashboard.html";
   }
 }
+
+/* FIX: syncAssessmentActivity — sync pakai localStorage */
 function syncAssessmentActivity(activity, historyType){
   const ids = getAssessmentIdentity();
   if(!ids.projectId || !ids.participantId) return;
   try{
-    const projects = (await DataService.getProjects());
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
     if(!Array.isArray(projects)) return;
     const now = new Date().toISOString();
     let changed = false;
@@ -666,6 +718,8 @@ function syncAssessmentActivity(activity, historyType){
    AUTO LOGOUT
 ========================================================= */
 let assessmentLogoutRecorded = false;
+
+/* FIX: recordAssessmentLogout — sync pakai localStorage */
 function recordAssessmentLogout(reason){
   if(assessmentLogoutRecorded) return;
   const internalNavigation = sessionStorage.getItem("ts_internal_assessment_navigation");
@@ -674,7 +728,7 @@ function recordAssessmentLogout(reason){
   const ids = getAssessmentIdentity();
   if(!ids.projectId || !ids.participantId) return;
   try{
-    const projects = (await DataService.getProjects());
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
     if(!Array.isArray(projects)) return;
     const now = new Date().toISOString();
     const testName = getAssessmentDisplayName();
@@ -703,6 +757,7 @@ window.addEventListener("beforeunload", function(){ recordAssessmentLogout("befo
 function markAssessmentStarted(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Sedang mengerjakan tes (" + name + ")" + getAssessmentSequenceLabel(), "test-start"); }
 function markAssessmentFinished(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Tes selesai (" + name + ")" + getAssessmentSequenceLabel(), "test-complete"); }
 
+/* FIX: getContext — sync pakai localStorage */
 function getContext(){
   const params = new URLSearchParams(location.search);
   const participantId = String(params.get("participantId") || params.get("id") || "").trim();
@@ -712,7 +767,7 @@ function getContext(){
   try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
   let participantName = "", projectName = "", participantObject = null, projectObject = null;
   try{
-    const projects = (await DataService.getProjects());
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
     if(Array.isArray(projects)){
       projectObject = projects.find(function(project){
         const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
@@ -743,7 +798,6 @@ function getContext(){
 }
 
 function init(){
-  // PATCH: Init warning pindah tab (MSJT)
   if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
     window.TabSwitchWarning.init({ context: "MSJT" });
   }
@@ -988,16 +1042,14 @@ const assessmentIdFromUrl = String(params.get("assessmentId") || "").trim();
         answeredItems: Object.keys(responses).length,
         submittedAt
       };
-      // Simpan dengan UUID (BARU)
-if (assessmentIdFromUrl) {
-    localStorage.setItem(`sjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(msjtResult));
-    localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(msjtResult));
-    console.log("[MSJT] ✓ Data disimpan dengan UUID:", assessmentIdFromUrl);
-}
+      if (assessmentIdFromUrl) {
+        localStorage.setItem(`sjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(msjtResult));
+        localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIdFromUrl}`, JSON.stringify(msjtResult));
+        console.log("[MSJT] Data disimpan dengan UUID:", assessmentIdFromUrl);
+      }
 
-// Simpan dengan index (kompatibilitas)
-localStorage.setItem(`sjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
-localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
+      localStorage.setItem(`sjt_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
+      localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}_${assessmentIndexNum}`, JSON.stringify(msjtResult));
       let allResults = [];
       try{ allResults = JSON.parse(localStorage.getItem("talent_scope_results") || "[]"); }catch(e){ allResults = []; }
       if(!Array.isArray(allResults)) allResults = [];
@@ -1018,7 +1070,7 @@ localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}
       const sb = window.supabaseClient || window.supabase;
       if(sb && typeof sb.from === "function"){
         const { error } = await sb
-    .from("msjt_results")              // ← FIX 1: msjt_results
+    .from("msjt_results")
     .upsert({
         project_id: ids.projectId,
         participant_id: ids.participantId,
@@ -1027,7 +1079,7 @@ localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}
         assessment_name: assessmentNameStr || "Managerial Situational Judgment Test",
         participant_name: participant.name || "",
         result_type: "MSJT",
-        raw_data: {                     // ← FIX 2: raw_data bukan responses
+        raw_data: {
             responses: responses,
             total_items: ITEMS.length,
             answered_items: Object.keys(responses).length
@@ -1041,14 +1093,14 @@ localStorage.setItem(`assessment_result_v3_${ids.projectId}_${ids.participantId}
 if(error){
     console.error("[MSJT] Supabase upsert error:", error);
 } else {
-    console.log("[MSJT] ✅ Hasil tersinkron ke Supabase (msjt_results)");  // ← FIX 3: log
+    console.log("[MSJT] Hasil tersinkron ke Supabase (msjt_results)");
 }
       }
     }catch(err){ console.error("[MSJT] Gagal sync Supabase:", err); }
   }
 
   try{
-    const projects = (await DataService.getProjects());
+    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
     if(Array.isArray(projects)){
       const now = new Date().toISOString();
       projects.forEach(project=>{
