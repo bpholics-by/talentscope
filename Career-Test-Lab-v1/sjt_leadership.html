@@ -460,51 +460,95 @@ function markAssessmentStarted(){ const name = getAssessmentDisplayName(); syncA
 function markAssessmentFinished(){ const name = getAssessmentDisplayName(); syncAssessmentActivity("Tes selesai (" + name + ")" + getAssessmentSequenceLabel(), "test-complete"); }
 
 /* FIX: getContext — sync pakai localStorage, tanpa await */
-function getContext(){
+async function getContext(){
   const params = new URLSearchParams(location.search);
   const participantId = String(params.get("participantId") || params.get("id") || "").trim();
   const projectId = String(params.get("projectId") || "").trim();
   const context = (window.TALENTSCOPE_CONTEXT && typeof window.TALENTSCOPE_CONTEXT === "object") ? window.TALENTSCOPE_CONTEXT : {};
   let storedContext = {};
   try{ storedContext = JSON.parse(localStorage.getItem("talentscope_context") || "{}"); }catch(e){ storedContext = {}; }
+  
   let participantName = "", projectName = "", participantObject = null, projectObject = null;
-  try{
-    const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
-    if(Array.isArray(projects)){
-      projectObject = projects.find(function(project){
-        const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
-        return currentProjectId === projectId;
-      });
-      if(projectObject){
-        projectName = String(projectObject.name || projectObject.projectName || projectObject.project_name || projectObject.title || "").trim();
-        const participants = Array.isArray(projectObject.participants) ? projectObject.participants : [];
-        participantObject = participants.find(function(participant){
-          const currentParticipantId = String(participant.id || participant.participantId || participant.employeeId || participant.employee_id || "").trim();
-          return currentParticipantId === participantId;
-        });
-        if(participantObject){
-          participantName = String(participantObject.name || participantObject.fullName || participantObject.full_name || participantObject.participantName || "").trim();
+  
+  // PRIORITAS 1: Query langsung Supabase
+  const sb = window.supabaseClient || window.supabase;
+  if (sb && typeof sb.from === 'function' && participantId) {
+    try {
+      const { data: p } = await sb
+        .from("participants")
+        .select("id, name, full_name, email")
+        .eq("id", participantId)
+        .maybeSingle();
+      if (p) {
+        participantName = p.name || p.full_name || p.email || "";
+        participantObject = p;
+        console.log("[LSJT] Participant dari Supabase:", participantName);
+      }
+    } catch(e) { console.warn("[LSJT] Fetch participant failed:", e); }
+    
+    if (projectId) {
+      try {
+        const { data: pr } = await sb
+          .from("projects")
+          .select("id, name, project_name")
+          .eq("id", projectId)
+          .maybeSingle();
+        if (pr) {
+          projectName = pr.name || pr.project_name || "";
+          projectObject = pr;
+          console.log("[LSJT] Project dari Supabase:", projectName);
+        }
+      } catch(e) { console.warn("[LSJT] Fetch project failed:", e); }
+    }
+  }
+  
+  // PRIORITAS 2: Fallback ke DataService
+  if (!participantName || !projectName) {
+    try {
+      const projects = await DataService.getProjects();
+      if (Array.isArray(projects)) {
+        if (!projectObject) {
+          projectObject = projects.find(function(project){
+            const currentProjectId = String(project.id || project.projectId || project.project_id || "").trim();
+            return currentProjectId === projectId;
+          });
+        }
+        if (projectObject && !projectName) {
+          projectName = String(projectObject.name || projectObject.projectName || projectObject.project_name || projectObject.title || "").trim();
+        }
+        if (projectObject && !participantName) {
+          const participants = Array.isArray(projectObject.participants) ? projectObject.participants : [];
+          participantObject = participants.find(function(participant){
+            const currentParticipantId = String(participant.id || participant.participantId || participant.employeeId || participant.employee_id || "").trim();
+            return currentParticipantId === participantId;
+          });
+          if (participantObject) {
+            participantName = String(participantObject.name || participantObject.fullName || participantObject.full_name || participantObject.participantName || "").trim();
+          }
         }
       }
-    }
-  }catch(error){ console.warn("Gagal ambil data peserta/project:", error); }
-  if(!participantName){
+    } catch(error){ console.warn("[LSJT] DataService fallback gagal:", error); }
+  }
+  
+  // PRIORITAS 3: Fallback URL params / context
+  if (!participantName) {
     const participantObj = context.participant || context.candidate || context.user || storedContext.participant || storedContext.candidate || storedContext.user || {};
     participantName = String(params.get("participantName") || params.get("name") || context.participantName || context.participant_name || context.candidateName || participantObj.name || participantObj.fullName || storedContext.participantName || storedContext.name || "").trim();
   }
-  if(!projectName){
+  if (!projectName) {
     const projectObj = context.project || storedContext.project || {};
     projectName = String(params.get("projectName") || params.get("project") || context.projectName || context.project_name || context.projectTitle || (typeof projectObj === "string" ? projectObj : (projectObj.name || projectObj.projectName || projectObj.title || "")) || storedContext.projectName || "").trim();
   }
+  
   return {id: participantId, name: participantName, project: projectName, projectId: projectId, participant: participantObject, projectData: projectObject};
 }
 
-function init(){
+async function init(){
   if (window.TabSwitchWarning && typeof window.TabSwitchWarning.init === "function") {
     window.TabSwitchWarning.init({ context: "LSJT" });
   }
 
-  const c = getContext();
+  const c = await getContext();
   participant.name = c.name; participant.id = c.id; participant.project = c.project;
   participant.date = new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
   el("participantName").textContent = participant.name || "-";
