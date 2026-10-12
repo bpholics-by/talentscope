@@ -601,7 +601,7 @@
 <body>
 
     <div class="top-nav">
-        <a href="#" class="back-link"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a>
+        <a href="participant-dashboard.html" class="back-link" onclick="return backToDashboard(event);"><i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard</a>
         <div class="timer-badge" id="timer-display">
             <i class="fa-regular fa-clock"></i> 60:00
         </div>
@@ -1673,9 +1673,7 @@ window.addEventListener(
 );
 
         // Initialize App
-        document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+        document.addEventListener("DOMContentLoaded", async () => {
 
 // ==========================================================
             // PATCH: Init warning pindah tab (PAPI)
@@ -1741,7 +1739,7 @@ window.addEventListener(
                     "none";
             }
 
-            showThankYou();
+            await showThankYou();
 
             return;
         }
@@ -2473,7 +2471,7 @@ if (papiActivityHeartbeat) {
     papiActivityHeartbeat = null;
 }
 
-showThankYou();
+await showThankYou();
 }
         
 
@@ -2578,51 +2576,109 @@ function getNextAssessmentIndex() {
 }
 </script>
 <script>
-function showThankYou() {
+/* ==========================================================
+   SHOW THANK YOU — Cek Next dari Supabase participant_assessments
+========================================================== */
+async function showThankYou() {
 
-    const instruction =
-        document.getElementById(
-            "papiInstruction"
-        );
+    const instruction = document.getElementById("papiInstruction");
+    const quizCard = document.getElementById("quiz-card");
 
-    const quizCard =
-        document.getElementById(
-            "quiz-card"
-        );
+    if (instruction) instruction.style.display = "none";
+    if (quizCard) quizCard.style.display = "none";
 
+    const container = document.querySelector(".container") || document.body;
 
-    if (instruction) {
-        instruction.style.display =
-            "none";
+    // ==========================================================
+    // CEK NEXT DARI SUPABASE
+    // ==========================================================
+    let hasNext = false;
+    let nextRoute = "";
+    let nextName = "";
+    let nextIndex = -1;
+
+    try {
+        const currentIndex = Number(assessmentIndex);
+        const nextIndexCandidate = currentIndex + 1;
+
+        // Query participant_assessments dari Supabase
+        let packs = [];
+        const sb = window.supabaseClient || window.supabase;
+
+        if (sb && typeof sb.from === 'function' && partId) {
+            const { data, error } = await sb
+                .from("participant_assessments")
+                .select("id, assessment_id, assessment_name, status, created_at")
+                .eq("participant_id", partId)
+                .order("created_at", { ascending: true });
+
+            console.log("[PAPI] Query for next:", data?.length, "| error:", error);
+
+            if (Array.isArray(data) && data.length > 0) {
+                packs = data;
+            }
+        }
+
+        // Fallback ke localStorage
+        if (packs.length === 0) {
+            try {
+                const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+                const project = projects.find(function(p) {
+                    return String(p?.id || p?.projectId || p?.project_id || "").trim() === projId;
+                });
+                const part = project?.participants?.find(function(p) {
+                    return String(p?.id || p?.participantId || p?.employeeId || p?.employee_id || "").trim() === partId;
+                });
+                packs = (Array.isArray(part?.assessments) && part.assessments.length > 0)
+                    ? part.assessments
+                    : (project?.assessmentPackage || project?.assessments || project?.packages || []);
+            } catch(e) { packs = []; }
+        }
+
+        // Cek apakah ada next
+        if (nextIndexCandidate < packs.length) {
+            hasNext = true;
+            nextIndex = nextIndexCandidate;
+            const nextPkg = packs[nextIndexCandidate];
+            nextName = nextPkg.assessment_name || nextPkg.name || "Assessment";
+
+            // Resolve route
+            const n = String(nextName).toLowerCase();
+            if (n.includes('vap') || n.includes('work performance') || n.includes('sustained') || n.includes('speed'))
+                nextRoute = 'speedtest.html';
+            else if (n.includes('intray') || n.includes('inbasket') || n.includes('inbaket'))
+                nextRoute = 'intray_test.html';
+            else if (n.includes('managerial') || n.includes('msjt'))
+                nextRoute = 'msjt_managerial.html';
+            else if (n.includes('leadership') || n.includes('lsjt') || n.includes('situational'))
+                nextRoute = 'sjt_leadership.html';
+            else if (n.includes('papi') || n.includes('kostick'))
+                nextRoute = 'papi_kostick_test.html';
+            else if (n.includes('disc'))
+                nextRoute = 'disc_test.html';
+            else if (n.includes('tpdk') || n.includes('penalaran'))
+                nextRoute = 'tpdk_test.html';
+
+            if (!nextRoute) hasNext = false;
+        }
+
+        console.log("[PAPI] Next assessment:", {
+            hasNext, nextIndex, nextName, nextRoute,
+            totalPacks: packs.length, currentIndex
+        });
+
+    } catch (err) {
+        console.warn("[PAPI] Gagal cek next:", err);
     }
 
-
-    if (quizCard) {
-        quizCard.style.display =
-            "none";
-    }
-
-
-    const container =
-        document.querySelector(
-            ".container"
-        ) || document.body;
-
-
-    const nextIndex =
-        getNextAssessmentIndex();
-
-
-    const hasNextAssessment =
-        nextIndex !== null;
-
-
+    // ==========================================================
+    // BUILD HTML
+    // ==========================================================
     let htmlContent =
         '<div style="' +
         'text-align:center;' +
         'padding:60px 20px;' +
         '">';
-
 
     htmlContent +=
         '<div style="' +
@@ -2637,13 +2693,8 @@ function showThankYou() {
         'margin:0 auto 20px;' +
         'font-size:32px;' +
         '">';
-
-    htmlContent +=
-        '<i class="fa-solid fa-check"></i>';
-
-    htmlContent +=
-        '</div>';
-
+    htmlContent += '<i class="fa-solid fa-check"></i>';
+    htmlContent += '</div>';
 
     htmlContent +=
         '<h2 style="' +
@@ -2651,7 +2702,6 @@ function showThankYou() {
         'font-size:28px;' +
         'margin-bottom:12px;' +
         '">Tes PAPI Kostick Selesai</h2>';
-
 
     htmlContent +=
         '<p style="' +
@@ -2662,28 +2712,20 @@ function showThankYou() {
         'margin:0 auto 28px;' +
         '">';
 
-
-    if (hasNextAssessment) {
-
+    if (hasNext) {
         htmlContent +=
             'Jawaban PAPI Kostick Anda telah berhasil disimpan. ' +
             'Silakan lanjut ke assessment berikutnya.';
-
     } else {
-
         htmlContent +=
             'Jawaban PAPI Kostick Anda telah berhasil disimpan. ' +
             'Seluruh rangkaian assessment pada project ini telah selesai.';
-
     }
 
+    htmlContent += '</p>';
 
-    htmlContent +=
-        '</p>';
-
-
-    if (hasNextAssessment) {
-
+    // Tombol — conditional
+    if (hasNext) {
         htmlContent +=
             '<button ' +
             'type="button" ' +
@@ -2702,21 +2744,13 @@ function showThankYou() {
             'font-weight:700;' +
             'cursor:pointer;' +
             '">';
-
-        htmlContent +=
-            'Lanjut ke Tes Berikutnya';
-
-        htmlContent +=
-            ' <i class="fa-solid fa-arrow-right"></i>';
-
-        htmlContent +=
-            '</button>';
-
+        htmlContent += 'Lanjut ke Tes Berikutnya';
+        htmlContent += ' <i class="fa-solid fa-arrow-right"></i>';
+        htmlContent += '</button>';
     } else {
-
         htmlContent +=
             '<a ' +
-            'href="participant-dashboard.html" ' +
+            'href="participant-dashboard.html?completed=true" ' +
             'style="' +
             'display:inline-flex;' +
             'align-items:center;' +
@@ -2730,232 +2764,201 @@ function showThankYou() {
             'font-size:14px;' +
             'font-weight:700;' +
             '">';
-
-        htmlContent +=
-            'Kembali ke Dashboard';
-
-        htmlContent +=
-            '</a>';
-
+        htmlContent += 'Kembali ke Dashboard';
+        htmlContent += ' <i class="fa-solid fa-check"></i>';
+        htmlContent += '</a>';
     }
 
+    htmlContent += '</div>';
 
-    htmlContent +=
-        '</div>';
+    container.innerHTML = htmlContent;
 
-
-    container.innerHTML =
-        htmlContent;
-
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
-}
-</script>
-<script>
-function goToNextAssessment() {
-
-    const nextIndex =
-        getNextAssessmentIndex();
-
-
-    if (
-        nextIndex === null
-    ) {
-
-        window.location.href =
-            "participant-dashboard.html";
-
-        return;
-
-    }
-
-
-    window.location.href =
-        "assessment.html" +
-        "?projectId=" +
-        encodeURIComponent(
-            projId
-        ) +
-
-        "&participantId=" +
-        encodeURIComponent(
-            partId
-        ) +
-
-        "&assessmentIndex=" +
-        encodeURIComponent(
-            nextIndex
-        );
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 </script>
 <script>
 /* ==========================================================
-   DYNAMIC PARTICIPANT / PROJECT INFO
+   GO TO NEXT ASSESSMENT — Query Supabase participant_assessments
 ========================================================== */
+async function goToNextAssessment() {
+    // FIX: Query Supabase dulu untuk tentukan next index
+    const currentIdx = Number(assessmentIndex);
+    const nextIndex = currentIdx + 1;
 
-function loadParticipantInfo() {
+    let packs = [];
+    try {
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === 'function') {
+            const { data, error } = await sb
+                .from("participant_assessments")
+                .select("id, assessment_id, assessment_name, status, created_at")
+                .eq("participant_id", partId)
+                .order("created_at", { ascending: true });
+            
+            console.log("[PAPI] Query participant_assessments:", data?.length, "| error:", error);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                packs = data;
+            }
+        }
+    } catch(e) {
+        console.warn("[PAPI] Supabase query failed:", e);
+    }
+
+    if (packs.length === 0) {
+        try {
+            const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+            const project = projects.find(function(p) {
+                return String(p?.id || p?.projectId || p?.project_id || "").trim() === projId;
+            });
+            const part = project?.participants?.find(function(p) {
+                return String(p?.id || p?.participantId || p?.employeeId || p?.employee_id || "").trim() === partId;
+            });
+            packs = (Array.isArray(part?.assessments) && part.assessments.length > 0)
+                ? part.assessments
+                : (project?.assessmentPackage || project?.assessments || project?.packages || []);
+        } catch(e) { packs = []; }
+    }
+
+    if (nextIndex >= packs.length) {
+        window.location.href = "participant-dashboard.html?completed=true";
+        return;
+    }
+
+    const nextPkg = packs[nextIndex];
+    const nextName = nextPkg.assessment_name || nextPkg.name || "Assessment";
+
+    let nextRoute = "";
+    const n = String(nextName).toLowerCase();
+    if (n.includes('vap') || n.includes('work performance') || n.includes('sustained') || n.includes('speed'))
+        nextRoute = 'speedtest.html';
+    else if (n.includes('intray') || n.includes('inbasket') || n.includes('inbaket'))
+        nextRoute = 'intray_test.html';
+    else if (n.includes('managerial') || n.includes('msjt'))
+        nextRoute = 'msjt_managerial.html';
+    else if (n.includes('leadership') || n.includes('lsjt') || n.includes('situational'))
+        nextRoute = 'sjt_leadership.html';
+    else if (n.includes('papi') || n.includes('kostick'))
+        nextRoute = 'papi_kostick_test.html';
+    else if (n.includes('disc'))
+        nextRoute = 'disc_test.html';
+    else if (n.includes('tpdk') || n.includes('penalaran'))
+        nextRoute = 'tpdk_test.html';
+
+    const nextCode = nextPkg.assessment_id || '';
+
+    if (nextRoute) {
+        window.location.href = `${nextRoute}?projectId=${encodeURIComponent(projId)}&participantId=${encodeURIComponent(partId)}&assessmentIndex=${nextIndex}&assessmentCode=${encodeURIComponent(nextCode)}&assessmentName=${encodeURIComponent(nextName)}`;
+    } else {
+        console.warn("[PAPI] Tidak bisa resolve next route:", nextName);
+        window.location.href = "participant-dashboard.html";
+    }
+}
+</script>
+<script>
+/* ==========================================================
+   /* ==========================================================
+   BACK TO DASHBOARD HANDLER
+========================================================== */
+function backToDashboard(e){
+    if(e && typeof e.preventDefault === "function") {
+        e.preventDefault();
+    }
+    
+    if(confirm("Kembali ke Dashboard? Progress assessment yang belum selesai dapat terhenti.")){
+        try {
+            sessionStorage.setItem("ts_internal_assessment_navigation", "true");
+        } catch(err) {}
+        
+        window.location.href = "participant-dashboard.html";
+    }
+    return false;
+}
+
+/* ==========================================================
+   DYNAMIC PARTICIPANT / PROJECT INFO — Query Supabase
+========================================================== */
+async function loadParticipantInfo() {
 
     try {
+        const params = new URLSearchParams(window.location.search);
+        const projectId = String(params.get("projectId") || params.get("project") || "").trim();
+        const participantId = String(params.get("participantId") || params.get("participant") || "").trim();
 
-        /* ------------------------------------------
-           AMBIL ID DARI URL
-        ------------------------------------------ */
+        const participantEl = document.getElementById("participant-name");
+        const projectEl = document.getElementById("project-name");
+        const dateEl = document.getElementById("current-date-span");
 
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
+        let participantName = participantId || "-";
+        let projectName = projectId || "-";
 
-        const projectId =
-            params.get("projectId") ||
-            params.get("project") ||
-            "";
+        // PRIORITAS 1: Supabase langsung
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && typeof sb.from === 'function' && participantId) {
+            try {
+                const { data: p } = await sb
+                    .from("participants")
+                    .select("id, name, full_name, email")
+                    .eq("id", participantId)
+                    .maybeSingle();
+                if (p) {
+                    participantName = p.name || p.full_name || p.email || participantName;
+                    console.log("[PAPI] Participant dari Supabase:", participantName);
+                }
+            } catch(e) { console.warn("[PAPI] Fetch participant failed:", e); }
 
-        const participantId =
-            params.get("participantId") ||
-            params.get("participant") ||
-            "";
-
-
-        /* ------------------------------------------
-           ELEMENT HTML
-        ------------------------------------------ */
-
-        const participantEl =
-            document.getElementById(
-                "participant-name"
-            );
-
-        const projectEl =
-            document.getElementById(
-                "project-name"
-            );
-
-        const dateEl =
-            document.getElementById(
-                "current-date-span"
-            );
-
-
-        /* ------------------------------------------
-           AMBIL DATA PROJECT
-        ------------------------------------------ */
-
-        const projects =
-            JSON.parse(
-                localStorage.getItem(
-                    "talentscope_projects"
-                ) || "[]"
-            );
-
-
-        const project =
-            Array.isArray(projects)
-                ? projects.find(
-                    function (p) {
-
-                        return String(
-                            p?.id ||
-                            p?.projectId ||
-                            p?.project_id ||
-                            ""
-                        ) === String(projectId);
-
+            if (projectId) {
+                try {
+                    const { data: pr } = await sb
+                        .from("projects")
+                        .select("id, name, project_name")
+                        .eq("id", projectId)
+                        .maybeSingle();
+                    if (pr) {
+                        projectName = pr.name || pr.project_name || projectName;
+                        console.log("[PAPI] Project dari Supabase:", projectName);
                     }
-                )
-                : null;
-
-
-        /* ------------------------------------------
-           AMBIL DATA PARTICIPANT
-        ------------------------------------------ */
-
-        const participant =
-            project &&
-            Array.isArray(project.participants)
-
-                ? project.participants.find(
-                    function (p) {
-
-                        return String(
-                            p?.id ||
-                            p?.participantId ||
-                            p?.employeeId ||
-                            p?.employee_id ||
-                            ""
-                        ) === String(participantId);
-
-                    }
-                )
-
-                : null;
-
-
-        /* ------------------------------------------
-           NAMA PESERTA
-        ------------------------------------------ */
-
-        if (participantEl) {
-
-            participantEl.textContent =
-                participant?.name ||
-                participant?.fullName ||
-                participant?.participantName ||
-                participantId ||
-                "-";
-
+                } catch(e) { console.warn("[PAPI] Fetch project failed:", e); }
+            }
         }
 
-
-        /* ------------------------------------------
-           NAMA PROJECT
-        ------------------------------------------ */
-
-        if (projectEl) {
-
-            projectEl.textContent =
-                project?.projectName ||
-                project?.name ||
-                project?.title ||
-                projectId ||
-                "-";
-
+        // PRIORITAS 2: Fallback localStorage
+        if (participantName === participantId || projectName === projectId) {
+            try {
+                const projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+                const project = Array.isArray(projects) ? projects.find(function(p) {
+                    return String(p?.id || p?.projectId || p?.project_id || "").trim() === projectId;
+                }) : null;
+                
+                if (project) {
+                    projectName = project.projectName || project.name || project.title || projectName;
+                    const participants = Array.isArray(project.participants) ? project.participants : [];
+                    const participant = participants.find(function(p) {
+                        return String(p?.id || p?.participantId || p?.employeeId || p?.employee_id || "").trim() === participantId;
+                    });
+                    if (participant) {
+                        participantName = participant.name || participant.fullName || participant.participantName || participantName;
+                    }
+                }
+            } catch(e) { console.warn("[PAPI] localStorage fallback failed:", e); }
         }
 
-
-        /* ------------------------------------------
-           TANGGAL
-           
-           Kalau assessment date tersedia di project,
-           gunakan tanggal tersebut.
-           
-           Kalau tidak ada, gunakan tanggal hari ini.
-        ------------------------------------------ */
+        // Apply ke DOM
+        if (participantEl) participantEl.textContent = participantName || "-";
+        if (projectEl) projectEl.textContent = projectName || "-";
 
         if (dateEl) {
             const today = new Date();
-            dateEl.textContent = today.toLocaleDateString(
-                "id-ID",
-                {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric"
-                }
-            );
+            dateEl.textContent = today.toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            });
         }
 
     } catch (error) {
-
-        console.warn(
-            "Gagal memuat informasi peserta/project:",
-            error
-        );
-
+        console.warn("[PAPI] Gagal memuat info peserta/project:", error);
     }
-
 }
 </script>
 
