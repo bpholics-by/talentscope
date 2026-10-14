@@ -8755,6 +8755,9 @@ async function saveAssessmentOrder() {
         const sb = window.supabaseClient || window.supabase;
         if (!sb) throw new Error("Supabase client tidak tersedia");
 
+        // ==========================================================
+        // STEP 1: Update project_assessments.sort_order (master order)
+        // ==========================================================
         for (let i = 0; i < assessmentList.length; i++) {
             const item = assessmentList[i];
             const { error } = await sb
@@ -8763,10 +8766,46 @@ async function saveAssessmentOrder() {
                 .eq("id", item.id);
 
             if (error) {
-                console.error("[Reorder] Update gagal:", item.id, error);
+                console.error("[Reorder] Update project_assessments gagal:", item.id, error);
                 throw error;
             }
         }
+
+        // ==========================================================
+        // STEP 2: Sync participant_assessments.sort_order (peserta order)
+        // ==========================================================
+        console.log("[Reorder] Sync participant_assessments...");
+        
+        for (let i = 0; i < assessmentList.length; i++) {
+            const item = assessmentList[i];
+            
+            // Ambil assessment_id dari project_assessments
+            const assessmentId = item.assessment_id;
+            if (!assessmentId) {
+                console.warn("[Reorder] Skip — tidak ada assessment_id:", item);
+                continue;
+            }
+
+            // Update semua peserta di project ini untuk assessment ini
+            const { error: syncError } = await sb
+                .from("participant_assessments")
+                .update({ sort_order: i + 1 })
+                .eq("project_id", projectId)
+                .eq("assessment_id", assessmentId);
+
+            if (syncError) {
+                console.error("[Reorder] Sync participant_assessments gagal:", {
+                    assessmentId,
+                    sortOrder: i + 1,
+                    error: syncError
+                });
+                // Lanjut — tidak throw, biar reorder utama tetap sukses
+            } else {
+                console.log("[Reorder] ✓ Synced participant_assessments:", assessmentId, "→", i + 1);
+            }
+        }
+
+        console.log("[Reorder] ✅ Semua order tersimpan");
 
         btn.classList.add("saved");
         btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan!';

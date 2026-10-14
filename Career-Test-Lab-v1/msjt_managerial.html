@@ -633,6 +633,7 @@ async function goToNextOrDashboard(){
         .from("participant_assessments")
         .select("id, assessment_id, assessment_name, status, created_at")
         .eq("participant_id", ids.participantId)
+        .order("sort_order", { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: true });
 
       console.log("[MSJT] Query result:", data?.length, "| error:", error);
@@ -1212,6 +1213,7 @@ try {
                 .select("id")
                 .eq("participant_id", ids.participantId)
                 .eq("project_id", ids.projectId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true })
                 .range(_assessmentIndexNum, _assessmentIndexNum);
             if (data && data[0]) _targetRow = data[0];

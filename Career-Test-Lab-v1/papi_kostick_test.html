@@ -2430,6 +2430,7 @@ try {
                 .select("id")
                 .eq("participant_id", partId)
                 .eq("project_id", projId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true })
                 .range(_assessmentIndexNum, _assessmentIndexNum);
             if (data && data[0]) _targetRow = data[0];
@@ -2610,6 +2611,7 @@ async function showThankYou() {
                 .from("participant_assessments")
                 .select("id, assessment_id, assessment_name, status, created_at")
                 .eq("participant_id", partId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true });
 
             console.log("[PAPI] Query for next:", data?.length, "| error:", error);
@@ -2793,6 +2795,7 @@ async function goToNextAssessment() {
                 .from("participant_assessments")
                 .select("id, assessment_id, assessment_name, status, created_at")
                 .eq("participant_id", partId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true });
             
             console.log("[PAPI] Query participant_assessments:", data?.length, "| error:", error);

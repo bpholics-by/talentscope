@@ -581,6 +581,7 @@ a{text-decoration:none;color:inherit}
                 .select("id, participant_id, project_id, assessment_id, assessment_name, status, score, progress, created_at")
                 .eq("project_id", projectId)
                 .eq("participant_id", participantId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true });
 
             if (error) {
@@ -854,6 +855,7 @@ a{text-decoration:none;color:inherit}
                 .from("participant_assessments")
                 .select("status, assessment_id")
                 .eq("participant_id", participantId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true });
 
             if (!error && Array.isArray(data) && data[targetIdx]) {

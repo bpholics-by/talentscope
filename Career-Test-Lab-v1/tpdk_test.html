@@ -1023,6 +1023,7 @@ try {
                 .select("id")
                 .eq("participant_id", participantId)
                 .eq("project_id", projectId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true })
                 .range(_assessmentIndexNum, _assessmentIndexNum);
             if (data && data[0]) _targetRow = data[0];
@@ -1096,6 +1097,7 @@ async function nextTest(){
                 .from("participant_assessments")
                 .select("id, assessment_id, assessment_name, status, created_at")
                 .eq("participant_id", participantId)
+                .order("sort_order", { ascending: true, nullsFirst: false })
                 .order("created_at", { ascending: true });
             
             console.log("[TPDK] Query result:", data?.length, "| error:", error);
