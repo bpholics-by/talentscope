@@ -141,7 +141,7 @@ let filteredResults = [];
 let currentResult = null;
 let charts = {};
 let dataSource = "local";
-const SUPABASE_TABLE = "sjt_results";
+const SUPABASE_TABLE = "msjt_results";
 
 function el(id){ return document.getElementById(id); }
 function fmtDate(iso){
@@ -154,8 +154,10 @@ async function loadFromSupabase(){
   try {
     let sb = window.supabaseClient || window.supabase || null;
     if (!sb) return null;
-    const { data, error } = await sb.from(SUPABASE_TABLE).select("*")
-      .eq("result_type", "MSJT").order("submitted_at", { ascending: false }).limit(500);
+    const { data, error } = await sb.from(SUPABASE_TABLE)
+    .select("*")
+    .order("submitted_at", { ascending: false })
+    .limit(500);
     if (error) { console.warn("[MSJT Report] error:", error.message); return null; }
     if (!Array.isArray(data) || data.length === 0) return null;
     return data.map(row => ({
