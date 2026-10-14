@@ -8089,10 +8089,11 @@ try {
     console.warn("[Save Package] Sync exception:", syncException);
 }
 }}
-        const refreshed = await DataService.getProjectAssessments(window.project.id);
+               const refreshed = await DataService.getProjectAssessments(window.project.id);
         window.project.assessments = Array.isArray(refreshed) ? refreshed : window.project.assessments;
-        const assessmentList = document.getElementById("assessmentList");
-        if (typeof window.renderAssessmentPackage === "function") window.renderAssessmentPackage(assessmentList, refreshed);
+        // FIX: rename variable supaya tidak konflik dengan global `assessmentList`
+        const assessmentListEl = document.getElementById("assessmentList");
+        if (typeof window.renderAssessmentPackage === "function") window.renderAssessmentPackage(assessmentListEl, refreshed);
         closeAssessmentPackageEditor();
     } catch (error) {
         console.error("[ASSESSMENT PACKAGE] Save failed:", error);
@@ -8754,12 +8755,39 @@ async function saveAssessmentOrder() {
     try {
         const sb = window.supabaseClient || window.supabase;
         if (!sb) throw new Error("Supabase client tidak tersedia");
+        
+        // ==========================================================
+        // FIX: definisi projectId eksplisit dari URL
+        // Jangan andalkan scope chain (bisa jadi DOM element)
+        // ==========================================================
+        const params = new URLSearchParams(window.location.search);
+        const projectId = params.get("id") || params.get("projectId");
+        
+        if (!projectId) {
+            throw new Error("Project ID tidak ditemukan di URL");
+        }
+        
+        console.log("[Reorder] Project ID:", projectId, "| Type:", typeof projectId);
 
-        // ==========================================================
-        // STEP 1: Update project_assessments.sort_order (master order)
-        // ==========================================================
-        for (let i = 0; i < assessmentList.length; i++) {
+                // STEP 1: Update project_assessments.sort_order (master order)
+                for (let i = 0; i < assessmentList.length; i++) {
             const item = assessmentList[i];
+            
+            // SAFETY: skip kalau bukan data object
+            if (!item || typeof item !== 'object' || item instanceof HTMLElement) {
+                console.warn(`[Reorder] Skip item ${i} — bukan data object:`, item);
+                continue;
+            }
+            
+            const assessmentId = String(item.assessment_id || "").trim();
+            
+            // SAFETY: validasi UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!assessmentId || !uuidRegex.test(assessmentId)) {
+                console.warn(`[Reorder] Skip item ${i} — assessment_id invalid:`, assessmentId);
+                continue;
+            }
+            
             const { error } = await sb
                 .from("project_assessments")
                 .update({ sort_order: i + 1 })
@@ -8771,41 +8799,52 @@ async function saveAssessmentOrder() {
             }
         }
 
-        // ==========================================================
-        // STEP 2: Sync participant_assessments.sort_order (peserta order)
-        // ==========================================================
+                // STEP 2: Sync participant_assessments.sort_order (peserta order)
         console.log("[Reorder] Sync participant_assessments...");
         
-        for (let i = 0; i < assessmentList.length; i++) {
+                for (let i = 0; i < assessmentList.length; i++) {
             const item = assessmentList[i];
             
-            // Ambil assessment_id dari project_assessments
+            // SAFETY: skip kalau bukan data object
+            if (!item || typeof item !== 'object' || item instanceof HTMLElement) {
+                console.warn("[Reorder] Skip STEP 2 — item bukan data object:", item);
+                continue;
+            }
+            
             const assessmentId = item.assessment_id;
-            if (!assessmentId) {
-                console.warn("[Reorder] Skip — tidak ada assessment_id:", item);
+            
+            // SAFETY: validasi UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!assessmentId || !uuidRegex.test(assessmentId)) {
+                console.warn("[Reorder] Skip STEP 2 — assessment_id invalid:", assessmentId, item);
                 continue;
             }
 
-            // Update semua peserta di project ini untuk assessment ini
+            console.log(`[Reorder] Syncing ${i+1}/${assessmentList.length}:`, assessmentId);
+
             const { error: syncError } = await sb
                 .from("participant_assessments")
                 .update({ sort_order: i + 1 })
-                .eq("project_id", projectId)
-                .eq("assessment_id", assessmentId);
+                .eq("project_id", String(projectId).trim())
+                .eq("assessment_id", String(assessmentId).trim());
 
             if (syncError) {
-                console.error("[Reorder] Sync participant_assessments gagal:", {
-                    assessmentId,
-                    sortOrder: i + 1,
-                    error: syncError
+                console.error("[Reorder] ❌ Sync gagal:", {
+                    assessmentId, 
+                    sortOrder: i + 1, 
+                    errorMessage: syncError.message,
+                    errorCode: syncError.code
                 });
-                // Lanjut — tidak throw, biar reorder utama tetap sukses
             } else {
-                console.log("[Reorder] ✓ Synced participant_assessments:", assessmentId, "→", i + 1);
+                console.log("[Reorder] ✅ Synced:", assessmentId, "→", i + 1);
             }
+            
+            // DELAY 250ms untuk hindari rate limit PostgREST
+            await new Promise(r => setTimeout(r, 250));
         }
-
+        
         console.log("[Reorder] ✅ Semua order tersimpan");
+        
 
         btn.classList.add("saved");
         btn.innerHTML = '<i class="fa-solid fa-check"></i> Tersimpan!';
