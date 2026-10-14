@@ -271,7 +271,10 @@ function initReport() {
                 assessmentName: row.assessment_name,
                 participantName: row.participant_name || "",
                 scores: typeof row.scores === "string" ? JSON.parse(row.scores) : row.scores,
-                sessions: typeof row.raw_data === "string" ? JSON.parse(row.raw_data) : row.raw_data,
+                sessions: (() => {
+    const rd = typeof row.raw_data === "string" ? JSON.parse(row.raw_data) : row.raw_data;
+    return rd?.sessions || rd || {};
+})(),
                 submittedAt: row.submitted_at,
                 _source: "supabase"
             }));
@@ -421,7 +424,7 @@ function initReport() {
     function renderReport(r){
         const d = r.scores;
         const s1 = d.s1 || {}, s2 = d.s2 || {};
-        const raw = d.raw || {};
+        const raw = r.raw_data || {};
         const overall = mean([d.speed, d.accuracy, d.stability, d.endurance, d.attention, d.vigilance]);
 
         const dims = [
@@ -503,7 +506,15 @@ function initReport() {
         const anomalyHTML = anomalies.length
             ? anomalies.map(x => `<div class="anomaly">⚠ ${x}</div>`).join("")
             : `<div class="anomaly-ok">✓ Tidak ditemukan anomali signifikan antar-blok.</div>`;
-
+// ============ DEBUG VAP ============
+console.log("[VAP Debug] r keys:", Object.keys(r || {}));
+console.log("[VAP Debug] r.sessions:", r?.sessions);
+console.log("[VAP Debug] r.sessions type:", typeof r?.sessions);
+console.log("[VAP Debug] r.sessions[1]:", r?.sessions?.["1"]);
+console.log("[VAP Debug] r.sessions[1].trials:", r?.sessions?.["1"]?.trials);
+console.log("[VAP Debug] r.sessions[1].trials.length:", r?.sessions?.["1"]?.trials?.length);
+console.log("[VAP Debug] r.raw_data:", r?.raw_data);
+// ==================================
         el("reportContainer").innerHTML = `
             <div class="hero">
               <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
@@ -514,7 +525,8 @@ function initReport() {
               </p>
               <div class="overall-panel">
                 <div class="overall-stat"><div class="lbl">Overall Score</div><div class="val">${overall.toFixed(1)}<span class="unit">/ 100</span></div></div>
-                <div class="overall-stat"><div class="lbl">Total Trials</div><div class="val">${(s1.trials?.length || 0) + (s2.trials?.length || 0)}</div></div>
+                <div class="lbl">Total Trials</div>
+                <div class="val">${((r?.sessions?.["1"]?.trials?.length) || 0) + ((r?.sessions?.["2"]?.trials?.length) || 0)}</div>
                 <div class="overall-stat"><div class="lbl">Total Correct</div><div class="val">${(s1.correct || 0) + (s2.correct || 0)}</div></div>
                 <div class="overall-stat"><div class="lbl">Median RT</div><div class="val">${d.medianRT ? (d.medianRT/1000).toFixed(2) : "-"}<span class="unit">s</span></div></div>
               </div>
