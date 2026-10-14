@@ -596,11 +596,18 @@ async function refreshList(){
     }
     allResults.sort((a,b) => new Date(b.submittedAt) - new Date(a.submittedAt));
     filteredResults = [...allResults];
-    renderDropdown();
+        renderDropdown();
     if (allResults.length === 0) {
       el("reportContainer").innerHTML = `<div class="card empty"><h3>Belum ada hasil</h3><p>Belum ada peserta yang menyelesaikan In-Tray Exercise.</p></div>`;
     } else {
-      el("reportContainer").innerHTML = `<div class="card empty"><h3>Pilih peserta</h3><p>Pilih peserta dari dropdown di atas.</p></div>`;
+      // FIX: auto-select peserta pertama
+      const sel = el("resultSelect");
+      if (sel && sel.options.length > 1) {
+        sel.selectedIndex = 1;   // Skip placeholder (index 0)
+        loadResult();            // Trigger load report pertama
+      } else {
+        el("reportContainer").innerHTML = `<div class="card empty"><h3>Pilih peserta</h3><p>Pilih peserta dari dropdown di atas.</p></div>`;
+      }
     }
   } catch(err) {
     console.error("[INTRAY] Refresh error:", err);
