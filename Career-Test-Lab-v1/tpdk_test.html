@@ -1196,13 +1196,90 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
   } catch(error){ console.warn('Gagal sync ke '+storeKey+':', error); return false; }
 }
 function updateParticipantAssessmentStatus(status, activity, historyText, historyType){
-  const primary = updateStore('talentscope_projects', status, activity, historyText, historyType, true);
-  updateStore('projects', status, activity, historyText, historyType, false);
-  return primary;
+    // Keep localStorage update for backward compatibility
+    const primary = updateStore('talentscope_projects', status, activity, historyText, historyType, true);
+    updateStore('projects', status, activity, historyText, historyType, false);
+    
+    // NEW: Push to Supabase for real-time monitoring
+    const testName = "TPDK";  // atau dari variable global
+    if (activity) {
+        syncActivityToSupabase(activity, testName, historyType);
+    }
+    
+    return primary;
+}
+/* ==========================================================
+   SYNC ACTIVITY TO SUPABASE — Real-time monitoring
+========================================================== */
+async function syncActivityToSupabase(activity, testName, type) {
+    const sb = window.supabaseClient || window.supabase;
+    if (!sb || !participantId || !projectId) {
+        console.warn("[Activity Sync] Missing sb/participantId/projectId");
+        return;
+    }
+    
+    try {
+        const now = new Date().toISOString();
+        
+        // Update participants — current status
+        const { error: updateErr } = await sb
+            .from("participants")
+            .update({
+                current_activity: activity,
+                last_activity: activity,
+                activity_updated_at: now,
+                is_logged_in: true
+            })
+            .eq("id", participantId);
+        
+        if (updateErr) {
+            console.warn("[Activity Sync] Update participants error:", updateErr.message);
+        } else {
+            console.log("[Activity Sync] ✓ Updated participants:", activity);
+        }
+        
+        // Insert to history — only for important events (not heartbeat)
+        if (type) {
+            const { error: insertErr } = await sb
+                .from("participant_activity_history")
+                .insert({
+                    participant_id: participantId,
+                    project_id: projectId,
+                    type: type,
+                    activity: activity,
+                    description: activity + " - " + (testName || "TPDK"),
+                    timestamp: now
+                });
+            
+            if (insertErr) {
+                console.warn("[Activity Sync] Insert history error:", insertErr.message);
+            } else {
+                console.log("[Activity Sync] ✓ Logged history:", type);
+            }
+        }
+    } catch (err) {
+        console.warn("[Activity Sync] Exception:", err);
+    }
 }
 function updateParticipantHeartbeat(){
-  updateStore('talentscope_projects', null, null, null, null, false);
-  updateStore('projects', null, null, null, null, false);
+    // Keep localStorage (backward compat)
+    updateStore("talentscope_projects", null, null, null, null, false);
+    updateStore("projects", null, null, null, null, false);
+    
+    // NEW: Push heartbeat to Supabase (throttled)
+    if (typeof heartbeat_lastSync === "undefined") {
+        window.heartbeat_lastSync = 0;
+    }
+    
+    const now = Date.now();
+    if (now - window.heartbeat_lastSync > 10000) {  // Every 10 seconds
+        window.heartbeat_lastSync = now;
+        syncActivityToSupabase(
+            "Sedang mengerjakan tes (TPDK)", 
+            "TPDK", 
+            null  // Don't log heartbeat to history
+        );
+    }
 }
 function markInternalNavigation(){ try{ sessionStorage.setItem(NAVIGATION_FLAG, '1'); }catch(e){} }
 function consumeInternalNavigation(){ try{ const v = sessionStorage.getItem(NAVIGATION_FLAG)==='1'; sessionStorage.removeItem(NAVIGATION_FLAG); return v; }catch(e){ return false; } }
@@ -1250,6 +1327,26 @@ window.addEventListener('pagehide', function(event){
 updateParticipantAssessmentStatus('Ongoing','Sedang berada pada halaman tes (TPDK)','Membuka halaman tes TPDK','test-open');
 updateParticipantHeartbeat();
 setInterval(updateParticipantHeartbeat, HEARTBEAT_INTERVAL);
+
+/* ==========================================================
+   PUSH OFFLINE STATUS ON PAGE CLOSE
+========================================================== */
+window.addEventListener("pagehide", function() {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && participantId) {
+        // Use sendBeacon-style: fire and forget
+        sb.from("participants")
+            .update({
+                current_activity: "Offline",
+                last_activity: "Offline",
+                activity_updated_at: new Date().toISOString(),
+                is_logged_in: false
+            })
+            .eq("id", participantId)
+            .then(() => console.log("[Activity Sync] Offline"))
+            .catch((err) => console.warn("[Activity Sync] Offline error:", err));
+    }
+});
 </script>
 </body>
 </html>

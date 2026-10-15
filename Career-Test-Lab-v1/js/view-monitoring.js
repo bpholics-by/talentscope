@@ -468,11 +468,21 @@ function buildMonitoringParticipant(relation) {
     const rawData =
         participantRow.raw_data || {};
 
+    // ==========================================================
+    // FIX: PRIORITAS KOLOM TABLE (bukan raw_data)
+    // -----------------------------------------------------------
+    // Kolom real-time di participants table:
+    //   - current_activity, last_activity, activity_updated_at
+    //   - is_logged_in, login_at, logout_at, last_login_at
+    // Semua kolom INI di-update oleh participant-activity.js.
+    // raw_data hanya fallback untuk field lama.
+    // ==========================================================
+
     const participant =
         Object.assign(
             {},
-            participantRow,
-            rawData
+            rawData,              // ← fallback lama (dulu prioritas)
+            participantRow        // ← OVERRIDE dengan kolom table (BARU)
         );
 
     // ID yang dipakai di seluruh UI (mis. "AA01"), fallback
@@ -482,13 +492,118 @@ function buildMonitoringParticipant(relation) {
         participantRow.id ||
         rawData.id;
 
-    // Referensi internal (bukan untuk ditampilkan) supaya
-    // automatic-logout bisa disimpan balik ke Supabase.
+    // ==========================================================
+    // ALIAS: Map kolom table → field yang dibaca UI
+    // ==========================================================
+    participant.currentActivity =
+        participantRow.current_activity ||
+        rawData.currentActivity ||
+        participantRow.currentActivity ||
+        "";
+
+    participant.lastActivity =
+        participantRow.last_activity ||
+        rawData.lastActivity ||
+        "";
+
+    participant.activityUpdatedAt =
+        participantRow.activity_updated_at ||
+        rawData.activityUpdatedAt ||
+        "";
+
+    participant.lastSeenAt =
+        participantRow.activity_updated_at ||
+        participantRow.last_login_at ||
+        rawData.lastSeenAt ||
+        "";
+
+    participant.lastSeen =
+        participantRow.activity_updated_at ||
+        participantRow.last_login_at ||
+        rawData.lastSeen ||
+        "";
+
+    // Status online: PRIORITAS kolom is_logged_in
+    participant.isLoggedIn =
+        participantRow.is_logged_in === true ||
+        participantRow.is_logged_in === "true" ||
+        rawData.isLoggedIn === true;
+
+        // ==========================================================
+    // FIX: loginTime & logoutTime — handle STALE data
+    // -----------------------------------------------------------
+    // Masalah: login_at & logout_at sering stale (dari test lama)
+    // karena test file hanya update current_activity + is_logged_in.
+    //
+    // Solusi:
+    // - loginTime: pakai activity_updated_at kalau login_at lebih LAMA
+    // - logoutTime: HANYA tampilkan kalau is_logged_in = FALSE
+    // ==========================================================
+    
+    var rawLoginAt = participantRow.login_at || participantRow.last_login_at || "";
+    var rawLogoutAt = participantRow.logout_at || participantRow.last_logout_at || "";
+    var latestActivityAt = participantRow.activity_updated_at || "";
+    var isCurrentlyOnline = participantRow.is_logged_in === true 
+                         || participantRow.is_logged_in === "true";
+
+    // loginTime: pakai yang PALING BARU antara login_at vs activity_updated_at
+    var loginTimeValue = rawLoginAt;
+    if (latestActivityAt) {
+        var loginTs = rawLoginAt ? new Date(rawLoginAt).getTime() : 0;
+        var activityTs = new Date(latestActivityAt).getTime();
+        
+        // Kalau activity lebih baru dari login → pakai activity
+        if (!loginTs || activityTs > loginTs) {
+            loginTimeValue = latestActivityAt;
+        }
+    }
+    participant.loginTime = loginTimeValue || rawData.loginTime || "";
+
+    // logoutTime: HANYA tampilkan kalau peserta OFFLINE
+    if (isCurrentlyOnline) {
+        participant.logoutTime = ""; // Peserta online — tidak ada logout
+    } else {
+        // Peserta offline — cek logout_at
+        var logoutTimeValue = rawLogoutAt;
+        
+        // Kalau logout_at kosong atau lebih lama dari activity, pakai activity
+        if (latestActivityAt) {
+            var logoutTs = rawLogoutAt ? new Date(rawLogoutAt).getTime() : 0;
+            var activityTs2 = new Date(latestActivityAt).getTime();
+            
+            // Kalau activity lebih baru dari logout → pakai activity (artinya baru disconnect)
+            if (!logoutTs || activityTs2 > logoutTs) {
+                logoutTimeValue = latestActivityAt;
+            }
+        }
+        
+        participant.logoutTime = logoutTimeValue || rawData.logoutTime || "";
+    }
+
+    // Log debug
+    console.log("[Monitoring] Times:", {
+        name: participantRow.name,
+        isOnline: isCurrentlyOnline,
+        loginTime: participant.loginTime,
+        logoutTime: participant.logoutTime
+    });
+
+    // Referensi internal
     participant._supabaseParticipantId =
         participantRow.id;
 
     participant._supabaseRawData =
         rawData;
+
+    // ==========================================================
+    // PATCH: Log debug
+    // ==========================================================
+    console.log("[Monitoring] Built participant:", {
+        name: participant.name || participantRow.name,
+        currentActivity: participant.currentActivity,
+        isLoggedIn: participant.isLoggedIn,
+        lastSeenAt: participant.lastSeenAt
+    });
 
     return participant;
 

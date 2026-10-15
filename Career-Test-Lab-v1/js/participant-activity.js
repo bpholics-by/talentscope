@@ -291,7 +291,82 @@
 
     }
 
+    /* =====================================================
+       SYNC REALTIME TO SUPABASE
+       -----------------------------------------------------------
+       Push current_activity, last_activity, activity_updated_at
+       ke tabel participants + log ke participant_activity_history.
+       Support both string IDs and UUIDs.
+    ===================================================== */
 
+    var _lastRealtimeSync = 0;
+    var _realtimeSyncThrottleMs = 3000; // 3 detik
+
+    function syncRealtimeToSupabase(activity, testName, type) {
+        try {
+            var sb = window.supabaseClient || window.supabase;
+            if (!sb || typeof sb.from !== "function") return;
+
+            var identity = resolveIdentity();
+            var participantId = identity.participantId;
+            var projectId = identity.projectId;
+
+            if (!participantId || !projectId) {
+                console.warn("[PARTICIPANT ACTIVITY] Realtime sync skipped — missing IDs");
+                return;
+            }
+
+            // Throttle: minimal 3 detik antar sync (hindari spam)
+            var now = Date.now();
+            if (now - _lastRealtimeSync < _realtimeSyncThrottleMs) {
+                return;
+            }
+            _lastRealtimeSync = now;
+
+            var timestamp = new Date().toISOString();
+            var testLabel = testName || "Assessment";
+
+            // 1. UPDATE participants.current_activity
+            sb.from("participants")
+                .update({
+                    current_activity: activity,
+                    last_activity: activity,
+                    activity_updated_at: timestamp,
+                    is_logged_in: true
+                })
+                .eq("id", participantId)
+                .then(function (result) {
+                    if (result.error) {
+                        console.warn("[PARTICIPANT ACTIVITY] Update participants:", result.error.message);
+                    } else {
+                        console.log("[PARTICIPANT ACTIVITY] ✓ participants updated:", activity);
+                    }
+                });
+
+            // 2. INSERT to participant_activity_history (only for important events)
+            if (type && type !== "tab-hidden" && type !== "tab-visible") {
+                sb.from("participant_activity_history")
+                    .insert({
+                        participant_id: participantId,
+                        project_id: projectId,
+                        type: type,
+                        activity: activity,
+                        description: activity + " - " + testLabel,
+                        timestamp: timestamp
+                    })
+                    .then(function (result) {
+                        if (result.error) {
+                            console.warn("[PARTICIPANT ACTIVITY] Insert history:", result.error.message);
+                        } else {
+                            console.log("[PARTICIPANT ACTIVITY] ✓ history logged:", type);
+                        }
+                    });
+            }
+
+        } catch (err) {
+            console.warn("[PARTICIPANT ACTIVITY] Realtime sync exception:", err);
+        }
+    }
     /* =====================================================
        RECORD ACTIVITY (fungsi utama)
     ===================================================== */
@@ -432,26 +507,20 @@
         participant.activityHistory.push(entry);
 
 
-        writeProjects(projects);
+               writeProjects(projects);
 
         /*
-           FIX: syncToSupabase() (DataService.updateParticipant,
-           overwrite raw_data TANPA baca-gabung-dulu) SUDAH DIHAPUS
-           dari sini. writeProjects() di atas menulis ke
-           localStorage("talentscope_projects"), yang otomatis
-           memicu ts-supabase-sync.js (baca dulu raw_data lama →
-           gabung → PATCH) -- itu sudah cukup dan lebih aman.
-
-           Sebelumnya DUA jalur ini jalan bersamaan tanpa koordinasi:
-           salah satu melakukan overwrite penuh raw_data tanpa merge,
-           sehingga kalau overwrite itu selesai BELAKANGAN dari
-           versi yang lebih lama, data terbaru (activityHistory,
-           loginAt, dst dari event lain) ikut hilang tertimpa.
-           Sekarang cuma ts-supabase-sync.js yang menulis ke
-           Supabase, jadi tidak ada lagi dua penulis yang saling
-           balapan.
+           FIX: syncToSupabase() ...
         */
 
+        // ==========================================================
+        // NEW: Push realtime ke Supabase (participants + history)
+        // ==========================================================
+        syncRealtimeToSupabase(
+            label,
+            extra && extra.page ? extra.page : "Assessment",
+            type
+        );
     }
 
 

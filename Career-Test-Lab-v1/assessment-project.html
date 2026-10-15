@@ -3505,76 +3505,78 @@ document.addEventListener("DOMContentLoaded", function () {
     /* ==========================================
        LOAD ACTIVE ADMIN SESSION
     ========================================== */
+   
 
-    var rawSession =
-        sessionStorage.getItem("ts_admin_session");
+    "use strict";
 
-    if (!rawSession) return;
+    /* AMBIL SESSION USER */
+    function getSavedUser() {
+        try {
+            var rawSession =
+                sessionStorage.getItem("ts_admin_session") ||
+                sessionStorage.getItem("ts_participant_session") ||
+                localStorage.getItem("talentscope_current_user");
 
-    var activeUser;
-
-    try {
-        activeUser = JSON.parse(rawSession);
-    } catch (error) {
-        console.warn("Admin session tidak valid");
-        return;
+            return rawSession ? JSON.parse(rawSession) : null;
+        } catch (error) {
+            console.warn("Session pengguna tidak valid.");
+            return null;
+        }
     }
 
+    function updateUserHeader() {
+        var activeUser = getSavedUser();
 
-    /* ==========================================
-       USER DATA
-    ========================================== */
+        if (!activeUser) return;
 
-    var userName =
-        activeUser.name ||
-        activeUser.username ||
-        "User";
+        var role = String(activeUser.role || "").trim();
 
-    var userRole =
-        activeUser.role ||
-        "System Administrator";
+        /* Samakan penulisan role */
+        if (/^system\s+admin$/i.test(role)) {
+            role = "System Administrator";
+        }
 
+        var nameElement = document.getElementById("headerUserName");
+        var roleElement = document.getElementById("headerUserRole");
+        var avatarElement = document.getElementById("headerAvatar");
 
-    /* ==========================================
-       NORMALISASI ROLE
-    ========================================== */
+        /*
+         * Nama mengikuti Dashboard:
+         * gunakan nama akun jika tersedia.
+         * Jika tidak ada, gunakan Administrator untuk akun admin.
+         */
+        var userName =
+            activeUser.name ||
+            activeUser.username ||
+            (/administrator|system/i.test(role)
+                ? "Administrator"
+                : "User");
 
-    if (userRole === "System Admin") {
-        userRole = "System Administrator";
+        if (nameElement) {
+            nameElement.textContent = userName;
+        }
+
+        if (roleElement) {
+            roleElement.textContent = role || "Administrator";
+        }
+
+        if (avatarElement) {
+            avatarElement.textContent =
+                String(userName).charAt(0).toUpperCase();
+        }
     }
 
-
-    /* ==========================================
-       HEADER ELEMENTS
-    ========================================== */
-
-    var avatar = document.getElementById("headerAvatar");
-    var nameElement = document.getElementById("headerUserName");
-    var roleElement = document.getElementById("headerUserRole");
-
-
-    /* ==========================================
-       UPDATE HEADER
-    ========================================== */
-
-    if (avatar) {
-        avatar.textContent =
-            String(userName).charAt(0).toUpperCase();
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            updateUserHeader
+        );
+    } else {
+        updateUserHeader();
     }
-
-    if (nameElement) {
-        nameElement.textContent = userName;
-    }
-
-    if (roleElement) {
-        roleElement.textContent = userRole;
-    }
-
-
-
-
 })();
 </script>
+
 
 </body>
 </html>

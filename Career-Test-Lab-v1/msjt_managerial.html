@@ -1250,6 +1250,25 @@ try {
 
 init();
 console.log("[MSJT] Ready. Total items:", ITEMS.length);
+
+/* ==========================================================
+   PUSH OFFLINE STATUS ON PAGE CLOSE
+========================================================== */
+window.addEventListener("pagehide", function() {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && participantId) {
+        sb.from("participants")
+            .update({
+                current_activity: "Offline",
+                last_activity: "Offline",
+                activity_updated_at: new Date().toISOString(),
+                is_logged_in: false
+            })
+            .eq("id", participantId)
+            .then(() => console.log("[Sync] Offline"))
+            .catch((err) => console.warn("[Sync] Offline error:", err));
+    }
+});
 </script>
 </body>
 </html>
