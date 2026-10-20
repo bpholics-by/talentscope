@@ -912,6 +912,53 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
     }
 }
 
+
+/* ==========================================================
+   SYNC ACTIVITY TO SUPABASE — Real-time monitoring
+========================================================== */
+async function syncActivityToSupabase(activity, testName, type) {
+    const sb = window.supabaseClient || window.supabase;
+    if (!sb || !participantId || !projectId) return;
+    
+    try {
+        const now = new Date().toISOString();
+        
+        const { error: updateErr } = await sb
+            .from("participants")
+            .update({
+                current_activity: activity,
+                last_activity: activity,
+                activity_updated_at: now,
+                is_logged_in: true
+            })
+            .eq("id", participantId);
+        
+        if (updateErr) {
+            console.warn("[Sync] Update participants:", updateErr.message);
+        }
+        
+        if (type) {
+            const { error: insertErr } = await sb
+                .from("participant_activity_history")
+                .insert({
+                    participant_id: participantId,
+                    project_id: projectId,
+                    type: type,
+                    activity: activity,
+                    description: activity + " - " + (testName || "DISC"),
+                    timestamp: now
+                });
+            
+            if (insertErr) {
+                console.warn("[Sync] Insert history:", insertErr.message);
+            } else {
+                console.log("[Sync] ?", type, "?", activity);
+            }
+        }
+    } catch (err) {
+        console.warn("[Sync] Exception:", err);
+    }
+}
 function updateParticipantAssessmentStatus(status, activity, historyText, historyType) {
     const primary = updateStore(
         "talentscope_projects",
@@ -1090,6 +1137,25 @@ const participantHeartbeatInterval = setInterval(
     updateParticipantHeartbeat,
     HEARTBEAT_INTERVAL
 );
+
+/* ==========================================================
+   PUSH OFFLINE STATUS ON PAGE CLOSE
+========================================================== */
+window.addEventListener("pagehide", function() {
+    const sb = window.supabaseClient || window.supabase;
+    if (sb && participantId) {
+        sb.from("participants")
+            .update({
+                current_activity: "Offline",
+                last_activity: "Offline",
+                activity_updated_at: new Date().toISOString(),
+                is_logged_in: false
+            })
+            .eq("id", participantId)
+            .then(() => console.log("[Sync] Offline"))
+            .catch((err) => console.warn("[Sync] Offline error:", err));
+    }
+});
 </script>
 </body>
 </html>

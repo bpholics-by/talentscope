@@ -101,76 +101,109 @@
 
     function resolveIdentity() {
 
-        var params =
-            new URLSearchParams(
-                window.location.search
-            );
+    var params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-        var projectId =
+    var projectId =
+        normalize(
+            params.get("projectId") ||
+            params.get("project") ||
+            ""
+        );
+
+    var participantId =
+        normalize(
+            params.get("participantId") ||
+            params.get("participant") ||
+            ""
+        );
+
+    var email = "";
+
+    // ==========================================================
+    // FIX: Fallback ke localStorage (dari login.html)
+    // ==========================================================
+    if (!projectId) {
+        projectId =
             normalize(
-                params.get("projectId") ||
-                params.get("project") ||
+                localStorage.getItem("ts_project_id") ||
+                localStorage.getItem("ts_projectId") ||
                 ""
             );
+    }
 
-        var participantId =
+    if (!participantId) {
+        participantId =
             normalize(
-                params.get("participantId") ||
-                params.get("participant") ||
+                localStorage.getItem("ts_participant_id") ||
+                localStorage.getItem("ts_participantId") ||
                 ""
             );
+    }
 
-        var email = "";
+    if (!email) {
+        email =
+            normalizeEmail(
+                localStorage.getItem("ts_participant_email") ||
+                localStorage.getItem("ts_participantEmail") ||
+                ""
+            );
+    }
 
-        if (!projectId || !participantId) {
+    // ==========================================================
+    // Fallback ke sessionStorage ts_participant_session
+    // ==========================================================
+    if (!projectId || !participantId) {
 
-            try {
+        try {
 
-                var raw =
-                    sessionStorage.getItem(
-                        "ts_participant_session"
+            var raw =
+                sessionStorage.getItem(
+                    "ts_participant_session"
+                );
+
+            var s =
+                raw ? JSON.parse(raw) : null;
+
+            if (s) {
+
+                projectId =
+                    projectId ||
+                    normalize(
+                        s.projectId ||
+                        s.project_id
                     );
 
-                var s =
-                    raw ? JSON.parse(raw) : null;
+                participantId =
+                    participantId ||
+                    normalize(
+                        s.participantId ||
+                        s.participant_id ||
+                        s.id
+                    );
 
-                if (s) {
+                email =
+                    email ||
+                    normalizeEmail(
+                        s.email ||
+                        s.emailAddress
+                    );
 
-                    projectId =
-                        projectId ||
-                        normalize(
-                            s.projectId ||
-                            s.project_id
-                        );
+            }
 
-                    participantId =
-                        participantId ||
-                        normalize(
-                            s.participantId ||
-                            s.participant_id ||
-                            s.id
-                        );
-
-                    email =
-                        normalizeEmail(
-                            s.email ||
-                            s.emailAddress
-                        );
-
-                }
-
-            } catch (error) {}
-
-        }
-
-        return {
-            projectId: projectId,
-            participantId: participantId,
-            email: email
-        };
+        } catch (error) {}
 
     }
 
+    return {
+        projectId: projectId,
+        participantId: participantId,
+        email: email
+    };
+
+}
 
     /* =====================================================
        FIND PARTICIPANT DI localStorage
@@ -412,24 +445,31 @@
         }
 
 
-        var projects =
-            readProjects();
+                var projects = readProjects();
+        var participant = findParticipant(projects, identity);
 
-        var participant =
-            findParticipant(
-                projects,
+        // ============================================================
+        // FIX: JANGAN return kalau participant tidak ada di localStorage
+        // ------------------------------------------------------------
+        // Kita tetap bisa push ke Supabase karena identity sudah
+        // punya participantId + projectId. localStorage cuma untuk
+        // cache/snapshot lama, bukan syarat mutlak.
+        // ============================================================
+        if (!participant) {
+            console.warn(
+                "[PARTICIPANT ACTIVITY] Participant tidak ada di localStorage, " +
+                "tetap push ke Supabase:",
                 identity
             );
 
-        if (!participant) {
-
-            console.warn(
-                "[PARTICIPANT ACTIVITY] Participant tidak ditemukan di localStorage:",
-                identity
+            // Langsung push ke Supabase tanpa perlu participant object
+            syncRealtimeToSupabase(
+                label,
+                extra && extra.page ? extra.page : "Assessment",
+                type
             );
 
             return;
-
         }
 
 

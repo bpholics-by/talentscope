@@ -6,7 +6,7 @@
 <title>Login | TalentScope</title>
 
 <!-- WAJIB PALING ATAS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
 <script src="js/config.js?v=9"></script>
 <script src="js/supabase-client.js?v=7"></script>
 <script src="js/session-helper.js?v=1"></script>
@@ -254,43 +254,101 @@ input:focus{border-color:#0878e8;box-shadow:0 0 0 3px rgba(8,120,232,.08);}
         try {
             var email;
             
-            if (usernameRaw.indexOf("@") !== -1) {
-                // Sudah email
-                email = usernameRaw.toLowerCase();
-                console.log("[LOGIN] Email detected:", email);
-            } else if (looksLikeAccessCode(usernameRaw)) {
-                // ============================================
-                // LOGIN PESERTA VIA ACCESS CODE
-                // ============================================
-                console.log("[LOGIN] Access code detected:", usernameRaw);
-                
-                var accessCode = usernameRaw.toUpperCase().replace(/\s+/g, "");
-                var sbP = window.supabaseClient;
-                
-                if (!sbP) {
-                    setError("Supabase client tidak tersedia");
-                    setLoading(false);
-                    return;
-                }
-                
-                var pesertaResult = await sbP
-                    .from("participants")
-                    .select("id, email, name, project_id, access_code, auth_user_id")
-                    .eq("access_code", accessCode)
-                    .maybeSingle();
-                
-                var peserta = pesertaResult.data;
-                
-                if (!peserta || !peserta.email) {
-                    setError("Access code tidak valid");
-                    setLoading(false);
-                    return;
-                }
-                
-                console.log("[LOGIN] Peserta ditemukan:", peserta.name);
-                email = peserta.email;
-                
+           if (usernameRaw.indexOf("@") !== -1) {
+    // ============================================
+    // LOGIN VIA EMAIL
+    // ============================================
+    email = usernameRaw.toLowerCase();
+    console.log("[LOGIN] Email detected:", email);
+    
+    // ============================================================
+    // FIX: SIMPAN IDENTITAS PESERTA UNTUK LOGIN VIA EMAIL
+    // ------------------------------------------------------------
+    // Query peserta berdasarkan email, lalu simpan id + project_id
+    // ke localStorage. Ini WAJIB supaya heartbeat di dashboard
+    // tahu participant mana yang harus di-update ke Supabase.
+    // ============================================================
+    try {
+        var sbEmail = window.supabaseClient;
+        if (sbEmail) {
+            var pesertaByEmail = await sbEmail
+                .from("participants")
+                .select("id, email, name, project_id, access_code")
+                .eq("email", email)
+                .maybeSingle();
+
+            if (pesertaByEmail.data) {
+                var p = pesertaByEmail.data;
+                localStorage.setItem("ts_participant_id", p.id);
+                localStorage.setItem("ts_project_id", p.project_id);
+                localStorage.setItem("ts_participant_email", p.email || email);
+                localStorage.setItem("ts_participant_name", p.name || "");
+                console.log("[LOGIN] ✅ Identitas peserta tersimpan (via email):", {
+                    id: p.id,
+                    project_id: p.project_id,
+                    name: p.name
+                });
             } else {
+                console.warn("[LOGIN] ⚠️ Peserta tidak ditemukan untuk email:", email);
+            }
+        }
+    } catch (identityErr) {
+        console.warn("[LOGIN] Gagal simpan identitas via email:", identityErr);
+    }
+    
+} else if (looksLikeAccessCode(usernameRaw)) {
+    // ============================================
+    // LOGIN PESERTA VIA ACCESS CODE
+    // ============================================
+    console.log("[LOGIN] Access code detected:", usernameRaw);
+    
+    var accessCode = usernameRaw.toUpperCase().replace(/\s+/g, "");
+    var sbP = window.supabaseClient;
+    
+    if (!sbP) {
+        setError("Supabase client tidak tersedia");
+        setLoading(false);
+        return;
+    }
+    
+    var pesertaResult = await sbP
+        .from("participants")
+        .select("id, email, name, project_id, access_code, auth_user_id")
+        .eq("access_code", accessCode)
+        .maybeSingle();
+    
+    var peserta = pesertaResult.data;
+    
+    if (!peserta || !peserta.email) {
+        setError("Access code tidak valid");
+        setLoading(false);
+        return;
+    }
+    
+    console.log("[LOGIN] Peserta ditemukan:", peserta.name, peserta.id);
+    
+    // ============================================================
+    // FIX: SIMPAN IDENTITAS PESERTA KE LOCALSTORAGE
+    // ------------------------------------------------------------
+    // Ini yang bikin heartbeat di participant-dashboard.html
+    // tahu participant mana yang harus di-update ke Supabase.
+    // ============================================================
+    try {
+        localStorage.setItem("ts_participant_id", peserta.id);
+        localStorage.setItem("ts_project_id", peserta.project_id);
+        localStorage.setItem("ts_participant_email", peserta.email);
+        localStorage.setItem("ts_participant_name", peserta.name || "");
+        console.log("[LOGIN] ✅ Identitas peserta tersimpan:", {
+            id: peserta.id,
+            project_id: peserta.project_id
+        });
+    } catch (storageErr) {
+        console.warn("[LOGIN] Gagal simpan identitas:", storageErr);
+    }
+    
+    email = peserta.email;
+    
+} else {
                 // Username biasa → mapping ke email
                 email = usernameRaw.toLowerCase();
                 

@@ -2228,6 +2228,38 @@ function importParticipantsFromExcel() {
         fileInput.files[0];
 
 
+// ============================================================
+// P2.4 FIX: Validasi XLSX Import (Mitigasi CVE-2024-22363 ReDoS)
+// ============================================================
+if (!file) {
+    alert("Pilih file Excel terlebih dahulu");
+    return;
+}
+
+// 1. Validasi ekstensi file
+var _fileName = String(file.name || "").toLowerCase();
+var _fileExt = _fileName.slice(_fileName.lastIndexOf("."));
+var _allowedExt = [".xlsx", ".xls"];
+
+if (!_allowedExt.includes(_fileExt)) {
+    alert("Hanya file Excel (.xlsx / .xls) yang diizinkan");
+    return;
+}
+
+// 2. Validasi ukuran file (max 5 MB)
+var _MAX_FILE_SIZE = 5 * 1024 * 1024;
+if (file.size > _MAX_FILE_SIZE) {
+    alert("File terlalu besar. Maksimal 5 MB.\n" +
+          "Ukuran file: " + (file.size / 1024 / 1024).toFixed(2) + " MB");
+    return;
+}
+
+console.log("[XLSX Import] Validation passed:", {
+    name: file.name,
+    size: file.size,
+    type: file.type
+});
+
     const reader =
         new FileReader();
 
@@ -2244,13 +2276,27 @@ function importParticipantsFromExcel() {
 
 
                 const workbook =
-                    XLSX.read(
-                        data,
-                        {
-                            type: "array"
-                        }
-                    );
+    XLSX.read(
+        data,
+        { type: "array" }
+    );
 
+// ============================================================
+// P2.4 FIX: Validasi jumlah baris (mitigasi ReDoS)
+// ============================================================
+var _firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+if (_firstSheet && _firstSheet["!ref"]) {
+    var _range = XLSX.utils.decode_range(_firstSheet["!ref"]);
+    var _rowCount = _range.e.r - _range.s.r + 1;
+    var _MAX_ROWS = 5000;
+    
+    if (_rowCount > _MAX_ROWS) {
+        alert("File terlalu banyak baris. Maksimal 5.000 baris.\n" +
+              "File Anda: " + _rowCount + " baris");
+        return;
+    }
+    console.log("[XLSX Import] Row count:", _rowCount, "OK");
+}
 
                 if (
                     !workbook.SheetNames ||

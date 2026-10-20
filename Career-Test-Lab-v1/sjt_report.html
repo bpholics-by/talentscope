@@ -107,7 +107,20 @@ th{background:#f8fafc;color:#64748b;font-weight:800;font-size:11px;letter-spacin
   <div id="reportContainer"><div class="card empty"><h3>Belum ada hasil dipilih</h3><p>Pilih peserta dari dropdown di atas.</p></div></div>
 </div>
 
+
 <script>
+    /* =========================================================
+   ESCAPE HTML — Security (P0.5)
+========================================================= */
+function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+    }[c]));
+}
 /* =========================================================
    LSJT REPORT VIEWER — v3.1
    5-Level Classification + Narrative Interpretation
@@ -218,7 +231,7 @@ function initReport() {
             console.log("[LSJT] Refresh selesai:", allResults.length, "hasil");
         } catch (err) {
             console.error("[LSJT Report] Error:", err);
-            if (rc) rc.innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${err.message}</p></div>`;
+            if (rc) rc.innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${escapeHtml(err.message)}</p></div>`;
         }
     }
 
@@ -379,7 +392,7 @@ function initReport() {
             <div class="hero">
               <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
               <h2 class="hero-title">LSJT — Leadership Profile</h2>
-              <p class="hero-sub">${r.participantName || r.participantId} • ${fmtDate(r.submittedAt)} • Leadership Situational Judgment Test</p>
+              <p class="hero-sub">${escapeHtml(r.participantName || r.participantId)} • ${fmtDate(r.submittedAt)} • Leadership Situational Judgment Test</p>
               <div class="overall-panel">
                 <div class="overall-stat"><div class="lbl">Total Item</div><div class="val">${r.totalItems || 28}</div></div>
                 <div class="overall-stat"><div class="lbl">Terjawab</div><div class="val">${r.answeredItems || 0}<span class="unit">/ ${r.totalItems || 28}</span></div></div>

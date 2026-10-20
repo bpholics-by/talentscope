@@ -191,5 +191,45 @@
   observer.observe(document.body, { childList: true, subtree: true });
 })();
 </script>
+<script>
+/* ============================================================
+   ROLE GUARD — Peserta TIDAK BOLEH lihat hasil tes
+   ------------------------------------------------------------
+   Fix P0.3: Otorisasi harus di server/halaman, bukan cuma
+   menyembunyikan tombol di UI.
+   
+   Kalau role = peserta → redirect ke dashboard dengan pesan.
+============================================================ */
+(async function guardTestResultAccess() {
+    try {
+        // Tunggu TS_SESSION siap
+        if (!window.TS_SESSION) {
+            console.warn("[GUARD] TS_SESSION tidak tersedia, skip guard");
+            return;
+        }
+        
+        var role = await window.TS_SESSION.getRole();
+        console.log("[GUARD] Current role:", role);
+        
+        var roleLower = String(role || "").toLowerCase().trim();
+        
+        // Peserta atau participant → BLOCK
+        if (roleLower === "peserta" || roleLower === "participant") {
+            console.warn("[GUARD] ❌ Peserta tidak boleh akses hasil tes");
+            
+            // Tampilkan pesan
+            alert("Anda tidak memiliki akses untuk melihat hasil tes. Hasil hanya dapat dilihat oleh Admin, Asesor, atau Client.");
+            
+            // Redirect ke dashboard peserta
+            window.location.replace("participant-dashboard.html");
+            return;
+        }
+        
+        console.log("[GUARD] ✅ Role authorized:", roleLower);
+    } catch (err) {
+        console.error("[GUARD] Error:", err);
+    }
+})();
+</script>
 </body>
 </html>

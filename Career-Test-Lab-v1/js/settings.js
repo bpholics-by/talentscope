@@ -162,51 +162,16 @@
     ];
 
     /* ==========================================================
-       DEFAULT USERS
-    ========================================================== */
+   DEFAULT USERS — DIHAPUS (Security P0.1)
+   ----------------------------------------------------------
+   Alasan: Password hardcoded di frontend bisa dibaca siapa
+   saja (DevTools / curl). Ini celah kritis P0.1 sesuai
+   dokumen handover teknis Career Test Lab v1(8).
 
-    const defaultUsers = [
-
-        {
-            id: "USR-001",
-            name: "Administrator",
-            username: "admin",
-            email: "admin@talentscope.com",
-            role: "System Administrator",
-            status: "Active",
-            password: "admin123"
-        },
-
-        {
-            id: "USR-002",
-            name: "Client",
-            username: "client",
-            email: "client@company.com",
-            role: "Client",
-            status: "Active",
-            password: "client123"
-        },
-
-        {
-            id: "USR-003",
-            name: "Asesor",
-            username: "asesor",
-            email: "asesor@talentscope.com",
-            role: "Asesor",
-            status: "Active",
-            password: "asesor123"
-        },
-
-        {
-            id: "USR-004",
-            name: "Peserta",
-            username: "peserta",
-            email: "peserta@talentscope.com",
-            role: "Peserta",
-            status: "Active",
-            password: "peserta123"
-        }
-    ];
+   Semua user diambil dari Supabase Auth + tabel public.users.
+   Tidak boleh ada kredensial di bundle frontend.
+========================================================== */
+const defaultUsers = [];
 
 
     /* ==========================================================

@@ -143,6 +143,19 @@ let charts = {};
 let dataSource = "local";
 const SUPABASE_TABLE = "msjt_results";
 
+/* =========================================================
+   ESCAPE HTML — Security (P0.5)
+========================================================= */
+function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+    }[c]));
+}
+
 function el(id){ return document.getElementById(id); }
 function fmtDate(iso){
   if(!iso) return "-";
@@ -212,8 +225,9 @@ async function refreshList(){
     }
   } catch (err) {
     console.error("[MSJT Report] Error:", err);
-    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${err.message}</p></div>`;
-  }
+    // FIX XSS: escape err.message sebelum render
+    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${escapeHtml(err.message)}</p></div>`;
+}
 }
 
 function renderDropdown(){
@@ -356,7 +370,7 @@ function renderReport(r){
       <div class="comp-block">
         <div class="comp-head">
           <div>
-            <div class="comp-name">${comp.label}</div>
+            <div class="comp-name">${escapeHtml(comp.label)}</div>
             <div class="comp-label">Net Score: ${comp.netScore > 0 ? '+' : ''}${comp.netScore.toFixed(1)}</div>
           </div>
           <div class="comp-score-wrap">
@@ -366,8 +380,8 @@ function renderReport(r){
         </div>
         <div class="comp-bar"><i style="width:${Math.max(0, Math.min(100, comp.normalized))}%;background:${barColor}"></i></div>
         <div class="comp-detail">
-          <span>MOST: <b>${comp.most}</b> (${comp.mostPct.toFixed(1)}%)</span>
-          <span>LEAST: <b>${comp.least}</b> (${comp.leastPct.toFixed(1)}%)</span>
+          <span>MOST: <b>${escapeHtml(comp.most)}</b> (${comp.mostPct.toFixed(1)}%)</span>
+<span>LEAST: <b>${escapeHtml(comp.least)}</b> (${comp.leastPct.toFixed(1)}%)</span>
           <span>Net: <b>${comp.netScore > 0 ? '+' : ''}${comp.netScore.toFixed(1)}</b></span>
         </div>
       </div>
@@ -386,11 +400,11 @@ function renderReport(r){
     <div class="hero">
       <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
       <h2 class="hero-title">MSJT — Managerial Competency Profile</h2>
-      <p class="hero-sub">${r.participantName || r.participantId} • ${fmtDate(r.submittedAt)} • Managerial Situational Judgment Test</p>
+      <p class="hero-sub">${escapeHtml(r.participantName || r.participantId)} • ${fmtDate(r.submittedAt)} • Managerial Situational Judgment Test</p>
       <div class="overall-panel">
         <div class="overall-stat"><div class="lbl">Total Item</div><div class="val">${r.totalItems || 32}</div></div>
         <div class="overall-stat"><div class="lbl">Terjawab</div><div class="val">${r.answeredItems || 0}<span class="unit">/ ${r.totalItems || 32}</span></div></div>
-        <div class="overall-stat"><div class="lbl">Kompetensi Dominan</div><div class="val" style="font-size:14px;line-height:1.3">${dominant.label}</div></div>
+        <div class="overall-stat"><div class="lbl">Kompetensi Dominan</div><div class="val" style="font-size:14px;line-height:1.3">${escapeHtml(dominant.label)}</div></div>
         <div class="overall-stat"><div class="lbl">Kategori</div><div class="val" style="font-size:16px">${clsNormalized(dominant.normalized)}</div></div>
       </div>
     </div>

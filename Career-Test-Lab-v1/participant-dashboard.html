@@ -417,11 +417,24 @@ a{text-decoration:none;color:inherit}
     /* ==========================================================
        ROUTE MAP
     ========================================================== */
-    function getAssessmentRoute(code, name) {
+        function getAssessmentRoute(code, name) {
         var c = String(code || "").toLowerCase();
         var n = String(name || "").toLowerCase();
 
-        if (c.includes("intray") || c.includes("in-tray") || c.includes("in_tray") || n.includes("intray") || n.includes("in-tray") || n.includes("in tray")) return "intray_test.html";
+        // ==========================================
+        // TAMBAHKAN INI: Cek Intray 2 DULU (Arunika)
+        // ==========================================
+        if (c.includes("intray2") || c.includes("intray 2") || c.includes("arunika") || 
+            n.includes("intray2") || n.includes("intray 2") || n.includes("arunika")) {
+            return "intray_test2.html";
+        }
+
+        // BARU KEMUDIAN CEK IN-TRAY 1 (EMN)
+        if (c.includes("intray") || c.includes("in-tray") || c.includes("in_tray") || 
+            n.includes("intray") || n.includes("in-tray") || n.includes("in tray")) {
+            return "intray_test.html";
+        }
+
         if (c.includes("tpdk") || c.includes("penalaran") || n.includes("tpdk") || n.includes("penalaran") || n.includes("tes penalaran")) return "tpdk_test.html";
         if (c.includes("lsjt") || c.includes("leadership") || n.includes("lsjt") || n.includes("leadership")) return "sjt_leadership.html";
         if (c.includes("msjt") || c.includes("managerial") || n.includes("msjt") || n.includes("managerial")) return "msjt_managerial.html";
@@ -705,20 +718,26 @@ a{text-decoration:none;color:inherit}
     var nextIndex = assessments.indexOf(nextEntry);
 
     // ===== Tentukan label + action tombol =====
-    var isAllCompleted = packageStatus === "Completed";
-    var buttonLabel = "Start Assessment";
-    var buttonAction = "start"; // start | continue | result
+// FIX: Peserta TIDAK BOLEH melihat hasil tes sendiri.
+// Hanya admin/asesor/client yang bisa lihat hasil.
+var isAllCompleted = packageStatus === "Completed";
+var buttonLabel = "Start Assessment";
+var buttonAction = "start"; // start | continue | disabled
+var buttonDisabled = false;
 
-    if (isAllCompleted) {
-        buttonLabel = "View All Results";
-        buttonAction = "result-all";
-    } else if (nextEntryStatus === "in progress") {
-        buttonLabel = "Continue Assessment";
-        buttonAction = "continue";
-    } else if (completedCount > 0) {
-        buttonLabel = "Continue to Next";
-        buttonAction = "start";
-    }
+if (isAllCompleted) {
+    // ❌ SEBELUM: buttonLabel = "View All Results"; buttonAction = "result-all";
+    // ✅ SESUDAH: tombol disable, peserta tidak bisa lihat hasil
+    buttonLabel = "Semua Assessment Telah Selesai";
+    buttonAction = "none";
+    buttonDisabled = true;
+} else if (nextEntryStatus === "in progress") {
+    buttonLabel = "Continue Assessment";
+    buttonAction = "continue";
+} else if (completedCount > 0) {
+    buttonLabel = "Continue to Next";
+    buttonAction = "start";
+}
 
     // ===== Build test list =====
     var testListHtml = '<div class="package-tests"><div class="package-tests-label">Assessments Included</div><div class="package-test-list">';
@@ -754,16 +773,17 @@ a{text-decoration:none;color:inherit}
                     '<div><div class="info-label">Total Assessments</div><div class="info-value">' + assessments.length + '</div></div>' +
                 '</div>' +
                 '<button class="action" ' +
-                    'data-action="' + buttonAction + '" ' +
-                    'data-project="' + escapeHtml(projectId) + '" ' +
-                    'data-participant="' + escapeHtml(participantId) + '" ' +
-                    'data-assessment-index="' + nextIndex + '" ' +
-                    'data-assessment-code="' + escapeHtml(nextEntry.code || "") + '" ' +
-                    'data-assessment-name="' + escapeHtml(nextEntry.name || nextEntry.assessment_name || "") + '" ' +
-                    'type="button">' +
-                    '<span class="btn-spinner"></span>' +
-                    '<span class="btn-label">' + escapeHtml(buttonLabel) + '</span>' +
-                '</button>' +
+    'data-action="' + buttonAction + '" ' +
+    'data-project="' + escapeHtml(projectId) + '" ' +
+    'data-participant="' + escapeHtml(participantId) + '" ' +
+    'data-assessment-index="' + nextIndex + '" ' +
+    'data-assessment-code="' + escapeHtml(nextEntry.code || "") + '" ' +
+    'data-assessment-name="' + escapeHtml(nextEntry.name || nextEntry.assessment_name || "") + '" ' +
+    (buttonDisabled ? 'disabled style="opacity:0.6;cursor:not-allowed;background:#94a3b8" ' : '') +
+    'type="button">' +
+    '<span class="btn-spinner"></span>' +
+    '<span class="btn-label">' + escapeHtml(buttonLabel) + '</span>' +
+'</button>' +
             '</article>' +
         '</div>';
 
@@ -837,12 +857,13 @@ a{text-decoration:none;color:inherit}
         "&assessmentCode=" + encodeURIComponent(assessmentCode) +
         "&assessmentName=" + encodeURIComponent(assessmentName);
 
-    // ===== ACTION: VIEW RESULT (khusus tombol View Result) =====
-    if (action === "result" || action === "result-all") {
-        window.__tsParticipantInternalNavigation = true;
-        window.location.href = "test-result.html" + commonParams;
-        return;
-    }
+    // ===== ACTION: BLOCKED (peserta tidak boleh lihat hasil) =====
+if (action === "none" || action === "result" || action === "result-all") {
+    showToast("Hasil tes hanya dapat dilihat oleh Admin/Asesor/Client.", "info");
+    btn.disabled = false;
+    btn.classList.remove("loading");
+    return;
+}
 
     // ===== ACTION: START / CONTINUE =====
     // Guard tambahan: kalau ternyata status sudah Completed (race condition),
@@ -859,17 +880,22 @@ a{text-decoration:none;color:inherit}
                 .order("created_at", { ascending: true });
 
             if (!error && Array.isArray(data) && data[targetIdx]) {
-                var currentStatus = String(data[targetIdx].status || "").toLowerCase();
-                console.log("[START] Server status check:", currentStatus);
+    var currentStatus = String(data[targetIdx].status || "").toLowerCase();
+    console.log("[START] Server status check:", currentStatus);
 
-                if (currentStatus === "completed") {
-                    // Sudah selesai → redirect ke result
-                    showToast("Assessment ini sudah selesai. Menampilkan hasil...", "info");
-                    window.__tsParticipantInternalNavigation = true;
-                    window.location.href = "test-result.html" + commonParams;
-                    return;
-                }
-            }
+    if (currentStatus === "completed") {
+        // ============================================================
+        // FIX: Peserta TIDAK BOLEH melihat hasil tes.
+        // Hanya admin/asesor/client yang boleh.
+        // ❌ SEBELUM: redirect ke test-result.html
+        // ✅ SESUDAH: tampilkan info, block redirect
+        // ============================================================
+        showToast("Assessment ini sudah selesai. Hasil hanya dapat dilihat oleh Admin/Asesor/Client.", "info");
+        btn.disabled = false;
+        btn.classList.remove("loading");
+        return;
+    }
+}
         }
     } catch (e) {
         console.warn("[START] Status check error:", e);
@@ -955,6 +981,121 @@ a{text-decoration:none;color:inherit}
     }
 
 })();
+</script>
+<script>
+// ==========================================================
+// BRIDGE: Copy ts_* keys → key yang dibaca participant-activity.js
+// ==========================================================
+(function bridgeIdentityKeys() {
+    try {
+        var pid = localStorage.getItem("ts_participant_id");
+        var projId = localStorage.getItem("ts_project_id");
+        var email = localStorage.getItem("ts_participant_email");
+        var name = localStorage.getItem("ts_participant_name");
+
+        if (pid) {
+            localStorage.setItem("participantId", pid);
+            localStorage.setItem("participant_id", pid);
+        }
+        if (projId) {
+            localStorage.setItem("projectId", projId);
+            localStorage.setItem("project_id", projId);
+        }
+        if (email) localStorage.setItem("participantEmail", email);
+        if (name) localStorage.setItem("participantName", name);
+
+        // Juga set di sessionStorage (kemungkinan dibaca dari sini)
+        if (pid) {
+            sessionStorage.setItem("participantId", pid);
+            sessionStorage.setItem("participant_id", pid);
+        }
+        if (projId) {
+            sessionStorage.setItem("projectId", projId);
+            sessionStorage.setItem("project_id", projId);
+        }
+
+        console.log("[Bridge] Identity bridged to multiple keys");
+    } catch (err) {
+        console.warn("[Bridge] Error:", err);
+    }
+})();
+</script>
+<!-- Participant Activity Tracker + Heartbeat -->
+<script src="js/participant-activity.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    if (typeof ParticipantActivity === "undefined") {
+        console.error("[Dashboard] ❌ ParticipantActivity tidak dimuat!");
+        return;
+    }
+
+    console.log("[Dashboard] ✅ ParticipantActivity loaded");
+
+    // ==========================================================
+    // Track page entry (sekali)
+    // ==========================================================
+    try {
+        ParticipantActivity.trackPageEntry(
+            "Dashboard",
+            "Peserta membuka dashboard"
+        );
+    } catch (err) {
+        console.warn("[Dashboard] trackPageEntry error:", err);
+    }
+
+    // ==========================================================
+    // Heartbeat tiap 30 detik
+    // ----------------------------------------------------------
+    // Ini yang bikin activity_updated_at selalu fresh,
+    // sehingga admin bisa lihat status "Online" secara akurat.
+    // ==========================================================
+    function sendHeartbeat() {
+        try {
+            ParticipantActivity.recordActivity(
+                "Aktif di dashboard",
+                "Dashboard",
+                "heartbeat"
+            );
+            console.log("[Dashboard] 💓 Heartbeat terkirim:", new Date().toLocaleTimeString());
+        } catch (err) {
+            console.warn("[Dashboard] Heartbeat error:", err);
+        }
+    }
+
+    // Heartbeat pertama setelah 2 detik
+    setTimeout(sendHeartbeat, 2000);
+
+    // Heartbeat berkala tiap 30 detik
+    setInterval(sendHeartbeat, 30000);
+
+    console.log("[Dashboard] ✅ Heartbeat interval started (30s)");
+
+    // ==========================================================
+    // Push saat tab ditutup (logout)
+    // ==========================================================
+    window.addEventListener("beforeunload", function () {
+        try {
+            const sb = window.supabaseClient || window.supabase;
+            if (!sb) return;
+
+            const pid = localStorage.getItem("ts_participant_id");
+            if (!pid) return;
+
+            // Fire-and-forget update
+            sb.from("participants").update({
+                is_logged_in: false,
+                logout_at: new Date().toISOString(),
+                last_logout_at: new Date().toISOString()
+            }).eq("id", pid).then(function() {
+                console.log("[Dashboard] Logout pushed");
+            });
+        } catch (err) {
+            // Ignore — tab closing
+        }
+    });
+});
 </script>
 </body>
 </html>

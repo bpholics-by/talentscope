@@ -1,0 +1,85 @@
+<div class="brand">
+
+    <div class="brand-logo">
+        TS
+    </div>
+
+    <div class="brand-info">
+
+        <div class="brand-title">
+            TalentScope
+        </div>
+
+        <div class="brand-version">
+            Enterprise v1.0
+        </div>
+
+        <div class="brand-tagline">
+            Integrated Assessment<br>
+            & Development Platform
+        </div>
+
+    </div>
+
+</div>
+
+<nav class="menu">
+
+    <div class="menu-title">
+        MAIN MENU
+    </div>
+
+    <ul>
+
+        <li data-page="dashboard">
+            <a href="dashboard.html">
+                <i class="fa-solid fa-house"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        <li data-page="participants">
+            <a href="participants.html">
+                <i class="fa-solid fa-users"></i>
+                <span>Participants</span>
+            </a>
+        </li>
+
+        <li data-page="identitas">
+            <a href="identitas.html">
+                <i class="fa-solid fa-id-card"></i>
+                <span>Participant Profile</span>
+            </a>
+        </li>
+
+        <li data-page="catalog">
+            <a href="assessment-catalog.html">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Assessment Catalog</span>
+            </a>
+        </li>
+
+        <li data-page="assessment-project">
+    <a href="assessment-project.html">
+        <i class="fa-solid fa-folder-open"></i>
+        <span>Assessment Project</span>
+    </a>
+</li>
+
+        <li data-page="assessment-detail">
+    <a href="project-detail.html">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Assessment Detail</span>
+    </a>
+</li>
+
+        <li data-page="result">
+            <a href="hasil.html">
+                <i class="fa-solid fa-chart-column"></i>
+                <span>Results</span>
+            </a>
+        </li>
+
+    </ul>
+
+</nav>

@@ -388,8 +388,14 @@ async function loadMonitoringProjects() {
 
         }
 
-
         monitoringProjects = built;
+
+        // NEW: Start realtime subscription
+        const urlParams = new URLSearchParams(location.search);
+        const activeProjectId = urlParams.get("id") || urlParams.get("projectId");
+        if (activeProjectId) {
+            startRealtimeSubscription(activeProjectId);
+        }
 
         console.log(
             `[MONITORING] Loaded ${monitoringProjects.length} projects from Supabase`
@@ -461,154 +467,320 @@ function buildMonitoringProject(projectRow) {
 ========================================================== */
 
 function buildMonitoringParticipant(relation) {
+    const participantRow = (relation && relation.participant) || {};
+    const rawData = participantRow.raw_data || {};
 
-    const participantRow =
-        (relation && relation.participant) || {};
+    const participant = Object.assign({}, rawData, participantRow);
 
-    const rawData =
-        participantRow.raw_data || {};
-
-    // ==========================================================
-    // FIX: PRIORITAS KOLOM TABLE (bukan raw_data)
-    // -----------------------------------------------------------
-    // Kolom real-time di participants table:
-    //   - current_activity, last_activity, activity_updated_at
-    //   - is_logged_in, login_at, logout_at, last_login_at
-    // Semua kolom INI di-update oleh participant-activity.js.
-    // raw_data hanya fallback untuk field lama.
-    // ==========================================================
-
-    const participant =
-        Object.assign(
-            {},
-            rawData,              // ← fallback lama (dulu prioritas)
-            participantRow        // ← OVERRIDE dengan kolom table (BARU)
-        );
-
-    // ID yang dipakai di seluruh UI (mis. "AA01"), fallback
-    // ke UUID kalau participant_code kosong.
+    // ID
     participant.id =
         participantRow.participant_code ||
         participantRow.id ||
         rawData.id;
 
-    // ==========================================================
-    // ALIAS: Map kolom table → field yang dibaca UI
-    // ==========================================================
+    // Activity mapping
     participant.currentActivity =
         participantRow.current_activity ||
-        rawData.currentActivity ||
         participantRow.currentActivity ||
+        rawData.currentActivity ||
         "";
 
     participant.lastActivity =
         participantRow.last_activity ||
+        participantRow.lastActivity ||
         rawData.lastActivity ||
         "";
 
     participant.activityUpdatedAt =
         participantRow.activity_updated_at ||
+        participantRow.activityUpdatedAt ||
         rawData.activityUpdatedAt ||
         "";
 
-    participant.lastSeenAt =
-        participantRow.activity_updated_at ||
-        participantRow.last_login_at ||
-        rawData.lastSeenAt ||
-        "";
-
-    participant.lastSeen =
-        participantRow.activity_updated_at ||
-        participantRow.last_login_at ||
-        rawData.lastSeen ||
-        "";
-
-    // Status online: PRIORITAS kolom is_logged_in
-    participant.isLoggedIn =
-        participantRow.is_logged_in === true ||
-        participantRow.is_logged_in === "true" ||
-        rawData.isLoggedIn === true;
-
-        // ==========================================================
-    // FIX: loginTime & logoutTime — handle STALE data
-    // -----------------------------------------------------------
-    // Masalah: login_at & logout_at sering stale (dari test lama)
-    // karena test file hanya update current_activity + is_logged_in.
-    //
-    // Solusi:
-    // - loginTime: pakai activity_updated_at kalau login_at lebih LAMA
-    // - logoutTime: HANYA tampilkan kalau is_logged_in = FALSE
     // ==========================================================
-    
-    var rawLoginAt = participantRow.login_at || participantRow.last_login_at || "";
-    var rawLogoutAt = participantRow.logout_at || participantRow.last_logout_at || "";
-    var latestActivityAt = participantRow.activity_updated_at || "";
-    var isCurrentlyOnline = participantRow.is_logged_in === true 
-                         || participantRow.is_logged_in === "true";
+    // FIX P1: lastSeenAt — pakai timestamp PALING BARU
+    // ----------------------------------------------------------
+    // Masalah: activity_updated_at sering NULL di database
+    // karena test file belum update kolom itu.
+    // Solusi: kumpulkan semua kandidat timestamp, ambil yang
+    // paling baru, bukan asal fallback berurutan.
+    // ==========================================================
+    const lastSeenCandidates = [
+        participantRow.activity_updated_at,
+        participantRow.last_activity_at,
+        participantRow.last_login_at,
+        participantRow.login_at,
+        rawData.lastSeenAt,
+        rawData.lastSeen,
+        rawData.lastActivityAt,
+        rawData.heartbeat
+    ].filter(Boolean);
 
-    // loginTime: pakai yang PALING BARU antara login_at vs activity_updated_at
-    var loginTimeValue = rawLoginAt;
+    let latestLastSeen = "";
+    let latestLastSeenTs = 0;
+    for (const value of lastSeenCandidates) {
+        const ts = new Date(value).getTime();
+        if (Number.isFinite(ts) && ts > latestLastSeenTs) {
+            latestLastSeenTs = ts;
+            latestLastSeen = value;
+        }
+    }
+    participant.lastSeenAt = latestLastSeen;
+    participant.lastSeen = latestLastSeen;
+
+    // ==========================================================
+    // FIX P1: isLoggedIn — handle boolean & string, snake & camel
+    // ==========================================================
+    const rawIsLoggedIn =
+        participantRow.is_logged_in !== undefined
+            ? participantRow.is_logged_in
+            : (participantRow.isLoggedIn !== undefined
+                ? participantRow.isLoggedIn
+                : rawData.isLoggedIn);
+
+    participant.isLoggedIn =
+        rawIsLoggedIn === true ||
+        rawIsLoggedIn === "true" ||
+        rawIsLoggedIn === 1 ||
+        rawIsLoggedIn === "1";
+
+    // Simpan juga versi snake_case untuk debug
+    participant.is_logged_in = participant.isLoggedIn;
+
+    // ==========================================================
+    // loginTime & logoutTime (P2: stale data handling)
+    // ==========================================================
+    const rawLoginAt =
+        participantRow.login_at ||
+        participantRow.last_login_at ||
+        "";
+
+    const rawLogoutAt =
+        participantRow.logout_at ||
+        participantRow.last_logout_at ||
+        "";
+
+    const latestActivityAt =
+        participantRow.activity_updated_at || "";
+
+    const isCurrentlyOnline = participant.isLoggedIn;
+
+    let loginTimeValue = rawLoginAt;
     if (latestActivityAt) {
-        var loginTs = rawLoginAt ? new Date(rawLoginAt).getTime() : 0;
-        var activityTs = new Date(latestActivityAt).getTime();
-        
-        // Kalau activity lebih baru dari login → pakai activity
+        const loginTs = rawLoginAt ? new Date(rawLoginAt).getTime() : 0;
+        const activityTs = new Date(latestActivityAt).getTime();
         if (!loginTs || activityTs > loginTs) {
             loginTimeValue = latestActivityAt;
         }
     }
-    participant.loginTime = loginTimeValue || rawData.loginTime || "";
+    // Fallback: kalau loginTime masih kosong, pakai lastSeenAt
+    participant.loginTime = loginTimeValue || participant.lastSeenAt || rawData.loginTime || "";
 
-    // logoutTime: HANYA tampilkan kalau peserta OFFLINE
     if (isCurrentlyOnline) {
-        participant.logoutTime = ""; // Peserta online — tidak ada logout
+        participant.logoutTime = "";
     } else {
-        // Peserta offline — cek logout_at
-        var logoutTimeValue = rawLogoutAt;
-        
-        // Kalau logout_at kosong atau lebih lama dari activity, pakai activity
+        let logoutTimeValue = rawLogoutAt;
         if (latestActivityAt) {
-            var logoutTs = rawLogoutAt ? new Date(rawLogoutAt).getTime() : 0;
-            var activityTs2 = new Date(latestActivityAt).getTime();
-            
-            // Kalau activity lebih baru dari logout → pakai activity (artinya baru disconnect)
-            if (!logoutTs || activityTs2 > logoutTs) {
+            const logoutTs = rawLogoutAt ? new Date(rawLogoutAt).getTime() : 0;
+            const activityTs = new Date(latestActivityAt).getTime();
+            if (!logoutTs || activityTs > logoutTs) {
                 logoutTimeValue = latestActivityAt;
             }
         }
-        
         participant.logoutTime = logoutTimeValue || rawData.logoutTime || "";
     }
 
-    // Log debug
-    console.log("[Monitoring] Times:", {
-        name: participantRow.name,
-        isOnline: isCurrentlyOnline,
-        loginTime: participant.loginTime,
-        logoutTime: participant.logoutTime
-    });
-
     // Referensi internal
-    participant._supabaseParticipantId =
-        participantRow.id;
+    participant._supabaseParticipantId = participantRow.id;
+    participant._supabaseRawData = rawData;
 
-    participant._supabaseRawData =
-        rawData;
-
-    // ==========================================================
-    // PATCH: Log debug
-    // ==========================================================
     console.log("[Monitoring] Built participant:", {
         name: participant.name || participantRow.name,
         currentActivity: participant.currentActivity,
         isLoggedIn: participant.isLoggedIn,
-        lastSeenAt: participant.lastSeenAt
+        lastSeenAt: participant.lastSeenAt,
+        loginTime: participant.loginTime
     });
 
     return participant;
+}
+/* ==========================================================
+   REALTIME SUBSCRIPTION — Supabase WebSocket
+   -----------------------------------------------------------
+   Subscribe ke perubahan tabel `participants` untuk
+   project yang sedang dibuka. Update UI otomatis tanpa
+   polling 30s.
 
+   Keuntungan:
+   - Instant update (delay < 1 detik)
+   - Hemat egress (cuma push saat ada perubahan)
+   - Fallback ke polling kalau WebSocket disconnect
+
+   Setup:
+   - Supabase Realtime harus enable untuk tabel participants
+   - Dashboard → Database → Replication → participants ON
+========================================================== */
+
+var monitoringRealtimeChannel = null;
+var monitoringRealtimeProjectId = null;
+
+function startRealtimeSubscription(projectId) {
+    var sb = window.supabaseClient || window.supabase;
+    if (!sb || typeof sb.channel !== "function") {
+        console.warn("[Monitoring] Supabase Realtime tidak tersedia");
+        return;
+    }
+
+    // Kalau sudah subscribe project yang sama, skip
+    if (monitoringRealtimeChannel && monitoringRealtimeProjectId === projectId) {
+        return;
+    }
+
+    // Unsubscribe channel lama
+    if (monitoringRealtimeChannel) {
+        try {
+            sb.removeChannel(monitoringRealtimeChannel);
+        } catch (err) {
+            console.warn("[Monitoring] Remove channel error:", err);
+        }
+        monitoringRealtimeChannel = null;
+    }
+
+    console.log("[Monitoring] 🔌 Subscribing realtime for project:", projectId);
+
+    monitoringRealtimeProjectId = projectId;
+
+    monitoringRealtimeChannel = sb
+        .channel("monitoring-" + projectId)
+        .on("postgres_changes", {
+            event: "*",  // INSERT, UPDATE, DELETE
+            schema: "public",
+            table: "participants",
+            filter: "project_id=eq." + projectId
+        }, function(payload) {
+            console.log("[Monitoring] 🔔 Realtime event:", {
+                eventType: payload.eventType,
+                participantId: payload.new?.id,
+                currentActivity: payload.new?.current_activity
+            });
+
+            // Update UI langsung tanpa query
+            handleRealtimeUpdate(payload);
+        })
+        .subscribe(function(status) {
+            console.log("[Monitoring] Realtime status:", status);
+
+            if (status === "SUBSCRIBED") {
+                console.log("[Monitoring] ✅ Realtime connected");
+                setMonitoringConnectionStatus("connected");
+            } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
+                console.warn("[Monitoring] ⚠️ Realtime disconnected, fallback to polling");
+                setMonitoringConnectionStatus("disconnected");
+            }
+        });
 }
 
+function stopRealtimeSubscription() {
+    var sb = window.supabaseClient || window.supabase;
+    if (monitoringRealtimeChannel && sb) {
+        try {
+            sb.removeChannel(monitoringRealtimeChannel);
+            console.log("[Monitoring] Realtime unsubscribed");
+        } catch (err) {
+            console.warn("[Monitoring] Unsubscribe error:", err);
+        }
+        monitoringRealtimeChannel = null;
+        monitoringRealtimeProjectId = null;
+    }
+}
+
+/* ==========================================================
+   HANDLE REALTIME UPDATE
+   -----------------------------------------------------------
+   Update participant di memory + render ulang UI tanpa
+   query ulang ke Supabase.
+========================================================== */
+
+function handleRealtimeUpdate(payload) {
+    if (!selectedProject) {
+        // Belum pilih project — refresh daftar project
+        loadMonitoringProjects().then(function() {
+            renderMonitoringProjects();
+        });
+        return;
+    }
+
+    var newRow = payload.new || payload.old;
+    if (!newRow || !newRow.id) return;
+
+    var participants = selectedProject.participants || [];
+    var participantIndex = participants.findIndex(function(p) {
+        return p._supabaseParticipantId === newRow.id;
+    });
+
+    // Build participant object dari row baru
+    var updatedParticipant = buildMonitoringParticipant({
+        participant: newRow,
+        project_id: newRow.project_id
+    });
+
+    if (participantIndex >= 0) {
+        // Update existing — merge supaya field yang tidak ada di payload
+        // tidak hilang (mis. activityHistory dari query awal)
+        var existing = participants[participantIndex] || {};
+        participants[participantIndex] = Object.assign({}, existing, updatedParticipant, {
+            activityHistory: existing.activityHistory || updatedParticipant.activityHistory || [],
+            _supabaseParticipantId: newRow.id,
+            _supabaseRawData: existing._supabaseRawData || updatedParticipant._supabaseRawData
+        });
+        console.log("[Monitoring] Updated participant:", updatedParticipant.name);
+    } else {
+        // New participant (INSERT)
+        participants.push(updatedParticipant);
+        console.log("[Monitoring] New participant:", updatedParticipant.name);
+    }
+
+    selectedProject.participants = participants;
+
+    // Update juga di monitoringProjects
+    var projectIndex = monitoringProjects.findIndex(function(p) {
+        return getProjectId(p) === getProjectId(selectedProject);
+    });
+    if (projectIndex >= 0) {
+        monitoringProjects[projectIndex].participants = participants;
+    }
+
+    // Render ulang UI
+    renderParticipants(selectedProject);
+
+    // Update detail kalau sedang buka peserta itu
+    if (selectedParticipant) {
+        var selectedId = selectedParticipant._supabaseParticipantId;
+        if (selectedId === newRow.id) {
+            selectedParticipant = participants[participantIndex >= 0 ? participantIndex : participants.length - 1];
+            fillParticipantDetail(selectedProject, selectedParticipant);
+        }
+    }
+
+    updateMonitoringTimestamp();
+}
+
+/* ==========================================================
+   UI: Koneksi Status Indicator
+========================================================== */
+
+function setMonitoringConnectionStatus(status) {
+    var el = document.getElementById("realtimeStatus");
+    if (!el) return;
+
+    if (status === "connected") {
+        el.innerHTML = '<span style="color:#16a34a">●</span> Live';
+        el.title = "Realtime connected";
+    } else if (status === "disconnected") {
+        el.innerHTML = '<span style="color:#d97706">●</span> Polling';
+        el.title = "Realtime disconnected — using polling fallback";
+    }
+}
 /* ==========================================================
    LIVE MONITORING REFRESH
    Membaca ulang data participant dari Supabase
@@ -1350,98 +1522,44 @@ function renderMonitoringProjects(
    OPEN PROJECT
 ========================================================== */
 
-function openProjectMonitoring(
-    projectId
-) {
-
-    const project =
-        monitoringProjects.find(
-            function (item) {
-
-                return (
-                    getProjectId(item) ===
-                    String(projectId)
-                );
-
-            }
-        );
-
-
-    if (!project) {
-
-        alert(
-            "Project tidak ditemukan."
-        );
-
-        return;
-
-    }
-
-
-    selectedProject =
-        project;
-
-
-    selectedParticipant =
-        null;
-
-
-    renderParticipants(
-        project
-    );
-
-
-    const projectCard =
-        document.querySelector(
-            ".card:not(.detail-card):not(.participant-detail)"
-        );
-
-
-    if (projectCard) {
-
-        projectCard.style.display =
-            "none";
-
-    }
-
-
-    const participantCard =
-        document.getElementById(
-            "participantCard"
-        );
-
-
-    if (participantCard) {
-
-        participantCard.classList.add(
-            "show"
-        );
-
-    }
-
-
-    const detailCard =
-        document.getElementById(
-            "participantDetailCard"
-        );
-
-
-    if (detailCard) {
-
-        detailCard.classList.remove(
-            "show"
-        );
-
-    }
-
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
+function openProjectMonitoring(projectId) {
+    const project = monitoringProjects.find(function (p) {
+        return getProjectId(p) === String(projectId);
     });
 
-}
+    if (!project) {
+        alert("Project tidak ditemukan.");
+        return;
+    }
 
+    selectedProject = project;
+    selectedParticipant = null;
+
+    // Subscribe realtime untuk project ini
+    startRealtimeSubscription(String(projectId));
+
+    renderParticipants(project);
+
+    const projectCard = document.querySelector(
+        ".card:not(.detail-card):not(.participant-detail)"
+    );
+
+    if (projectCard) {
+        projectCard.style.display = "none";
+    }
+
+    const participantCard = document.getElementById("participantCard");
+    if (participantCard) {
+        participantCard.classList.add("show");
+    }
+
+    const detailCard = document.getElementById("participantDetailCard");
+    if (detailCard) {
+        detailCard.classList.remove("show");
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 /* ==========================================================
    RENDER PARTICIPANTS
@@ -1546,9 +1664,9 @@ function renderParticipants(
             */
 
             const isOnline =
-    isParticipantOnline(
-        participant
-    );
+                isParticipantOnline(
+                    participant
+                );
 
 
             /*
@@ -1608,15 +1726,15 @@ function renderParticipants(
 
 
             const statusActivity =
-    !isOnline
+                !isOnline
 
-        ? "Peserta sedang offline"
+                    ? "Peserta sedang offline"
 
-        : isDoingTest
+                    : isDoingTest
 
-            ? activityText
+                        ? activityText
 
-            : "Tidak sedang mengerjakan tes";
+                        : "Tidak sedang mengerjakan tes";
 
 
             /*
@@ -1936,7 +2054,7 @@ function fillParticipantDetail(
         "-";
 
 
-        /* ======================================================
+    /* ======================================================
        LOGOUT — PATCH: Fallback dari activityHistory
     ====================================================== */
 
@@ -2022,103 +2140,94 @@ function fillParticipantDetail(
 
 
     setText(
-    "detailLogout",
-    formatDateTime(logout)
-);
+        "detailLogout",
+        formatDateTime(logout)
+    );
 
-
-/* ==========================================================
-   PATCH BONUS: Statistik Pindah Tab
-   ----------------------------------------------------------
-   Menampilkan berapa kali peserta pindah tab selama sesi.
-   Ini indikator fokus peserta — pindah tab sering bisa
-   jadi sinyal peserta cari jawaban di tab/aplikasi lain.
-
-   Data dibaca dari participant.tabSwitchCount yang dikirim
-   oleh participant-dashboard.html lewat pushParticipantsPresence.
-========================================================== */
-
-var tabStatsEl = document.getElementById("detailTabStats");
-if (tabStatsEl) {
 
     /* ==========================================================
-       PILAR 3: Counter langsung + fallback dari activityHistory
+       PATCH BONUS: Statistik Pindah Tab
        ----------------------------------------------------------
-       Kalau tabSwitchCount ada → pakai itu (data baru)
-       Kalau tidak ada → hitung dari activityHistory (data lama)
+       Menampilkan berapa kali peserta pindah tab selama sesi.
+       Ini indikator fokus peserta — pindah tab sering bisa
+       jadi sinyal peserta cari jawaban di tab/aplikasi lain.
+
+       Data dibaca dari participant.tabSwitchCount yang dikirim
+       oleh participant-dashboard.html lewat pushParticipantsPresence.
     ========================================================== */
 
-    var tabCount = Number(participant.tabSwitchCount) || 0;
-    var tabLong = Number(participant.tabSwitchLongSwitches) || 0;
-    var tabDuration = Number(participant.tabSwitchTotalDuration) || 0;
+    var tabStatsEl = document.getElementById("detailTabStats");
+    if (tabStatsEl) {
 
-    // FALLBACK: Hitung dari activityHistory kalau counter = 0
-    if (tabCount === 0) {
-        var history = Array.isArray(participant.activityHistory)
-            ? participant.activityHistory
-            : [];
+        /* ==========================================================
+           PILAR 3: Counter langsung + fallback dari activityHistory
+           ----------------------------------------------------------
+           Kalau tabSwitchCount ada → pakai itu (data baru)
+           Kalau tidak ada → hitung dari activityHistory (data lama)
+        ========================================================== */
 
-        history.forEach(function(item) {
-            var text = String(
-                item?.activity ||
-                item?.description ||
-                item?.title ||
-                ""
-            ).toLowerCase();
+        var tabCount = Number(participant.tabSwitchCount) || 0;
+        var tabLong = Number(participant.tabSwitchLongSwitches) || 0;
+        var tabDuration = Number(participant.tabSwitchTotalDuration) || 0;
 
-            if (text.includes("pindah tab") || text.includes("berpindah tab")) {
-                tabCount++;
+        // FALLBACK: Hitung dari activityHistory kalau counter = 0
+        if (tabCount === 0) {
+            var history = Array.isArray(participant.activityHistory)
+                ? participant.activityHistory
+                : [];
 
-                // Cek durasi di teks
-                var match = text.match(/(\d+)\s*detik/);
-                if (match) {
-                    var sec = Number(match[1]);
-                    tabDuration += sec;
-                    if (sec > 30) {
-                        tabLong++;
+            history.forEach(function(item) {
+                var text = String(
+                    item?.activity ||
+                    item?.description ||
+                    item?.title ||
+                    ""
+                ).toLowerCase();
+
+                if (text.includes("pindah tab") || text.includes("berpindah tab")) {
+                    tabCount++;
+
+                    // Cek durasi di teks
+                    var match = text.match(/(\d+)\s*detik/);
+                    if (match) {
+                        var sec = Number(match[1]);
+                        tabDuration += sec;
+                        if (sec > 30) {
+                            tabLong++;
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        if (tabCount > 0) {
-            console.log("[View Monitoring] Counter dari history:", tabCount);
+            if (tabCount > 0) {
+                console.log("[View Monitoring] Counter dari history:", tabCount);
+            }
+        }
+
+        // TAMPILKAN
+        if (tabCount === 0) {
+            tabStatsEl.textContent = "Tidak ada pindah tab";
+            tabStatsEl.style.color = "#16a34a";
+        } else if (tabCount <= 2) {
+            tabStatsEl.textContent = tabCount + "× pindah tab (normal)";
+            tabStatsEl.style.color = "#65a30d";
+        } else if (tabCount <= 5) {
+            tabStatsEl.textContent = tabCount + "× pindah tab" +
+                (tabLong > 0 ? ", " + tabLong + "× > 30 detik ⚠️" : "");
+            tabStatsEl.style.color = "#d97706";
+            tabStatsEl.style.fontWeight = "700";
+        } else {
+            tabStatsEl.textContent = tabCount + "× pindah tab" +
+                (tabLong > 0 ? ", " + tabLong + "× > 30 detik 🚨" : "");
+            tabStatsEl.style.color = "#dc2626";
+            tabStatsEl.style.fontWeight = "800";
+        }
+
+        if (tabDuration > 0) {
+            tabStatsEl.title = "Total waktu di tab lain: " +
+                Math.round(tabDuration) + " detik";
         }
     }
-
-    // TAMPILKAN
-    if (tabCount === 0) {
-        tabStatsEl.textContent = "Tidak ada pindah tab";
-        tabStatsEl.style.color = "#16a34a";
-    } else if (tabCount <= 2) {
-        tabStatsEl.textContent = tabCount + "× pindah tab (normal)";
-        tabStatsEl.style.color = "#65a30d";
-    } else if (tabCount <= 5) {
-        tabStatsEl.textContent = tabCount + "× pindah tab" +
-            (tabLong > 0 ? ", " + tabLong + "× > 30 detik ⚠️" : "");
-        tabStatsEl.style.color = "#d97706";
-        tabStatsEl.style.fontWeight = "700";
-    } else {
-        tabStatsEl.textContent = tabCount + "× pindah tab" +
-            (tabLong > 0 ? ", " + tabLong + "× > 30 detik 🚨" : "");
-        tabStatsEl.style.color = "#dc2626";
-        tabStatsEl.style.fontWeight = "800";
-    }
-
-    if (tabDuration > 0) {
-        tabStatsEl.title = "Total waktu di tab lain: " +
-            Math.round(tabDuration) + " detik";
-    }
-}
-
-/* ======================================================
-   ACTIVITY
-====================================================== */
-
-renderParticipantActivity(
-    participant
-);
-
 
     /* ======================================================
        ACTIVITY
@@ -2297,10 +2406,19 @@ function renderParticipantActivity(
                 participant
             );
 
-            const isOnline =
-    isParticipantOnline(
-        participant
-    );
+        // ======================================================
+        // FIX: GUNAKAN isParticipantOnline() YANG SUDAH DIPERBAIKI
+        // ------------------------------------------------------
+        // Sebelumnya fungsi ini menghitung sendiri umur heartbeat
+        // dari participant.lastSeenAt saja. Sekarang pakai
+        // isParticipantOnline() supaya konsisten dengan tabel
+        // peserta (yang juga pakai isParticipantOnline).
+        // ======================================================
+
+        const isOnline =
+            isParticipantOnline(
+                participant
+            );
 
         const rawActivity =
             String(
@@ -2326,159 +2444,136 @@ function renderParticipantActivity(
             participant?.isLoggedIn === "true";
 
         /* ======================================================
-   PATCH FASE 2: 3 STATUS — Online / Idle / Offline
-   ------------------------------------------------------
-   PRIORITAS:
-   1. Completed   → "Assessment selesai"
-   2. Explicit Logout → "Offline" (peserta klik tombol logout)
-   3. > 30 menit tanpa heartbeat → "Offline" (tab ditutup lama)
-   4. > 2 menit tanpa heartbeat  → "Idle" (tab background sementara)
-   5. Sedang mengerjakan tes → "Sedang mengerjakan tes"
-   6. Online (heartbeat < 2 menit) → "Online"
+           PATCH FASE 2: 3 STATUS — Online / Idle / Offline
+           ------------------------------------------------------
+           PRIORITAS:
+           1. Completed   → "Assessment selesai"
+           2. Explicit Logout → "Offline" (peserta klik tombol logout)
+           3. Tidak online (isParticipantOnline = false) → "Offline"
+           4. Sedang mengerjakan tes → "Sedang mengerjakan tes"
+           5. Online (heartbeat < 2 menit) → "Online"
 
-   Efek: Log "keluar palsu" hilang. Peserta yang tinggal tab
-   beberapa menit tampil sebagai "Idle", bukan "Offline".
-====================================================== */
+           Efek: Log "keluar palsu" hilang. Peserta yang tinggal tab
+           beberapa menit tampil sebagai "Idle", bukan "Offline".
+        ====================================================== */
 
-let displayActivity = "Offline";
-let displaySubtext = "Peserta tidak terhubung";
+        let displayActivity = "Offline";
+        let displaySubtext = "Peserta tidak terhubung";
 
-/* ======================================================
-   HITUNG UMUR HEARTBEAT
-====================================================== */
+        /* ======================================================
+           CEK LOGOUT EKSPLISIT
+           Peserta klik tombol Logout → logoutTime terisi
+        ====================================================== */
 
-const lastSeen = participant.lastSeenAt || participant.lastSeen || "";
-const lastSeenTime = lastSeen ? new Date(lastSeen).getTime() : 0;
-const ageSec = lastSeenTime > 0 ? (Date.now() - lastSeenTime) / 1000 : Infinity;
-
-const IDLE_THRESHOLD_SEC = 30 * 60;   // 30 menit → anggap Offline
-const ONLINE_THRESHOLD_SEC = 2 * 60;  // 2 menit → masih Online
-
-/* ======================================================
-   CEK LOGOUT EKSPLISIT
-   Peserta klik tombol Logout → logoutTime terisi
-====================================================== */
-
-const explicitLogout = !!(
-    participant.logoutTime ||
-    participant.loggedOutAt ||
-    participant.logoutAt ||
-    participant.lastLogoutAt
-);
-
-/* ======================================================
-   STATUS PARTICIPANT (Completed / dll)
-====================================================== */
-
-const participantStatus =
-    String(
-        participant?.status ||
-        participant?.onlineStatus ||
-        ""
-    )
-    .toLowerCase()
-    .trim();
-
-
-/* ======================================================
-   PRIORITAS 1: COMPLETED
-====================================================== */
-
-if (
-    participantStatus === "completed" ||
-    participantStatus === "complete"
-) {
-
-    displayActivity = "Assessment selesai";
-    displaySubtext = "Peserta telah menyelesaikan assessment";
-
-
-/* ======================================================
-   PRIORITAS 2: EXPLICIT LOGOUT
-   Peserta klik tombol Logout
-====================================================== */
-
-} else if (explicitLogout) {
-
-    displayActivity = "Offline";
-    displaySubtext = "Peserta sudah logout";
-
-
-/* ======================================================
-   PRIORITAS 3: OFFLINE (tidak heartbeat > 30 menit)
-   Tab sudah ditutup lama / tidak aktif
-====================================================== */
-
-} else if (ageSec > IDLE_THRESHOLD_SEC) {
-
-    displayActivity = "Offline";
-    displaySubtext = "Tidak aktif > 30 menit";
-
-
-/* ======================================================
-   PRIORITAS 4: IDLE (2-30 menit tanpa heartbeat)
-   Tab terbuka tapi tidak aktif sementara
-====================================================== */
-
-} else if (ageSec > ONLINE_THRESHOLD_SEC) {
-
-    displayActivity = "Idle";
-    displaySubtext = "Tidak aktif sementara";
-
-
-/* ======================================================
-   PRIORITAS 5: SEDANG MENGERJAKAN TES
-====================================================== */
-
-} else if (
-    isOnline &&
-    isDoingTest
-) {
-
-    const testOrdinal =
-        Number.isFinite(Number(participant?.currentAssessmentIndex))
-            ? (Number(participant.currentAssessmentIndex) + 1)
-            : null;
-
-    displayActivity =
-        rawActivity ||
-        (
-            participant?.currentTest
-                ? "Sedang mengerjakan tes" +
-                  (testOrdinal ? " " + testOrdinal : "") +
-                  " (" +
-                  participant.currentTest +
-                  ")"
-                : "Sedang mengerjakan tes"
+        const explicitLogout = !!(
+            participant.logoutTime ||
+            participant.loggedOutAt ||
+            participant.logoutAt ||
+            participant.lastLogoutAt
         );
 
-    displaySubtext = "Sedang berlangsung";
+        /* ======================================================
+           STATUS PARTICIPANT (Completed / dll)
+        ====================================================== */
+
+        const participantStatus =
+            String(
+                participant?.status ||
+                participant?.onlineStatus ||
+                ""
+            )
+            .toLowerCase()
+            .trim();
 
 
-/* ======================================================
-   PRIORITAS 6: ONLINE
-   Heartbeat < 2 menit
-====================================================== */
+        /* ======================================================
+           PRIORITAS 1: COMPLETED
+        ====================================================== */
 
-} else if (
-    isOnline &&
-    isLoggedIn
-) {
+        if (
+            participantStatus === "completed" ||
+            participantStatus === "complete"
+        ) {
 
-    displayActivity = "Online";
-    displaySubtext = "Siap mengerjakan tes";
+            displayActivity = "Assessment selesai";
+            displaySubtext = "Peserta telah menyelesaikan assessment";
 
 
-/* ======================================================
-   FALLBACK
-====================================================== */
+        /* ======================================================
+           PRIORITAS 2: EXPLICIT LOGOUT
+           Peserta klik tombol Logout
+        ====================================================== */
 
-} else {
+        } else if (explicitLogout) {
 
-    displayActivity = "Offline";
-    displaySubtext = "Peserta tidak terhubung";
+            displayActivity = "Offline";
+            displaySubtext = "Peserta sudah logout";
 
-}
+
+        /* ======================================================
+           PRIORITAS 3: TIDAK ONLINE (heartbeat mati)
+        ====================================================== */
+
+        } else if (!isOnline) {
+
+            displayActivity = "Offline";
+            displaySubtext = "Peserta tidak terhubung";
+
+
+        /* ======================================================
+           PRIORITAS 4: SEDANG MENGERJAKAN TES
+        ====================================================== */
+
+        } else if (
+            isOnline &&
+            isDoingTest
+        ) {
+
+            const testOrdinal =
+                Number.isFinite(Number(participant?.currentAssessmentIndex))
+                    ? (Number(participant.currentAssessmentIndex) + 1)
+                    : null;
+
+            displayActivity =
+                rawActivity ||
+                (
+                    participant?.currentTest
+                        ? "Sedang mengerjakan tes" +
+                          (testOrdinal ? " " + testOrdinal : "") +
+                          " (" +
+                          participant.currentTest +
+                          ")"
+                        : "Sedang mengerjakan tes"
+                );
+
+            displaySubtext = "Sedang berlangsung";
+
+
+        /* ======================================================
+           PRIORITAS 5: ONLINE
+           Heartbeat < 2 menit
+        ====================================================== */
+
+        } else if (
+            isOnline &&
+            isLoggedIn
+        ) {
+
+            displayActivity = "Online";
+            displaySubtext = "Siap mengerjakan tes";
+
+
+        /* ======================================================
+           FALLBACK
+        ====================================================== */
+
+        } else {
+
+            displayActivity = "Offline";
+            displaySubtext = "Peserta tidak terhubung";
+
+        }
+
         currentBox.classList.toggle(
             "is-active",
             active
@@ -2670,75 +2765,69 @@ if (
    ONLINE = HEARTBEAT MASIH AKTIF
 ========================================================== */
 
-function isParticipantOnline(
-    participant
-) {
+function isParticipantOnline(participant) {
+    if (!participant) return false;
 
-    if (!participant) {
-        return false;
-    }
-
-
-    /*
-       Logout eksplisit = OFFLINE.
-    */
-
+    // Cek explicit logout dulu
     if (
-        participant.isLoggedIn !== true
+        participant.logoutTime ||
+        participant.loggedOutAt ||
+        participant.logoutAt ||
+        participant.lastLogoutAt
     ) {
         return false;
     }
 
+    // Cek is_logged_in (handle boolean & string)
+    const isLoggedIn =
+        participant.isLoggedIn === true ||
+        participant.isLoggedIn === "true" ||
+        participant.is_logged_in === true ||
+        participant.is_logged_in === "true";
 
-    /*
-       Online hanya jika heartbeat
-       masih dalam batas waktu.
-    */
+    if (!isLoggedIn) return false;
 
-    const lastSeen =
-        participant.lastSeenAt ||
-        participant.lastSeen ||
-        "";
+    // Cari timestamp terbaru dari berbagai field
+    const candidates = [
+        participant.lastSeenAt,
+        participant.lastSeen,
+        participant.activityUpdatedAt,
+        participant.activity_updated_at,
+        participant.last_activity_at,
+        participant.loginTime,
+        participant.login_at,
+        participant.last_login_at
+    ].filter(Boolean);
 
-
-    if (!lastSeen) {
-        return false;
+    if (candidates.length === 0) {
+        // is_logged_in = true tapi tidak ada timestamp sama sekali
+        // → anggap online (lebih baik false positive daripada false negative)
+        console.warn(
+            "[Monitoring] isLoggedIn=true tapi tidak ada timestamp, assume online:",
+            participant.name
+        );
+        return true;
     }
 
-
-    const lastSeenTime =
-        new Date(lastSeen).getTime();
-
-
-    if (
-        !Number.isFinite(
-            lastSeenTime
-        )
-    ) {
-        return false;
+    // Ambil timestamp paling baru
+    let latestTs = 0;
+    for (const value of candidates) {
+        const ts = new Date(value).getTime();
+        if (Number.isFinite(ts) && ts > latestTs) {
+            latestTs = ts;
+        }
     }
 
+    if (latestTs === 0) return true; // fallback sama seperti di atas
 
-        // PATCH: ONLINE_TIMEOUT harus lebih besar dari heartbeat interval.
-    // Heartbeat peserta sekarang 60 detik (lihat participant-dashboard.html),
-    // jadi timeout diset 120 detik (2×) supaya peserta tidak salah
-    // dianggap offline tepat sebelum heartbeat berikutnya datang.
-    const ONLINE_TIMEOUT =
-        120 * 1000;  // 120 detik = 2 menit
+    const age = Date.now() - latestTs;
+    const ONLINE_TIMEOUT = 120 * 1000; // 2 menit
 
+    // Toleransi clock skew: kalau timestamp di masa depan, anggap online
+    if (age < 0) return true;
 
-    const age =
-        Date.now() -
-        lastSeenTime;
-
-
-    return (
-        age >= 0 &&
-        age <= ONLINE_TIMEOUT
-    );
-
+    return age <= ONLINE_TIMEOUT;
 }
-
 /* ==========================================================
    AUTO LOGOUT RECORD
    Mencatat waktu logout jika participant disconnect

@@ -356,7 +356,50 @@ function canWriteProjects() {
 // - Teks → lowercase
 // - Kosong → "gen"
 // ============================================
-var rawCode = String(item.assessmentCode || "GEN").trim();
+// ============================================================
+// FIX P1.1: Normalisasi assessment_code
+// ------------------------------------------------------------
+// - Jangan fallback ke "GEN"
+// - Fallback ke resultType kalau assessmentCode kosong
+// - Mapping nama lengkap ke kode
+// - Validasi kode akhir
+// ============================================================
+var rawCode = String(item.assessmentCode || "").trim().toLowerCase();
+
+// Kalau kosong, fallback ke resultType
+if (!rawCode) {
+    rawCode = String(item.resultType || "").trim().toLowerCase();
+}
+
+// Mapping nama lengkap → kode
+var codeMap = {
+    "vap test": "vap",
+    "work performance & sustained attention assessment": "vap",
+    "intray exercise": "intray",
+    "in-tray exercise": "intray",
+    "leadership situational judgment test": "lsjt",
+    "managerial situational judgment test": "msjt",
+    "tes penalaran khusus": "tpdk",
+    "papi kostick": "papi",
+    "disc personality": "disc"
+};
+
+if (codeMap[rawCode]) {
+    rawCode = codeMap[rawCode];
+}
+
+// Validasi
+var validCodes = ["vap", "intray", "lsjt", "msjt", "tpdk", "papi", "disc"];
+if (!validCodes.includes(rawCode)) {
+    console.warn("[TS-Sync] Kode tidak valid, fallback ke resultType:", {
+        input: item.assessmentCode,
+        resultType: item.resultType,
+        normalized: rawCode
+    });
+    rawCode = String(item.resultType || "unknown").toLowerCase();
+}
+
+var code = rawCode;
 var UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Map UUID → lowercase code (dari tabel assessments)
@@ -371,12 +414,31 @@ var UUID_TO_CODE_MAP = {
 
 var code;
 if (UUID_REGEX.test(rawCode)) {
-    code = UUID_TO_CODE_MAP[rawCode.toLowerCase()] || "gen";
-    if (code === "gen") {
-        console.warn("[TS-Sync] UUID tidak dikenal, fallback ke 'gen':", rawCode);
+    // FIX P1.1: JANGAN fallback ke "gen"
+    // Kalau UUID tidak dikenal, pakai resultType sebagai fallback
+    code = UUID_TO_CODE_MAP[rawCode.toLowerCase()];
+    
+    if (!code) {
+        console.warn("[TS-Sync] UUID tidak dikenal, fallback ke resultType:", {
+            uuid: rawCode,
+            resultType: item.resultType,
+            participant: item.participantId
+        });
+        // Fallback ke resultType (lowercase) — BUKAN "gen"
+        code = String(item.resultType || "unknown").toLowerCase();
     }
 } else {
     code = rawCode.toLowerCase();
+}
+
+// FIX P1.1: Validasi kode akhir
+var validCodes = ["vap", "intray", "lsjt", "msjt", "tpdk", "papi", "disc"];
+if (!validCodes.includes(code) && code !== "unknown") {
+    console.warn("[TS-Sync] Kode tidak valid, fallback ke resultType:", {
+        input: code,
+        resultType: item.resultType
+    });
+    code = String(item.resultType || "unknown").toLowerCase();
 }
 
         return {

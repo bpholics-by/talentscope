@@ -162,6 +162,15 @@ tr:hover td{background:#f8fafc}
   </div>
 </div>
 <script>
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({
+        '&':'&amp;',
+        '<':'&lt;',
+        '>':'&gt;',
+        '"':'&quot;',
+        "'":'&#039;'
+    }[c]));
+}
 /* =========================================================
    VAP REPORT VIEWER v4.1 — FEAST-inspired redesign
    PATCH: Bungkus dalam initReport() + expose ke window
@@ -330,7 +339,7 @@ function initReport() {
             console.log("[VAP] Refresh selesai:", allResults.length, "hasil");
         } catch (err) {
             console.error("[VAP Report] Error:", err);
-            if (rc) rc.innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${err.message}</p></div>`;
+            if (rc) rc.innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${escapeHtml(err.message)}</p></div>`;
         }
     }
 
@@ -520,7 +529,7 @@ console.log("[VAP Debug] r.raw_data:", r?.raw_data);
               <div class="hero-label">DETAILED ASSESSMENT RESULT</div>
               <h2 class="hero-title">VAP — Work Performance Profile</h2>
               <p class="hero-sub">
-                ${r.participantName || r.participantId} • ${fmtDate(r.submittedAt)} • 
+                ${escapeHtml(r.participantName || r.participantId)} • ${fmtDate(r.submittedAt)} • 
                 Work Performance &amp; Sustained Attention Assessment
               </p>
               <div class="overall-panel">
@@ -589,10 +598,10 @@ console.log("[VAP Debug] r.raw_data:", r?.raw_data);
                 <div class="grid-2">
                   <div>
                     <h4 style="font-size:14px;margin:0 0 10px;color:#0f172a">Metadata</h4>
-                    <div class="stat-line"><span>Project ID</span><b>${r.projectId || "-"}</b></div>
-                    <div class="stat-line"><span>Participant ID</span><b>${r.participantId || "-"}</b></div>
-                    <div class="stat-line"><span>Nama Peserta</span><b>${r.participantName || "-"}</b></div>
-                    <div class="stat-line"><span>Assessment</span><b>${r.assessmentName || "VAP"}</b></div>
+                    <div class="stat-line"><span>Project ID</span><b><b>${escapeHtml(r.projectId || "-")}</b></div>
+                    <div class="stat-line"><span>Participant ID</span><b><b>${escapeHtml(r.participantId || "-")}</b></div>
+                    <div class="stat-line"><span>Nama Peserta</span><b><b>${escapeHtml(r.participantName || "-")}</b></div>
+                    <div class="stat-line"><span>Assessment</span><b><b>${escapeHtml(r.assessmentName || "VAP")}</b></div>
                     <div class="stat-line"><span>Submitted</span><b>${fmtDate(r.submittedAt)}</b></div>
                     <div class="stat-line"><span>Version</span><b>v${r.version || 1}</b></div>
                     <div class="stat-line"><span>Data Source</span><b>${r._source === "supabase" ? "☁ Supabase" : "📦 LocalStorage"}</b></div>
@@ -879,7 +888,7 @@ console.log("[VAP Debug] r.raw_data:", r?.raw_data);
             const overall = mean(dims.map(k => d[k] || 0));
             html += `
               <tr>
-                <td><b>${r.participantName || r.participantId || "-"}</b></td>
+                <td><b><b>${escapeHtml(r.participantName || r.participantId || "-")}</b></td>
                 <td style="font-size:11px;color:#64748b">${fmtDate(r.submittedAt)}</td>
                 ${dims.map(k => { const val = d[k] || 0; return `<td><span class="pill ${clsClass(val)}">${val.toFixed(1)}</span></td>`; }).join("")}
                 <td><b>${overall.toFixed(1)}</b></td>

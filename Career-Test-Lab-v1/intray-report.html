@@ -611,8 +611,9 @@ async function refreshList(){
     }
   } catch(err) {
     console.error("[INTRAY] Refresh error:", err);
-    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${err.message}</p></div>`;
-  }
+    // FIX XSS: escape err.message sebelum render
+    el("reportContainer").innerHTML = `<div class="card empty"><h3>⚠ Gagal memuat</h3><p>${escapeHtml(err.message)}</p></div>`;
+}
 }
 
 function renderDropdown(){
