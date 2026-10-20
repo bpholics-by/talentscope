@@ -1,4 +1,4 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8">
+﻿<!doctype html><html lang="id"><head><meta charset="utf-8">
     <script>
     // FIX: Matikan auto-sync di halaman tes — hemat egress
     window.__TS_DISABLE_AUTO_SYNC = true;
@@ -7,7 +7,7 @@
     <script src="js/config.js"></script>
     <script src="js/tab-switch-warning.js"></script>
     <!-- SUPABASE (untuk sinkronisasi activity peserta real-time ke database) -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
     <script src="js/supabase-client.js?v=7"></script>
         <script src="js/session-helper.js?v=1"></script>
         <script src="js/auth-guard.js?v=14"></script>
@@ -914,7 +914,7 @@ function updateStore(storeKey, status, activity, historyText, historyType, force
 
 
 /* ==========================================================
-   SYNC ACTIVITY TO SUPABASE � Real-time monitoring
+   SYNC ACTIVITY TO SUPABASE � Real-time monitoring
 ========================================================== */
 async function syncActivityToSupabase(activity, testName, type) {
     const sb = window.supabaseClient || window.supabase;
