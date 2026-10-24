@@ -1,355 +1,363 @@
-/* ==========================================================
-   CALCULATE TPDK SCORE — SECURED v3
-   ==========================================================
-   
-   SECURITY LAYERS:
-   1. JWT verification
-   2. Participant ownership check (peserta hanya untuk dirinya)
-   3. Project membership check (HEX COMPARE workaround)
-   4. Rate limit (maks 5 submit per jam per peserta)
-   5. Audit logging
-   6. Input validation
-   7. Support array DAN object answers format
-========================================================== */
+// =========================================================
+// Edge Function: calculate-tpdk-score (v3 — 70 item + IQ + kelebihan/kelemahan)
+// Deploy: supabase functions deploy calculate-tpdk-score
+// =========================================================
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ============================================================
-// HELPER: Canonical role
-// ============================================================
-function normalizeRole(rawRole: string): string {
-    const role = String(rawRole || "").toLowerCase().trim().replace(/\s+/g, "_");
-    if (role === "system_administrator" || role === "system_admin") return "system_admin";
-    if (role === "administrator" || role === "admin") return "administrator";
-    if (role === "client_administrator" || role === "client_admin") return "client_admin";
-    if (role === "asesor" || role === "assessor") return "asesor";
-    if (role === "peserta" || role === "participant") return "peserta";
-    return role;
+// ============ KUNCI JAWABAN 70 ITEM ============
+const ANSWER_KEY: Record<string, string> = {
+  // A: Verbal (20)
+  A01:"C",A02:"A",A03:"D",A04:"A",A05:"D",A06:"B",A07:"A",A08:"D",A09:"B",A10:"B",
+  A11:"C",A12:"B",A13:"D",A14:"C",A15:"C",A16:"C",A17:"C",A18:"C",A19:"C",A20:"C",
+  // B: Numerik (20)
+  B01:"B",B02:"C",B03:"B",B04:"B",B05:"C",B06:"B",B07:"C",B08:"C",B09:"C",B10:"A",
+  B11:"A",B12:"A",B13:"C",B14:"C",B15:"B",B16:"C",B17:"C",B18:"B",B19:"C",B20:"B",
+  // C: Spasial (20)
+  C01:"C",C02:"A",C03:"D",C04:"A",C05:"B",C06:"C",C07:"C",C08:"A",C09:"B",C10:"C",
+  C11:"A",C12:"D",C13:"C",C14:"C",C15:"A",C16:"B",C17:"A",C18:"A",C19:"A",C20:"B",
+  // D: Logika/Analisa-Sintesa (10)
+  D01:"A",D02:"A",D03:"A",D04:"D",D05:"B",D06:"D",D07:"B",D08:"B",D09:"B",D10:"B",
+};
+
+const MAX_PER_SUBTEST = { A: 20, B: 20, C: 20, D: 10 } as const;
+
+// Norma placeholder (WAJIB dikalibrasi setelah pilot N ≥ 200)
+const NORMS = {
+  A: { mean: 11.0, sd: 3.5, max: 20 },
+  B: { mean: 9.0,  sd: 4.0, max: 20 },
+  C: { mean: 12.0, sd: 4.0, max: 20 },
+  D: { mean: 6.5,  sd: 2.0, max: 10 },
+  TOTAL: { mean: 38.5, sd: 10.0, max: 70 },
+};
+
+// ============ UTIL STATISTIK ============
+function scoreToTScore(raw: number, mean: number, sd: number): number {
+  return 50 + 10 * ((raw - mean) / sd);
 }
 
-// ============================================================
-// HELPER: Hex comparison (bypass Supabase string === bug)
-// ============================================================
-function toHex(s: any): string {
-    return [...String(s || "")].map(c => c.charCodeAt(0).toString(16)).join("");
+// T-score → IQ (mean 100, SD 15)
+function tScoreToIQ(t: number): number {
+  return 100 + 15 * ((t - 50) / 10);
 }
 
-function uuidEquals(a: any, b: any): boolean {
-    const aHex = toHex(String(a || "").trim());
-    const bHex = toHex(String(b || "").trim());
-    if (aHex === bHex) return true;
-    // Fallback: prefix 8 char match (UUID unik di 8 char pertama)
-    const aPrefix = String(a || "").trim().toLowerCase().substring(0, 8);
-    const bPrefix = String(b || "").trim().toLowerCase().substring(0, 8);
-    return aPrefix.length === 8 && aPrefix === bPrefix;
+// Aproksimasi CDF normal (Abramowitz-Stegun)
+function normalCDF(z: number): number {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989423 * Math.exp(-z * z / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+  return z > 0 ? 1 - p : p;
 }
 
-// Role yang bisa hitung skor (admin bisa hitung untuk siapapun)
-const ADMIN_ROLES = ["system_admin", "administrator"];
-
-// Rate limit
-const MAX_SUBMITS_PER_HOUR = 5;
-
-// ============================================================
-// HELPER: JSON Response
-// ============================================================
-function jsonResponse(data: any, status = 200) {
-    return new Response(
-        JSON.stringify(data),
-        { status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+function tToPercentile(t: number): number {
+  const z = (t - 50) / 10;
+  return Math.round(normalCDF(z) * 1000) / 10;
 }
 
-// ============================================================
-// HELPER: Rate limit (maks 5 submit/jam per peserta)
-// ============================================================
-async function checkRateLimit(
-    supabaseAdmin: any,
-    participantId: string,
-    projectId: string
-): Promise<{ allowed: boolean; count: number }> {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    
-    const { count, error } = await supabaseAdmin
-        .from("audit_log")
-        .select("*", { count: "exact", head: true })
-        .eq("action", "calculate_tpdk_score")
-        .eq("target_user_id", participantId)
-        .gte("created_at", oneHourAgo);
-    
-    if (error) {
-        return { allowed: true, count: 0 };
+// ============ KATEGORI ============
+function tCategory(t: number): string {
+  if (t >= 70) return "Sangat Tinggi";
+  if (t >= 60) return "Tinggi";
+  if (t >= 50) return "Di Atas Rata-rata";
+  if (t >= 40) return "Rata-rata";
+  if (t >= 30) return "Di Bawah Rata-rata";
+  return "Rendah";
+}
+
+function iqCategory(iq: number): string {
+  if (iq >= 130) return "Sangat Superior";
+  if (iq >= 120) return "Superior";
+  if (iq >= 110) return "Di Atas Rata-rata";
+  if (iq >= 90)  return "Rata-rata";
+  if (iq >= 80)  return "Di Bawah Rata-rata";
+  if (iq >= 70)  return "Borderline";
+  return "Sangat Rendah";
+}
+
+function iqDescription(iq: number): string {
+  if (iq >= 130) return "Kecerdasan umum sangat superior; kemampuan analisis dan pemecahan masalah kompleks di atas 98% populasi.";
+  if (iq >= 120) return "Kecerdasan umum superior; mampu menangani masalah abstrak dan kompleks dengan sangat baik.";
+  if (iq >= 110) return "Kecerdasan umum di atas rata-rata; cepat memahami pola dan konsep baru.";
+  if (iq >= 90)  return "Kecerdasan umum pada level rata-rata; mampu menyelesaikan tugas analitis standar.";
+  if (iq >= 80)  return "Kecerdasan umum di bawah rata-rata; memerlukan pendampingan pada tugas analitis kompleks.";
+  if (iq >= 70)  return "Kecerdasan umum borderline; disarankan pendampingan intensif pada tugas penalaran.";
+  return "Kecerdasan umum sangat rendah; membutuhkan dukungan khusus dalam tugas penalaran.";
+}
+
+// ============ KELEBIHAN & KELEMAHAN ============
+type SubtestInfo = {
+  code: string;
+  name: string;
+  raw: number;
+  max: number;
+  t: number;
+  category: string;
+  pct: number;
+};
+
+function deriveStrengthsWeaknesses(subs: SubtestInfo[]): {
+  kelebihan: string[];
+  kelemahan: string[];
+  rekomendasi: string[];
+} {
+  const kelebihan: string[] = [];
+  const kelemahan: string[] = [];
+  const rekomendasi: string[] = [];
+
+  const STRENGTH_TEMPLATES: Record<string, string[]> = {
+    A: [
+      "Kemampuan verbal kuat: mudah memahami bacaan kompleks, menangkap nuansa makna, dan menyusun argumen.",
+      "Cakap dalam analogi kata dan klasifikasi konsep — berguna untuk analisis dokumen & komunikasi tertulis.",
+    ],
+    B: [
+      "Kemampuan numerik kuat: cepat dan akurat dalam perhitungan, deret angka, dan penalaran kuantitatif.",
+      "Mampu mengolah data numerik dan menemukan pola angka dengan efisien.",
+    ],
+    C: [
+      "Kemampuan spasial-perseptual kuat: baik dalam visualisasi, rotasi mental, dan pencerminan figur.",
+      "Cepat menangkap hubungan ruang & bentuk — berguna untuk desain, navigasi, dan analisis visual.",
+    ],
+    D: [
+      "Kemampuan analisa-sintesa kuat: mampu menghubungkan informasi, menyimpulkan, dan mengambil keputusan berbasis cerita.",
+      "Logika praktis tajam — baik dalam menganalisis situasi kompleks dan menemukan akar masalah.",
+    ],
+  };
+
+  const WEAKNESS_TEMPLATES: Record<string, string[]> = {
+    A: [
+      "Kemampuan verbal perlu diperkuat: latihan membaca kritis, analogi, dan klasifikasi kata.",
+      "Perhatikan ketelitian dalam memahami hubungan makna antar kata.",
+    ],
+    B: [
+      "Kemampuan numerik perlu diperkuat: latihan aritmatika, deret angka, dan estimasi cepat.",
+      "Disarankan berlatih soal hitung dan pola angka secara rutin.",
+    ],
+    C: [
+      "Kemampuan spasial perlu diperkuat: latihan rotasi mental, analogi figur, dan pencerminan.",
+      "Perhatikan detail visual dan hubungan ruang pada gambar.",
+    ],
+    D: [
+      "Kemampuan analisa-sintesa perlu diperkuat: latihan membaca cerita panjang, menyimpulkan, dan mengidentifikasi asumsi.",
+      "Disarankan berlatih soal logika praktis dan studi kasus.",
+    ],
+  };
+
+  const REKOM_TEMPLATES: Record<string, string[]> = {
+    A: ["Ikuti pelatihan business writing & critical reading.", "Biasakan membuat ringkasan bacaan panjang."],
+    B: ["Latihan mental math & analisis data dasar.", "Gunakan spreadsheet untuk melatih pola angka."],
+    C: ["Latihan visual reasoning (puzzle, figural).", "Gunakan aplikasi latihan spasial 15 menit/hari."],
+    D: ["Ikuti pelatihan problem solving & case study.", "Biasakan menulis kesimpulan dari bacaan panjang."],
+  };
+
+  // Hitung rata-rata T
+  const avgT = subs.reduce((s, x) => s + x.t, 0) / subs.length;
+
+  subs.forEach((s) => {
+    const isStrength = s.t >= 55;
+    const isWeakness = s.t <= 45;
+    if (isStrength) {
+      const idx = kelebihan.length % STRENGTH_TEMPLATES[s.code].length;
+      kelebihan.push(STRENGTH_TEMPLATES[s.code][idx]);
     }
-    
-    return { allowed: (count || 0) < MAX_SUBMITS_PER_HOUR, count: count || 0 };
+    if (isWeakness) {
+      const idx = kelemahan.length % WEAKNESS_TEMPLATES[s.code].length;
+      kelemahan.push(WEAKNESS_TEMPLATES[s.code][idx]);
+      const ridx = rekomendasi.length % REKOM_TEMPLATES[s.code].length;
+      rekomendasi.push(REKOM_TEMPLATES[s.code][ridx]);
+    }
+  });
+
+  // Fallback jika semua merata
+  if (kelebihan.length === 0) {
+    kelebihan.push("Profil kemampuan relatif merata; tidak ada keunggulan mencolok pada satu subtes.");
+  }
+  if (kelemahan.length === 0) {
+    kelemahan.push("Tidak ditemukan kelemahan signifikan; kemampuan relatif seimbang di semua subtes.");
+  }
+  // Rekomendasi umum
+  if (rekomendasi.length === 0) {
+    rekomendasi.push("Pertahankan latihan kognitif rutin untuk menjaga performa penalaran.");
+  }
+
+  return { kelebihan, kelemahan, rekomendasi };
 }
 
-// ============================================================
-// MAIN HANDLER
-// ============================================================
-Deno.serve(async (req) => {
-    if (req.method === "OPTIONS") {
-        return new Response(null, { headers: corsHeaders });
+// ============ HANDLER ============
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS_HEADERS });
+
+  try {
+    const body = await req.json();
+    const { projectId, participantId, answers } = body || {};
+
+    if (!projectId || !participantId || !Array.isArray(answers)) {
+      return json({ success: false, error: "projectId, participantId, answers wajib diisi" }, 400);
     }
-    
-    if (req.method !== "POST") {
-        return jsonResponse({ success: false, error: "Method not allowed" }, 405);
+    if (answers.length !== 70) {
+      return json({ success: false, error: `Jumlah jawaban harus 70, diterima ${answers.length}` }, 400);
     }
-    
+
+    // Susun kode item
+    const codes: string[] = [];
+    for (let i = 1; i <= 20; i++) codes.push("A" + String(i).padStart(2, "0"));
+    for (let i = 1; i <= 20; i++) codes.push("B" + String(i).padStart(2, "0"));
+    for (let i = 1; i <= 20; i++) codes.push("C" + String(i).padStart(2, "0"));
+    for (let i = 1; i <= 10; i++) codes.push("D" + String(i).padStart(2, "0"));
+
+    // Hitung skor per subtes + detail
+    const perSubtest: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+    const detail: Array<{ code: string; selected: string | null; key: string; correct: boolean }> = [];
+
+    answers.forEach((ans: string | null, idx: number) => {
+      const code = codes[idx];
+      const key = ANSWER_KEY[code];
+      const sub = code[0];
+      const correct = ans === key;
+      if (correct) perSubtest[sub] += 1;
+      detail.push({ code, selected: ans, key, correct });
+    });
+
+    // Subtest info + T-score
+    const subs: SubtestInfo[] = [
+      { code: "A", name: "Verbal",         raw: perSubtest.A, max: 20, t: 0, category: "", pct: 0 },
+      { code: "B", name: "Numerik",        raw: perSubtest.B, max: 20, t: 0, category: "", pct: 0 },
+      { code: "C", name: "Spasial",        raw: perSubtest.C, max: 20, t: 0, category: "", pct: 0 },
+      { code: "D", name: "Analisa-Sintesa", raw: perSubtest.D, max: 10, t: 0, category: "", pct: 0 },
+    ];
+
+    subs.forEach((s) => {
+      const n = NORMS[s.code as keyof typeof NORMS];
+      s.t = Math.round(scoreToTScore(s.raw, n.mean, n.sd) * 10) / 10;
+      s.pct = Math.round((s.raw / s.max) * 1000) / 10;
+      s.category = tCategory(s.t);
+    });
+
+    const totalRaw = subs.reduce((sum, s) => sum + s.raw, 0);
+    const tTotal = Math.round(scoreToTScore(totalRaw, NORMS.TOTAL.mean, NORMS.TOTAL.sd) * 10) / 10;
+    const iqEstimate = Math.round(tScoreToIQ(tTotal) * 10) / 10;
+    const iqPct = tToPercentile(tTotal);
+
+    const { kelebihan, kelemahan, rekomendasi } = deriveStrengthsWeaknesses(subs);
+
+    // Payload hasil lengkap
+    const result = {
+      success: true,
+      perSubtest,
+      maxPerSubtest: MAX_PER_SUBTEST,
+      raw: {
+        verbal: subs[0].raw, numerik: subs[1].raw,
+        spasial: subs[2].raw, analisa: subs[3].raw,
+        total: totalRaw,
+      },
+      tScore: {
+        verbal: subs[0].t, numerik: subs[1].t,
+        spasial: subs[2].t, analisa: subs[3].t,
+        total: tTotal,
+      },
+      kategori: {
+        verbal: subs[0].category, numerik: subs[1].category,
+        spasial: subs[2].category, analisa: subs[3].category,
+        total: tCategory(tTotal),
+      },
+      iq: {
+        value: iqEstimate,
+        category: iqCategory(iqEstimate),
+        percentile: iqPct,
+        description: iqDescription(iqEstimate),
+        tScore: tTotal,
+        rawTotal: totalRaw,
+      },
+      kelebihan,
+      kelemahan,
+      rekomendasi,
+      detail,
+      skoringVersion: "v3-70item",
+      normaVersion: "placeholder-2025",
+      disclaimer: "IQ estimasi ini adalah estimasi berbasis tes penalaran khusus, BUKAN diagnosis IQ klinis. Untuk diagnosis resmi, konsultasikan dengan psikolog berlisensi.",
+      generatedAt: new Date().toISOString(),
+    };
+
+    // ============ SIMPAN KE SUPABASE (opsional) ============
     try {
-        // ============================================================
-        // LAYER 1: JWT VERIFICATION
-        // ============================================================
-        const authHeader = req.headers.get("Authorization");
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return jsonResponse({ success: false, error: "Unauthorized: missing token" }, 401);
-        }
-        
-        const token = authHeader.replace("Bearer ", "");
-        const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-        const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
-        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-        
-        if (!supabaseUrl || !serviceRoleKey || !anonKey) {
-            return jsonResponse({ success: false, error: "Server config error" }, 500);
-        }
-        
-        // Auth client untuk verify token
-        const supabaseAuth = createClient(supabaseUrl, anonKey);
-        const { data: { user: caller }, error: authError } = await supabaseAuth.auth.getUser(token);
-        
-        if (authError || !caller) {
-            return jsonResponse({ success: false, error: "Unauthorized: invalid token" }, 401);
-        }
-        
-        console.log("[calculate-tpdk-score] Caller:", caller.email);
-        
-        const callerRole = normalizeRole(caller.user_metadata?.role || "");
-        const callerParticipantId = caller.user_metadata?.participant_id || "";
-        
-        // ============================================================
-        // PARSE & VALIDATE INPUT
-        // ============================================================
-        const body = await req.json().catch(() => ({}));
-        const projectId = String(body.projectId || "").trim();
-        const participantId = String(body.participantId || "").trim();
-        let answers = body.answers;
-        
-        if (!projectId || !participantId) {
-            return jsonResponse({ 
-                success: false, 
-                error: "projectId & participantId wajib" 
-            }, 400);
-        }
-        
-        // Normalisasi answers: support ARRAY dan OBJECT
-        if (Array.isArray(answers)) {
-            const obj: Record<string, string> = {};
-            answers.forEach((v: any, i: number) => {
-                if (v !== null && v !== undefined) {
-                    obj[String(i)] = String(v);
-                }
-            });
-            answers = obj;
-        }
-        
-        if (!answers || typeof answers !== "object") {
-            return jsonResponse({ 
-                success: false, 
-                error: "answers harus array atau object" 
-            }, 400);
-        }
-        
-        // ============================================================
-        // LAYER 2: PARTICIPANT OWNERSHIP CHECK
-        // ============================================================
-        // Admin bisa hitung untuk siapapun
-        // Peserta hanya bisa hitung untuk dirinya sendiri
-        if (!ADMIN_ROLES.includes(callerRole)) {
-            if (callerRole === "peserta" || callerRole === "client_user") {
-                const sameParticipant = uuidEquals(callerParticipantId, participantId) 
-                    || uuidEquals(caller.id, participantId);
-                
-                if (!sameParticipant) {
-                    await (async () => {
-                        const sb = createClient(supabaseUrl, serviceRoleKey);
-                        await sb.from("audit_log").insert({
-                            action: "calculate_tpdk_score_forbidden",
-                            actor_id: caller.id,
-                            actor_email: caller.email,
-                            actor_role: callerRole,
-                            target_user_id: participantId,
-                            metadata: { 
-                                reason: "participant_ownership_violation",
-                                project_id: projectId
-                            },
-                            created_at: new Date().toISOString(),
-                        });
-                    })();
-                    
-                    return jsonResponse({ 
-                        success: false, 
-                        error: "Forbidden: Anda hanya bisa submit jawaban Anda sendiri" 
-                    }, 403);
-                }
-            } else {
-                return jsonResponse({ 
-                    success: false, 
-                    error: "Forbidden: role Anda tidak bisa hitung skor" 
-                }, 403);
-            }
-        }
-        
-        console.log("[calculate-tpdk-score] Authorized. Participant:", participantId);
-        
-        // ============================================================
-        // LAYER 3: PROJECT MEMBERSHIP CHECK (HEX COMPARE)
-        // ============================================================
-        const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-            auth: { persistSession: false }
-        });
-        
-        const { data: participant } = await supabaseAdmin
-            .from("participants")
-            .select("id, project_id, auth_user_id")
-            .eq("id", participantId)
-            .maybeSingle();
-        
-        if (!participant) {
-            return jsonResponse({ 
-                success: false, 
-                error: "Participant tidak ditemukan" 
-            }, 404);
-        }
-        
-        // FIX: pakai uuidEquals (hex + prefix fallback) untuk bypass bug string ===
-        if (!uuidEquals(participant.project_id, projectId)) {
-            console.warn("[calculate-tpdk-score] Project mismatch:", 
-                JSON.stringify(participant.project_id), "vs", JSON.stringify(projectId));
-            return jsonResponse({ 
-                success: false, 
-                error: "Participant tidak terdaftar di project ini" 
-            }, 403);
-        }
-        
-        // ============================================================
-        // LAYER 4: RATE LIMIT
-        // ============================================================
-        const rateCheck = await checkRateLimit(supabaseAdmin, participantId, projectId);
-        if (!rateCheck.allowed) {
-            return jsonResponse({ 
-                success: false, 
-                error: `Rate limit exceeded: maksimal ${MAX_SUBMITS_PER_HOUR} submit per jam`,
-                current_count: rateCheck.count
-            }, 429);
-        }
-        
-        // ============================================================
-        // LOAD ASSESSMENT KEYS
-        // ============================================================
-        const { data: keys, error: keysError } = await supabaseAdmin
-            .from("assessment_keys")
-            .select("question_id, correct_answer, score_value")
-            .eq("assessment_code", "TPDK")
-            .order("question_id", { ascending: true });
-        
-        if (keysError || !Array.isArray(keys)) {
-            return jsonResponse({ 
-                success: false, 
-                error: "Gagal load kunci" 
-            }, 500);
-        }
-        
-        // ============================================================
-        // CALCULATE SCORE
-        // ============================================================
-        let total = 0;
-        const perSubtest = { A: 0, B: 0, C: 0, D: 0 };
-        
-        const subtestBoundaries: Record<string, [number, number]> = {
-            A: [0, 10],
-            B: [10, 15],
-            C: [15, 20],
-            D: [20, 30]
-        };
-        
-        keys.forEach(function (key: any, idx: number) {
-            const userAnswer = String(answers[String(idx)] || "").trim().toUpperCase();
-            const correctAnswer = String(key.correct_answer || "").trim().toUpperCase();
-            
-            if (userAnswer && userAnswer === correctAnswer) {
-                total += (key.score_value || 1);
-                
-                for (const [subtest, bounds] of Object.entries(subtestBoundaries)) {
-                    if (idx >= bounds[0] && idx < bounds[1]) {
-                        perSubtest[subtest]++;
-                        break;
-                    }
-                }
-            }
-        });
-        
-        const maxTotal = keys.length;
-        const percentage = (maxTotal > 0) ? (total / maxTotal) * 100 : 0;
-        const gScore = Math.round(100 + ((percentage - 50) / 50) * 50);
-        
-        let gCategory, gPercentile, gDesc;
-        if (gScore >= 140) { gCategory = "Sangat Superior"; gPercentile = "≥ 99.6%"; gDesc = "Kemampuan penalaran jauh di atas rata-rata."; }
-        else if (gScore >= 130) { gCategory = "Sangat Superior"; gPercentile = "≥ 98%"; gDesc = "Kemampuan penalaran sangat tinggi."; }
-        else if (gScore >= 120) { gCategory = "Superior"; gPercentile = "91-97%"; gDesc = "Kemampuan penalaran di atas rata-rata."; }
-        else if (gScore >= 110) { gCategory = "Di Atas Rata-rata"; gPercentile = "75-90%"; gDesc = "Kemampuan penalaran baik."; }
-        else if (gScore >= 100) { gCategory = "Rata-rata"; gPercentile = "50-74%"; gDesc = "Kemampuan penalaran rata-rata."; }
-        else if (gScore >= 90) { gCategory = "Rata-rata"; gPercentile = "25-49%"; gDesc = "Rata-rata bawah. Perlu pengembangan."; }
-        else if (gScore >= 80) { gCategory = "Di Bawah Rata-rata"; gPercentile = "9-24%"; gDesc = "Di bawah rata-rata. Perlu pelatihan."; }
-        else if (gScore >= 70) { gCategory = "Borderline"; gPercentile = "2-8%"; gDesc = "Borderline. Disarankan pendampingan."; }
-        else { gCategory = "Rendah"; gPercentile = "< 2%"; gDesc = "Di bawah standar. Perlu intervensi."; }
-        
-        // ============================================================
-        // LAYER 5: AUDIT LOG
-        // ============================================================
-        await supabaseAdmin.from("audit_log").insert({
-            action: "calculate_tpdk_score",
-            actor_id: caller.id,
-            actor_email: caller.email,
-            actor_role: callerRole,
-            target_user_id: participantId,
-            target_email: null,
-            metadata: {
-                project_id: projectId,
-                total: total,
-                max_total: maxTotal,
-                percentage: Math.round(percentage * 100) / 100,
-                g_score: gScore,
-                per_subtest: perSubtest,
-            },
-            created_at: new Date().toISOString(),
-        });
-        
-        console.log("[calculate-tpdk-score] ✅ Score calculated:", gScore);
-        
-        return jsonResponse({
-            success: true,
-            total: total,
-            maxTotal: maxTotal,
-            perSubtest: perSubtest,
-            percentage: Math.round(percentage * 100) / 100,
-            gScore: gScore,
-            gCategory: gCategory,
-            gPercentile: gPercentile,
-            gDesc: gDesc,
-        });
-        
-    } catch (err) {
-        console.error("[calculate-tpdk-score] Exception:", err);
-        return jsonResponse({
-            success: false,
-            error: "Internal error: " + (err instanceof Error ? err.message : String(err))
-        }, 500);
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+      const SERVICE_KEY  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
+
+      // Ambil nama peserta
+      let participantName: string | null = null;
+      const { data: pRow } = await supabase.from("participants").select("name, full_name, email").eq("id", participantId).maybeSingle();
+      if (pRow) participantName = pRow.name || pRow.full_name || pRow.email || null;
+
+      const assessmentIndex = Number(body.assessmentIndex ?? 0);
+      const assessmentCode  = String(body.assessmentCode ?? "TPDK").toUpperCase();
+      const assessmentId    = body.assessmentId || null;
+
+      await supabase.from("tpdk_results").upsert({
+        project_id: projectId,
+        participant_id: participantId,
+        participant_name: participantName,
+        assessment_index: assessmentIndex,
+        assessment_code: assessmentCode,
+        assessment_name: "Tes Penalaran Khusus",
+        result_type: "TPDK",
+
+        raw_verbal: result.raw.verbal,
+        raw_numerik: result.raw.numerik,
+        raw_spasial: result.raw.spasial,
+        raw_analisa: result.raw.analisa,
+        raw_total: result.raw.total,
+
+        t_verbal: result.tScore.verbal,
+        t_numerik: result.tScore.numerik,
+        t_spasial: result.tScore.spasial,
+        t_analisa: result.tScore.analisa,
+        t_total: result.tScore.total,
+
+        iq_estimate: result.iq.value,
+        iq_category: result.iq.category,
+        iq_percentile: result.iq.percentile,
+        iq_description: result.iq.description,
+
+        kategori_verbal: result.kategori.verbal,
+        kategori_numerik: result.kategori.numerik,
+        kategori_spasial: result.kategori.spasial,
+        kategori_analisa: result.kategori.analisa,
+
+        kelebihan: result.kelebihan,
+        kelemahan: result.kelemahan,
+        rekomendasi: result.rekomendasi,
+
+        detail_jawaban: result.detail,
+        skoring_version: result.skoringVersion,
+        norma_version: result.normaVersion,
+        disclaimer: result.disclaimer,
+        submitted_at: new Date().toISOString(),
+      }, { onConflict: "project_id,participant_id,assessment_index,assessment_code" });
+
+      console.log(`[TPDK v3] Saved result IQ=${iqEstimate} for ${participantId}`);
+    } catch (dbErr) {
+      console.error("[TPDK v3] DB save error:", dbErr);
+      // Jangan gagalkan response jika hanya gagal simpan
     }
+
+    return json(result, 200);
+
+  } catch (err) {
+    console.error("[calculate-tpdk-score v3] Error:", err);
+    return json({ success: false, error: String((err as Error)?.message || err) }, 500);
+  }
 });
+
+function json(payload: unknown, status: number) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+  });
+}

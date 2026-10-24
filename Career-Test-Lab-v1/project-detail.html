@@ -57,10 +57,16 @@
     })();
     </script>
 
-    <meta charset="UTF-8">
+        <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Detail | TalentScope</title>
     <link rel="stylesheet" href="css/sidebar-shared.css?v=7">
+
+    <!-- SUPABASE LIBRARY -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+    
+    <!-- XLSX LIBRARY — P2.4 FIX -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 
     <!-- SCRIPT PROTEKSI SESSION & ROLE (WAJIB DI ATAS) -->
@@ -4801,27 +4807,48 @@ function importExcel(){
 
 document.getElementById("v22_isave").onclick =
 async function () {
-
     console.log("[IMPORT] Save import participant started");
-
-    /* =====================================================
-       GET CURRENT PROJECT
-    ===================================================== */
-
-    var p = getProject();
-
-    if (!p) {
-        alert("Project tidak ditemukan.");
+    
+    // ============================================================
+    // FIX: Ambil project dari window.currentProject (bukan getProject())
+    // ============================================================
+    var p = window.currentProject || window.project;
+    
+    // Fallback 1: dari URL param
+    if (!p || !p.id) {
+        var urlId = new URLSearchParams(window.location.search).get("id") 
+                 || new URLSearchParams(window.location.search).get("projectId");
+        if (urlId) {
+            p = p || {};
+            p.id = urlId;
+        }
+    }
+    
+    // Fallback 2: dari localStorage
+    if (!p || !p.id) {
+        try {
+            var projects = JSON.parse(localStorage.getItem("talentscope_projects") || "[]");
+            var urlId = new URLSearchParams(window.location.search).get("id");
+            p = projects.find(function(proj) { return String(proj.id) === String(urlId); });
+        } catch (e) {
+            console.error("[IMPORT] localStorage parse error:", e);
+        }
+    }
+    
+    if (!p || !p.id) {
+        alert("Project tidak ditemukan. Silakan refresh halaman.");
+        console.error("[IMPORT] Project not found. Debug:", {
+            currentProject: window.currentProject,
+            windowProject: window.project,
+            urlId: new URLSearchParams(window.location.search).get("id")
+        });
         return;
     }
-
-    var projectId =
-        p.id ||
-        p.projectId ||
-        "";
-
+    
+    var projectId = String(p.id || p.projectId || "");
+    
     if (!projectId) {
-        alert("Project ID tidak ditemukan.");
+        alert("Project ID tidak ditemukan. Silakan refresh halaman.");
         return;
     }
 
@@ -6643,9 +6670,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-<!-- SUPABASE LIBRARY -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+
 
 <!-- SUPABASE CLIENT -->
 <script src="js/config.js?v=5"></script>
@@ -8886,7 +8911,7 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(loadAssessmentPackage, 500);
 });
 </script>
-s
+
 </body>
 
 </html>

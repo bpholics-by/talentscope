@@ -24,17 +24,6 @@ document.addEventListener(
 /* ==========================================================
    AKSES DATA BERDASARKAN ROLE (Client/Asesor hanya melihat
    project miliknya sendiri)
-
-   Sama seperti mekanisme yang sudah dipasang di database.html
-   — diduplikasi di sini (bukan di-share) karena ini file JS
-   yang berdiri sendiri dan tidak berbagi scope dengan
-   database.html.
-
-   Sumber session yang BENAR adalah sessionStorage["ts_admin_session"]
-   (yang ditulis login.html untuk akun admin/Client/Asesor) —
-   BUKAN localStorage["currentUser"]/["user"] yang sebelumnya
-   dicek di initializeUserRole() (key itu tidak pernah ditulis
-   oleh proses login manapun).
 ========================================================== */
 
 function getMonitoringSession() {
@@ -285,17 +274,6 @@ async function initializeMonitoring() {
 
 /* ==========================================================
    LOAD PROJECTS (SUPABASE)
-   ==========================================================
-   Ambil semua project dari tabel `projects`, lalu untuk
-   tiap project ambil daftar pesertanya dari
-   `project_participants` + `participants` (lewat
-   DataService.getProjectParticipants, yang sudah ada).
-
-   Hasilnya dibentuk ulang supaya field-nya tetap kompatibel
-   dengan seluruh fungsi render/helper di bawah (yang dulu
-   dibuat mengikuti bentuk data localStorage): project.id,
-   project.participants[], participant.isLoggedIn,
-   participant.activityHistory, dst.
 ========================================================== */
 
 async function loadMonitoringProjects() {
@@ -339,12 +317,6 @@ async function loadMonitoringProjects() {
 
         }
 
-
-        /*
-           FILTER AKSES: Client/Asesor cuma melihat project
-           milik perusahaan/projectId mereka sendiri. Admin
-           tetap melihat semua.
-        */
         const accessibleProjectRows =
             projectRows.filter(
                 canMonitoringAccessProject
@@ -417,12 +389,6 @@ async function loadMonitoringProjects() {
 
 /* ==========================================================
    BUILD PROJECT OBJECT DARI ROW SUPABASE
-
-   Digabung dengan project.raw_data supaya field lama
-   (mis. `start`, `pic`) tetap ada sebagai fallback, tapi
-   kolom asli tabel `projects` (name, project_name, company,
-   client, pic, status, start_date, dst) selalu menang karena
-   itu yang paling update.
 ========================================================== */
 
 function buildMonitoringProject(projectRow) {
@@ -437,16 +403,12 @@ function buildMonitoringProject(projectRow) {
             projectRow
         );
 
-    // Alias supaya cocok dengan fallback chain yang dipakai
-    // di seluruh file ini: project.startDate || project.start
     project.startDate =
         projectRow.start_date ||
         rawData.startDate ||
         rawData.start ||
         null;
 
-    // Jangan bawa snapshot participants lama dari raw_data;
-    // akan diisi ulang dengan data live dari tabel participants.
     project.participants = [];
 
     return project;
@@ -456,14 +418,6 @@ function buildMonitoringProject(projectRow) {
 
 /* ==========================================================
    BUILD PARTICIPANT OBJECT DARI RELASI SUPABASE
-
-   `relation` = hasil DataService.getProjectParticipants(),
-   berbentuk { ...project_participants row, participant: {...} }
-
-   participant.raw_data berisi snapshot lengkap gaya
-   localStorage lama (isLoggedIn, activityHistory,
-   currentActivity, dst) dan diprioritaskan karena field
-   itulah yang dibaca semua fungsi render di bawah.
 ========================================================== */
 
 function buildMonitoringParticipant(relation) {
@@ -497,14 +451,6 @@ function buildMonitoringParticipant(relation) {
         rawData.activityUpdatedAt ||
         "";
 
-    // ==========================================================
-    // FIX P1: lastSeenAt — pakai timestamp PALING BARU
-    // ----------------------------------------------------------
-    // Masalah: activity_updated_at sering NULL di database
-    // karena test file belum update kolom itu.
-    // Solusi: kumpulkan semua kandidat timestamp, ambil yang
-    // paling baru, bukan asal fallback berurutan.
-    // ==========================================================
     const lastSeenCandidates = [
         participantRow.activity_updated_at,
         participantRow.last_activity_at,
@@ -528,9 +474,6 @@ function buildMonitoringParticipant(relation) {
     participant.lastSeenAt = latestLastSeen;
     participant.lastSeen = latestLastSeen;
 
-    // ==========================================================
-    // FIX P1: isLoggedIn — handle boolean & string, snake & camel
-    // ==========================================================
     const rawIsLoggedIn =
         participantRow.is_logged_in !== undefined
             ? participantRow.is_logged_in
@@ -544,12 +487,8 @@ function buildMonitoringParticipant(relation) {
         rawIsLoggedIn === 1 ||
         rawIsLoggedIn === "1";
 
-    // Simpan juga versi snake_case untuk debug
     participant.is_logged_in = participant.isLoggedIn;
 
-    // ==========================================================
-    // loginTime & logoutTime (P2: stale data handling)
-    // ==========================================================
     const rawLoginAt =
         participantRow.login_at ||
         participantRow.last_login_at ||
@@ -573,7 +512,6 @@ function buildMonitoringParticipant(relation) {
             loginTimeValue = latestActivityAt;
         }
     }
-    // Fallback: kalau loginTime masih kosong, pakai lastSeenAt
     participant.loginTime = loginTimeValue || participant.lastSeenAt || rawData.loginTime || "";
 
     if (isCurrentlyOnline) {
@@ -590,35 +528,14 @@ function buildMonitoringParticipant(relation) {
         participant.logoutTime = logoutTimeValue || rawData.logoutTime || "";
     }
 
-    // Referensi internal
     participant._supabaseParticipantId = participantRow.id;
     participant._supabaseRawData = rawData;
 
-    console.log("[Monitoring] Built participant:", {
-        name: participant.name || participantRow.name,
-        currentActivity: participant.currentActivity,
-        isLoggedIn: participant.isLoggedIn,
-        lastSeenAt: participant.lastSeenAt,
-        loginTime: participant.loginTime
-    });
-
     return participant;
 }
+
 /* ==========================================================
    REALTIME SUBSCRIPTION — Supabase WebSocket
-   -----------------------------------------------------------
-   Subscribe ke perubahan tabel `participants` untuk
-   project yang sedang dibuka. Update UI otomatis tanpa
-   polling 30s.
-
-   Keuntungan:
-   - Instant update (delay < 1 detik)
-   - Hemat egress (cuma push saat ada perubahan)
-   - Fallback ke polling kalau WebSocket disconnect
-
-   Setup:
-   - Supabase Realtime harus enable untuk tabel participants
-   - Dashboard → Database → Replication → participants ON
 ========================================================== */
 
 var monitoringRealtimeChannel = null;
@@ -631,12 +548,10 @@ function startRealtimeSubscription(projectId) {
         return;
     }
 
-    // Kalau sudah subscribe project yang sama, skip
     if (monitoringRealtimeChannel && monitoringRealtimeProjectId === projectId) {
         return;
     }
 
-    // Unsubscribe channel lama
     if (monitoringRealtimeChannel) {
         try {
             sb.removeChannel(monitoringRealtimeChannel);
@@ -653,57 +568,28 @@ function startRealtimeSubscription(projectId) {
     monitoringRealtimeChannel = sb
         .channel("monitoring-" + projectId)
         .on("postgres_changes", {
-            event: "*",  // INSERT, UPDATE, DELETE
+            event: "*",
             schema: "public",
             table: "participants",
             filter: "project_id=eq." + projectId
         }, function(payload) {
-            console.log("[Monitoring] 🔔 Realtime event:", {
-                eventType: payload.eventType,
-                participantId: payload.new?.id,
-                currentActivity: payload.new?.current_activity
-            });
-
-            // Update UI langsung tanpa query
             handleRealtimeUpdate(payload);
         })
         .subscribe(function(status) {
-            console.log("[Monitoring] Realtime status:", status);
-
             if (status === "SUBSCRIBED") {
-                console.log("[Monitoring] ✅ Realtime connected");
                 setMonitoringConnectionStatus("connected");
             } else if (status === "TIMED_OUT" || status === "CLOSED" || status === "CHANNEL_ERROR") {
-                console.warn("[Monitoring] ⚠️ Realtime disconnected, fallback to polling");
                 setMonitoringConnectionStatus("disconnected");
             }
         });
 }
 
-function stopRealtimeSubscription() {
-    var sb = window.supabaseClient || window.supabase;
-    if (monitoringRealtimeChannel && sb) {
-        try {
-            sb.removeChannel(monitoringRealtimeChannel);
-            console.log("[Monitoring] Realtime unsubscribed");
-        } catch (err) {
-            console.warn("[Monitoring] Unsubscribe error:", err);
-        }
-        monitoringRealtimeChannel = null;
-        monitoringRealtimeProjectId = null;
-    }
-}
-
 /* ==========================================================
    HANDLE REALTIME UPDATE
-   -----------------------------------------------------------
-   Update participant di memory + render ulang UI tanpa
-   query ulang ke Supabase.
 ========================================================== */
 
 function handleRealtimeUpdate(payload) {
     if (!selectedProject) {
-        // Belum pilih project — refresh daftar project
         loadMonitoringProjects().then(function() {
             renderMonitoringProjects();
         });
@@ -718,31 +604,24 @@ function handleRealtimeUpdate(payload) {
         return p._supabaseParticipantId === newRow.id;
     });
 
-    // Build participant object dari row baru
     var updatedParticipant = buildMonitoringParticipant({
         participant: newRow,
         project_id: newRow.project_id
     });
 
     if (participantIndex >= 0) {
-        // Update existing — merge supaya field yang tidak ada di payload
-        // tidak hilang (mis. activityHistory dari query awal)
         var existing = participants[participantIndex] || {};
         participants[participantIndex] = Object.assign({}, existing, updatedParticipant, {
             activityHistory: existing.activityHistory || updatedParticipant.activityHistory || [],
             _supabaseParticipantId: newRow.id,
             _supabaseRawData: existing._supabaseRawData || updatedParticipant._supabaseRawData
         });
-        console.log("[Monitoring] Updated participant:", updatedParticipant.name);
     } else {
-        // New participant (INSERT)
         participants.push(updatedParticipant);
-        console.log("[Monitoring] New participant:", updatedParticipant.name);
     }
 
     selectedProject.participants = participants;
 
-    // Update juga di monitoringProjects
     var projectIndex = monitoringProjects.findIndex(function(p) {
         return getProjectId(p) === getProjectId(selectedProject);
     });
@@ -750,10 +629,8 @@ function handleRealtimeUpdate(payload) {
         monitoringProjects[projectIndex].participants = participants;
     }
 
-    // Render ulang UI
     renderParticipants(selectedProject);
 
-    // Update detail kalau sedang buka peserta itu
     if (selectedParticipant) {
         var selectedId = selectedParticipant._supabaseParticipantId;
         if (selectedId === newRow.id) {
@@ -781,27 +658,9 @@ function setMonitoringConnectionStatus(status) {
         el.title = "Realtime disconnected — using polling fallback";
     }
 }
+
 /* ==========================================================
    LIVE MONITORING REFRESH
-   Membaca ulang data participant dari Supabase
-   tanpa mengubah status secara paksa berdasarkan waktu.
-
-   Untuk hemat query, refresh berkala ini HANYA mengambil
-   ulang peserta dari project yang sedang dibuka
-   (selectedProject) -- persis seperti perilaku lama, yang
-   juga cuma memproses ulang tampilan kalau ada project yang
-   sedang aktif dibuka.
-========================================================== */
-
-/* ==========================================================
-   LIVE MONITORING REFRESH (v2 - FIXED)
-   ----------------------------------------------------------
-   PERBAIKAN:
-   1. Interval 60s → 30s (lebih responsif)
-   2. Refresh juga saat belum pilih project (daftar project)
-   3. Timeout 10 detik untuk query Supabase
-   4. Log debug untuk tracking
-   5. Update timestamp "last refresh" di UI (kalau ada)
 ========================================================== */
 
 function startLiveMonitoringRefresh() {
@@ -812,51 +671,34 @@ function startLiveMonitoringRefresh() {
 
     window.talentScopeMonitoringRefreshStarted = true;
 
-    console.log("[Monitoring] Live refresh started (interval: 30s)");
-
     setInterval(async function () {
         try {
-            // ==================================================
-            // PRIORITAS 1: Kalau belum pilih project → refresh daftar
-            // ==================================================
             if (!selectedProject) {
-                console.log("[Monitoring] Auto-refresh daftar project...");
                 await loadMonitoringProjects();
                 renderMonitoringProjects();
                 updateMonitoringTimestamp();
                 return;
             }
 
-            // ==================================================
-            // PRIORITAS 2: Kalau sudah pilih project → refresh participants
-            // ==================================================
             const selectedProjectId = getProjectId(selectedProject);
             if (!selectedProjectId) return;
 
-            console.log("[Monitoring] Auto-refresh participants for:", selectedProjectId);
-
-            // Timeout 10 detik supaya tidak hanging
             const relations = await Promise.race([
                 DataService.getProjectParticipants(selectedProjectId),
                 new Promise(function (resolve) {
                     setTimeout(function () { 
-                        console.warn("[Monitoring] Query timeout, skip");
                         resolve([]); 
                     }, 10000);
                 })
             ]);
 
             if (!Array.isArray(relations) || relations.length === 0) {
-                console.warn("[Monitoring] No participants returned");
                 return;
             }
 
             const latestParticipants = relations.map(buildMonitoringParticipant);
-
-            // Update object
             selectedProject.participants = latestParticipants;
 
-            // Sync ke daftar utama
             const projectIndex = monitoringProjects.findIndex(
                 function (project) {
                     return getProjectId(project) === selectedProjectId;
@@ -867,9 +709,6 @@ function startLiveMonitoringRefresh() {
                 monitoringProjects[projectIndex].participants = latestParticipants;
             }
 
-            // ==================================================
-            // Auto-logout untuk peserta yang sudah disconnect > 5 menit
-            // ==================================================
             let hasAutomaticLogout = false;
             const changedParticipants = [];
 
@@ -886,7 +725,7 @@ function startLiveMonitoringRefresh() {
 
                 const minutesAgo = (Date.now() - lastSeenTime) / (60 * 1000);
 
-                if (minutesAgo > 5) {
+                if (minutesAgo > 30) {
                     const updated = recordAutomaticLogout(selectedProject, participant);
                     if (updated) {
                         hasAutomaticLogout = true;
@@ -899,13 +738,9 @@ function startLiveMonitoringRefresh() {
                 await persistAutomaticLogouts(changedParticipants);
             }
 
-            // ==================================================
-            // Render ulang tampilan
-            // ==================================================
             renderParticipants(selectedProject);
             updateMonitoringTimestamp();
 
-            // Update detail participant yang sedang dibuka
             if (selectedParticipant) {
                 const selectedParticipantId = getParticipantId(selectedParticipant);
                 const latestParticipant = latestParticipants.find(
@@ -923,7 +758,7 @@ function startLiveMonitoringRefresh() {
         } catch (error) {
             console.warn("[Monitoring] Live refresh gagal:", error);
         }
-    }, 30000);  // ← 30 detik (dari 60 detik)
+    }, 30000);
 }
 
 /* ==========================================================
@@ -946,15 +781,6 @@ function updateMonitoringTimestamp() {
 
 /* ==========================================================
    SIMPAN AUTOMATIC LOGOUT KE SUPABASE
-
-   recordAutomaticLogout() di atas cuma mengubah object
-   participant di memory (browser). Fungsi ini yang
-   menuliskan perubahan itu balik ke tabel `participants`
-   di Supabase, supaya tidak hilang saat halaman di-refresh
-   atau dibuka admin lain.
-
-   Best-effort per participant: kalau satu gagal disimpan,
-   yang lain tetap dicoba (tidak saling menggagalkan).
 ========================================================== */
 
 async function persistAutomaticLogouts(participants) {
@@ -966,21 +792,17 @@ async function persistAutomaticLogouts(participants) {
         }
 
         try {
-            // Ambil timestamp logout yang valid
             const logoutTimeISO = participant.logoutTime ||
                 participant.logoutAt ||
                 participant.lastLogoutAt ||
                 participant.waktuLogout ||
                 new Date().toISOString();
 
-            // Validasi timestamp
             const parsedDate = new Date(logoutTimeISO);
             if (isNaN(parsedDate.getTime())) {
-                console.warn("[Monitoring] Timestamp logout invalid, skip:", participant.id);
                 continue;
             }
 
-            // Siapkan raw_data
             const updatedRawData = Object.assign(
                 {},
                 participant._supabaseRawData || {},
@@ -998,9 +820,6 @@ async function persistAutomaticLogouts(participants) {
                 }
             );
 
-            // FIX: Kirim HANYA kolom yang ada di database
-            // Kolom yang ada: is_logged_in, logout_at, last_logout_at, raw_data
-            // Kolom yang TIDAK ada: logged_out_at, status, activity, current_activity
             const updatePayload = {
                 is_logged_in: false,
                 logout_at: logoutTimeISO,
@@ -1008,18 +827,10 @@ async function persistAutomaticLogouts(participants) {
                 raw_data: updatedRawData
             };
 
-            console.log("[Monitoring] Sending update payload:", updatePayload);
-
-            const result = await DataService.updateParticipant(
+            await DataService.updateParticipant(
                 participant._supabaseParticipantId,
                 updatePayload
             );
-
-            if (result) {
-                console.log("[Monitoring] ✅ Automatic logout tersimpan:", participant.id);
-            } else {
-                console.warn("[Monitoring] ⚠️ Update returned null:", participant.id);
-            }
 
         } catch (error) {
             console.error(
@@ -1036,49 +847,31 @@ async function persistAutomaticLogouts(participants) {
 ========================================================== */
 
 function getProjectId(project) {
-
     return String(
         project?.id ||
         project?.projectId ||
         project?.projectID ||
         ""
     );
-
 }
 
-
 function getProjectName(project) {
-
     return (
         project?.projectName ||
         project?.name ||
         project?.project ||
         "-"
     );
-
 }
-
 
 function getParticipants(project) {
-
-    if (
-        project &&
-        Array.isArray(
-            project.participants
-        )
-    ) {
-
+    if (project && Array.isArray(project.participants)) {
         return project.participants;
-
     }
-
     return [];
-
 }
 
-
 function getParticipantName(participant) {
-
     return (
         participant?.name ||
         participant?.fullName ||
@@ -1086,24 +879,18 @@ function getParticipantName(participant) {
         participant?.nama ||
         "-"
     );
-
 }
 
-
 function getParticipantId(participant) {
-
     return String(
         participant?.id ||
         participant?.participantId ||
         participant?.participantID ||
         ""
     );
-
 }
 
-
 function getClient(project) {
-
     return (
         project?.company ||
         project?.organization ||
@@ -1111,412 +898,120 @@ function getClient(project) {
         project?.clientName ||
         "-"
     );
-
 }
 
-
 function getPIC(project) {
-
-    if (
-        project?.pic &&
-        typeof project.pic === "object"
-    ) {
-
+    if (project?.pic && typeof project.pic === "object") {
         return (
             project.pic.name ||
             project.pic.fullName ||
             "-"
         );
-
     }
-
     return (
         project?.pic ||
         project?.PIC ||
         "-"
     );
-
 }
 
-
 /* ==========================================================
-   FORMAT DATE
+   FORMAT DATE & STATUS
 ========================================================== */
 
 function formatMonitoringDate(value) {
-
-    if (
-        value === undefined ||
-        value === null ||
-        String(value).trim() === ""
-    ) {
-
+    if (value === undefined || value === null || String(value).trim() === "") {
         return "-";
-
     }
-
-
-    const raw =
-        String(value).trim();
-
-
-    /*
-       Jika sudah format
-       DD Mon YYYY
-    */
-
-    if (
-        /^[0-9]{2}\s[A-Za-z]{3}\s[0-9]{4}$/.test(
-            raw
-        )
-    ) {
-
+    const raw = String(value).trim();
+    if (/^[0-9]{2}\s[A-Za-z]{3}\s[0-9]{4}$/.test(raw)) {
         return raw;
-
     }
-
-
-    /*
-       ISO DATE
-    */
-
-    const date =
-        new Date(
-            raw.includes("T")
-                ? raw
-                : raw + "T00:00:00"
-        );
-
-
+    const date = new Date(raw.includes("T") ? raw : raw + "T00:00:00");
     if (isNaN(date.getTime())) {
-
         return raw;
-
     }
-
-
-    return date.toLocaleDateString(
-        "en-GB",
-        {
-            day:"2-digit",
-            month:"short",
-            year:"numeric"
-        }
-    );
-
+    return date.toLocaleDateString("en-GB", {
+        day:"2-digit",
+        month:"short",
+        year:"numeric"
+    });
 }
-
-
-/* ==========================================================
-   STATUS
-========================================================== */
 
 function getStatusClass(status) {
-
-    const value =
-        String(
-            status || ""
-        )
-        .toLowerCase()
-        .trim();
-
-
-    if (
-        value.includes("complete") ||
-        value.includes("completed")
-    ) {
-
-        return "completed";
-
-    }
-
-
-    if (
-        value.includes("ongoing") ||
-        value.includes("running") ||
-        value.includes("progress") ||
-        value.includes("active")
-    ) {
-
-        return "ongoing";
-
-    }
-
-
-    if (
-        value.includes("scheduled") ||
-        value.includes("waiting")
-    ) {
-
-        return "scheduled";
-
-    }
-
-
-    if (
-        value.includes("draft")
-    ) {
-
-        return "draft";
-
-    }
-
-
+    const value = String(status || "").toLowerCase().trim();
+    if (value.includes("complete")) return "completed";
+    if (value.includes("ongoing") || value.includes("running") || value.includes("progress") || value.includes("active")) return "ongoing";
+    if (value.includes("scheduled") || value.includes("waiting")) return "scheduled";
+    if (value.includes("draft")) return "draft";
     return "scheduled";
-
 }
-
-
-/* ==========================================================
-   PROJECT STATUS
-========================================================== */
 
 function getProjectStatus(project) {
-
-    return (
-        project?.status ||
-        project?.projectStatus ||
-        "-"
-    );
-
+    return project?.status || project?.projectStatus || "-";
 }
-
 
 /* ==========================================================
    RENDER PROJECTS
 ========================================================== */
 
-function renderMonitoringProjects(
-    source
-) {
-
-    const table =
-        document.getElementById(
-            "projectMonitoringTable"
-        );
-
-
-    const count =
-        document.getElementById(
-            "projectCount"
-        );
-
-
+function renderMonitoringProjects(source) {
+    const table = document.getElementById("projectMonitoringTable");
+    const count = document.getElementById("projectCount");
     if (!table) return;
 
-
-    const data =
-        Array.isArray(source)
-            ? source
-            : monitoringProjects;
-
-
+    const data = Array.isArray(source) ? source : monitoringProjects;
     table.innerHTML = "";
 
-
     if (!data.length) {
-
         table.innerHTML = `
-
             <tr>
-
-                <td
-                    colspan="7"
-                    class="empty-state"
-                >
-
+                <td colspan="7" class="empty-state">
                     <i class="fa-solid fa-chart-line"></i>
-
-                    <p>
-                        Belum ada project untuk ditampilkan.
-                    </p>
-
+                    <p>Belum ada project untuk ditampilkan.</p>
                 </td>
-
             </tr>
+        `;
+        if (count) count.textContent = "Showing 0 results";
+        return;
+    }
 
+    data.forEach(function (project) {
+        const projectId = getProjectId(project);
+        const projectName = getProjectName(project);
+        const participants = getParticipants(project);
+        const status = getProjectStatus(project);
+        const statusClass = getStatusClass(status);
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>
+                <div class="project-name">${escapeHTML(projectName)}</div>
+                ${projectId ? `<span class="project-id">${escapeHTML(projectId)}</span>` : ""}
+            </td>
+            <td>${escapeHTML(getClient(project))}</td>
+            <td>${escapeHTML(formatMonitoringDate(project.startDate || project.start || project.assessmentDate))}</td>
+            <td><span class="participant-count">${participants.length}</span></td>
+            <td>${escapeHTML(getPIC(project))}</td>
+            <td><span class="status ${statusClass}">${escapeHTML(status)}</span></td>
+            <td>
+                <button type="button" class="monitor-btn" data-project-id="${escapeHTML(projectId)}">
+                    <i class="fa-solid fa-chart-line"></i> View & Monitoring
+                </button>
+            </td>
         `;
 
-
-        if (count) {
-
-            count.textContent =
-                "Showing 0 results";
-
+        const button = row.querySelector(".monitor-btn");
+        if (button) {
+            button.addEventListener("click", function () {
+                openProjectMonitoring(projectId);
+            });
         }
+        table.appendChild(row);
+    });
 
-        return;
-
-    }
-
-
-    data.forEach(
-        function (project) {
-
-            const projectId =
-                getProjectId(project);
-
-
-            const projectName =
-                getProjectName(project);
-
-
-            const participants =
-                getParticipants(project);
-
-
-            const status =
-                getProjectStatus(project);
-
-
-            const statusClass =
-                getStatusClass(status);
-
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <td>
-
-                    <div class="project-name">
-
-                        ${escapeHTML(
-                            projectName
-                        )}
-
-                    </div>
-
-                    ${
-                        projectId
-                            ? `
-                                <span class="project-id">
-                                    ${escapeHTML(projectId)}
-                                </span>
-                              `
-                            : ""
-                    }
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHTML(
-                        getClient(project)
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHTML(
-                        formatMonitoringDate(
-                            project.startDate ||
-                            project.start ||
-                            project.assessmentDate
-                        )
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    <span class="participant-count">
-
-                        ${participants.length}
-
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    ${escapeHTML(
-                        getPIC(project)
-                    )}
-
-                </td>
-
-
-                <td>
-
-                    <span
-                        class="status ${statusClass}"
-                    >
-
-                        ${escapeHTML(
-                            status
-                        )}
-
-                    </span>
-
-                </td>
-
-
-                <td>
-
-                    <button
-                        type="button"
-                        class="monitor-btn"
-                        data-project-id="${escapeHTML(projectId)}"
-                    >
-
-                        <i class="fa-solid fa-chart-line"></i>
-
-                        View & Monitoring
-
-                    </button>
-
-                </td>
-
-            `;
-
-
-            const button =
-                row.querySelector(
-                    ".monitor-btn"
-                );
-
-
-            if (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        openProjectMonitoring(
-                            projectId
-                        );
-
-                    }
-                );
-
-            }
-
-
-            table.appendChild(row);
-
-        }
-    );
-
-
-    if (count) {
-
-        count.textContent =
-            "Showing " +
-            data.length +
-            " results";
-
-    }
-
+    if (count) count.textContent = "Showing " + data.length + " results";
 }
-
 
 /* ==========================================================
    OPEN PROJECT
@@ -1535,28 +1030,17 @@ function openProjectMonitoring(projectId) {
     selectedProject = project;
     selectedParticipant = null;
 
-    // Subscribe realtime untuk project ini
     startRealtimeSubscription(String(projectId));
-
     renderParticipants(project);
 
-    const projectCard = document.querySelector(
-        ".card:not(.detail-card):not(.participant-detail)"
-    );
-
-    if (projectCard) {
-        projectCard.style.display = "none";
-    }
+    const projectCard = document.querySelector(".card:not(.detail-card):not(.participant-detail)");
+    if (projectCard) projectCard.style.display = "none";
 
     const participantCard = document.getElementById("participantCard");
-    if (participantCard) {
-        participantCard.classList.add("show");
-    }
+    if (participantCard) participantCard.classList.add("show");
 
     const detailCard = document.getElementById("participantDetailCard");
-    if (detailCard) {
-        detailCard.classList.remove("show");
-    }
+    if (detailCard) detailCard.classList.remove("show");
 
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -1565,646 +1049,155 @@ function openProjectMonitoring(projectId) {
    RENDER PARTICIPANTS
 ========================================================== */
 
-function renderParticipants(
-    project
-) {
-
-    const table =
-        document.getElementById(
-            "participantMonitoringTable"
-        );
-
-
-    const count =
-        document.getElementById(
-            "participantCount"
-        );
-
-
-    const title =
-        document.getElementById(
-            "participantTitle"
-        );
-
+function renderParticipants(project) {
+    const table = document.getElementById("participantMonitoringTable");
+    const count = document.getElementById("participantCount");
+    const title = document.getElementById("participantTitle");
 
     if (!table) return;
-
-
-    const participants =
-        getParticipants(project);
-
-
+    const participants = getParticipants(project);
     table.innerHTML = "";
 
-
-    if (title) {
-
-        title.textContent =
-            "Participants - " +
-            getProjectName(project);
-
-    }
-
+    if (title) title.textContent = "Participants - " + getProjectName(project);
 
     if (!participants.length) {
-
         table.innerHTML = `
-
             <tr>
-
-                <td
-                    colspan="5"
-                    class="empty-state"
-                >
-
+                <td colspan="5" class="empty-state">
                     <i class="fa-solid fa-users"></i>
-
-                    <p>
-                        Belum ada peserta dalam project ini.
-                    </p>
-
+                    <p>Belum ada peserta dalam project ini.</p>
                 </td>
-
             </tr>
+        `;
+        if (count) count.textContent = "Showing 0 results";
+        return;
+    }
 
+    participants.forEach(function (participant) {
+        const participantId = getParticipantId(participant);
+        const participantName = getParticipantName(participant);
+        const isOnline = isParticipantOnline(participant);
+        const activityText = String(participant?.currentActivity || participant?.activity || "").trim();
+        const activityLower = activityText.toLowerCase();
+        const isDoingTest = activityText !== "" && activityLower !== "online" && (activityLower.includes("mengerjakan") || activityLower.includes("assessment") || activityLower.includes("test") || activityLower.includes("tes"));
+        
+        const statusTitle = isOnline ? "Online" : "Offline";
+        const statusActivity = !isOnline ? "Peserta sedang offline" : isDoingTest ? activityText : "Tidak sedang mengerjakan tes";
+        const statusClass = isOnline ? "is-online" : "is-offline";
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td><div class="project-name">${escapeHTML(getProjectName(project))}</div></td>
+            <td>${escapeHTML(formatMonitoringDate(project.startDate || project.start || project.assessmentDate))}</td>
+            <td>
+                <div class="project-name">${escapeHTML(participantName)}</div>
+                ${participantId ? `<span class="project-id">${escapeHTML(participantId)}</span>` : ""}
+            </td>
+            <td class="participant-status-cell">
+                <div class="participant-status ${statusClass}">
+                    <div class="participant-status-main">
+                        <span class="participant-status-dot"></span>
+                        <strong>${escapeHTML(statusTitle)}</strong>
+                    </div>
+                    <div class="participant-status-activity">${escapeHTML(statusActivity)}</div>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="monitor-btn participant-monitor-btn">
+                    <i class="fa-solid fa-user-clock"></i> View & Monitoring
+                </button>
+            </td>
         `;
 
-
-        if (count) {
-
-            count.textContent =
-                "Showing 0 results";
-
+        const button = row.querySelector(".participant-monitor-btn");
+        if (button) {
+            button.addEventListener("click", function () {
+                openParticipantMonitoring(project, participant);
+            });
         }
+        table.appendChild(row);
+    });
 
-        return;
-
-    }
-
-
-    participants.forEach(
-        function (participant) {
-
-            const participantId =
-                getParticipantId(
-                    participant
-                );
-
-
-            const participantName =
-                getParticipantName(
-                    participant
-                );
-
-
-            /*
-               ==================================================
-               STATUS ONLINE
-               ==================================================
-            */
-
-            const isOnline =
-                isParticipantOnline(
-                    participant
-                );
-
-
-            /*
-               ==================================================
-               AMBIL ACTIVITY
-               ==================================================
-            */
-
-            const activityText =
-                String(
-                    participant?.currentActivity ||
-                    participant?.activity ||
-                    ""
-                )
-                .trim();
-
-
-            const activityLower =
-                activityText.toLowerCase();
-
-
-            /*
-               ==================================================
-               CEK APAKAH SEDANG MENGERJAKAN TES
-               ==================================================
-            */
-
-            const isDoingTest =
-                activityText !== "" &&
-                activityLower !== "online" &&
-                (
-                    activityLower.includes(
-                        "mengerjakan"
-                    ) ||
-                    activityLower.includes(
-                        "assessment"
-                    ) ||
-                    activityLower.includes(
-                        "test"
-                    ) ||
-                    activityLower.includes(
-                        "tes"
-                    )
-                );
-
-
-            /*
-               ==================================================
-               TEXT STATUS
-               ==================================================
-            */
-
-            const statusTitle =
-                isOnline
-                    ? "Online"
-                    : "Offline";
-
-
-            const statusActivity =
-                !isOnline
-
-                    ? "Peserta sedang offline"
-
-                    : isDoingTest
-
-                        ? activityText
-
-                        : "Tidak sedang mengerjakan tes";
-
-
-            /*
-               ==================================================
-               CLASS DOT
-               ==================================================
-            */
-
-            const statusClass =
-                isOnline
-                    ? "is-online"
-                    : "is-offline";
-
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <!-- PROJECT -->
-
-                <td>
-
-                    <div class="project-name">
-
-                        ${escapeHTML(
-                            getProjectName(project)
-                        )}
-
-                    </div>
-
-                </td>
-
-
-                <!-- ASSESSMENT DATE -->
-
-                <td>
-
-                    ${escapeHTML(
-                        formatMonitoringDate(
-                            project.startDate ||
-                            project.start ||
-                            project.assessmentDate
-                        )
-                    )}
-
-                </td>
-
-
-                <!-- PARTICIPANT -->
-
-                <td>
-
-                    <div class="project-name">
-
-                        ${escapeHTML(
-                            participantName
-                        )}
-
-                    </div>
-
-
-                    ${
-                        participantId
-                            ? `
-                                <span class="project-id">
-                                    ${escapeHTML(
-                                        participantId
-                                    )}
-                                </span>
-                              `
-                            : ""
-                    }
-
-                </td>
-
-
-                <!-- STATUS -->
-
-                <td class="participant-status-cell">
-
-                    <div
-                        class="
-                            participant-status
-                            ${statusClass}
-                        "
-                    >
-
-                        <div
-                            class="participant-status-main"
-                        >
-
-                            <span
-                                class="
-                                    participant-status-dot
-                                "
-                            ></span>
-
-
-                            <strong>
-                                ${escapeHTML(
-                                    statusTitle
-                                )}
-                            </strong>
-
-                        </div>
-
-
-                        <div
-                            class="
-                                participant-status-activity
-                            "
-                        >
-
-                            ${escapeHTML(
-                                statusActivity
-                            )}
-
-                        </div>
-
-                    </div>
-
-                </td>
-
-
-                <!-- VIEW & MONITORING -->
-
-                <td>
-
-                    <button
-                        type="button"
-                        class="
-                            monitor-btn
-                            participant-monitor-btn
-                        "
-                    >
-
-                        <i
-                            class="fa-solid fa-user-clock"
-                        ></i>
-
-                        View & Monitoring
-
-                    </button>
-
-                </td>
-
-            `;
-
-
-            /*
-               ==================================================
-               BUTTON VIEW & MONITORING
-               ==================================================
-            */
-
-            const button =
-                row.querySelector(
-                    ".participant-monitor-btn"
-                );
-
-
-            if (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        openParticipantMonitoring(
-                            project,
-                            participant
-                        );
-
-                    }
-                );
-
-            }
-
-
-            table.appendChild(row);
-
-        }
-    );
-
-
-    /*
-       ==================================================
-       RESULT COUNT
-       ==================================================
-    */
-
-    if (count) {
-
-        count.textContent =
-            "Showing " +
-            participants.length +
-            " results";
-
-    }
-
+    if (count) count.textContent = "Showing " + participants.length + " results";
 }
-
 
 /* ==========================================================
    OPEN PARTICIPANT MONITORING
 ========================================================== */
 
-function openParticipantMonitoring(
-    project,
-    participant
-) {
+function openParticipantMonitoring(project, participant) {
+    selectedProject = project;
+    selectedParticipant = participant;
 
-    selectedProject =
-        project;
+    const detailCard = document.getElementById("participantDetailCard");
+    const participantCard = document.getElementById("participantCard");
 
-    selectedParticipant =
-        participant;
+    if (participantCard) participantCard.classList.remove("show");
+    if (detailCard) detailCard.classList.add("show");
 
+    fillParticipantDetail(project, participant);
 
-    const detailCard =
-        document.getElementById(
-            "participantDetailCard"
-        );
-
-
-    const participantCard =
-        document.getElementById(
-            "participantCard"
-        );
-
-
-    if (participantCard) {
-
-        participantCard.classList.remove(
-            "show"
-        );
-
-    }
-
-
-    if (detailCard) {
-
-        detailCard.classList.add(
-            "show"
-        );
-
-    }
-
-
-    fillParticipantDetail(
-        project,
-        participant
-    );
-
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
-
+    window.scrollTo({ top:0, behavior:"smooth" });
 }
-
 
 /* ==========================================================
    PARTICIPANT DETAIL
 ========================================================== */
 
-function fillParticipantDetail(
-    project,
-    participant
-) {
+function fillParticipantDetail(project, participant) {
+    const name = getParticipantName(participant);
+    const projectName = getProjectName(project);
+    const assessmentDate = formatMonitoringDate(project.startDate || project.start || project.assessmentDate);
+    const invitation = participant?.invitationStatus || participant?.statusInvitation || participant?.invitation || participant?.inviteStatus || participant?.accessStatus || "Belum diundang";
 
-    const name =
-        getParticipantName(
-            participant
-        );
+    const login = participant?.loginTime || participant?.loggedInAt || participant?.loginAt || participant?.timeLogin || participant?.lastLogin || "-";
 
+    let logout = participant?.logoutTime || participant?.loggedOutAt || participant?.logoutAt || participant?.timeLogout || participant?.lastLogoutAt || "";
 
-    const projectName =
-        getProjectName(
-            project
-        );
-
-
-    const assessmentDate =
-        formatMonitoringDate(
-            project.startDate ||
-            project.start ||
-            project.assessmentDate
-        );
-
-
-    /* ======================================================
-       INVITATION
-    ====================================================== */
-
-    const invitation =
-        participant?.invitationStatus ||
-        participant?.statusInvitation ||
-        participant?.invitation ||
-        participant?.inviteStatus ||
-        participant?.accessStatus ||
-        "Belum diundang";
-
-
-    /* ======================================================
-       LOGIN
-    ====================================================== */
-
-    const login =
-        participant?.loginTime ||
-        participant?.loggedInAt ||
-        participant?.loginAt ||
-        participant?.timeLogin ||
-        participant?.lastLogin ||
-        "-";
-
-
-    /* ======================================================
-       LOGOUT — PATCH: Fallback dari activityHistory
-    ====================================================== */
-
-    let logout =
-        participant?.logoutTime ||
-        participant?.loggedOutAt ||
-        participant?.logoutAt ||
-        participant?.timeLogout ||
-        participant?.lastLogoutAt ||
-        "";
-
-    // FALLBACK: Kalau tidak ada field, cari di activityHistory
     if (!logout) {
-
-        var logoutHistory = Array.isArray(participant.activityHistory)
-            ? participant.activityHistory
-            : [];
-
+        var logoutHistory = Array.isArray(participant.activityHistory) ? participant.activityHistory : [];
         var logoutItem = logoutHistory.find(function(item) {
-
             var type = String(item?.type || "").toLowerCase();
             var activity = String(item?.activity || item?.description || "").toLowerCase();
-
-            return type === "logout" ||
-                   activity.includes("keluar") ||
-                   activity.includes("logout") ||
-                   activity.includes("sesi berakhir");
+            return type === "logout" || activity.includes("keluar") || activity.includes("logout") || activity.includes("sesi berakhir");
         });
-
         if (logoutItem) {
-
-            logout = logoutItem.timestamp ||
-                     logoutItem.time ||
-                     logoutItem.createdAt ||
-                     "";
-
-            console.log("[View Monitoring] Logout dari history:", logout);
+            logout = logoutItem.timestamp || logoutItem.time || logoutItem.createdAt || "";
         }
     }
 
-    if (!logout) {
-        logout = "-";
-    }
+    if (!logout) logout = "-";
 
-    /* ======================================================
-       BASIC INFORMATION
-    ====================================================== */
-
-    setText(
-        "detailParticipantName",
-        name
-    );
-
-
-    setText(
-        "detailName",
-        name
-    );
-
-
-    setText(
-        "detailProject",
-        projectName
-    );
-
-
-    setText(
-        "detailDate",
-        assessmentDate
-    );
-
-
-    setText(
-        "detailInvitation",
-        invitation
-    );
-
-
-    setText(
-        "detailLogin",
-        formatDateTime(login)
-    );
-
-
-    setText(
-        "detailLogout",
-        formatDateTime(logout)
-    );
-
-
-    /* ==========================================================
-       PATCH BONUS: Statistik Pindah Tab
-       ----------------------------------------------------------
-       Menampilkan berapa kali peserta pindah tab selama sesi.
-       Ini indikator fokus peserta — pindah tab sering bisa
-       jadi sinyal peserta cari jawaban di tab/aplikasi lain.
-
-       Data dibaca dari participant.tabSwitchCount yang dikirim
-       oleh participant-dashboard.html lewat pushParticipantsPresence.
-    ========================================================== */
+    setText("detailParticipantName", name);
+    setText("detailName", name);
+    setText("detailProject", projectName);
+    setText("detailDate", assessmentDate);
+    setText("detailInvitation", invitation);
+    setText("detailLogin", formatDateTime(login));
+    setText("detailLogout", formatDateTime(logout));
 
     var tabStatsEl = document.getElementById("detailTabStats");
     if (tabStatsEl) {
-
-        /* ==========================================================
-           PILAR 3: Counter langsung + fallback dari activityHistory
-           ----------------------------------------------------------
-           Kalau tabSwitchCount ada → pakai itu (data baru)
-           Kalau tidak ada → hitung dari activityHistory (data lama)
-        ========================================================== */
-
         var tabCount = Number(participant.tabSwitchCount) || 0;
         var tabLong = Number(participant.tabSwitchLongSwitches) || 0;
         var tabDuration = Number(participant.tabSwitchTotalDuration) || 0;
 
-        // FALLBACK: Hitung dari activityHistory kalau counter = 0
         if (tabCount === 0) {
-            var history = Array.isArray(participant.activityHistory)
-                ? participant.activityHistory
-                : [];
-
+            var history = Array.isArray(participant.activityHistory) ? participant.activityHistory : [];
             history.forEach(function(item) {
-                var text = String(
-                    item?.activity ||
-                    item?.description ||
-                    item?.title ||
-                    ""
-                ).toLowerCase();
-
+                var text = String(item?.activity || item?.description || item?.title || "").toLowerCase();
                 if (text.includes("pindah tab") || text.includes("berpindah tab")) {
                     tabCount++;
-
-                    // Cek durasi di teks
                     var match = text.match(/(\d+)\s*detik/);
                     if (match) {
                         var sec = Number(match[1]);
                         tabDuration += sec;
-                        if (sec > 30) {
-                            tabLong++;
-                        }
+                        if (sec > 30) tabLong++;
                     }
                 }
             });
-
-            if (tabCount > 0) {
-                console.log("[View Monitoring] Counter dari history:", tabCount);
-            }
         }
 
-        // TAMPILKAN
         if (tabCount === 0) {
             tabStatsEl.textContent = "Tidak ada pindah tab";
             tabStatsEl.style.color = "#16a34a";
@@ -2212,1672 +1205,404 @@ function fillParticipantDetail(
             tabStatsEl.textContent = tabCount + "× pindah tab (normal)";
             tabStatsEl.style.color = "#65a30d";
         } else if (tabCount <= 5) {
-            tabStatsEl.textContent = tabCount + "× pindah tab" +
-                (tabLong > 0 ? ", " + tabLong + "× > 30 detik ⚠️" : "");
+            tabStatsEl.textContent = tabCount + "× pindah tab" + (tabLong > 0 ? ", " + tabLong + "× > 30 detik ⚠️" : "");
             tabStatsEl.style.color = "#d97706";
             tabStatsEl.style.fontWeight = "700";
         } else {
-            tabStatsEl.textContent = tabCount + "× pindah tab" +
-                (tabLong > 0 ? ", " + tabLong + "× > 30 detik 🚨" : "");
+            tabStatsEl.textContent = tabCount + "× pindah tab" + (tabLong > 0 ? ", " + tabLong + "× > 30 detik 🚨" : "");
             tabStatsEl.style.color = "#dc2626";
             tabStatsEl.style.fontWeight = "800";
         }
 
         if (tabDuration > 0) {
-            tabStatsEl.title = "Total waktu di tab lain: " +
-                Math.round(tabDuration) + " detik";
+            tabStatsEl.title = "Total waktu di tab lain: " + Math.round(tabDuration) + " detik";
         }
     }
 
-    /* ======================================================
-       ACTIVITY
-    ====================================================== */
-
-    renderParticipantActivity(
-        participant
-    );
-
+    renderParticipantActivity(participant);
 }
-
 
 /* ==========================================================
    ACTIVITY
 ========================================================== */
 
-function getCurrentActivity(
-    participant
-) {
+function getCurrentActivity(participant) {
+    const directActivity = participant?.currentActivity || participant?.activity || participant?.currentTest || participant?.testActivity || participant?.kegiatan;
+    if (directActivity && String(directActivity).trim() !== "") return String(directActivity);
 
-    /*
-     * PRIORITAS 1
-     * Activity yang memang disimpan oleh sistem test.
-     */
-
-    const directActivity =
-        participant?.currentActivity ||
-        participant?.activity ||
-        participant?.currentTest ||
-        participant?.testActivity ||
-        participant?.kegiatan;
-
-
-    if (
-        directActivity &&
-        String(directActivity).trim() !== ""
-    ) {
-
-        return String(
-            directActivity
-        );
-
-    }
-
-
-    /*
-     * PRIORITAS 2
-     * Cek status assessment peserta.
-     */
-
-    const status =
-        String(
-            participant?.assessmentStatus ||
-            participant?.assessment_status ||
-            participant?.testStatus ||
-            participant?.status ||
-            ""
-        )
-        .toLowerCase()
-        .trim();
-
-
-    if (
-        status.includes("progress") ||
-        status.includes("running") ||
-        status.includes("active") ||
-        status.includes("ongoing")
-    ) {
-
-        return "Sedang mengerjakan tes";
-
-    }
-
-
-    if (
-        status.includes("complete") ||
-        status.includes("completed") ||
-        status.includes("finish") ||
-        status.includes("finished")
-    ) {
-
-        return "Tes telah selesai";
-
-    }
-
-
-    if (
-        status.includes("login") ||
-        status.includes("logged")
-    ) {
-
-        return "Peserta sudah login";
-
-    }
-
-
+    const status = String(participant?.assessmentStatus || participant?.assessment_status || participant?.testStatus || participant?.status || "").toLowerCase().trim();
+    if (status.includes("progress") || status.includes("running") || status.includes("active") || status.includes("ongoing")) return "Sedang mengerjakan tes";
+    if (status.includes("complete") || status.includes("completed") || status.includes("finish") || status.includes("finished")) return "Tes telah selesai";
+    if (status.includes("login") || status.includes("logged")) return "Peserta sudah login";
     return "Tidak sedang mengerjakan tes";
-
 }
 
-
-/* ==========================================================
-   ACTIVITY HISTORY
-========================================================== */
-
-function getActivityHistory(
-    participant
-) {
-
-    /*
-     * Beberapa kemungkinan nama field
-     * agar kompatibel dengan sistem yang
-     * sudah ada.
-     */
-
-    const history =
-        participant?.activityHistory ||
-        participant?.activityLog ||
-        participant?.activities ||
-        participant?.history ||
-        [];
-
-
-    if (
-        Array.isArray(history)
-    ) {
-
-        return history;
-
-    }
-
-
+function getActivityHistory(participant) {
+    const history = participant?.activityHistory || participant?.activityLog || participant?.activities || participant?.history || [];
+    if (Array.isArray(history)) return history;
     return [];
-
 }
 
-
 /* ==========================================================
-   RENDER ACTIVITY
+   FIX UTAMA: Ambil data history dari Supabase (Tabel)
 ========================================================== */
-
-function renderParticipantActivity(
-    participant
-) {
-
-    if (!participant) {
-        return;
+async function loadActivityHistoryFromSupabase(participantId) {
+    try {
+        var sb = window.supabaseClient || window.supabase;
+        if (!sb) return [];
+        
+        var { data, error } = await sb
+            .from("participant_activity_history")
+            .select("*")
+            .eq("participant_id", participantId)
+            .order("timestamp", { ascending: false })
+            .limit(50);
+        
+        if (error) {
+            console.warn("[Monitoring] Activity history error:", error);
+            return [];
+        }
+        
+        return Array.isArray(data) ? data : [];
+    } catch (e) {
+        console.warn("[Monitoring] Activity history exception:", e);
+        return [];
     }
+}
 
+async function renderParticipantActivity(participant) {
+    if (!participant) return;
 
-    const currentActivity =
-        getCurrentActivity(
-            participant
-        );
-
-
-    const activityHistory =
-        getActivityHistory(
-            participant
-        );
-
-
-    /* ======================================================
-       CURRENT ACTIVITY
-    ====================================================== */
-
-    const currentBox =
-        document.getElementById(
-            "currentActivity"
-        );
-
+    const currentBox = document.getElementById("currentActivity");
     if (currentBox) {
-
-        const active =
-            isParticipantActive(
-                participant
-            );
-
-        // ======================================================
-        // FIX: GUNAKAN isParticipantOnline() YANG SUDAH DIPERBAIKI
-        // ------------------------------------------------------
-        // Sebelumnya fungsi ini menghitung sendiri umur heartbeat
-        // dari participant.lastSeenAt saja. Sekarang pakai
-        // isParticipantOnline() supaya konsisten dengan tabel
-        // peserta (yang juga pakai isParticipantOnline).
-        // ======================================================
-
-        const isOnline =
-            isParticipantOnline(
-                participant
-            );
-
-        const rawActivity =
-            String(
-                participant?.currentActivity ||
-                participant?.activity ||
-                participant?.testActivity ||
-                participant?.lastActivity ||
-                ""
-            ).trim();
-
-        const activityLower =
-            rawActivity.toLowerCase();
-
-        const isDoingTest =
-            /^sedang\s+mengerjakan\s+tes\s*\d*\s*\(/i.test(rawActivity) ||
-            activityLower.includes("mengerjakan tes") ||
-            activityLower.includes("assessment") ||
-            activityLower.includes("test") ||
-            activityLower.includes("tes");
-
-        const isLoggedIn =
-            participant?.isLoggedIn === true ||
-            participant?.isLoggedIn === "true";
-
-        /* ======================================================
-           PATCH FASE 2: 3 STATUS — Online / Idle / Offline
-           ------------------------------------------------------
-           PRIORITAS:
-           1. Completed   → "Assessment selesai"
-           2. Explicit Logout → "Offline" (peserta klik tombol logout)
-           3. Tidak online (isParticipantOnline = false) → "Offline"
-           4. Sedang mengerjakan tes → "Sedang mengerjakan tes"
-           5. Online (heartbeat < 2 menit) → "Online"
-
-           Efek: Log "keluar palsu" hilang. Peserta yang tinggal tab
-           beberapa menit tampil sebagai "Idle", bukan "Offline".
-        ====================================================== */
-
+        const active = isParticipantActive(participant);
+        const isOnline = isParticipantOnline(participant);
+        const rawActivity = String(participant?.currentActivity || participant?.activity || participant?.testActivity || participant?.lastActivity || "").trim();
+        const activityLower = rawActivity.toLowerCase();
+        const isDoingTest = /^sedang\s+mengerjakan\s+tes\s*\d*\s*\(/i.test(rawActivity) || activityLower.includes("mengerjakan tes") || activityLower.includes("assessment") || activityLower.includes("test") || activityLower.includes("tes");
+        const isLoggedIn = participant?.isLoggedIn === true || participant?.isLoggedIn === "true";
+        
         let displayActivity = "Offline";
         let displaySubtext = "Peserta tidak terhubung";
+        const explicitLogout = !!(participant.logoutTime || participant.loggedOutAt || participant.logoutAt || participant.lastLogoutAt);
+        const participantStatus = String(participant?.status || participant?.onlineStatus || "").toLowerCase().trim();
 
-        /* ======================================================
-           CEK LOGOUT EKSPLISIT
-           Peserta klik tombol Logout → logoutTime terisi
-        ====================================================== */
-
-        const explicitLogout = !!(
-            participant.logoutTime ||
-            participant.loggedOutAt ||
-            participant.logoutAt ||
-            participant.lastLogoutAt
-        );
-
-        /* ======================================================
-           STATUS PARTICIPANT (Completed / dll)
-        ====================================================== */
-
-        const participantStatus =
-            String(
-                participant?.status ||
-                participant?.onlineStatus ||
-                ""
-            )
-            .toLowerCase()
-            .trim();
-
-
-        /* ======================================================
-           PRIORITAS 1: COMPLETED
-        ====================================================== */
-
-        if (
-            participantStatus === "completed" ||
-            participantStatus === "complete"
-        ) {
-
+        if (participantStatus === "completed" || participantStatus === "complete") {
             displayActivity = "Assessment selesai";
             displaySubtext = "Peserta telah menyelesaikan assessment";
-
-
-        /* ======================================================
-           PRIORITAS 2: EXPLICIT LOGOUT
-           Peserta klik tombol Logout
-        ====================================================== */
-
         } else if (explicitLogout) {
-
             displayActivity = "Offline";
             displaySubtext = "Peserta sudah logout";
-
-
-        /* ======================================================
-           PRIORITAS 3: TIDAK ONLINE (heartbeat mati)
-        ====================================================== */
-
         } else if (!isOnline) {
-
             displayActivity = "Offline";
             displaySubtext = "Peserta tidak terhubung";
-
-
-        /* ======================================================
-           PRIORITAS 4: SEDANG MENGERJAKAN TES
-        ====================================================== */
-
-        } else if (
-            isOnline &&
-            isDoingTest
-        ) {
-
-            const testOrdinal =
-                Number.isFinite(Number(participant?.currentAssessmentIndex))
-                    ? (Number(participant.currentAssessmentIndex) + 1)
-                    : null;
-
-            displayActivity =
-                rawActivity ||
-                (
-                    participant?.currentTest
-                        ? "Sedang mengerjakan tes" +
-                          (testOrdinal ? " " + testOrdinal : "") +
-                          " (" +
-                          participant.currentTest +
-                          ")"
-                        : "Sedang mengerjakan tes"
-                );
-
+        } else if (isOnline && isDoingTest) {
+            const testOrdinal = Number.isFinite(Number(participant?.currentAssessmentIndex)) ? (Number(participant.currentAssessmentIndex) + 1) : null;
+            displayActivity = rawActivity || (participant?.currentTest ? "Sedang mengerjakan tes" + (testOrdinal ? " " + testOrdinal : "") + " (" + participant.currentTest + ")" : "Sedang mengerjakan tes");
             displaySubtext = "Sedang berlangsung";
-
-
-        /* ======================================================
-           PRIORITAS 5: ONLINE
-           Heartbeat < 2 menit
-        ====================================================== */
-
-        } else if (
-            isOnline &&
-            isLoggedIn
-        ) {
-
+        } else if (isOnline && isLoggedIn) {
             displayActivity = "Online";
             displaySubtext = "Siap mengerjakan tes";
-
-
-        /* ======================================================
-           FALLBACK
-        ====================================================== */
-
         } else {
-
             displayActivity = "Offline";
             displaySubtext = "Peserta tidak terhubung";
-
         }
 
-        currentBox.classList.toggle(
-            "is-active",
-            active
-        );
-
+        currentBox.classList.toggle("is-active", active);
         currentBox.innerHTML = `
-            <div
-                class="
-        activity-status-dot
-        ${isOnline ? '' : 'offline'}
-    "
-            ></div>
-
+            <div class="activity-status-dot ${isOnline ? '' : 'offline'}"></div>
             <div class="activity-current-content">
-                <strong>
-                    ${escapeHTML(displayActivity)}
-                </strong>
-
-                <span>
-                    ${escapeHTML(displaySubtext)}
-                </span>
+                <strong>${escapeHTML(displayActivity)}</strong>
+                <span>${escapeHTML(displaySubtext)}</span>
             </div>
         `;
     }
 
     /* ======================================================
-       ACTIVITY HISTORY
+       ACTIVITY HISTORY (FIX: Fetch dari Supabase)
     ====================================================== */
+    const historyContainer = document.getElementById("activityHistory");
+    if (!historyContainer) return;
 
-    const historyContainer =
-        document.getElementById(
-            "activityHistory"
-        );
+    // Tampilkan loading sementara
+    historyContainer.innerHTML = '<div class="activity-empty">Memuat riwayat aktivitas...</div>';
 
+    var supabaseId = participant._supabaseParticipantId || participant.id;
+    var historyData = await loadActivityHistoryFromSupabase(supabaseId);
 
-    if (!historyContainer) {
+    // Fallback ke data lokal jika Supabase kosong
+    if (!historyData || historyData.length === 0) {
+        historyData = Array.isArray(participant.activityHistory) ? participant.activityHistory : [];
+    }
+
+    if (historyData.length === 0) {
+        historyContainer.innerHTML = `<div class="activity-empty">Belum ada aktivitas.</div>`;
         return;
     }
 
+    const sortedHistory = historyData.sort(function(a, b) {
+        const dateA = new Date(a.timestamp || a.time || a.createdAt || 0);
+        const dateB = new Date(b.timestamp || b.time || b.createdAt || 0);
+        return dateB - dateA;
+    });
 
     historyContainer.innerHTML = "";
 
+    sortedHistory.forEach(function(item) {
+        const title = item.activity || item.title || item.action || item.test || item.name || "Aktivitas tes";
+        const description = item.description || item.detail || item.message || "";
+        const time = item.timestamp || item.time || item.createdAt || item.date || "-";
+        const row = document.createElement("div");
+        row.className = "activity-history-item";
 
-    if (
-        activityHistory.length === 0
-    ) {
-
-        historyContainer.innerHTML = `
-
-            <div
-                class="activity-empty"
-            >
-
-                Belum ada aktivitas.
-
+        row.innerHTML = `
+            <div class="activity-history-marker"></div>
+            <div class="activity-history-content">
+                <strong>${escapeHTML(title)}</strong>
+                ${description ? `<span>${escapeHTML(description)}</span>` : ""}
             </div>
-
+            <div class="activity-history-time">
+                ${escapeHTML(formatDateTime(time))}
+            </div>
         `;
 
-        return;
-
-    }
-
-
-    const sortedHistory =
-        [...activityHistory]
-            .sort(
-                function(a, b) {
-
-                    const dateA =
-                        new Date(
-                            a?.timestamp ||
-                            a?.time ||
-                            a?.createdAt ||
-                            0
-                        );
-
-                    const dateB =
-                        new Date(
-                            b?.timestamp ||
-                            b?.time ||
-                            b?.createdAt ||
-                            0
-                        );
-
-                    return (
-                        dateB - dateA
-                    );
-
-                }
-            );
-
-
-    sortedHistory.forEach(
-        function(item) {
-
-            const title =
-                item?.activity ||
-                item?.title ||
-                item?.action ||
-                item?.test ||
-                item?.name ||
-                "Aktivitas tes";
-
-
-            const description =
-                item?.description ||
-                item?.detail ||
-                item?.message ||
-                "";
-
-
-            const time =
-                item?.timestamp ||
-                item?.time ||
-                item?.createdAt ||
-                item?.date ||
-                "-";
-
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-
-            row.className =
-                "activity-history-item";
-
-
-            row.innerHTML = `
-
-                <div
-                    class="activity-history-marker"
-                ></div>
-
-
-                <div
-                    class="activity-history-content"
-                >
-
-                    <strong>
-                        ${escapeHTML(
-                            title
-                        )}
-                    </strong>
-
-
-                    ${
-                        description
-                            ? `
-                                <span>
-                                    ${escapeHTML(
-                                        description
-                                    )}
-                                </span>
-                              `
-                            : ""
-                    }
-
-                </div>
-
-
-                <div
-                    class="activity-history-time"
-                >
-
-                    ${escapeHTML(
-                        formatDateTime(time)
-                    )}
-
-                </div>
-
-            `;
-
-
-            historyContainer.appendChild(
-                row
-            );
-
-        }
-    );
-
+        historyContainer.appendChild(row);
+    });
 }
 
 
 /* ==========================================================
    PARTICIPANT ONLINE CHECK
-   ONLINE = HEARTBEAT MASIH AKTIF
 ========================================================== */
 
 function isParticipantOnline(participant) {
     if (!participant) return false;
+    if (participant.logoutTime || participant.loggedOutAt || participant.logoutAt || participant.lastLogoutAt) return false;
 
-    // Cek explicit logout dulu
-    if (
-        participant.logoutTime ||
-        participant.loggedOutAt ||
-        participant.logoutAt ||
-        participant.lastLogoutAt
-    ) {
-        return false;
-    }
-
-    // Cek is_logged_in (handle boolean & string)
-    const isLoggedIn =
-        participant.isLoggedIn === true ||
-        participant.isLoggedIn === "true" ||
-        participant.is_logged_in === true ||
-        participant.is_logged_in === "true";
-
+    const isLoggedIn = participant.isLoggedIn === true || participant.isLoggedIn === "true" || participant.is_logged_in === true || participant.is_logged_in === "true";
     if (!isLoggedIn) return false;
 
-    // Cari timestamp terbaru dari berbagai field
-    const candidates = [
-        participant.lastSeenAt,
-        participant.lastSeen,
-        participant.activityUpdatedAt,
-        participant.activity_updated_at,
-        participant.last_activity_at,
-        participant.loginTime,
-        participant.login_at,
-        participant.last_login_at
-    ].filter(Boolean);
+    const candidates = [participant.lastSeenAt, participant.lastSeen, participant.activityUpdatedAt, participant.activity_updated_at, participant.last_activity_at, participant.loginTime, participant.login_at, participant.last_login_at].filter(Boolean);
+    if (candidates.length === 0) return true;
 
-    if (candidates.length === 0) {
-        // is_logged_in = true tapi tidak ada timestamp sama sekali
-        // → anggap online (lebih baik false positive daripada false negative)
-        console.warn(
-            "[Monitoring] isLoggedIn=true tapi tidak ada timestamp, assume online:",
-            participant.name
-        );
-        return true;
-    }
-
-    // Ambil timestamp paling baru
     let latestTs = 0;
     for (const value of candidates) {
         const ts = new Date(value).getTime();
-        if (Number.isFinite(ts) && ts > latestTs) {
-            latestTs = ts;
-        }
+        if (Number.isFinite(ts) && ts > latestTs) latestTs = ts;
     }
 
-    if (latestTs === 0) return true; // fallback sama seperti di atas
-
+    if (latestTs === 0) return true;
     const age = Date.now() - latestTs;
     const ONLINE_TIMEOUT = 120 * 1000; // 2 menit
-
-    // Toleransi clock skew: kalau timestamp di masa depan, anggap online
     if (age < 0) return true;
-
     return age <= ONLINE_TIMEOUT;
 }
+
 /* ==========================================================
    AUTO LOGOUT RECORD
-   Mencatat waktu logout jika participant disconnect
-   karena close tab / close window / close browser.
 ========================================================== */
 
-function recordAutomaticLogout(
-    project,
-    participant
-) {
+function recordAutomaticLogout(project, participant) {
+    if (!participant) return false;
+    const existingLogoutTime = participant.logoutTime || participant.loggedOutAt || participant.logoutAt || participant.lastLogoutAt || participant.lastLogout || participant.waktuLogout || null;
+    if (existingLogoutTime) return false;
 
-    if (!participant) {
-        return false;
-    }
+    const hasLoginHistory = !!(participant.loginTime || participant.loggedInAt || participant.loginAt || participant.lastLoginAt || participant.lastLogin || participant.lastSeenAt || participant.lastSeen || participant.lastActivityAt || participant.heartbeat);
+    if (!hasLoginHistory) return false;
+    if (isParticipantOnline(participant)) return false;
 
-
-    /* ======================================================
-       JIKA SUDAH ADA WAKTU LOGOUT, JANGAN DIBUAT ULANG
-    ====================================================== */
-
-    const existingLogoutTime =
-        participant.logoutTime ||
-        participant.loggedOutAt ||
-        participant.logoutAt ||
-        participant.lastLogoutAt ||
-        participant.lastLogout ||
-        participant.waktuLogout ||
-        null;
-
-
-    if (existingLogoutTime) {
-        return false;
-    }
-
-
-    /* ======================================================
-       CEK APAKAH PESERTA PERNAH MEMILIKI AKTIVITAS LOGIN
-
-       Jangan hanya mengandalkan isLoggedIn === true,
-       karena bisa saja halaman peserta sudah mengubah
-       status menjadi false tetapi belum sempat mengisi
-       logoutTime.
-    ====================================================== */
-
-    const hasLoginHistory =
-        !!(
-            participant.loginTime ||
-            participant.loggedInAt ||
-            participant.loginAt ||
-            participant.lastLoginAt ||
-            participant.lastLogin ||
-            participant.lastSeenAt ||
-            participant.lastSeen ||
-            participant.lastActivityAt ||
-            participant.heartbeat
-        );
-
-
-    if (!hasLoginHistory) {
-        return false;
-    }
-
-
-    /* ======================================================
-       CEK APAKAH PESERTA MASIH ONLINE
-
-       Jika masih online, TIDAK BOLEH membuat logoutTime.
-    ====================================================== */
-
-    if (isParticipantOnline(participant)) {
-        return false;
-    }
-
-
-    /* ======================================================
-       AMBIL WAKTU AKTIVITAS TERAKHIR
-
-       PRIORITAS:
-       1. lastSeenAt
-       2. lastSeen
-       3. lastActivityAt
-       4. heartbeat
-       5. activityUpdatedAt
-    ====================================================== */
-
-    const lastSeenValue =
-        participant.lastSeenAt ||
-        participant.lastSeen ||
-        participant.lastActivityAt ||
-        participant.heartbeat ||
-        participant.activityUpdatedAt ||
-        null;
-
-
+    const lastSeenValue = participant.lastSeenAt || participant.lastSeen || participant.lastActivityAt || participant.heartbeat || participant.activityUpdatedAt || null;
     let logoutDate;
-
-
     if (lastSeenValue) {
-
-        const parsedDate =
-            new Date(lastSeenValue);
-
-        if (
-            !isNaN(parsedDate.getTime())
-        ) {
-
-            logoutDate =
-                parsedDate;
-
-        }
-
+        const parsedDate = new Date(lastSeenValue);
+        if (!isNaN(parsedDate.getTime())) logoutDate = parsedDate;
     }
+    if (!logoutDate) logoutDate = new Date();
 
+    const logoutISOString = logoutDate.toISOString();
+    participant.isLoggedIn = false;
+    participant.onlineStatus = "offline";
+    participant.status = "Offline";
+    participant.logoutTime = logoutISOString;
+    participant.loggedOutAt = logoutISOString;
+    participant.logoutAt = logoutISOString;
+    participant.lastLogoutAt = logoutISOString;
+    participant.lastLogout = logoutISOString;
+    participant.waktuLogout = logoutISOString;
+    participant.currentActivity = "Offline";
 
-    /* ======================================================
-       FALLBACK JIKA WAKTU AKTIVITAS TIDAK VALID
-    ====================================================== */
-
-    if (!logoutDate) {
-
-        logoutDate =
-            new Date();
-
-    }
-
-
-    const logoutISOString =
-        logoutDate.toISOString();
-
-
-    /* ======================================================
-       SIMPAN STATUS LOGOUT
-
-       Gunakan beberapa alias field agar kompatibel dengan
-       Database Peserta dan modul TalentScope lainnya.
-    ====================================================== */
-
-    participant.isLoggedIn =
-        false;
-
-    participant.onlineStatus =
-        "offline";
-
-    participant.status =
-        "Offline";
-
-    participant.logoutTime =
-        logoutISOString;
-
-    participant.loggedOutAt =
-        logoutISOString;
-
-    participant.logoutAt =
-        logoutISOString;
-
-    participant.lastLogoutAt =
-        logoutISOString;
-
-    participant.lastLogout =
-        logoutISOString;
-
-    participant.waktuLogout =
-        logoutISOString;
-
-    participant.currentActivity =
-        "Offline";
-
-
-    /* ======================================================
-       CATAT ACTIVITY HISTORY
-    ====================================================== */
-
-    if (
-        !Array.isArray(
-            participant.activityHistory
-        )
-    ) {
-
-        participant.activityHistory =
-            [];
-
-    }
-
-
+    if (!Array.isArray(participant.activityHistory)) participant.activityHistory = [];
     participant.activityHistory.unshift({
-
-        activity:
-            "Peserta keluar / sesi berakhir",
-
-        description:
-            "Peserta keluar / sesi berakhir",
-
-        type:
-            "logout",
-
-        timestamp:
-            logoutISOString
-
+        activity: "Peserta keluar / sesi berakhir",
+        description: "Peserta keluar / sesi berakhir",
+        type: "logout",
+        timestamp: logoutISOString
     });
-
-
     return true;
-
 }
 
 /* ==========================================================
    PARTICIPANT ACTIVE CHECK
-   ACTIVE = LOGIN + HEARTBEAT MASIH HIDUP
 ========================================================== */
 
-function isParticipantActive(
-    participant
-) {
-
-    if (!participant) {
-        return false;
-    }
-
-
-    /* ======================================================
-       PALING PENTING:
-       Semua status aktif harus mengikuti heartbeat.
-
-       Jika heartbeat sudah mati,
-       participant otomatis tidak aktif.
-    ====================================================== */
-
-    if (
-        !isParticipantOnline(
-            participant
-        )
-    ) {
-
-        return false;
-
-    }
-
-
-    /* ======================================================
-       CEK LOGIN
-    ====================================================== */
-
-    const isLoggedIn =
-        participant.isLoggedIn === true ||
-        participant.isLoggedIn === "true";
-
-
-    if (!isLoggedIn) {
-
-        return false;
-
-    }
-
-
-    /* ======================================================
-       JIKA ONLINE + LOGIN
-       BERARTI PESERTA AKTIF
-    ====================================================== */
-
+function isParticipantActive(participant) {
+    if (!participant) return false;
+    if (!isParticipantOnline(participant)) return false;
+    const isLoggedIn = participant.isLoggedIn === true || participant.isLoggedIn === "true";
+    if (!isLoggedIn) return false;
     return true;
-
 }
-
 
 /* ==========================================================
    FORMAT DATETIME
 ========================================================== */
 
-function formatDateTime(
-    value
-) {
+function formatDateTime(value) {
+    if (value === undefined || value === null || String(value).trim() === "" || String(value).trim() === "-") return "-";
+    const raw = String(value).trim();
+    const date = new Date(raw);
+    if (isNaN(date.getTime())) return raw;
 
-    if (
-        value === undefined ||
-        value === null ||
-        String(value).trim() === "" ||
-        String(value).trim() === "-"
-    ) {
-
-        return "-";
-
-    }
-
-
-    const raw =
-        String(value).trim();
-
-
-    const date =
-        new Date(raw);
-
-
-    if (isNaN(date.getTime())) {
-
-        return raw;
-
-    }
-
-
-    return date.toLocaleString(
-        "id-ID",
-        {
-            day:"2-digit",
-            month:"short",
-            year:"numeric",
-            hour:"2-digit",
-            minute:"2-digit"
-        }
-    );
-
+    return date.toLocaleString("id-ID", {
+        day:"2-digit",
+        month:"short",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+    });
 }
 
-
 /* ==========================================================
-   SEARCH
+   SEARCH & NAVIGATION
 ========================================================== */
 
 function initializeSearch() {
-
-    const input =
-        document.getElementById(
-            "projectSearch"
-        );
-
-
+    const input = document.getElementById("projectSearch");
     if (!input) return;
 
-
-    input.addEventListener(
-        "input",
-        function () {
-
-            const keyword =
-                input.value
-                    .toLowerCase()
-                    .trim();
-
-
-            if (!keyword) {
-
-                renderMonitoringProjects();
-
-                return;
-
-            }
-
-
-            const filtered =
-                monitoringProjects.filter(
-                    function (project) {
-
-                        const projectName =
-                            getProjectName(
-                                project
-                            )
-                            .toLowerCase();
-
-
-                        const client =
-                            getClient(
-                                project
-                            )
-                            .toLowerCase();
-
-
-                        const pic =
-                            getPIC(
-                                project
-                            )
-                            .toLowerCase();
-
-
-                        return (
-                            projectName.includes(
-                                keyword
-                            )
-                            ||
-                            client.includes(
-                                keyword
-                            )
-                            ||
-                            pic.includes(
-                                keyword
-                            )
-                        );
-
-                    }
-                );
-
-
-            renderMonitoringProjects(
-                filtered
-            );
-
+    input.addEventListener("input", function () {
+        const keyword = input.value.toLowerCase().trim();
+        if (!keyword) {
+            renderMonitoringProjects();
+            return;
         }
-    );
 
+        const filtered = monitoringProjects.filter(function (project) {
+            const projectName = getProjectName(project).toLowerCase();
+            const client = getClient(project).toLowerCase();
+            const pic = getPIC(project).toLowerCase();
+            return projectName.includes(keyword) || client.includes(keyword) || pic.includes(keyword);
+        });
+        renderMonitoringProjects(filtered);
+    });
 }
-
-
-/* ==========================================================
-   NAVIGATION
-========================================================== */
 
 function initializeNavigation() {
-
-    const backProjects =
-        document.getElementById(
-            "backToProjects"
-        );
-
-
-    const backParticipants =
-        document.getElementById(
-            "backToParticipants"
-        );
-
+    const backProjects = document.getElementById("backToProjects");
+    const backParticipants = document.getElementById("backToParticipants");
 
     if (backProjects) {
-
-        backProjects.addEventListener(
-            "click",
-            function () {
-
-                showProjects();
-
-            }
-        );
-
+        backProjects.addEventListener("click", function () { showProjects(); });
     }
-
 
     if (backParticipants) {
-
-        backParticipants.addEventListener(
-            "click",
-            function () {
-
-                if (
-                    selectedProject
-                ) {
-
-                    const detailCard =
-                        document.getElementById(
-                            "participantDetailCard"
-                        );
-
-
-                    const participantCard =
-                        document.getElementById(
-                            "participantCard"
-                        );
-
-
-                    if (detailCard) {
-
-                        detailCard.classList.remove(
-                            "show"
-                        );
-
-                    }
-
-
-                    if (participantCard) {
-
-                        participantCard.classList.add(
-                            "show"
-                        );
-
-                    }
-
-
-                    window.scrollTo({
-                        top:0,
-                        behavior:"smooth"
-                    });
-
-                }
-
+        backParticipants.addEventListener("click", function () {
+            if (selectedProject) {
+                const detailCard = document.getElementById("participantDetailCard");
+                const participantCard = document.getElementById("participantCard");
+                if (detailCard) detailCard.classList.remove("show");
+                if (participantCard) participantCard.classList.add("show");
+                window.scrollTo({ top:0, behavior:"smooth" });
             }
-        );
-
+        });
     }
-
 }
-
-
-/* ==========================================================
-   SHOW PROJECTS
-========================================================== */
 
 function showProjects() {
+    selectedProject = null;
+    selectedParticipant = null;
 
-    selectedProject =
-        null;
+    const participantCard = document.getElementById("participantCard");
+    const detailCard = document.getElementById("participantDetailCard");
+    if (participantCard) participantCard.classList.remove("show");
+    if (detailCard) detailCard.classList.remove("show");
 
-    selectedParticipant =
-        null;
+    const projectCard = document.querySelector(".card:not(.detail-card):not(.participant-detail)");
+    if (projectCard) projectCard.style.display = "";
 
-
-    const participantCard =
-        document.getElementById(
-            "participantCard"
-        );
-
-
-    const detailCard =
-        document.getElementById(
-            "participantDetailCard"
-        );
-
-
-    if (participantCard) {
-
-        participantCard.classList.remove(
-            "show"
-        );
-
-    }
-
-
-    if (detailCard) {
-
-        detailCard.classList.remove(
-            "show"
-        );
-
-    }
-
-
-    const projectCard =
-        document.querySelector(
-            ".card:not(.detail-card):not(.participant-detail)"
-        );
-
-
-    if (projectCard) {
-
-        projectCard.style.display =
-            "";
-
-    }
-
-
-    const input =
-        document.getElementById(
-            "projectSearch"
-        );
-
-
-    if (input) {
-
-        input.value = "";
-
-    }
-
+    const input = document.getElementById("projectSearch");
+    if (input) input.value = "";
 
     renderMonitoringProjects();
-
-
-    window.scrollTo({
-        top:0,
-        behavior:"smooth"
-    });
-
+    window.scrollTo({ top:0, behavior:"smooth" });
 }
-
-
-/* ==========================================================
-   USER ROLE
-========================================================== */
 
 function initializeUserRole() {
+    const userRole = document.getElementById("userRole");
+    const userLabel = document.getElementById("userLabel");
+    if (!userRole || !userLabel) return;
 
-    const userRole =
-        document.getElementById(
-            "userRole"
-        );
-
-
-    const userLabel =
-        document.getElementById(
-            "userLabel"
-        );
-
-
-    if (!userRole || !userLabel) {
-
-        return;
-
-    }
-
-
-    let storedUser =
-        null;
-
-
+    let storedUser = null;
     try {
+        storedUser = JSON.parse(localStorage.getItem("currentUser") || localStorage.getItem("user") || "null");
+    } catch (error) { storedUser = null; }
+    if (!storedUser) return;
 
-        storedUser =
-            JSON.parse(
-                localStorage.getItem(
-                    "currentUser"
-                )
-                ||
-                localStorage.getItem(
-                    "user"
-                )
-                ||
-                "null"
-            );
+    let role = storedUser.role || storedUser.userRole || storedUser.type || storedUser.userType || "";
+    role = String(role).toLowerCase();
 
+    if (role.includes("admin")) {
+        userRole.textContent = "Administrator";
+        userLabel.textContent = "Admin";
+    } else if (role.includes("client")) {
+        userRole.textContent = "Client";
+        userLabel.textContent = "Client";
+    } else if (role.includes("asesor") || role.includes("assessor")) {
+        userRole.textContent = "Asesor";
+        userLabel.textContent = "Asesor";
     }
-
-    catch (error) {
-
-        storedUser =
-            null;
-
-    }
-
-
-    if (!storedUser) {
-
-        return;
-
-    }
-
-
-    let role =
-        storedUser.role ||
-        storedUser.userRole ||
-        storedUser.type ||
-        storedUser.userType ||
-        "";
-
-
-    role =
-        String(role)
-            .toLowerCase();
-
-
-    if (
-        role.includes("admin")
-    ) {
-
-        userRole.textContent =
-            "Administrator";
-
-        userLabel.textContent =
-            "Admin";
-
-    }
-
-    else if (
-        role.includes("client")
-    ) {
-
-        userRole.textContent =
-            "Client";
-
-        userLabel.textContent =
-            "Client";
-
-    }
-
-    else if (
-        role.includes("asesor") ||
-        role.includes("assessor")
-    ) {
-
-        userRole.textContent =
-            "Asesor";
-
-        userLabel.textContent =
-            "Asesor";
-
-    }
-
 }
-
-
-/* ==========================================================
-   LOGOUT
-========================================================== */
 
 function initializeLogout() {
-
-    const button =
-        document.getElementById(
-            "logoutBtn"
-        );
-
-
+    const button = document.getElementById("logoutBtn");
     if (!button) return;
 
-
-    button.addEventListener(
-        "click",
-        function () {
-
-            const confirmed =
-                confirm(
-                    "Apakah Anda yakin ingin logout?"
-                );
-
-
-            if (!confirmed) {
-
-                return;
-
-            }
-
-
-            /*
-               Hapus session login.
-               DATA PROJECT TIDAK DIHAPUS.
-            */
-
-            localStorage.removeItem(
-                "currentUser"
-            );
-
-            localStorage.removeItem(
-                "user"
-            );
-
-
-            /*
-               Sesuaikan tujuan jika
-               halaman login kakak berbeda.
-            */
-
-            window.location.href =
-                "login.html";
-
-        }
-    );
-
+    button.addEventListener("click", function () {
+        const confirmed = confirm("Apakah Anda yakin ingin logout?");
+        if (!confirmed) return;
+        localStorage.removeItem("currentUser");
+        localStorage.removeItem("user");
+        window.location.href = "login.html";
+    });
 }
 
-/* ==========================================================
-   ACTIVITY LOG
-========================================================== */
-
-function renderActivityLog(
-    activityLog,
-    currentActivity
-) {
-
-    const container =
-        document.getElementById(
-            "activityLog"
-        );
-
-    if (!container) return;
-
-    container.innerHTML = "";
-
-    const history =
-        Array.isArray(activityLog)
-            ? [...activityLog]
-            : [];
-
-    /*
-       Aktivitas tes baru bisa menyimpan nama assessment di:
-       testName / assessmentName / test / name,
-       sementara activity tetap menjadi kalimat yang dibaca user.
-    */
-    if (history.length === 0) {
-
-        const fallback =
-            currentActivity ||
-            "Belum ada riwayat aktivitas.";
-
-        container.innerHTML = `
-            <div class="activity-log-item">
-                <div class="activity-log-dot"></div>
-                <div class="activity-log-content">
-                    <strong>${escapeHTML(fallback)}</strong>
-                    <span>Aktivitas saat ini</span>
-                </div>
-            </div>
-        `;
-
-        return;
-    }
-
-    history
-        .sort(function(a, b) {
-            const aDate =
-                new Date(
-                    a?.timestamp ||
-                    a?.time ||
-                    a?.createdAt ||
-                    a?.date ||
-                    0
-                );
-
-            const bDate =
-                new Date(
-                    b?.timestamp ||
-                    b?.time ||
-                    b?.createdAt ||
-                    b?.date ||
-                    0
-                );
-
-            return bDate - aDate;
-        })
-        .forEach(function(item) {
-
-            const testName =
-                String(
-                    item?.testName ||
-                    item?.assessmentName ||
-                    item?.test ||
-                    item?.assessment ||
-                    ""
-                ).trim();
-
-            let activity =
-                String(
-                    item?.activity ||
-                    item?.title ||
-                    item?.action ||
-                    item?.description ||
-                    item?.name ||
-                    "-"
-                ).trim();
-
-            /*
-               Jika event adalah test-start/test-session tetapi activity
-               belum mengandung nama tes, bentuk ulang dari field testName.
-            */
-            const type =
-                String(
-                    item?.type ||
-                    ""
-                ).toLowerCase();
-
-            if (
-                testName &&
-                (
-                    type === "test-start" ||
-                    type === "test-session" ||
-                    type === "test-complete"
-                ) &&
-                !/mengerjakan\s+tes\s*\d*\s*\(/i.test(activity) &&
-                !/tes\s+selesai\s*\(/i.test(activity)
-            ) {
-                const ordinal =
-                    Number.isFinite(Number(item?.assessmentIndex))
-                        ? (Number(item.assessmentIndex) + 1)
-                        : null;
-
-                if (type === "test-complete") {
-                    activity =
-                        "Tes selesai (" +
-                        testName +
-                        ")";
-                } else {
-                    activity =
-                        "Sedang mengerjakan tes" +
-                        (ordinal ? " " + ordinal : "") +
-                        " (" +
-                        testName +
-                        ")";
-                }
-
-                if (
-                    item?.sessionNumber !== undefined &&
-                    item?.sessionNumber !== null
-                ) {
-                    activity +=
-                        " — Sesi " +
-                        item.sessionNumber;
-                }
-            }
-
-            const time =
-                item?.timestamp ||
-                item?.time ||
-                item?.createdAt ||
-                item?.date ||
-                "";
-
-            const row =
-                document.createElement(
-                    "div"
-                );
-
-            row.className =
-                "activity-log-item";
-
-            row.innerHTML = `
-                <div class="activity-log-dot"></div>
-
-                <div class="activity-log-content">
-
-                    <strong>
-                        ${escapeHTML(activity)}
-                    </strong>
-
-                    ${
-                        testName &&
-                        !activity.includes("(" + testName + ")")
-                            ? `
-                                <span>
-                                    ${escapeHTML(testName)}
-                                </span>
-                              `
-                            : ""
-                    }
-
-                    ${
-                        time
-                            ? `
-                                <span>
-                                    ${escapeHTML(
-                                        formatDateTime(time)
-                                    )}
-                                </span>
-                              `
-                            : ""
-                    }
-
-                </div>
-            `;
-
-            container.appendChild(row);
-        });
-}
-
-
-function setText(
-    id,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            id
-        );
-
-
+function setText(id, value) {
+    const element = document.getElementById(id);
     if (!element) return;
-
-
-    element.textContent =
-        value === undefined ||
-        value === null ||
-        String(value).trim() === ""
-            ? "-"
-            : value;
-
+    element.textContent = value === undefined || value === null || String(value).trim() === "" ? "-" : value;
 }
 
-
-/* ==========================================================
-   ESCAPE HTML
-========================================================== */
-
-function escapeHTML(
-    value
-) {
-
-    return String(
-        value === undefined ||
-        value === null
-            ? ""
-            : value
-    )
-    .replace(
-        /&/g,
-        "&amp;"
-    )
-    .replace(
-        /</g,
-        "&lt;"
-    )
-    .replace(
-        />/g,
-        "&gt;"
-    )
-    .replace(
-        /"/g,
-        "&quot;"
-    )
-    .replace(
-        /'/g,
-        "&#039;"
-    );
-
+function escapeHTML(value) {
+    return String(value === undefined || value === null ? "" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
-
-/* ==========================================================
-   BACK TO PROJECTS
-========================================================== */
 
 function backToProjects() {
-
-    window.location.href =
-        "view-monitoring.html";
-
+    window.location.href = "view-monitoring.html";
 }
-
-/* ==========================================================
-   BACK TO PARTICIPANTS
-========================================================== */
 
 function backToParticipants(projectId) {
-
     if (!projectId) {
-
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-        projectId =
-            params.get("projectId");
-
+        const params = new URLSearchParams(window.location.search);
+        projectId = params.get("projectId");
     }
-
     if (!projectId) {
-
-        window.location.href =
-            "view-monitoring.html";
-
+        window.location.href = "view-monitoring.html";
         return;
-
     }
-
-    window.location.href =
-        `view-monitoring.html?projectId=${encodeURIComponent(projectId)}`;
-
+    window.location.href = `view-monitoring.html?projectId=${encodeURIComponent(projectId)}`;
 }
-
-/* ==========================================================
-   CATATAN: Blok "latestSelectedProject" DIHAPUS
-   ----------------------------------------------------------
-   Blok lama ini mereferensikan variabel `latestSelectedProject`
-   yang TIDAK PERNAH dideklarasikan di file ini — menyebabkan
-   ReferenceError setiap kali view-monitoring.js di-load.
-
-   Isinya juga tidak melakukan apa-apa (hanya comment di dalam
-   forEach). Jadi aman dihapus total.
-
-   Auto-logout sudah ditangani di startLiveMonitoringRefresh()
-   — atau lebih tepatnya, sudah kita nonaktifkan untuk
-   menghindari false positive.
-========================================================== */

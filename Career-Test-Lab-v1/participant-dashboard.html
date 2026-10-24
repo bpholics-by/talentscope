@@ -1067,10 +1067,33 @@ document.addEventListener("DOMContentLoaded", function () {
     // Heartbeat pertama setelah 2 detik
     setTimeout(sendHeartbeat, 2000);
 
-    // Heartbeat berkala tiap 30 detik
+        // Heartbeat berkala tiap 30 detik
     setInterval(sendHeartbeat, 30000);
 
+    // ==========================================================
+    // OPSI 3 FIX: Kirim heartbeat saat peserta kembali ke tab
+    // ----------------------------------------------------------
+    // Browser modern (Chrome, Safari, dll) akan menunda/menghentikan
+    // setInterval jika tab berada di background (tidak aktif) untuk
+    // menghemat baterai. Akibatnya, admin melihat peserta "Offline".
+    // Kode ini memaksa peserta mengirim sinyal "Online" segera
+    // setelah mereka membuka/mengklik tab browser mereka lagi.
+    // ==========================================================
+    document.addEventListener("visibilitychange", function() {
+        if (!document.hidden) {
+            console.log("[Dashboard] 👀 Tab aktif kembali, kirim heartbeat instan...");
+            sendHeartbeat();
+        }
+    });
+
+    // Cek juga saat window kembali fokus (misal: alt+tab dari aplikasi lain)
+    window.addEventListener("focus", function() {
+        sendHeartbeat();
+    });
+
     console.log("[Dashboard] ✅ Heartbeat interval started (30s)");
+
+   
 
     // ==========================================================
     // Push saat tab ditutup (logout)
