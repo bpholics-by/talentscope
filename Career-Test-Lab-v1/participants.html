@@ -1079,6 +1079,25 @@ if (isViewOnlyLocal) {
     .participant-table td:nth-child(2){
         white-space:normal;
     }
+
+    /* FIX CARD BISA DIGESER */
+    .participant-stats {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        gap: 15px !important;
+        padding-bottom: 15px !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .participant-stats > div {
+        flex: 0 0 85% !important;
+        min-width: 260px !important;
+    }
+    
+    .participant-stats::-webkit-scrollbar {
+        display: none;
+    }
 }
 
 @media(max-width:650px){
@@ -1194,11 +1213,24 @@ body{font-family:Inter,"Segoe UI",Arial,sans-serif;background:#f7f9fc;color:#102
   body.sidebar-open .sidebar{transform:translateX(0)}
   .main{width:100% !important;margin-left:0 !important}
   .topbar{min-height:0;display:grid !important;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title menu" "search search" "profile profile";align-items:center;gap:16px;padding:18px 20px}
-  .header-left{grid-area:title;min-width:0}
+    .header-left{grid-area:title;min-width:0; padding-right: 50px;}
   .header-right{display:contents}
   .header-search{grid-area:search;width:100%}
   .header-user{grid-area:profile;justify-self:start}
-  .mobile-menu-toggle{grid-area:menu;position:relative;display:flex !important;align-items:center;justify-content:center;width:48px;height:48px;padding:0;border:0;border-radius:14px;background:#0f172a;color:#fff;font-size:20px;cursor:pointer;z-index:1200}
+  
+  /* FIX TOMBOL MENU DI KANAN */
+  .mobile-menu-toggle{
+      grid-area:menu;
+      position:absolute; /* Ubah dari relative ke absolute */
+      top:20px;
+      right:20px;
+      display:flex !important;
+      align-items:center;
+      justify-content:center;
+      width:48px;height:48px;padding:0;border:0;border-radius:14px;
+      background:#0f172a;color:#fff;font-size:20px;cursor:pointer;z-index:1200
+  }
+  
   .mobile-sidebar-overlay{position:fixed;inset:0;display:block;background:rgba(15,23,42,.45);opacity:0;visibility:hidden;pointer-events:none;transition:.25s ease;z-index:900}
   body.sidebar-open .mobile-sidebar-overlay{opacity:1;visibility:visible;pointer-events:auto}
   #pageTitle{font-size:30px}
