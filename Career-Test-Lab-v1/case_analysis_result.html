@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hasil Case Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #f8fafc; --card: #ffffff; --primary: #2563eb; --text: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+body { background: var(--bg); color: var(--text); line-height: 1.6; padding: 24px; }
+.header { max-width: 1280px; margin: 0 auto 24px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 24px; font-weight: 800; }
+.btn { padding: 10px 20px; border-radius: 8px; background: var(--primary); color: white; text-decoration: none; font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
+.layout { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
+.layout.asesor-mode { grid-template-columns: 1fr 1fr; }
+
+/* PANEL KIRI: JAWABAN PESERTA */
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(15,23,42,0.03); }
+.panel-title { font-size: 18px; font-weight: 800; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; color: var(--primary); display: flex; justify-content: space-between; }
+.badge { font-size: 11px; background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 99px; border: 1px solid #bfdbfe; }
+.answer-box { margin-bottom: 24px; }
+.answer-label { font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: block; }
+.answer-content { background: #f8fafc; padding: 16px; border-radius: 12px; font-size: 14px; color: #334155; border-left: 4px solid #cbd5e1; white-space: pre-wrap; }
+
+/* PRIORITY LIST */
+.prio-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.prio-item { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; }
+.prio-num { width: 24px; height: 24px; background: var(--primary); color: white; border-radius: 6px; display: grid; place-items: center; font-size: 12px; }
+.prio-elim { background: #fee2e2; color: #991b1b; padding: 6px 10px; border-radius: 8px; }
+.prio-elim .prio-num { background: #ef4444; }
+
+/* PANEL KANAN: INTERPRETASI ASESOR */
+.panel-right { background: #0f172a; color: white; border: none; display: none; }
+.panel-right.show { display: block; }
+.panel-right .panel-title { color: white; border-bottom-color: #334155; }
+.rubric-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.rubric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.rubric-title { font-size: 15px; font-weight: 700; color: #e2e8f0; }
+.rubric-score { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 99px; background: rgba(255,255,255,0.1); }
+.rubric-desc { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+.score-high { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.score-mid { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.score-low { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+@media (max-width: 992px) { .layout.asesor-mode { grid-template-columns: 1fr; } }
+
+/* LOADING & ERROR */
+.loading-screen, .error-screen { text-align: center; padding: 80px 20px; background: white; border-radius: 20px; border: 1px solid var(--border); }
+.spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1 id="pageTitle">Memuat Hasil...</h1>
+    <button class="btn" onclick="window.print()" id="btnPrint" style="display:none;">🖨️ Cetak</button>
+</div>
+
+<div id="mainContainer">
+    <div class="loading-screen">
+        <div class="spinner"></div>
+        <h2>Mengambil data dari server...</h2>
+    </div>
+</div>
+
+<!-- Template Layout Hasil -->
+<template id="layoutTemplate">
+    <div class="layout" id="mainLayout">
+        <!-- KIRI: JAWABAN -->
+        <div class="panel">
+            <div class="panel-title">Lembar Jawaban <span class="badge">Peserta</span></div>
+            <div class="answer-box">
+                <span class="answer-label">Urutan Prioritas (Tugas 1)</span>
+                <div class="prio-list" id="renderPrio"></div>
+            </div>
+            <div class="answer-box">
+                <span class="answer-label">Alasan & Mitigasi Risiko</span>
+                <div class="answer-content" id="renderAlasan"></div>
+            </div>
+            <div class="answer-box">
+                <span class="answer-label">Evaluasi Informasi</span>
+                <div class="answer-content" id="renderQ1"></div>
+            </div>
+            <div class="answer-box">
+                <span class="answer-label">Identifikasi Akar Masalah</span>
+                <div class="answer-content" id="renderQ2"></div>
+            </div>
+            <div class="answer-box">
+                <span class="answer-label">Keputusan Akhir</span>
+                <div class="answer-content" id="renderQ3"></div>
+            </div>
+        </div>
+
+        <!-- KANAN: ASESOR -->
+        <div class="panel panel-right" id="panelAsesor">
+            <div class="panel-title">Panduan Interpretasi Asesor</div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">1. Berpikir Root Cause</div><div class="rubric-score score-high">Tinggi</div></div><div class="rubric-desc">Menyadari masalah bukan sekadar "profit turun", melainkan kombinasi mismanajemen & tekanan eksternal.</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">2. Berpikir Strategis</div><div class="rubric-score score-high">Tinggi</div></div><div class="rubric-desc">Memilih kombinasi strategi jangka pendek (likuiditas) DAN jangka panjang (SDM).</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">3. Memahami Permasalahan</div><div class="rubric-score score-mid">Sedang</div></div><div class="rubric-desc">Bisa membedakan fakta utama (target 20%) dengan informasi jebakan (gosip mobil).</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">4. Menentukan Prioritas</div><div class="rubric-score score-high">Tinggi</div></div><div class="rubric-desc">Urutan 1-5 logis. (Komunikasi/F & Likuiditas/G di atas PHK/A).</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">5. Deep Analysis</div><div class="rubric-score score-mid">Sedang</div></div><div class="rubric-desc">Menyadari PHK (A) memicu risiko hukum (Info 6).</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">6. Identifikasi Risiko</div><div class="rubric-score score-high">Tinggi</div></div><div class="rubric-desc">Menyebutkan mitigasi risiko dari strategi yang dipilih.</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">7. Perencanaan</div><div class="rubric-score score-low">Rendah</div></div><div class="rubric-desc">Memberikan indikator keberhasilan (KPI) atau tahapan eksekusi jelas.</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">8. Kemampuan Melibatkan</div><div class="rubric-score score-high">Tinggi</div></div><div class="rubric-desc">Memilih strategi F atau menyadari pentingnya transparansi ke serikat pekerja.</div></div>
+            <div class="rubric-card"><div class="rubric-header"><div class="rubric-title">9. Efisiensi</div><div class="rubric-score score-mid">Sedang</div></div><div class="rubric-desc">Pilihan menghasilkan penghematan riil tanpa mengorbankan kualitas ekstrem.</div></div>
+        </div>
+    </div>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script src="js/session-helper.js?v=1"></script>
+<script>
+async function initResult() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId');
+    const participantId = urlParams.get('participantId');
+    const assessmentIndex = urlParams.get('assessmentIndex');
+
+    if (!projectId || !participantId) {
+        showError("Parameter URL tidak lengkap. Tidak dapat memuat data.");
+        return;
+    }
+
+    const sb = window.supabaseClient || window.supabase;
+    if (!sb) {
+        showError("Koneksi database gagal.");
+        return;
+    }
+
+    try {
+        // 1. CEK ROLE (Asesor vs Peserta)
+        let isAsesor = false;
+        if (window.TS_SESSION) {
+            const role = await window.TS_SESSION.getRole();
+            if (role && role.toLowerCase() !== 'participant') {
+                isAsesor = true;
+            }
+        }
+
+        // 2. AMBIL DATA DARI SUPABASE
+        // Pastikan RLS (Row Level Security) di tabel case_analysis_results mengizinkan 
+        // Asesor (SELECT all) dan Peserta (SELECT where participant_id = auth.uid)
+        const { data: dbResult, error } = await sb
+            .from('case_analysis_results')
+            .select('result_data, submitted_at')
+            .eq('project_id', projectId)
+            .eq('participant_id', participantId)
+            .eq('assessment_index', assessmentIndex)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!dbResult) {
+            showError("Data jawaban tidak ditemukan. Pastikan peserta telah menyelesaikan tes ini.");
+            return;
+        }
+
+        // 3. RENDER TAMPILAN
+        renderUI(dbResult.result_data, isAsesor);
+
+    } catch (err) {
+        console.error("[Result] Error:", err);
+        showError("Gagal mengambil data: " + err.message);
+    }
+}
+
+function renderUI(data, isAsesor) {
+    // Siapkan layout dari template
+    const container = document.getElementById('mainContainer');
+    const template = document.getElementById('layoutTemplate').content.cloneNode(true);
+    
+    document.getElementById('pageTitle').textContent = isAsesor ? "Review Case Analysis Peserta" : "Jawaban Case Analysis Anda";
+    document.getElementById('btnPrint').style.display = "inline-block";
+    container.innerHTML = "";
+    container.appendChild(template);
+
+    // Tampilkan panel asesor jika role sesuai
+    if (isAsesor) {
+        document.getElementById('panelAsesor').classList.add('show');
+        document.getElementById('mainLayout').classList.add('asesor-mode');
+    }
+
+    // Mapping Strategi
+    const dict = {
+        A: "A. Restrukturisasi Tenaga Kerja", B: "B. Evaluasi Kompensasi Eksekutif",
+        C: "C. Rasionalisasi Fasilitas & Biaya", D: "D. Optimalisasi Produktivitas",
+        E: "E. Evaluasi Jaringan & Kapasitas", F: "F. Komunikasi Krisis & Pelibatan",
+        G: "G. Stabilisasi Likuiditas & Modal"
+    };
+
+    // Render Prioritas
+    let prioHtml = "";
+    const t1 = data.task1;
+    [t1.prio1, t1.prio2, t1.prio3, t1.prio4, t1.prio5].forEach((kode, idx) => {
+        prioHtml += `<div class="prio-item"><div class="prio-num">${idx+1}</div> ${dict[kode] || kode}</div>`;
+    });
+    prioHtml += `<div style="height:16px"></div>`;
+    [t1.elim1, t1.elim2].forEach(kode => {
+        prioHtml += `<div class="prio-item prio-elim"><div class="prio-num">X</div> ${dict[kode] || kode}</div>`;
+    });
+
+    // Isi Konten
+    document.getElementById('renderPrio').innerHTML = prioHtml;
+    document.getElementById('renderAlasan').textContent = t1.alasan || "-";
+    
+    const t2 = data.task2;
+    document.getElementById('renderQ1').textContent = t2.q1 || "-";
+    document.getElementById('renderQ2').textContent = t2.q2 || "-";
+    document.getElementById('renderQ3').textContent = t2.q3 || "-";
+}
+
+function showError(msg) {
+    document.getElementById('mainContainer').innerHTML = `
+        <div class="error-screen">
+            <svg style="width:64px;height:64px;color:#ef4444;margin-bottom:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <h2 style="color:var(--text);margin-bottom:8px;">Terjadi Kesalahan</h2>
+            <p style="color:var(--text-muted);">${msg}</p>
+        </div>`;
+    document.getElementById('pageTitle').textContent = "Error";
+}
+
+document.addEventListener("DOMContentLoaded", initResult);
+</script>
+</body>
+</html>

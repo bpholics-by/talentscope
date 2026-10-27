@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Analysis - Proyek Phoenix</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg-body: #f3f6fc;
+    --bg-panel: #ffffff;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --primary-light: #e0e7ff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --danger: #ef4444;
+    --danger-bg: #fef2f2;
+    --success: #10b981;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+body { background: var(--bg-body); color: var(--text-main); line-height: 1.6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* HEADER */
+.app-header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: var(--shadow-sm); z-index: 10;
+}
+.app-logo { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 800; color: var(--text-main); }
+.app-logo-icon {
+    width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), #818cf8);
+    border-radius: 10px; display: grid; place-items: center; color: white;
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+}
+.app-logo-icon svg { width: 20px; height: 20px; stroke-width: 2.5; }
+
+.timer-box {
+    display: flex; align-items: center; gap: 10px;
+    background: #f8fafc; padding: 10px 18px; border-radius: 99px;
+    border: 1px solid var(--border); font-weight: 800; color: var(--text-main);
+    font-family: 'SF Mono', Consolas, monospace; font-size: 16px;
+}
+.timer-box svg { width: 18px; height: 18px; color: var(--primary); }
+.timer-box.warning { background: var(--danger-bg); color: var(--danger); border-color: #fca5a5; animation: pulse 1s infinite; }
+.timer-box.warning svg { color: var(--danger); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+
+/* MAIN LAYOUT */
+.main-layout { display: flex; flex: 1; overflow: hidden; }
+
+/* LEFT PANEL (SCROLLABLE READING) */
+.panel-left { flex: 1; padding: 40px; overflow-y: auto; scroll-behavior: smooth; }
+.panel-left::-webkit-scrollbar { width: 8px; }
+.panel-left::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+.content-section {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 20px; padding: 36px; margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+}
+.section-title {
+    font-size: 18px; font-weight: 800; color: var(--text-main);
+    margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+}
+.section-icon {
+    width: 32px; height: 32px; background: var(--primary-light); color: var(--primary);
+    border-radius: 8px; display: grid; place-items: center;
+}
+.section-icon svg { width: 18px; height: 18px; stroke-width: 2.5; }
+p { margin-bottom: 16px; font-size: 15px; color: #334155; }
+ul { margin-left: 20px; margin-bottom: 16px; font-size: 15px; color: #334155; }
+li { margin-bottom: 10px; }
+.highlight { background: #fef08a; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: #854d0e; }
+
+/* INFO BOXES */
+.info-box {
+    background: #f8fafc; border: 1px solid var(--border); border-left: 4px solid #94a3b8;
+    border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; font-size: 14.5px;
+}
+.info-box strong { color: var(--text-main); display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 15px;}
+.info-box strong svg { width: 16px; height: 16px; color: var(--text-muted); }
+
+/* RIGHT PANEL (STICKY FORM) */
+.panel-right {
+    width: 500px; background: var(--bg-panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; box-shadow: -10px 0 30px rgba(0,0,0,0.03); z-index: 5;
+}
+.form-header { padding: 28px 32px; border-bottom: 1px solid var(--border); background: #fafafa; }
+.form-header h2 { font-size: 18px; font-weight: 800; color: var(--text-main); }
+.form-header p { font-size: 13px; color: var(--text-muted); margin-top: 6px; margin-bottom: 0; }
+.form-body { flex: 1; overflow-y: auto; padding: 28px 32px; }
+.form-body::-webkit-scrollbar { width: 6px; }
+.form-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+.form-group { margin-bottom: 22px; }
+label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; margin-bottom: 10px; color: var(--text-main); }
+label svg { width: 16px; height: 16px; color: var(--primary); }
+select, textarea {
+    width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px;
+    font-size: 14.5px; background: #f8fafc; color: var(--text-main); transition: all 0.2s;
+    resize: vertical;
+}
+select { font-weight: 600; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px; padding-right: 44px;}
+textarea { min-height: 110px; line-height: 1.6; }
+select:focus, textarea:focus {
+    background: #fff; border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
+}
+select:disabled { opacity: 0.4; cursor: not-allowed; background-color: #f1f5f9; }
+
+.elim-box { background: var(--danger-bg); padding: 20px; border-radius: 14px; border: 1px solid #fecaca; }
+.elim-box label { color: var(--danger); }
+.elim-box label svg { color: var(--danger); }
+.elim-selects { display: flex; gap: 12px; }
+.elim-selects select { border-color: #fca5a5; background-color: #fff; }
+
+.form-footer { padding: 24px 32px; border-top: 1px solid var(--border); background: #fafafa; }
+.btn-submit {
+    width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 800; cursor: pointer; transition: all 0.2s;
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+.btn-submit svg { width: 18px; height: 18px; stroke-width: 2.5; }
+.btn-submit:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); }
+.btn-submit:disabled { background: #cbd5e1; color: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* MODAL */
+.modal { position: fixed; inset: 0; background: rgba(15,23,42,0.7); backdrop-filter: blur(4px); display: none; place-items: center; z-index: 100; padding: 20px; }
+.modal.show { display: grid; }
+.modal-content { background: white; padding: 40px; border-radius: 24px; max-width: 400px; width: 100%; text-align: center; box-shadow: var(--shadow-lg); }
+.spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+@media (max-width: 1024px) {
+    .main-layout { flex-direction: column; overflow: auto; }
+    .panel-left { overflow: visible; padding: 24px; }
+    .panel-right { width: 100%; border-left: none; border-top: 1px solid var(--border); overflow: visible; }
+    body { height: auto; overflow: auto; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+    <div class="app-logo">
+        <div class="app-logo-icon">
+            <!-- Icon Clipboard/Document Premium -->
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        </div>
+        Case Analysis: Proyek Phoenix
+    </div>
+    <div class="timer-box" id="timer">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        40:00
+    </div>
+</header>
+
+<div class="main-layout">
+    <!-- PANEL KIRI: BACAAN -->
+    <div class="panel-left">
+        <div class="content-section">
+            <div class="section-title">
+                <div class="section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+                Konteks Situasi
+            </div>
+            <p>Anda merupakan anggota <strong>Task Force</strong> yang dibentuk oleh Direksi PT Sentosa Abadi, sebuah perusahaan distribusi barang konsumsi dengan 1.200 karyawan. Dalam enam bulan terakhir, perusahaan mengalami penurunan profit sebesar <strong>35%</strong>.</p>
+            <p>Manajemen Pusat menetapkan target pengurangan biaya operasional sebesar <span class="highlight">20% dalam waktu tiga bulan</span>. Jika gagal, perusahaan menghadapi risiko restrukturisasi besar-besaran.</p>
+            <p>Direksi membentuk Task Force untuk merumuskan rekomendasi dengan mempertimbangkan: Keberlangsungan finansial, Efisiensi operasional, Kesejahteraan karyawan, dan Keberlanjutan jangka menengah.</p>
+        </div>
+
+        <div class="content-section">
+            <div class="section-title">
+                <div class="section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></div>
+                Tujuh Alternatif Strategi
+            </div>
+            <p>Gunakan panduan form di sebelah kanan untuk memilih 5 strategi (Prioritas 1-5) dan 2 strategi yang dieliminasi.</p>
+            <ul style="list-style-type: none; padding: 0;">
+                <li><strong>A. Restrukturisasi Tenaga Kerja</strong><br><span style="color:var(--text-muted); font-size:14px;">Mengevaluasi struktur organisasi & pengurangan tenaga kerja jika efisiensi lain tidak cukup.</span></li>
+                <li><strong>B. Evaluasi Kompensasi Eksekutif</strong><br><span style="color:var(--text-muted); font-size:14px;">Meninjau bonus & remunerasi manajemen senior untuk penghematan proporsional.</span></li>
+                <li><strong>C. Rasionalisasi Fasilitas & Biaya</strong><br><span style="color:var(--text-muted); font-size:14px;">Mengevaluasi fasilitas non-esensial, perjalanan dinas, dan konsumsi.</span></li>
+                <li><strong>D. Optimalisasi Produktivitas</strong><br><span style="color:var(--text-muted); font-size:14px;">Mengidentifikasi sumber keterlambatan & perbaikan alur kerja.</span></li>
+                <li><strong>E. Evaluasi Jaringan & Kapasitas</strong><br><span style="color:var(--text-muted); font-size:14px;">Konsolidasi fasilitas atau perubahan pola operasional.</span></li>
+                <li><strong>F. Komunikasi Krisis & Pelibatan</strong><br><span style="color:var(--text-muted); font-size:14px;">Manajemen transparan & melibatkan karyawan dalam penghematan.</span></li>
+                <li><strong>G. Stabilisasi Likuiditas</strong><br><span style="color:var(--text-muted); font-size:14px;">Percepatan penagihan piutang, negosiasi termin, dan opsi pendanaan.</span></li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <div class="section-title">
+                <div class="section-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                Data Tambahan
+            </div>
+            <p>Tidak semua informasi di bawah ini memiliki tingkat relevansi yang sama. Anda harus bisa memilah data yang krusial dengan data yang <strong>memiliki relevansi terbatas</strong>.</p>
+            
+            <div class="info-box">
+                <strong><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg> Info 1: Aset Operasional</strong>
+                Gudang 5.000 m² bocor ringan sejak setahun lalu. Belum ada evaluasi biaya & dampak ke kapasitas.
+            </div>
+            <div class="info-box">
+                <strong><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path></svg> Info 2: Infrastruktur IT</strong>
+                60% karyawan pakai kuota pribadi karena WiFi lemot. Belum diketahui dampak ke produktivitas.
+            </div>
+            <div class="info-box">
+                <strong><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg> Info 3: Pesaing</strong>
+                Kompetitor ganti logo modern. Belum ada data perubahan pangsa pasar.
+            </div>
+            <div class="info-box">
+                <strong><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg> Info 4: Persepsi Pimpinan</strong>
+                Dirut beli mobil listrik Rp2 Miliar. Jadi gosip karyawan. Belum ada kaitan dengan keuangan perusahaan.
+            </div>
+            <div class="info-box">
+                <strong><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Info 5: Vendor</strong>
+                Vendor cleaning service tawarkan diskon 5% jika kontrak diperpanjang 2 tahun.
+            </div>
+            <div class="info-box">
+                <strong><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg> Info 6: Hubungan Industrial</strong>
+                Serikat pekerja didampingi pengacara sengketa. Belum ada kesimpulan hukum.
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL KANAN: FORM JAWABAN -->
+    <div class="panel-right">
+        <div class="form-header">
+            <h2>Lembar Jawaban Analisis</h2>
+            <p>Isi form di bawah berdasarkan analisis Anda.</p>
+        </div>
+        
+        <div class="form-body">
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Prioritas 1 (Paling Mendesak)</label>
+                <select id="prio1" onchange="updateOptions()"> <option value="">— Pilih Strategi —</option> </select>
+            </div>
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Prioritas 2</label>
+                <select id="prio2" onchange="updateOptions()"> <option value="">— Pilih Strategi —</option> </select>
+            </div>
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Prioritas 3</label>
+                <select id="prio3" onchange="updateOptions()"> <option value="">— Pilih Strategi —</option> </select>
+            </div>
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Prioritas 4</label>
+                <select id="prio4" onchange="updateOptions()"> <option value="">— Pilih Strategi —</option> </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 32px;">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Prioritas 5</label>
+                <select id="prio5" onchange="updateOptions()"> <option value="">— Pilih Strategi —</option> </select>
+            </div>
+
+            <div class="elim-box form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Strategi DIELIMINASI</label>
+                <div class="elim-selects">
+                    <select id="elim1" onchange="updateOptions()"> <option value="">— Eliminasi 1 —</option> </select>
+                    <select id="elim2" onchange="updateOptions()"> <option value="">— Eliminasi 2 —</option> </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Alasan Utama & Mitigasi Risiko</label>
+                <textarea id="alasanTugas1" placeholder="Mengapa memilih urutan ini? Bagaimana Anda memitigasi risiko dari strategi yang dipilih?"></textarea>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin: 32px 0;">
+
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg> Evaluasi Informasi</label>
+                <textarea id="q1" placeholder="Informasi mana yang paling relevan? Mana yang memiliki relevansi terbatas?"></textarea>
+            </div>
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Identifikasi Akar Masalah</label>
+                <textarea id="q2" placeholder="Hipotesis apa yang menjelaskan krisis ini?"></textarea>
+            </div>
+            <div class="form-group">
+                <label><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Keputusan Akhir</label>
+                <textarea id="q3" placeholder="Tuliskan rekomendasi akhir Anda secara keseluruhan..."></textarea>
+            </div>
+        </div>
+
+        <div class="form-footer">
+            <button class="btn-submit" id="btnSubmit" onclick="submitCase()" disabled>
+                Kirim Jawaban & Lihat Hasil
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="loadingModal">
+    <div class="modal-content">
+        <div class="spinner"></div>
+        <h2 style="font-size:20px; margin-bottom:8px;">Menyimpan Jawaban...</h2>
+        <p style="color:var(--text-muted); font-size:14px;">Mohon tunggu sebentar, jawaban Anda sedang diproses.</p>
+    </div>
+</div>
+
+<script>
+const strategies = [
+    { val: "A", text: "A. Restrukturisasi Tenaga Kerja" },
+    { val: "B", text: "B. Evaluasi Kompensasi Eksekutif" },
+    { val: "C", text: "C. Rasionalisasi Fasilitas & Biaya" },
+    { val: "D", text: "D. Optimalisasi Produktivitas" },
+    { val: "E", text: "E. Evaluasi Jaringan & Kapasitas" },
+    { val: "F", text: "F. Komunikasi Krisis & Pelibatan" },
+    { val: "G", text: "G. Stabilisasi Likuiditas & Modal" }
+];
+
+const selects = ['prio1','prio2','prio3','prio4','prio5','elim1','elim2'].map(id => document.getElementById(id));
+
+function initOptions() {
+    selects.forEach(sel => {
+        strategies.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.val; opt.textContent = s.text;
+            sel.appendChild(opt);
+        });
+    });
+}
+initOptions();
+
+function updateOptions() {
+    const selectedValues = selects.map(s => s.value).filter(v => v !== "");
+    
+    selects.forEach(sel => {
+        const currentVal = sel.value;
+        Array.from(sel.options).forEach(opt => {
+            if (opt.value === "") return;
+            if (selectedValues.includes(opt.value) && opt.value !== currentVal) {
+                opt.disabled = true;
+                opt.style.color = "#cbd5e1";
+            } else {
+                opt.disabled = false;
+                opt.style.color = "inherit";
+            }
+        });
+    });
+
+    const isValid = selects.every(s => s.value !== "");
+    document.getElementById('btnSubmit').disabled = !isValid;
+}
+
+let timeLeft = 40 * 60;
+const timerEl = document.getElementById('timer');
+setInterval(() => {
+    if (timeLeft <= 0) return;
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60);
+    const s = timeLeft % 60;
+    timerEl.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    if (timeLeft < 300) timerEl.classList.add('warning');
+}, 1000);
+
+function submitCase() {
+    const data = {
+        timestamp: new Date().toISOString(),
+        task1: {
+            prio1: document.getElementById('prio1').value,
+            prio2: document.getElementById('prio2').value,
+            prio3: document.getElementById('prio3').value,
+            prio4: document.getElementById('prio4').value,
+            prio5: document.getElementById('prio5').value,
+            elim1: document.getElementById('elim1').value,
+            elim2: document.getElementById('elim2').value,
+            alasan: document.getElementById('alasanTugas1').value || "-"
+        },
+        task2: {
+            q1: document.getElementById('q1').value || "-",
+            q2: document.getElementById('q2').value || "-",
+            q3: document.getElementById('q3').value || "-"
+        }
+    };
+
+    document.getElementById('loadingModal').classList.add('show');
+    localStorage.setItem('phoenix_case_result', JSON.stringify(data));
+    
+    setTimeout(() => {
+        window.location.href = 'case_analysis_result.html';
+    }, 800);
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js?v=7"></script>
+<script>
+    // Ambil parameter URL dari Dashboard
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId');
+    const participantId = urlParams.get('participantId');
+    const assessmentIndex = urlParams.get('assessmentIndex');
+    const assessmentCode = urlParams.get('assessmentCode') || 'CA';
+
+    async function submitCase() {
+        // Validasi
+        const selects = ['prio1','prio2','prio3','prio4','prio5','elim1','elim2'].map(id => document.getElementById(id).value);
+        if (selects.includes("")) {
+            alert("Harap lengkapi semua pilihan prioritas dan eliminasi strategi!");
+            return;
+        }
+
+        const data = {
+            timestamp: new Date().toISOString(),
+            task1: {
+                prio1: document.getElementById('prio1').value,
+                prio2: document.getElementById('prio2').value,
+                prio3: document.getElementById('prio3').value,
+                prio4: document.getElementById('prio4').value,
+                prio5: document.getElementById('prio5').value,
+                elim1: document.getElementById('elim1').value,
+                elim2: document.getElementById('elim2').value,
+                alasan: document.getElementById('alasanTugas1').value || "-"
+            },
+            task2: {
+                q1: document.getElementById('q1').value || "-",
+                q2: document.getElementById('q2').value || "-",
+                q3: document.getElementById('q3').value || "-"
+            }
+        };
+
+        // Tampilkan Modal Loading
+        document.getElementById('loadingModal').classList.add('show');
+        document.getElementById('btnSubmit').disabled = true;
+
+        // SIMPAN KE SUPABASE
+        const sb = window.supabaseClient || window.supabase;
+        if (sb && projectId && participantId) {
+            try {
+                // 1. Simpan jawaban ke tabel case_analysis_results
+                const { error: insertError } = await sb.from('case_analysis_results').upsert({
+                    project_id: projectId,
+                    participant_id: participantId,
+                    assessment_index: assessmentIndex,
+                    result_data: data
+                }, { onConflict: 'project_id,participant_id,assessment_index' });
+
+                if (insertError) throw insertError;
+
+                // 2. Update status di participant_assessments
+                // (Kita update berdasarkan participant_id & project_id, lalu filter berdasarkan urutan)
+                const { data: paData } = await sb.from('participant_assessments')
+                    .select('id')
+                    .eq('participant_id', participantId)
+                    .eq('project_id', projectId)
+                    .order('sort_order', { ascending: true, nullsFirst: false })
+                    .order('created_at', { ascending: true })
+                    .range(Number(assessmentIndex), Number(assessmentIndex));
+
+                if (paData && paData.length > 0) {
+                    await sb.from('participant_assessments')
+                        .update({ status: 'Completed', progress: 100, completed_at: data.timestamp })
+                        .eq('id', paData[0].id);
+                }
+
+                // 3. Redirect ke halaman Hasil dengan parameter URL
+                window.location.href = `case_analysis_result.html?projectId=${projectId}&participantId=${participantId}&assessmentIndex=${assessmentIndex}`;
+
+            } catch (err) {
+                console.error("Gagal menyimpan data:", err);
+                alert("Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.");
+                document.getElementById('loadingModal').classList.remove('show');
+                document.getElementById('btnSubmit').disabled = false;
+            }
+        } else {
+            alert("Koneksi database terputus.");
+            document.getElementById('loadingModal').classList.remove('show');
+            document.getElementById('btnSubmit').disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

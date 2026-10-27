@@ -420,7 +420,13 @@ a{text-decoration:none;color:inherit}
         function getAssessmentRoute(code, name) {
         var c = String(code || "").toLowerCase();
         var n = String(name || "").toLowerCase();
-
+ // ==========================================
+        // TAMBAHKAN ROUTING CASE ANALYSIS DI SINI
+        // ==========================================
+        if (c.includes("ca") || c.includes("case") || c.includes("analisis") || 
+            n.includes("case analysis") || n.includes("case analyisi")) {
+            return "case_analysis.html";
+        }
         // ==========================================
         // TAMBAHKAN INI: Cek Intray 2 DULU (Arunika)
         // ==========================================
